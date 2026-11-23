@@ -311,6 +311,10 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         """Put a layout at place ``at`` in the list; returns the place it had."""
         return self.layouts.move(layout, at)
 
+    def slides_following(self, layout: str) -> list[str]:
+        """The slides that follow a layout, in the order of the deck."""
+        return [slide for slide in self.order if self.slide_layouts[slide] == layout]
+
     def remove_layout(self, layout: str) -> tuple[Layout, int]:
         """Take a layout away that no slide follows; returns it and the place it had. The basic layout stays."""
         if layout == BASIC_LAYOUT:

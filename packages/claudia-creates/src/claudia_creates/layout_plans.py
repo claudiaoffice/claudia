@@ -10,8 +10,8 @@ from dataclasses import replace
 
 from claudia_core import AddObject, Batch, Command, MoveObject, RemoveObject, ResizeObject, RotateObject, SetObjectStyle
 
-from .layout_commands import DefineLayout, SetSlideLayout
-from .model import SlideModel
+from .layout_commands import DefineLayout, RemoveLayout, SetSlideLayout
+from .model import SlideModel, SlideObject
 
 #: The changes to an object that belong to the layout when the object does (E10.5): its place and size, its look, its
 #: turn, and taking it away. What is written in it is not among them.
@@ -38,14 +38,7 @@ def deviate_layout(model: SlideModel, slide: str, change: Command) -> Command:
     The new layout is a whole copy of the layout the slide follows, named after it ("Two lists 2"); the slide's bound
     objects are bound to its placeholders, and the change is made there. One step, one undo. ``ValueError`` if the
     change is not one of those that belong to a layout, or the thing is not the layout's."""
-    if not isinstance(change, _DEVIATIONS):
-        raise ValueError("this change does not belong to a layout")
-    parent = model.layout_of(slide)
-    target = model.get_object(change.id)
-    on_slide = target.holder == slide and target.anchor.bound_to_placeholder in model.stack_of(parent)
-    if not on_slide and target.holder != parent:
-        raise ValueError("this object does not belong to the layout of its slide")
-    layout_object = target.anchor.bound_to_placeholder if on_slide else target.id
+    parent, on_slide, layout_object = _belonging(model, slide, change)
     removing = isinstance(change, RemoveObject)
 
     layout_id, name = _next_layout(model, parent)
@@ -72,6 +65,55 @@ def deviate_layout(model: SlideModel, slide: str, change: Command) -> Command:
     else:
         steps.append(_retargeted(change, copies[layout_object], layout_id))
     return Batch(tuple(steps))
+
+
+def update_layout(model: SlideModel, slide: str, change: Command) -> Command:
+    """The command that makes ``change`` to something the slide gets from its layout, on the layout itself, so that
+    every slide that follows it gets the change (E10.5). Taking a placeholder away takes the empty objects bound to it
+    away with it; what is filled stays on its slide as a free box where it stands. ``ValueError`` as for
+    :func:`deviate_layout`."""
+    parent, _, layout_object = _belonging(model, slide, change)
+    if not isinstance(change, RemoveObject):
+        return _retargeted(change, layout_object, parent)
+    empty = [
+        obj.id
+        for follower in model.slides_following(parent)
+        for obj in model.objects_on(follower)
+        if obj.anchor.bound_to_placeholder == layout_object and _is_empty(obj)
+    ]
+    return Batch((*(RemoveObject(object_id) for object_id in empty), RemoveObject(layout_object)))
+
+
+def delete_layout(model: SlideModel, layout: str, move_to: str) -> Command:
+    """The command that takes a layout away: the slides that follow it follow ``move_to`` instead (their objects go to
+    the placeholders with the same purpose, or stay as free boxes), and what is on the layout goes with it (E10.4)."""
+    if move_to == layout:
+        raise ValueError("the slides cannot move to the layout that is taken away")
+    model.layouts[move_to]  # noqa: B018  (raises for an unknown layout)
+    steps: list[Command] = [set_layout_command(model, slide, move_to) for slide in model.slides_following(layout)]
+    steps += [RemoveObject(obj.id) for obj in model.objects_on(layout)]
+    steps.append(RemoveLayout(layout))
+    return Batch(tuple(steps))
+
+
+def _belonging(model: SlideModel, slide: str, change: Command) -> tuple[str, bool, str]:
+    """What a change to an object of a slide is about: the layout the slide follows, whether the object is a slide's
+    own object that is bound to the layout (not an object of the layout seen on the slide), and the object of the
+    layout it belongs to. ``ValueError`` if the change is not one that belongs to a layout, or the object is not the
+    layout's."""
+    if not isinstance(change, _DEVIATIONS):
+        raise ValueError("this change does not belong to a layout")
+    parent = model.layout_of(slide)
+    target = model.get_object(change.id)
+    on_slide = target.holder == slide and target.anchor.bound_to_placeholder in model.stack_of(parent)
+    if not on_slide and target.holder != parent:
+        raise ValueError("this object does not belong to the layout of its slide")
+    return parent, on_slide, target.anchor.bound_to_placeholder if on_slide else target.id
+
+
+def _is_empty(obj: SlideObject) -> bool:
+    """Is there nothing in this object that a person put there? A box with no words."""
+    return obj.body.paragraph is not None and not obj.body.paragraph.text
 
 
 def _retargeted(change: Command, object_id: str, layout_id: str) -> Command:

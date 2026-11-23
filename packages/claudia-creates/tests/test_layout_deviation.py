@@ -2,9 +2,9 @@
 
 from conftest import add, frame, move, reopen, resize, text_box
 
-from claudia_core import RemoveObject
+from claudia_core import InsertText, RemoveObject
 from claudia_creates import AddSlide, DefineLayout, SetSlideLayout
-from claudia_creates.layout_plans import deviate_layout
+from claudia_creates.layout_plans import delete_layout, deviate_layout, update_layout
 
 
 def two_slides_on_a_layout_with_a_title(doc):
@@ -64,3 +64,50 @@ def test_removing_a_bound_object_leaves_its_placeholder_off_the_layout_of_its_sl
     assert "h-s2" in doc.model.objects
     doc.undo("ana")
     assert "h-s1" in doc.model.objects and doc.model.layout_of("s1") == "two-lists"
+
+
+# -- the other answer: change the layout itself, for every slide that follows it ------------------------------
+def test_updating_the_layout_makes_the_change_to_the_placeholder_for_every_slide_that_follows_it(doc):
+    two_slides_on_a_layout_with_a_title(doc)
+    doc.execute(update_layout(doc.model, "s1", resize("h-s1", 120, 60, 700, 90)), author="ana")
+    assert frame(doc, "title") == (120, 60, 700, 90)
+    assert frame(doc, "h-s1") == frame(doc, "h-s2") == (120, 60, 700, 90)
+    assert doc.model.layout_of("s1") == "two-lists", "no layout of its own"
+    doc.undo("ana")
+    assert frame(doc, "h-s2") == (100, 50, 800, 100)
+
+
+def test_updating_a_layout_with_a_change_to_a_layout_object_changes_that_object(doc):
+    two_slides_on_a_layout_with_a_title(doc)
+    doc.execute(update_layout(doc.model, "s2", move("logo", 800, 20, slide="two-lists")), author="ana")
+    assert frame(doc, "logo") == (800, 20, 60, 40)
+
+
+def test_deleting_a_placeholder_takes_the_empty_objects_with_it_and_frees_the_filled_ones(doc):
+    two_slides_on_a_layout_with_a_title(doc)
+    doc.execute(InsertText("h-s2", 0, "Hello"), author="ana")
+    doc.execute(update_layout(doc.model, "s1", RemoveObject("h-s1")), author="ana")
+    assert "title" not in doc.model.objects and "h-s1" not in doc.model.objects
+    assert doc.model.get("h-s2").anchor.bound_to_placeholder == ""
+    assert frame(doc, "h-s2") == (100, 50, 800, 100), "the words stay where they were"
+    doc.undo("ana")
+    assert doc.model.get("title").anchor.purpose == "Title" and "h-s1" in doc.model.objects
+
+
+def test_the_slides_that_follow_a_layout_are_counted(doc):
+    two_slides_on_a_layout_with_a_title(doc)
+    assert doc.model.slides_following("two-lists") == ["s1", "s2"]
+    assert doc.model.slides_following("basic") == []
+
+
+def test_deleting_a_layout_moves_its_slides_to_another_one_and_frees_what_has_no_placeholder_there(doc):
+    two_slides_on_a_layout_with_a_title(doc)
+    doc.execute(delete_layout(doc.model, "two-lists", "basic"), author="ana")
+    assert "two-lists" not in doc.model.layouts and "title" not in doc.model.objects
+    assert [doc.model.layout_of(slide) for slide in ("s1", "s2")] == ["basic", "basic"]
+    assert doc.model.get("h-s1").anchor.bound_to_placeholder == ""
+    assert frame(doc, "h-s1") == (100, 50, 800, 100)
+    doc.undo("ana")
+    assert doc.model.layout_of("s2") == "two-lists" and doc.model.get("h-s2").anchor.bound_to_placeholder == "title"
+    assert [obj.id for obj in doc.model.objects_on("two-lists")] == ["title", "logo"]
+    assert reopen(doc).model.serialize() == doc.model.serialize()
