@@ -300,6 +300,10 @@ _avoid_: master, POTX, design
 A named arrangement of placeholders and other objects that a slide follows.
 _avoid_: slide master, slide type
 
+**Layout object**
+An object on a layout that is not a placeholder, such as a logo or a footer line; every slide that follows the layout shows it, and a slide cannot change it without changing the layout.
+_avoid_: master object, background element
+
 **Placeholder**
 An object on a layout, labelled by its purpose, that an object on a slide can take.
 _avoid_: slot, frame
