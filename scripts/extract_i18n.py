@@ -248,10 +248,11 @@ def _po_string(value: str) -> str:
 
 
 def render_pot(catalog: dict[str, list[str]]) -> str:
-    """The ``.pot`` text: the header, then one entry per ``msgid``, sorted so the output is deterministic."""
+    """The ``.pot`` text: the header, then one entry per ``msgid``, sorted so the output is deterministic. An entry
+    names the files its text is in, not the lines: a line that moves must not change the template (PROC-31)."""
     parts = [HEADER]
     for msgid in sorted(catalog):
-        occurrences = " ".join(sorted(catalog[msgid]))
+        occurrences = " ".join(sorted({re.sub(r":\d+$", "", place) for place in catalog[msgid]}))
         parts.append(f'\n#: {occurrences}\nmsgid {_po_string(msgid)}\nmsgstr ""\n')
     return "".join(parts)
 
