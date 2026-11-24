@@ -362,6 +362,14 @@ _avoid_: ping, address
 
 ### The ai at work
 
+**Action**
+Something a person can do in an app, by menu, shortcut or context menu: number a list, turn a shape, merge two cells.
+_avoid_: feature, command, capability, function
+
+**Action catalog**
+The list of all actions of one app, kept so that nothing a person can do is forgotten when the ai is taught what it may do and see.
+_avoid_: feature list, capability matrix
+
 **AI mode**
 How one person wants the ai to treat her requests in one document: act (it makes the change) or propose (it offers the change).
 _avoid_: autopilot, review mode, permission, suggest
