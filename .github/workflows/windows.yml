@@ -399,7 +399,9 @@ jobs:
           } finally {
             Stop-Process -Id $launcher.Id -Force -ErrorAction SilentlyContinue
             # the core of a window is a node of the installation too, and holds the copy
-            Get-Process node -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq "$env:INSTALL_DIR\node\node.exe" } | Stop-Process -Force
+            # (found by its command line: Windows reports its path in the short form, C:\PROGRA~1\CLAUDI~1\node\node.exe)
+            Get-CimInstance Win32_Process -Filter "Name = 'node.exe'" | Where-Object { $_.CommandLine -like '*\Claudia\run\*' } |
+              ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
             Get-Process neutralino-win_x64, claudia-server -ErrorAction SilentlyContinue | Stop-Process -Force
             Get-Content "$PWD\launcher.out", "$PWD\launcher.err" -ErrorAction SilentlyContinue
           }
@@ -423,7 +425,9 @@ jobs:
           } finally {
             Stop-Process -Id $window.Id -Force -ErrorAction SilentlyContinue
             # the core of the window is a node of the installation too, and holds its files until the uninstall (PROC-53)
-            Get-Process node -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq "$env:INSTALL_DIR\node\node.exe" } | Stop-Process -Force
+            # (found by its command line: Windows reports its path in the short form, C:\PROGRA~1\CLAUDI~1\node\node.exe)
+            Get-CimInstance Win32_Process -Filter "Name = 'node.exe'" | Where-Object { $_.CommandLine -like '*\Claudia\run\*' } |
+              ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
             Get-Process neutralino-win_x64, claudia-server -ErrorAction SilentlyContinue | Stop-Process -Force
             Get-Content "$env:LOCALAPPDATA\Claudia\composes\state\shell.log", "$env:LOCALAPPDATA\Claudia\state\server.log" -Tail 40 -ErrorAction SilentlyContinue
           }

@@ -2816,10 +2816,12 @@ the task manager now, it is invisible. **Escaped** because: spec gap (nobody had
 ### PROC-53 · The window step of the Windows install test left the core's node running · P2 · size 2 · fixed
 **Found** by the first run of `windows.yml` on `win-installer-fix` with the three fixes of this round (run 45346029894): the
 build and every step passed, *Uninstall, standard* failed on windows-2022 and windows-2025 ("C:\Program Files\Claudia Office
-is still there after the uninstall"); the run of 2026-11-23 failed at the same step. **Cause** (**read** in the log, not
-proven): the advisory step *A window opens...* started a window on the runner (Neutralino and the core ran), and its `finally` ended the
-launcher and Neutralino but not the core's `node.exe` of the installation, which holds files there; the step before it already
-ended that node. **Fixed** 2026-11-24: the same cleanup in the `finally` of the window step, and of `claudia-server`.
+is still there after the uninstall"); the run of 2026-11-23 failed at the same step. **Cause** (**measured**, the process list of the failing
+run): the advisory step *A window opens...* started a window on the runner, and a core `node.exe` of the installation was still
+running, holding `node\node.exe`. Both steps looked for that node by its path, which Windows reports in the short form
+(`C:\PROGRA~1\CLAUDI~1\node\node.exe`), so neither ever found it; the step before the window step never ended it either.
+**Fixed** 2026-11-24: both steps find it by its command line (`...\Claudia\run\...`), the window step also ends `claudia-server`; the
+uninstall check now says what is left and which processes there are.
 **Test:** `tests/test_windows_packaging.py::test_the_window_step_ends_the_core_of_its_window_before_the_uninstall`, red before.
 **Seen, not fixed:** in that run the window's core connected to Neutralino and the step then waited 120 s for a server on
 `127.0.0.1:8765`, which only the service uses (this install has none): either the check is wrong or the window's own server did

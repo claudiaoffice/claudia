@@ -425,8 +425,10 @@ def test_the_spec_takes_every_package_of_the_workspace_by_name_not_a_list_that_g
 
 def test_the_window_step_ends_the_core_of_its_window_before_the_uninstall():
     """PROC-53: the core of a window is a `node.exe` of the installation. The advisory window step ended the launcher
-    and the window but not that node, which held the files, so *Uninstall, standard* failed on both images."""
+    and the window but not that node, which held the files, so *Uninstall, standard* failed on both images. The step
+    before it looked for that node by its path, which Windows gives in the short form: it never found it."""
     step = _install_test_steps()["A window opens, and starts the server it needs"]
     finally_part = step[step.index("finally") :]
-    assert "Get-Process node" in finally_part and "INSTALL_DIR\\node\\node.exe" in finally_part
+    # found by its command line: Windows names the node of the installation by its short path (C:\PROGRA~1\CLAUDI~1\...)
+    assert "Win32_Process" in finally_part and "Claudia\\run" in finally_part and "ExecutablePath" not in finally_part
     assert "claudia-server" in finally_part
