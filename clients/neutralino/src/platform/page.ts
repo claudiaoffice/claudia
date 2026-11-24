@@ -18,6 +18,9 @@ export interface PagePlatform {
   whereTheLogsAre(app: App): string
   /** How to see the console of the shell page itself. */
   readonly howToSeeTheConsole: string
+  /** Whether Neutralino takes window sizes in physical pixels (Windows, UX-76) and not in points (macOS): then the page
+   * asks for the size again with the display scale applied (window-size.ts). */
+  readonly sizesInPhysicalPixels: boolean
 }
 
 export const MACOS_PAGE: PagePlatform = {
@@ -27,6 +30,7 @@ export const MACOS_PAGE: PagePlatform = {
   whereTheLogsAre: (app) =>
     `Its log: ~/Library/Application Support/Claudia/${app}/state/shell.log (or shell.log in ~/Library/Application Support/Claudia).`,
   howToSeeTheConsole: 'This window is a browser too: right-click and choose Inspect to see its console.',
+  sizesInPhysicalPixels: false,
 }
 
 export const WINDOWS_PAGE: PagePlatform = {
@@ -35,6 +39,7 @@ export const WINDOWS_PAGE: PagePlatform = {
   keepAtStart: keptOnWindowsFrontPage,
   whereTheLogsAre: (app) => `Its log: %LOCALAPPDATA%\\Claudia\\${app}\\state\\shell.log (or shell.log in %LOCALAPPDATA%\\Claudia).`,
   howToSeeTheConsole: "Start it again with --debug to open the window's web inspector and see its console.",
+  sizesInPhysicalPixels: true,
 }
 
 /** The page platform of this build (src/platform/id.ts). */

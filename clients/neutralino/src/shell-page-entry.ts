@@ -52,6 +52,7 @@ export function run(app: App, listing: ManifestListing, version: string): void {
     frame: element<HTMLIFrameElement>('frame') as unknown as FrameLike,
     status,
     onWindowMessage: (listener) => window.addEventListener('message', (event) => listener(event)),
+    screen: { availWidth: window.screen.availWidth, availHeight: window.screen.availHeight, devicePixelRatio: window.devicePixelRatio },
     locale: navigator.language || undefined,
     log: (message) => console.log(`[claudia shell] ${message}`),
   })

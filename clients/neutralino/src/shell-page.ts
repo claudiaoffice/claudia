@@ -19,11 +19,17 @@ import type { App } from './identity.js'
 import type { WindowMenuItem } from './menu.js'
 import { applyActionStates, routeMenuClick, type ActionState, type KnownAction } from './menu-actions.js'
 import { pagePlatform, type PagePlatform } from './platform/page.js'
+import { WINDOW_WANTED, windowSizeFor, type ScreenSize, type WindowSize } from './window-size.js'
 
 export interface NeutralinoLike {
   init(): void
   app: { exit(code?: number): Promise<unknown> }
-  window: { setMainMenu(items: WindowMenuItem[]): Promise<unknown> }
+  window: {
+    setMainMenu(items: WindowMenuItem[]): Promise<unknown>
+    /** Physical pixels on Windows (UX-76). */
+    setSize?(size: WindowSize): Promise<unknown>
+    center?(): Promise<unknown>
+  }
   events: { on(event: string, handler: (event: { detail: unknown }) => void): Promise<unknown> }
   extensions: {
     dispatch(id: string, event: string, data: unknown): Promise<unknown>
@@ -65,6 +71,8 @@ export interface PageEnv {
   log?: (message: string) => void
   /** What this operating system does differently (src/platform/page.ts); this build's by default. */
   platform?: PagePlatform
+  /** The screen the window is on, for the size of the window (UX-76); without it the size is the config's. */
+  screen?: ScreenSize
 }
 
 /** The actions a menu has, and which of them are tick marks. */
@@ -162,6 +170,7 @@ export class ShellPage {
     await neutralino.events.on(FROM_CORE, (event) => this.onCore(event.detail))
     await neutralino.events.on('mainMenuItemClicked', (event) => this.onMenuClick(event.detail))
     status.show('Starting…', undefined, false)
+    await this.fitWindow()
     await this.setMenu()
     if (await this.startCore()) this.watchCore(1)
   }
@@ -179,6 +188,19 @@ export class ShellPage {
           'shell contract over postMessage (it needs the web build of commit 55a9742 or newer), so the native menu cannot drive it',
       )
     })
+  }
+
+  /** The window's size is in physical pixels on Windows, so on a scaled display the config's size is too small for the
+   * page (UX-76, D749): ask again with the scale applied, and centre the window on its screen. */
+  private async fitWindow(): Promise<void> {
+    const { neutralino, screen } = this.env
+    if (!this.platform.sizesInPhysicalPixels || screen === undefined) return
+    try {
+      await neutralino.window.setSize?.(windowSizeFor(WINDOW_WANTED, screen))
+      await neutralino.window.center?.()
+    } catch (problem) {
+      this.log(`the window size could not be set: ${(problem as Error).message}`)
+    }
   }
 
   private async setMenu(): Promise<void> {

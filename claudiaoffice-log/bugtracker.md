@@ -134,12 +134,13 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |  |  |
 | UX-06 | — | UX | Web menu differs from decisions D4/D5 | needs decision |  |  |
 
-### Fixed (158)
+### Fixed (159)
 
 By ID. Items closed without a fix (superseded, wontfix) are here too.
 
 | ID | Pri | Category | Title | Status | Opened | Fixed |
 |---|---|---|---|---|---|---|
+| UX-76 | P2 | UX / Windows | The window opens at the configured size in physical pixels, so on a scaled display (200%) it is half the size the page needs | **fixed** 2026-11-24 on `win-installer-fix` (D749) | 2026-11-24 | 2026-11-24 |
 | CODE-82 | P2 | Code / Windows | Help ▸ About opens nothing on the start page of the Windows and macOS clients | **fixed** 2026-11-24 on `win-installer-fix` (D748) | 2026-11-24 | 2026-11-24 |
 | PROC-52 | P2 | Process / CI | The Windows install test let the launcher fail: its window step was advisory as a whole, so CODE-79 had a green CI | **fixed** 2026-11-23 on `win-installer-fix` (D747) | 2026-11-23 | 2026-11-23 |
 | CODE-81 | P1 | Code / Windows | The installed Windows client opens no window: the launcher looks for its apps in a repository that an installation does not have | **fixed** 2026-11-23 on `win-installer-fix` (D746) | 2026-11-23 | 2026-11-23 |
@@ -2786,3 +2787,13 @@ it to the page, and `OpenDialog.vue`'s handler had no case for it. **Fixed** 202
 and the start page mounts the About dialog of the window's app. **Test:** `web/tests/open.test.ts` (red before), the
 scenarios of `specs/desktop/about.feature`. **Not run** in a real window. **Escaped** because: spec gap (nothing said
 that every entry the shell keeps on a page must do something there).
+
+### UX-76 · The window is too small on a scaled display · P2 · size 2 · fixed
+**Found** by the owner (screenshot, 3840 × 1994 at 200%): the window looks like a browser window too small for the page.
+**Cause** (**read**, and the screenshot: about 640 × 430 CSS pixels for 1280 × 860): Neutralino takes window sizes in
+physical pixels on Windows; the config's size was written as CSS pixels. **Fixed** 2026-11-24 (D749): the shell page asks for
+the size again with the scale applied, capped at nine tenths of the free screen, and centres the window. **Tests:**
+`clients/neutralino/tests/window-size.test.ts` (red before: the module did not exist), `shell-page.test.ts` (red before),
+`build-shell.test.ts` (the allow-list; red before), the scenarios of `specs/desktop/window-size.feature`. **Not run on
+Windows or on a scaled display:** the owner's next install is the check. **Escaped** because: spec gap (no one had said
+that a window's size is in CSS pixels) and a unit that no test, on a Mac or on Linux, can see.

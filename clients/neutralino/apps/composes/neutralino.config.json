@@ -23,6 +23,8 @@
   "nativeAllowList": [
     "app.exit",
     "window.setMainMenu",
+    "window.setSize",
+    "window.center",
     "events.on",
     "extensions.dispatch",
     "extensions.getStats",
