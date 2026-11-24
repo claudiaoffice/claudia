@@ -56,7 +56,7 @@ from .server_settings import (
 )
 from .setup_code import SetupCode, remove_code
 from .suite import Suite
-from .typeset_check import identify
+from .typeset_check import check_identity
 
 log = logging.getLogger("claudia_server")
 JsonBody = Annotated[dict, Body()]
@@ -535,8 +535,8 @@ async def _typeset_settings_asked(body: dict) -> TypesetSettings:
     """The typesetting programs a ``PUT`` asks for, each seen to name itself (SEC-16, D2002); HTTP 400 otherwise."""
     asked = TypesetSettings(xelatex=body.get("xelatex"), pdftocairo=body.get("pdftocairo"))
     try:
-        await identify("xelatex", asked.xelatex)
-        await identify("pdftocairo", asked.pdftocairo)
+        await check_identity("xelatex", asked.xelatex)
+        await check_identity("pdftocairo", asked.pdftocairo)
     except ValueError as refused:
         raise HTTPException(400, str(refused)) from refused
     return asked

@@ -20,12 +20,12 @@ _ASK: dict[str, tuple[Sequence[str], str]] = {
 }
 
 
-async def identify(setting: str, configured: str | None) -> str | None:
-    """The line with which the program for ``setting`` names itself, or ``None`` when nothing is configured (the
-    program is then looked up on the PATH when it is needed). Raises ``ValueError`` with a sentence for a person when
+async def check_identity(setting: str, configured: str | None) -> None:
+    """Make sure the program configured for ``setting`` names itself as that program. Nothing configured is fine: the
+    program is then looked up on the PATH when it is needed. Raises ``ValueError`` with a sentence for a person when
     the program cannot be found, does not run, or is not the program ``setting`` asks for."""
-    if configured is None or str(configured).strip() == "":
-        return None
+    if configured is None or configured.strip() == "":
+        return
     arguments, banner = _ASK[setting]
     try:
         program = resolve_program(setting, configured, setting)
@@ -33,10 +33,8 @@ async def identify(setting: str, configured: str | None) -> str | None:
             done = await run_sandboxed([str(program), *arguments], cwd=Path(folder), env={}, limits=_LIMITS)
     except (EngineUnavailable, SandboxError) as error:
         raise ValueError(str(error)) from error
-    for line in done.output.splitlines():
-        if line.strip().startswith(banner):
-            return line.strip()
-    raise ValueError(
-        f"{configured} does not say it is {setting}: asked with {' '.join(arguments)}, it should answer "
-        f"with a line that begins “{banner}”"
-    )
+    if not any(line.strip().startswith(banner) for line in done.output.splitlines()):
+        raise ValueError(
+            f"{configured} does not say it is {setting}: asked with {' '.join(arguments)}, it should answer "
+            f"with a line that begins “{banner}”"
+        )
