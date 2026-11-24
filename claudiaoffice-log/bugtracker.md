@@ -35,7 +35,7 @@ The index is the status of record; a section below keeps the status of the round
 re-checked. **Opened** and **Fixed** are filled from 2026-11-20 on: for older items only where the status already gave
 the date.
 
-### Open (91)
+### Open (90)
 
 
 By priority (P1, P2, P3, then items that wait for a decision without one), then by ID.
@@ -124,7 +124,6 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | CODE-74 | P3 | Code | `export_content` still answers `{format: "claudia-export 1", ...}`, a JSON that is neither the zip of D1270 nor documented anywhere; it is recorded as an export and the panel says "exported as claudia-export 1"; no window calls it | **new, open** (size 3; remove it or make it the zip) |  |  |
 | CODE-75 | P3 | Code / web clients | Only composes refused a change of a viewer before sending it; computes sent it and showed the server's refusal, creates checked in some places only | **fixed** on `architecture-improvements` (D1432) | 2026-11-21 | 2026-11-21 |
 | CODE-76 | P3 | Code / web clients | The sheet session ignored `shape` events, so an outline a colleague's sheet object needed arrived only with a reload | **fixed** on `architecture-improvements` (D1432) | 2026-11-21 | 2026-11-21 |
-| CODE-80 | P2 | Code / AI / privacy | A question to Claude sends, before Claude asks for anything, the sheet list and the top left of the first three sheets (`workbook_lens.orient`; likewise the other two lenses' first look), so a sheet the question has nothing to do with can leave the server; the @core scenario "Claude is sent what the dialog says and nothing else" says it must not | **new, open** (size 2; owner to decide: fix now or log) | 2026-11-22 |  |
 | UX-74 | P3 | UX / AI | While the administrator has Claude off, the owners' dialog shows no check box, so an owner cannot withdraw a consent given earlier; it resumes when Claude is switched on again | **new, open** (size 3) | 2026-11-22 |  |
 | UX-75 | P3 | UX / AI | A window that is open when the administrator changes the provider keeps its old badge until the next consent change or reload | **new, open** (size 3) | 2026-11-22 |  |
 | CODE-84 | P3 | Code / creates I/O | The pptx and odp readers and writers keep their own DrawingML preset names, shape look and ODF graphic-style code beside `claudia_opc_io.drawingml` and `claudia_odf_io.boxes` (D1479), which texts and spreadsheets share | **new, open** (size 3) | 2026-11-24 |  |
@@ -134,7 +133,7 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |  |  |
 | UX-06 | — | UX | Web menu differs from decisions D4/D5 | needs decision |  |  |
 
-### Fixed (158)
+### Fixed (161)
 
 
 By ID. Items closed without a fix (superseded, wontfix) are here too.
@@ -250,6 +249,9 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | CODE-77 | P2 | Code / computes | Undoing a chart leaves it in the workbook (the server does not forget it), and the page reports a Plotly error | **fixed** 2026-11-23 on `e6-31-slides-in-computes` (D1475) | 2026-11-22 | 2026-11-23 |
 | CODE-83 | P2 | Code / computes | Writing in a text box on a workbook's slide is an internal server error | **fixed** 2026-11-23 on `e6-31-slides-in-computes` | 2026-11-23 | 2026-11-23 |
 | CODE-67 | P3 | computes I/O | Pictures of an XLSX or ODS are not read into the model: they stay in the file, are counted as `picture`, and survive an edit, but cannot be moved or described in computes | **fixed** 2026-11-24 on `e6-31-slides-in-computes` (D1478) | 2026-11-19 | 2026-11-24 |
+| CODE-80 | P2 | Code / AI / privacy | A question to Claude sends, before Claude asks for anything, the sheet list and the top left of the first three sheets (`workbook_lens.orient`; likewise the other two lenses' first look), so a sheet the question has nothing to do with can leave the server; the @core scenario "Claude is sent what the dialog says and nothing else" says it must not | **fixed** 2026-11-23 on `e7-2-skills-and-persona` (D1568) | 2026-11-22 | 2026-11-23 |
+| CODE-81 | P2 | Code / AI | The model was shown doubled braces where a request is explained (`HOW_TO_ASK`, the computes and creates examples), so it did not learn the form of a request: in composes it answered with nothing, in creates it pasted its list into the chat | **fixed** 2026-11-24 on `e7-2-skills-and-persona` (D1566) | 2026-11-23 | 2026-11-24 |
+| CODE-82 | P2 | Code / AI | An empty final answer read "I have nothing to add.", and Claude's answers were cut at the local model's 512 tokens, so a 300-word text failed and a one-sentence text worked | **fixed** 2026-11-24 on `e7-2-skills-and-persona` (D1564, D1565) | 2026-11-23 | 2026-11-24 |
 | PROC-01 | P1 | Process | No CI workflow in the repository | fixed (verified at `54d1245`) |  |  |
 | PROC-02 | P2 | Process | The quality gate prints "everything is clean" when half of it was skipped | fixed |  |  |
 | PROC-03 | P2 | Process | Work described as delivered is not in the repository | fixed |  |  |
@@ -2744,13 +2746,33 @@ switched off." The first router test was written red. **Test:** `test_server_ai_
 "The owners switch Claude off while a question is running" and "The administrator switching to another provider
 stops a running question the same way" in `server/claude-answers.feature`.
 
-### CODE-80 · What Claude is sent before it asks for anything · P2 · size 2 · new, open
+### CODE-80 · What Claude is sent before it asks for anything · P2 · size 2 · fixed 2026-11-23
 **Read** in code review of the branch (not measured with a real sheet): `WorkbookLens.orient` puts the sheet list and
 a preview of the first `PREVIEW_SHEETS` sheets into the first message for every provider. For the local model that stays
 on the machine; for Claude it is content of sheets the question does not name. **Fix, if the owner wants it now.** For a
 remote provider send names and sizes only and let Claude `look` for cells (the scenario's own wording: "what the ai looked
 at"); the lens needs to know the answer goes out (`Via.remote`). **Test:** the @core scenario above, with a "Salaries"
 sheet and the fake Anthropic's recorded requests.
+
+**Fixed 2026-11-23** on `e7-2-skills-and-persona` (D1568), test first: `tests/test_server_remote_orientation.py`. Each lens has
+`orient` (the start, for the local model) and `outline`; `ModelEngine` wraps the lens in `OutlineLens` for a remote runner, so
+there is no flag; for a remote provider each lens gives counts and ids and no word a person wrote
+(sheet names, cells, headings, style names, paragraph and slide text), and says to look. The local model's first message is
+unchanged (a test keeps that). The @core scenario "Claude is sent what the dialog says and nothing else" is the acceptance.
+
+### CODE-81 · The model is shown doubled braces · P2 · size 2 · fixed 2026-11-24
+**Measured** 2026-11-23 (printing the system message): `HOW_TO_ASK` goes out with `{{"method": ...}}`, and the computes and
+creates lens examples are inserted into a formatted template with their `{{ }}` doubled; composes' example was right. This fits
+the owner's real-key test: composes answered with nothing, creates pasted a JSON list into the chat. **Fix** (D1566): single
+braces. **Test first:** `tests/test_server_ai_prompt.py` reads every request the system message shows, in each app, as JSON; it failed
+for all three apps before the change.
+
+### CODE-82 · An empty answer, and Claude's answer length · P2 · size 2 · fixed 2026-11-24
+**Read** (and confirmed by the owner's real-key test): `ModelEngine._converse` returned `turn.say or "I have nothing to add."`;
+`AiSettings.max_tokens` (512) was also Claude's limit. **Fix** (D1564, D1565): an empty final answer is "I could not comply." (nothing
+changed) or "I made these changes: set_cells x2."; Claude has `claude.max_tokens` (4096). **Tests first:**
+`test_server_ai_loop.py` (empty answer, empty after a change, a short answer unchanged) and `test_server_ai_provider_settings.py`
+(default 4096, set to 8192, 0 refused, old settings read as 4096). The AI page field comes with E7.2.
 
 ### UX-74 · An owner cannot withdraw consent while Claude is off · P3 · size 3 · new, open
 `consentDialog` answers `no-remote` when `offered` is false and shows no choice. The consent is only a permission (D1491),

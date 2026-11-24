@@ -29,7 +29,8 @@ from claudia_composes.events import (
 from claudia_core import Document, TableDef, TablesChanged, parse_entry_id
 
 from .composes_words import paragraph_view
-from .lens import fence, shorten
+from .lens import HELP_METHODS, fence, look_first, shorten, show_help
+from .lens import count as _count
 from .tables import table_view
 
 PREVIEW_PARAGRAPHS = 12  # paragraphs from the start shown at the beginning
@@ -50,8 +51,9 @@ ORIENTATION = (
     "The text is a list of paragraphs. Each has an id (b1, b2, ...) and a paragraph style. Name a paragraph by its id "
     "and words in it by quoting them exactly as they are written (find); an empty find means the paragraph's whole "
     "text. Never count characters. A line break in new text starts a new paragraph. Read paragraphs before you change "
-    "them: the start of the text below is only a part of it.{example}"
+    "them.{example}"
 )
+START_IS_PART = " The start of the text below is only a part of it."
 TABLES_HELP = (
     "A table is made of boxes named by the ids of their row and column (r2, c3), never by place. Read tables with "
     "tables; change boxes with set_entries, or some words in one box with replace_words and the box's id "
@@ -83,10 +85,6 @@ def describe_paragraph(view: dict, limit: int = MAX_TEXT) -> str:
     text = view["text"]
     shown = f'"{_flat(text, limit)}"' if text.strip() else "(empty)"
     return f"{view['id']} ({style}): {shown}"
-
-
-def _count(count: int, one: str, many: str) -> str:
-    return f"{count} {one if count == 1 else many}"
 
 
 def describe_table(data: dict, name: str = "") -> str:
@@ -136,7 +134,7 @@ def describe_suggestion(item: dict) -> str:
 class DocumentLens:
     """The lens for composes."""
 
-    look_methods: tuple[str, ...] = ("read_paragraphs", "outline", "styles", "suggestions", "tables")
+    look_methods: tuple[str, ...] = ("read_paragraphs", "outline", "styles", "suggestions", "tables", *HELP_METHODS)
 
     # -- where the model starts
     def orient(
@@ -151,7 +149,7 @@ class DocumentLens:
         asker's own, and how many suggestions are open."""
         model = document.model
         assert isinstance(model, TextModel)
-        text = ORIENTATION.format(example=self._example(can_write, writes))
+        text = ORIENTATION.format(example=START_IS_PART + self._example(can_write, writes))
         labels = model.labels()
         paragraphs = model.paragraphs
         text += f"\nThe text has {len(paragraphs)} paragraph{'s' if len(paragraphs) != 1 else ''}."
@@ -180,10 +178,36 @@ class DocumentLens:
                 )
             else:
                 text += " (shown above)."
+        return text + self._open_suggestions(model)
+
+    def outline(
+        self,
+        document: Document,
+        *,
+        can_write: bool,
+        asker: str | None = None,
+        writes: frozenset[str] | None = None,
+    ) -> str:
+        """How paragraphs and words are named, how many paragraphs, headings, tables and open suggestions there are,
+        and the id (not the words) of the paragraph the asker is in; nothing a person wrote (D1568)."""
+        model = document.model
+        assert isinstance(model, TextModel)
+        text = ORIENTATION.format(example=self._example(can_write, writes))
+        paragraphs = model.paragraphs
+        headings = sum(1 for p in paragraphs if model.paragraph_kind(p) == "heading")
+        text += f"\nThe text has {_count(len(paragraphs), 'paragraph', 'paragraphs')}"
+        text += f", {_count(headings, 'heading', 'headings')}, {_count(len(model.tables), 'table', 'tables')}."
+        here = self._asker_at(document, model, asker)
+        if here is not None:
+            text += f"\nThe asker's cursor is in paragraph {paragraphs[here].id}."
+        return f"{text}{self._open_suggestions(model)}\n{look_first('outline, styles, tables or read_paragraphs')}"
+
+    @staticmethod
+    def _open_suggestions(model: TextModel) -> str:
         open_now = len(model.visible_suggestions())
-        if open_now:
-            text += f"\n{open_now} suggestion{'s are' if open_now != 1 else ' is'} open (ask for the suggestions)."
-        return text
+        if not open_now:
+            return ""
+        return f"\n{open_now} suggestion{'s are' if open_now != 1 else ' is'} open (ask for the suggestions)."
 
     @staticmethod
     def _tables(model: TextModel) -> str:
@@ -246,7 +270,9 @@ class DocumentLens:
 
     # -- what the read requests show
     def show(self, method: str, params: dict, result: Any) -> str:
-        """The answer of a read request, fenced as data."""
+        """The answer of a read request, fenced as data (help is not data, it is the product's own text)."""
+        if method in HELP_METHODS:
+            return show_help(method, result)
         if method == "read_paragraphs":
             lines = [describe_paragraph(view, MAX_READ_TEXT) for view in result["paragraphs"]]
             if not lines:

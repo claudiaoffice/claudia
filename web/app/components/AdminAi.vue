@@ -4,7 +4,7 @@
 // the last error and since when, and never shows the provider key again: only its last four characters.
 import { computed, onMounted, ref } from 'vue'
 import { adminApi, AdminApiError, type ServerSettingsView } from '~/lib/admin-api'
-import { applyState, claudePayload, failureHint, failureSentence, PROVIDERS, type AiForm, type Provider } from '~/lib/admin-ai'
+import { answerLength, applyState, approxWords, claudePayload, failureHint, failureSentence, lengthIsValid, lengthToSend, PROVIDERS, setAnswerLength, type AiForm, type Provider } from '~/lib/admin-ai'
 import { ago, clock } from '~/lib/people'
 import { useI18n } from '~/lib/i18n'
 
@@ -16,7 +16,7 @@ const DEVICES = ['CPU', 'GPU', 'NPU', 'AUTO'] as const
 const APPROVAL = t('Document content is sent to Anthropic when someone asks @ai.')
 
 const settings = ref<ServerSettingsView | null>(null)
-const form = ref<AiForm>({ provider: 'stand-in', modelDir: '', device: 'GPU', maxTokens: 512, timeout: 180, model: '', key: '', removeKey: false, confirmed: false })
+const form = ref<AiForm>({ provider: 'stand-in', modelDir: '', device: 'GPU', maxTokens: 512, claudeMaxTokens: 4096, timeout: 180, model: '', key: '', removeKey: false, confirmed: false })
 const busy = ref(false)
 const loading = ref(true)
 const error = ref('')
@@ -26,6 +26,11 @@ const removing = ref(false)
 const tested = ref(false)
 
 const ai = computed(() => settings.value?.ai ?? null)
+/** The field edits the answer length of the provider that is chosen: Claude's own, or the local model's. */
+const length = computed({
+  get: () => answerLength(form.value),
+  set: (tokens: number) => setAnswerLength(form.value, tokens),
+})
 const apply_ = computed(() => (ai.value ? applyState(form.value, { provider: ai.value.provider, key_set: ai.value.claude.key_set }) : null))
 
 function sync(s: ServerSettingsView) {
@@ -35,6 +40,7 @@ function sync(s: ServerSettingsView) {
     modelDir: s.ai.model_dir ?? '',
     device: s.ai.device,
     maxTokens: s.ai.max_tokens,
+    claudeMaxTokens: s.ai.claude.max_tokens,
     timeout: s.ai.timeout,
     model: s.ai.claude.model,
     key: '',
@@ -83,9 +89,9 @@ async function apply() {
         provider: f.provider,
         model_dir: f.modelDir.trim() || null,
         device: f.device,
-        max_tokens: f.maxTokens,
+        max_tokens: lengthToSend(f.maxTokens, ai.value?.max_tokens ?? 512),
         timeout: f.timeout,
-        claude: claudePayload(f),
+        claude: claudePayload(f, ai.value?.claude ?? { max_tokens: 4096 }),
       }),
     )
     tested.value = f.provider === 'claude'
@@ -183,10 +189,12 @@ const lastError = computed(() => {
     </template>
 
     <div class="pair">
-      <label class="field">
-        {{ t('Max answer length (tokens)') }}
-        <input v-model.number="form.maxTokens" type="number" min="1" class="mono narrow" >
-      </label>
+      <div class="field">
+        <label for="answer-length">{{ t('Max answer length (tokens)') }}</label>
+        <input id="answer-length" v-model.number="length" type="number" min="1" class="mono narrow" aria-describedby="answer-words" :aria-invalid="!lengthIsValid(length)" data-testid="ai-max-tokens" >
+        <span v-if="!lengthIsValid(length)" id="answer-words" class="hint" role="alert" data-testid="ai-max-words">{{ t('The answer length must be a whole number of at least 1.') }}</span>
+        <span v-else-if="approxWords(length) > 0" id="answer-words" class="hint" data-testid="ai-max-words">{{ t('About {words} words', { words: approxWords(length) }) }}</span>
+      </div>
       <label class="field">
         {{ t('Timeout (seconds)') }}
         <input v-model.number="form.timeout" type="number" min="1" class="mono narrow" >
