@@ -35,11 +35,11 @@ async function save() {
         <span class="badge" :class="{ remote: view.answering.remote }">{{ badge(view.answering) }}</span>
       </p>
 
-      <p v-if="dialog.mode === 'no-remote'" class="lead" data-testid="ai-no-remote">
+      <p v-if="dialog.noRemoteNote" class="lead" data-testid="ai-no-remote">
         {{ t('This server has no remote AI, so nothing in this document leaves it. An administrator can add Claude in the server settings. Then the owner can allow it here.') }}
       </p>
 
-      <template v-else>
+      <template v-if="dialog.mode !== 'no-remote'">
         <label class="check">
           <input v-model="allowed" type="checkbox" :disabled="dialog.mode !== 'owner'">
           <span>{{ t('Allow Claude to answer @ai in this document') }}</span>

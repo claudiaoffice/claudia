@@ -77,6 +77,8 @@ export interface DialogModel {
   ownerLine: string
   /** Who decided last and when, for whom; empty while nobody has decided. */
   allowedLine: string
+  /** Does it say that this server has no remote AI? Also to an owner who may still withdraw a consent (UX-74). */
+  noRemoteNote: boolean
 }
 
 export function consentDialog(view: ConsentView, role: string): DialogModel {
@@ -88,7 +90,7 @@ export function consentDialog(view: ConsentView, role: string): DialogModel {
     : view.allowed
       ? t('Allowed by {who}, {time} · for Claude (Anthropic)', decided)
       : t('Switched off by {who}, {time} · for Claude (Anthropic)', decided)
-  return { mode, ownerLine: t('Only the owner can change this: {owner}.', { owner }), allowedLine }
+  return { mode, ownerLine: t('Only the owner can change this: {owner}.', { owner }), allowedLine, noRemoteNote: !view.offered }
 }
 
 /** An owner gets the check box where Claude is offered, and also where it is not but a consent given earlier still
