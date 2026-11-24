@@ -421,3 +421,12 @@ def test_the_server_program_answers_the_workers_of_its_own_pool_first():
 def test_the_spec_takes_every_package_of_the_workspace_by_name_not_a_list_that_goes_stale():
     spec = (WINDOWS / "claudia-server.spec").read_text(encoding="utf-8")
     assert 'glob("packages/*/src/*")' in spec
+
+
+def test_the_window_step_ends_the_core_of_its_window_before_the_uninstall():
+    """PROC-53: the core of a window is a `node.exe` of the installation. The advisory window step ended the launcher
+    and the window but not that node, which held the files, so *Uninstall, standard* failed on both images."""
+    step = _install_test_steps()["A window opens, and starts the server it needs"]
+    finally_part = step[step.index("finally") :]
+    assert "Get-Process node" in finally_part and "INSTALL_DIR\\node\\node.exe" in finally_part
+    assert "claudia-server" in finally_part

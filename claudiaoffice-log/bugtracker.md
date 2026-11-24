@@ -134,12 +134,13 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |  |  |
 | UX-06 | — | UX | Web menu differs from decisions D4/D5 | needs decision |  |  |
 
-### Fixed (160)
+### Fixed (161)
 
 By ID. Items closed without a fix (superseded, wontfix) are here too.
 
 | ID | Pri | Category | Title | Status | Opened | Fixed |
 |---|---|---|---|---|---|---|
+| PROC-53 | P2 | Process / CI | The Windows install test failed at *Uninstall, standard* on both images: the window step left the core's node running, which held the installation's files | **fixed** 2026-11-24 on `win-installer-fix` | 2026-11-24 | 2026-11-24 |
 | UX-77 | P2 | UX / Windows | A console window of node stays open for as long as an app of the Windows client runs, and shows only start-up lines | **fixed** 2026-11-24 on `win-installer-fix` (D750) | 2026-11-24 | 2026-11-24 |
 | UX-76 | P2 | UX / Windows | The window opens at the configured size in physical pixels, so on a scaled display (200%) it is half the size the page needs | **fixed** 2026-11-24 on `win-installer-fix` (D749) | 2026-11-24 | 2026-11-24 |
 | CODE-82 | P2 | Code / Windows | Help ▸ About opens nothing on the start page of the Windows and macOS clients | **fixed** 2026-11-24 on `win-installer-fix` (D748) | 2026-11-24 | 2026-11-24 |
@@ -2811,3 +2812,16 @@ step *The launcher program hides node and keeps a log of what it prints* of `win
 no warnings, GUI subsystem checked in the file header) but never run; the CI step is its first run. **Not understood:** why
 the console stayed open *after* closing the app (a `node` left alive, by the launcher or by the core?); if one is left in
 the task manager now, it is invisible. **Escaped** because: spec gap (nobody had said that a shortcut must not show a console).
+
+### PROC-53 · The window step of the Windows install test left the core's node running · P2 · size 2 · fixed
+**Found** by the first run of `windows.yml` on `win-installer-fix` with the three fixes of this round (run 45346029894): the
+build and every step passed, *Uninstall, standard* failed on windows-2022 and windows-2025 ("C:\Program Files\Claudia Office
+is still there after the uninstall"); the run of 2026-11-23 failed at the same step. **Cause** (**read** in the log, not
+proven): the advisory step *A window opens...* started a window on the runner (Neutralino and the core ran), and its `finally` ended the
+launcher and Neutralino but not the core's `node.exe` of the installation, which holds files there; the step before it already
+ended that node. **Fixed** 2026-11-24: the same cleanup in the `finally` of the window step, and of `claudia-server`.
+**Test:** `tests/test_windows_packaging.py::test_the_window_step_ends_the_core_of_its_window_before_the_uninstall`, red before.
+**Seen, not fixed:** in that run the window's core connected to Neutralino and the step then waited 120 s for a server on
+`127.0.0.1:8765`, which only the service uses (this install has none): either the check is wrong or the window's own server did
+not start; the step is advisory and the log did not say which (CODE-83 below, if the owner wants it logged).
+**Escaped** because: the advisory step had never run a window until CODE-81 was fixed.

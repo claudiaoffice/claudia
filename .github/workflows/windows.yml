@@ -416,7 +416,9 @@ jobs:
             if (-not (Get-Process neutralino-win_x64 -ErrorAction SilentlyContinue)) { throw 'No Neutralino window is running' }
           } finally {
             Stop-Process -Id $window.Id -Force -ErrorAction SilentlyContinue
-            Get-Process neutralino-win_x64 -ErrorAction SilentlyContinue | Stop-Process -Force
+            # the core of the window is a node of the installation too, and holds its files until the uninstall (PROC-53)
+            Get-Process node -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq "$env:INSTALL_DIR\node\node.exe" } | Stop-Process -Force
+            Get-Process neutralino-win_x64, claudia-server -ErrorAction SilentlyContinue | Stop-Process -Force
             Get-Content "$env:LOCALAPPDATA\Claudia\composes\state\shell.log", "$env:LOCALAPPDATA\Claudia\state\server.log" -Tail 40 -ErrorAction SilentlyContinue
           }
 
