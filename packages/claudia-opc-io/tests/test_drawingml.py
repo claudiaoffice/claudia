@@ -13,6 +13,7 @@ from claudia_opc_io import (
     SHAPE_OF,
     SVG_URI,
     UNKNOWN,
+    add_svg,
     cropped,
     is_decorative,
     look_in,
@@ -100,3 +101,10 @@ def test_a_drawing_marked_decorative_says_so_and_has_no_description():
 def test_a_line_width_that_is_no_number_is_none():
     xml = f'<spPr xmlns:a="{A}"><a:ln w="thick">{solid((0, 0, 0))}</a:ln></spPr>'
     assert look_in(etree.fromstring(xml), styled=False) == (None, (0, 0, 0), 0)
+
+
+def test_an_svg_put_beside_a_picture_is_the_part_it_draws():
+    blip = element('<a:blip r:embed="rId2"/>')
+    add_svg(blip, "rId3")
+    assert shown_part(blip) == "rId3"
+    assert blip.find(f"{{{A}}}extLst/{{{A}}}ext").get("uri") == SVG_URI

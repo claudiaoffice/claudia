@@ -6,6 +6,8 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 ## [Unreleased]
 
 ### Added
+- `OUTLINES` (with LibreOffice's `ooxml-*` names), `outline_element`, `put_words`, `fill_and_line`, `hex_of` (CODE-84,
+  D1480). `graphic_styles` keeps the first style of a name (an automatic one before a common one).
 - `claudia_odf_io.boxes` (D1479, from composes): `BoxLook`, `look_of`, `is_written`, `authored`, `line_points`,
   `default_name`, and a box's OpenDocument elements: `box_element`, `graphic_properties`, `held_box` (with
   `plain_words`, the words style of a text box without a paragraph), `odf_properties`. `CM_PER_INCH`, `CM_PER_PIXEL`.

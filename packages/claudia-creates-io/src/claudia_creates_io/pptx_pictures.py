@@ -10,18 +10,12 @@ from pptx.enum.shapes import MSO_SHAPE_TYPE
 
 from claudia_core import ImageAsset, asset_of, keeps_proportions
 from claudia_creates import SLIDE_HEIGHT, SLIDE_WIDTH
+from claudia_opc_io import DRAWINGML, is_decorative, shown_part, turn_of
 
-_NS = {
-    "a": "http://schemas.openxmlformats.org/drawingml/2006/main",
-    "p": "http://schemas.openxmlformats.org/presentationml/2006/main",
-    "r": "http://schemas.openxmlformats.org/officeDocument/2006/relationships",
-    "asvg": "http://schemas.microsoft.com/office/drawing/2016/SVG/main",
-    "adec": "http://schemas.microsoft.com/office/drawing/2017/decorative",
-}
-_SVG = etree.XPath(".//asvg:svgBlip/@r:embed", namespaces=_NS)
+_NS = {**DRAWINGML, "p": "http://schemas.openxmlformats.org/presentationml/2006/main"}
+_BLIP = etree.XPath("./p:blipFill/a:blip", namespaces=_NS)
 _PROPERTIES = etree.XPath("./*[1]/p:cNvPr", namespaces=_NS)
 _TRANSFORM = etree.XPath("./p:spPr/a:xfrm", namespaces=_NS)
-_DECORATIVE = etree.XPath(".//adec:decorative/@val", namespaces=_NS)
 
 
 def _found(path: etree.XPath, shape: Any) -> list[Any]:  # noqa: ANN401 (python-pptx's own shape classes)
@@ -30,21 +24,11 @@ def _found(path: etree.XPath, shape: Any) -> list[Any]:  # noqa: ANN401 (python-
     return list(result)
 
 
-def _found_in(path: etree.XPath, element: Any) -> list[Any]:  # noqa: ANN401
-    """What the XPath ``path`` finds below ``element``."""
-    result: Any = path(element)
-    return list(result)
-
-
 def _blob_of(shape) -> bytes | None:  # noqa: ANN001 (python-pptx's own shape classes are not one type)
     """What the picture draws: its SVG, when it has one beside the ordinary picture, else the picture itself."""
-    if relations := _found(_SVG, shape):
-        try:
-            return shape.part.related_part(relations[0]).blob
-        except KeyError:
-            return None
+    blips = _found(_BLIP, shape)
     try:
-        return shape.image.blob
+        return shape.part.related_part(shown_part(blips[0])).blob if blips else shape.image.blob
     except (KeyError, ValueError, AttributeError):
         return None
 
@@ -57,7 +41,7 @@ def held_picture(shape) -> ImageAsset | None:  # noqa: ANN001
     if any((shape.crop_left, shape.crop_right, shape.crop_top, shape.crop_bottom)):
         return None
     transform = _found(_TRANSFORM, shape)
-    if transform and (transform[0].get("flipH") in ("1", "true") or transform[0].get("flipV") in ("1", "true")):
+    if turn_of(transform[0] if transform else None) is None:  # (flipped)
         return None
     asset = asset_of(_blob_of(shape))
     if asset is None:
@@ -73,4 +57,4 @@ def alt_text_of(shape) -> tuple[str, bool]:  # noqa: ANN001
     properties = _found(_PROPERTIES, shape)
     if not properties:
         return "", False
-    return properties[0].get("descr", ""), "1" in _found_in(_DECORATIVE, properties[0])
+    return properties[0].get("descr", ""), is_decorative(properties[0])

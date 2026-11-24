@@ -57,7 +57,17 @@ from claudia_creates import (
     paragraph_for,
 )
 from claudia_odf_io import DocumentInfo, Loss, LossLog, stamp_office_meta
-from claudia_opc_io import ThemeFonts, owns, parse_xml, read_parts, reconcile
+from claudia_opc_io import (
+    DRAWINGML,
+    PRESET,
+    ThemeFonts,
+    add_svg,
+    mark_decorative,
+    owns,
+    parse_xml,
+    read_parts,
+    reconcile,
+)
 
 from ._file_looks import LookBook
 from ._items import (
@@ -86,12 +96,9 @@ ANS = "http://schemas.openxmlformats.org/drawingml/2006/main"
 _DECK_WIDTH, _DECK_HEIGHT = Emu(12_192_000), Emu(6_858_000)
 _BLANK_LAYOUT = 6
 
-#: The three shapes claudia-creates ships (builtin_shapes/); a custom shape falls back to a plain rectangle.
-_AUTOSHAPE = {
-    "circle": MSO_SHAPE.OVAL,
-    "rectangle": MSO_SHAPE.RECTANGLE,
-    "triangle": MSO_SHAPE.ISOSCELES_TRIANGLE,
-}
+#: The three shapes claudia-creates ships (builtin_shapes/), by the preset DrawingML names them with
+#: (:data:`claudia_opc_io.PRESET`); a custom shape falls back to a plain rectangle.
+_AUTOSHAPE = {shape: MSO_SHAPE.from_xml(preset) for shape, preset in PRESET.items()}
 #: The reverse of ``_AUTOSHAPE``, for import: an autoshape of any other type (a star, a custom geometry) is not
 #: one of claudia's three built-in shapes, so it is left as beyond-claudia content, same as a table or a picture.
 _SHAPE_ID = {autoshape: claudia_id for claudia_id, autoshape in _AUTOSHAPE.items()}
@@ -170,12 +177,6 @@ def _style_shape(shape, css: dict[str, str], pt_per_unit: float, over: str | Non
         shape.line.width = width
 
 
-_DRAWINGML = "http://schemas.openxmlformats.org/drawingml/2006/main"
-#: How PowerPoint (2019 and later) marks an object as decorative: an extension of its non-visual properties.
-_DECORATIVE_NS = "http://schemas.microsoft.com/office/drawing/2017/decorative"
-_DECORATIVE_URI = "{C183D7F6-B498-43B3-948B-1728B52AA6E4}"
-
-
 def _turn(shape, body: ObjectBody) -> None:  # noqa: ANN001 (python-pptx's own shape classes are not one type)
     """Write the turn of ``body``: whole degrees clockwise about the centre, which is what ``a:xfrm rot`` is too (D459).
     The shape keeps the place and size of the *unturned* frame, as PowerPoint writes them. An upright object gets no
@@ -189,24 +190,15 @@ def _describe(shape, body: ObjectBody) -> None:  # noqa: ANN001 (python-pptx's o
     keeps on the shape, or — for a decorative object, which has no text alternative — PowerPoint's own mark."""
     properties = shape._element.xpath("./*[1]/p:cNvPr")[0]
     properties.attrib.pop("descr", None)
-    for old in properties.findall(f"{{{_DRAWINGML}}}extLst"):  # the mark of an earlier writing
+    for old in properties.findall(f"{{{DRAWINGML['a']}}}extLst"):  # the mark of an earlier writing
         properties.remove(old)
     if body.decorative:
-        properties.set("descr", "")  # (python-pptx names a picture's alt text after its file: "image.gif")
-        ext = etree.SubElement(etree.SubElement(properties, f"{{{_DRAWINGML}}}extLst"), f"{{{_DRAWINGML}}}ext")
-        ext.set("uri", _DECORATIVE_URI)
-        mark = etree.SubElement(ext, f"{{{_DECORATIVE_NS}}}decorative", nsmap={"adec": _DECORATIVE_NS})
-        mark.set("val", "1")
+        mark_decorative(properties)  # (and no description: python-pptx names a picture's after its file, "image.gif")
     elif body.description:
         properties.set("descr", body.description)
 
 
-#: How a picture is drawn in PowerPoint 2016 and later: the SVG itself, next to an ordinary picture as its fallback.
-_SVG_BLIP_URI = "{96DAC541-7B7A-43D3-8B79-37D633B846F1}"
-_SVG_BLIP_NS = "http://schemas.microsoft.com/office/drawing/2016/SVG/main"
 _IMAGE_RELATIONSHIP = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image"
-_BLIP_NS = "http://schemas.openxmlformats.org/drawingml/2006/main"
-_RELATIONSHIPS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
 
 
 def _add_picture(slide, asset, box, body: ObjectBody, rasterise: Rasterise | None):  # noqa: ANN001, ANN202
@@ -223,11 +215,7 @@ def _add_picture(slide, asset, box, body: ObjectBody, rasterise: Rasterise | Non
     name = package.next_partname("/ppt/media/svg%d.svg")
     svg_part = Part(name, "image/svg+xml", package, asset.data)
     relation = slide.part.relate_to(svg_part, _IMAGE_RELATIONSHIP)
-    blip = picture._element.xpath(".//a:blip")[0]
-    extensions = etree.SubElement(blip, f"{{{_BLIP_NS}}}extLst")
-    extension = etree.SubElement(extensions, f"{{{_BLIP_NS}}}ext", uri=_SVG_BLIP_URI)
-    svg = etree.SubElement(extension, f"{{{_SVG_BLIP_NS}}}svgBlip", nsmap={"asvg": _SVG_BLIP_NS})
-    svg.set(f"{{{_RELATIONSHIPS}}}embed", relation)
+    add_svg(picture._element.xpath(".//a:blip")[0], relation)
     return picture
 
 
