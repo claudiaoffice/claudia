@@ -37,7 +37,7 @@ msgstr "[(blànk)~~~]"
 msgid "(delete)"
 msgstr "[(délété)~~~]"
 
-#: web/app/components/AdminAi.vue:149
+#: web/app/components/AdminAi.vue:155
 msgid "(none — @ai gets the scripted stand-in)"
 msgstr "[(nôné — @àî géts thé scrîptéd stànd-în)~~~~~~~~~~~~~~~~]"
 
@@ -325,7 +325,7 @@ msgstr "[À héàdîng stàrts à pàrt ôf thé téxt àt îts lévél: thé t�
 msgid "A hyphen the line is never broken at"
 msgstr "[À hyphén thé lîné îs névér brôkén àt~~~~~~~~~~~~~~]"
 
-#: web/app/components/AdminAi.vue:174
+#: web/app/components/AdminAi.vue:180
 msgid "A key of your Anthropic account. Anthropic bills its use apart from any Claude subscription."
 msgstr "[À kéy ôf yôûr Ànthrôpîc àccôûnt. Ànthrôpîc bîlls îts ûsé àpàrt frôm àny Clàûdé sûbscrîptîôn.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -489,7 +489,7 @@ msgstr "[À1:B5~~]"
 msgid "ABCD-EFGH-…"
 msgstr "[ÀBCD-ÉFGH-…~~~~]"
 
-#: web/app/components/AdminAi.vue:124 web/app/components/AdminShell.vue:14
+#: web/app/components/AdminAi.vue:130 web/app/components/AdminShell.vue:14
 msgid "AI"
 msgstr "[ÀÎ~]"
 
@@ -497,7 +497,7 @@ msgstr "[ÀÎ~]"
 msgid "AI in this document"
 msgstr "[ÀÎ în thîs dôcûmént~~~~~~~~]"
 
-#: web/app/components/AdminAi.vue:140 web/app/components/AdminAi.vue:141
+#: web/app/components/AdminAi.vue:146 web/app/components/AdminAi.vue:147
 msgid "AI provider"
 msgstr "[ÀÎ prôvîdér~~~~]"
 
@@ -524,6 +524,10 @@ msgstr "[Àbôût clàûdîà~~~~~]"
 #: web/app/components/SearchPanel.vue:481
 msgid "About searching and patterns"
 msgstr "[Àbôût séàrchîng ànd pàttérns~~~~~~~~~~~]"
+
+#: web/app/components/AdminAi.vue:195
+msgid "About {words} words"
+msgstr "[Àbôût {words} wôrds~~~~~~~~]"
 
 #: web/app/lib/wrap.ts:33
 msgid "Above and below the object"
@@ -801,7 +805,7 @@ msgstr "[Ànôthér fônt…~~~~~]"
 msgid "Answering @ai in this document now"
 msgstr "[Ànswérîng @àî în thîs dôcûmént nôw~~~~~~~~~~~~~~]"
 
-#: web/app/components/AdminAi.vue:128
+#: web/app/components/AdminAi.vue:134
 msgid "Answering now:"
 msgstr "[Ànswérîng nôw:~~~~~~]"
 
@@ -809,27 +813,27 @@ msgstr "[Ànswérîng nôw:~~~~~~]"
 msgid "Answers to what people often want to do"
 msgstr "[Ànswérs tô whàt péôplé ôftén wànt tô dô~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/admin-ai.ts:34
+#: web/app/lib/admin-ai.ts:58
 msgid "Anthropic cannot be reached from this server."
 msgstr "[Ànthrôpîc cànnôt bé réàchéd frôm thîs sérvér.~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/admin-ai.ts:38
+#: web/app/lib/admin-ai.ts:62
 msgid "Anthropic did not answer within {seconds} seconds."
 msgstr "[Ànthrôpîc dîd nôt ànswér wîthîn {seconds} sécônds.~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/admin-ai.ts:36
+#: web/app/lib/admin-ai.ts:60
 msgid "Anthropic does not know the model “{model}”."
 msgstr "[Ànthrôpîc dôés nôt knôw thé môdél “{model}”.~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/admin-ai.ts:32
+#: web/app/lib/admin-ai.ts:56
 msgid "Anthropic is overloaded at the moment."
 msgstr "[Ànthrôpîc îs ôvérlôàdéd àt thé mômént.~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/admin-ai.ts:26
+#: web/app/lib/admin-ai.ts:50
 msgid "Anthropic refused the key."
 msgstr "[Ànthrôpîc réfûséd thé kéy.~~~~~~~~~~]"
 
-#: web/app/lib/admin-ai.ts:30
+#: web/app/lib/admin-ai.ts:54
 msgid "Anthropic's rate limit was reached."
 msgstr "[Ànthrôpîc's ràté lîmît wàs réàchéd.~~~~~~~~~~~~~~]"
 
@@ -869,11 +873,11 @@ msgstr "[Àpply Stylé~~~~]"
 msgid "Apply Style…"
 msgstr "[Àpply Stylé…~~~~~]"
 
-#: web/app/components/AdminAi.vue:204
+#: web/app/components/AdminAi.vue:211
 msgid "Apply asks Claude one test question first."
 msgstr "[Àpply àsks Clàûdé ôné tést qûéstîôn fîrst.~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/AdminAi.vue:205
+#: web/app/components/AdminAi.vue:212
 msgid "Apply needs a key and the confirmed sentence."
 msgstr "[Àpply nééds à kéy ànd thé cônfîrméd sénténcé.~~~~~~~~~~~~~~~~~~]"
 
@@ -969,7 +973,7 @@ msgstr "[Àt môst {max} chàràctérs.~~~~~~~~~~]"
 msgid "Authors"
 msgstr "[Àûthôrs~~~]"
 
-#: web/app/components/AdminAi.vue:155 web/app/components/StyleSpec.vue:197
+#: web/app/components/AdminAi.vue:161 web/app/components/StyleSpec.vue:197
 msgid "Auto"
 msgstr "[Àûtô~~]"
 
@@ -1317,7 +1321,7 @@ msgstr "[Chôôsé mémbérs…~~~~~~]"
 msgid "Choose somebody…"
 msgstr "[Chôôsé sômébôdy…~~~~~~]"
 
-#: web/app/components/AdminAi.vue:50
+#: web/app/components/AdminAi.vue:56
 msgid "Claude"
 msgstr "[Clàûdé~~]"
 
@@ -1493,7 +1497,7 @@ msgstr "[Côndîtîôn~~~~]"
 msgid "Confirm password"
 msgstr "[Cônfîrm pàsswôrd~~~~~~]"
 
-#: web/app/components/AdminAi.vue:202
+#: web/app/components/AdminAi.vue:209
 msgid "Confirmed by {by}, {when}"
 msgstr "[Cônfîrméd by {by}, {when}~~~~~~~~~~]"
 
@@ -1601,7 +1605,7 @@ msgstr "[Côûld nôt dràw ît: {message}~~~~~~~~~~~]"
 msgid "Could not place the chart."
 msgstr "[Côûld nôt plàcé thé chàrt.~~~~~~~~~~]"
 
-#: web/app/components/AddFontsDialog.vue:61 web/app/components/AdminAccessDocuments.vue:116 web/app/components/AdminAccessDocuments.vue:144 web/app/components/AdminAccessDocuments.vue:161 web/app/components/AdminAccessDocuments.vue:177 web/app/components/AdminAccessDocuments.vue:197 web/app/components/AdminAccessDocuments.vue:42 web/app/components/AdminAccessDocuments.vue:54 web/app/components/AdminAccessDocuments.vue:78 web/app/components/AdminAccessDocuments.vue:93 web/app/components/AdminAi.vue:62 web/app/components/AdminAi.vue:94 web/app/components/AdminFonts.vue:78 web/app/components/AdminSecurity.vue:54 web/app/components/AdminSecurity.vue:80 web/app/components/AdminTypesetting.vue:32 web/app/components/AdminTypesetting.vue:49 web/app/lib/admin-session.ts:119 web/app/lib/admin-session.ts:59
+#: web/app/components/AddFontsDialog.vue:61 web/app/components/AdminAccessDocuments.vue:116 web/app/components/AdminAccessDocuments.vue:144 web/app/components/AdminAccessDocuments.vue:161 web/app/components/AdminAccessDocuments.vue:177 web/app/components/AdminAccessDocuments.vue:197 web/app/components/AdminAccessDocuments.vue:42 web/app/components/AdminAccessDocuments.vue:54 web/app/components/AdminAccessDocuments.vue:78 web/app/components/AdminAccessDocuments.vue:93 web/app/components/AdminAi.vue:100 web/app/components/AdminAi.vue:68 web/app/components/AdminFonts.vue:78 web/app/components/AdminSecurity.vue:54 web/app/components/AdminSecurity.vue:80 web/app/components/AdminTypesetting.vue:32 web/app/components/AdminTypesetting.vue:49 web/app/lib/admin-session.ts:119 web/app/lib/admin-session.ts:59
 msgid "Could not reach the server."
 msgstr "[Côûld nôt réàch thé sérvér.~~~~~~~~~~~]"
 
@@ -1857,7 +1861,7 @@ msgstr "[Détàîls ôf {id}…~~~~~~]"
 msgid "Detected on this machine"
 msgstr "[Détéctéd ôn thîs màchîné~~~~~~~~~~]"
 
-#: web/app/components/AdminAi.vue:153 web/app/components/AdminAi.vue:154
+#: web/app/components/AdminAi.vue:159 web/app/components/AdminAi.vue:160
 msgid "Device"
 msgstr "[Dévîcé~~]"
 
@@ -1909,7 +1913,7 @@ msgstr "[Dôcûménts~~~~]"
 msgid "Documents are encrypted on this server. Claude reads what it is shown in plain text."
 msgstr "[Dôcûménts àré éncryptéd ôn thîs sérvér. Clàûdé réàds whàt ît îs shôwn în plàîn téxt.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/AdminAi.vue:201
+#: web/app/components/AdminAi.vue:208
 msgid "Documents are encrypted on this server; Claude reads what it is shown in plain text."
 msgstr "[Dôcûménts àré éncryptéd ôn thîs sérvér; Clàûdé réàds whàt ît îs shôwn în plàîn téxt.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -3009,7 +3013,7 @@ msgstr "[Kéép {what} în thé rédàctîôn~~~~~~~~~~~]"
 msgid "Kept as"
 msgstr "[Képt às~~~]"
 
-#: web/app/components/AdminAi.vue:173
+#: web/app/components/AdminAi.vue:179
 msgid "Kept on this server only. It is never shown again, never sent to a client or into a document."
 msgstr "[Képt ôn thîs sérvér ônly. Ît îs névér shôwn àgàîn, névér sént tô à clîént ôr întô à dôcûmént.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -3053,11 +3057,11 @@ msgstr "[Làrgést~~~]"
 msgid "Last changed by {by} · {when}"
 msgstr "[Làst chàngéd by {by} · {when}~~~~~~~~~~~~]"
 
-#: web/app/components/AdminAi.vue:133
+#: web/app/components/AdminAi.vue:139
 msgid "Last error"
 msgstr "[Làst érrôr~~~~]"
 
-#: web/app/components/AdminAi.vue:138
+#: web/app/components/AdminAi.vue:144
 msgid "Last error: none"
 msgstr "[Làst érrôr: nôné~~~~~~]"
 
@@ -3161,7 +3165,7 @@ msgstr "[Lîst, rénàmé, délété ànd hîdé thé stylés ôf thîs dôcûm�
 msgid "Loading…"
 msgstr "[Lôàdîng…~~~]"
 
-#: web/app/components/AdminAi.vue:49
+#: web/app/components/AdminAi.vue:55
 msgid "Local model"
 msgstr "[Lôcàl môdél~~~~]"
 
@@ -3297,7 +3301,7 @@ msgstr "[Màtchés~~~]"
 msgid "Max"
 msgstr "[Màx~]"
 
-#: web/app/components/AdminAi.vue:187
+#: web/app/components/AdminAi.vue:193
 msgid "Max answer length (tokens)"
 msgstr "[Màx ànswér léngth (tôkéns)~~~~~~~~~~]"
 
@@ -3369,11 +3373,11 @@ msgstr "[Mîné · ôpénéd béfôré~~~~~~~~]"
 msgid "Mist"
 msgstr "[Mîst~~]"
 
-#: web/app/components/AdminAi.vue:178
+#: web/app/components/AdminAi.vue:184
 msgid "Model"
 msgstr "[Môdél~~]"
 
-#: web/app/components/AdminAi.vue:147
+#: web/app/components/AdminAi.vue:153
 msgid "Model folder"
 msgstr "[Môdél fôldér~~~~~]"
 
@@ -3785,7 +3789,7 @@ msgstr "[Nôthîng tô rédô~~~~~~]"
 msgid "Nothing to undo"
 msgstr "[Nôthîng tô ûndô~~~~~~]"
 
-#: web/app/components/AdminAi.vue:212
+#: web/app/components/AdminAi.vue:219
 msgid "Nothing was changed: @ai still answers with {who}."
 msgstr "[Nôthîng wàs chàngéd: @àî stîll ànswérs wîth {who}.~~~~~~~~~~~~~~~~~~~~]"
 
@@ -4205,7 +4209,7 @@ msgstr "[Pàsté~~]"
 msgid "Paste As"
 msgstr "[Pàsté Às~~~]"
 
-#: web/app/components/AdminAi.vue:168
+#: web/app/components/AdminAi.vue:174
 msgid "Paste the key of your Anthropic account"
 msgstr "[Pàsté thé kéy ôf yôûr Ànthrôpîc àccôûnt~~~~~~~~~~~~~~~~]"
 
@@ -4429,7 +4433,7 @@ msgstr "[Prîntîng ànd sàvîng à PDF àré récôrdéd în thé dôcûmént'
 msgid "Print…"
 msgstr "[Prînt…~~]"
 
-#: web/app/components/AdminAi.vue:161
+#: web/app/components/AdminAi.vue:167
 msgid "Provider key"
 msgstr "[Prôvîdér kéy~~~~~]"
 
@@ -4497,11 +4501,11 @@ msgstr "[Pûts ràngés sîdé by sîdé; thé shôrtér ônés àré fîlléd �
 msgid "Query in {target}"
 msgstr "[Qûéry în {target}~~~~~~~]"
 
-#: web/app/lib/admin-ai.ts:47
+#: web/app/lib/admin-ai.ts:71
 msgid "Questions to Claude fail until credit is added or another provider is chosen."
 msgstr "[Qûéstîôns tô Clàûdé fàîl ûntîl crédît îs àddéd ôr ànôthér prôvîdér îs chôsén.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/admin-ai.ts:48
+#: web/app/lib/admin-ai.ts:72
 msgid "Questions to Claude fail until this is solved or another provider is chosen."
 msgstr "[Qûéstîôns tô Clàûdé fàîl ûntîl thîs îs sôlvéd ôr ànôthér prôvîdér îs chôsén.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -4641,7 +4645,7 @@ msgstr "[Réléàsé frôm grîd~~~~~~~]"
 msgid "Remarks"
 msgstr "[Rémàrks~~~]"
 
-#: web/app/components/AdminAccessDocuments.vue:235 web/app/components/AdminAi.vue:166 web/app/components/NumberingDialog.vue:200 web/app/components/PivotPanel.vue:113 web/app/components/SearchPanel.vue:638 web/app/components/ShareDialog.vue:116
+#: web/app/components/AdminAccessDocuments.vue:235 web/app/components/AdminAi.vue:172 web/app/components/NumberingDialog.vue:200 web/app/components/PivotPanel.vue:113 web/app/components/SearchPanel.vue:638 web/app/components/ShareDialog.vue:116
 msgid "Remove"
 msgstr "[Rémôvé~~]"
 
@@ -4669,7 +4673,7 @@ msgstr "[Rémôvé tàblé~~~~~]"
 msgid "Remove tag {tag}"
 msgstr "[Rémôvé tàg {tag}~~~~~~]"
 
-#: web/app/components/AdminAi.vue:171
+#: web/app/components/AdminAi.vue:177
 msgid "Remove the key"
 msgstr "[Rémôvé thé kéy~~~~~~]"
 
@@ -4709,7 +4713,7 @@ msgstr "[Rémôvés spàcés àt bôth énds ànd rédûcés thé ônés bétwé
 msgid "Removes the characters that cannot be printed (codes 0 to 31) from a text."
 msgstr "[Rémôvés thé chàràctérs thàt cànnôt bé prîntéd (côdés 0 tô 31) frôm à téxt.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/AdminAi.vue:170
+#: web/app/components/AdminAi.vue:176
 msgid "Removing the key switches this server to the local model, because nothing else could answer."
 msgstr "[Rémôvîng thé kéy swîtchés thîs sérvér tô thé lôcàl môdél, bécàûsé nôthîng élsé côûld ànswér.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -4749,7 +4753,7 @@ msgstr "[Rénàmé…~~~]"
 msgid "Renewing the keys…"
 msgstr "[Rénéwîng thé kéys…~~~~~~~]"
 
-#: web/app/components/AdminAi.vue:165 web/app/lib/shortcuts.ts:109
+#: web/app/components/AdminAi.vue:171 web/app/lib/shortcuts.ts:109
 msgid "Replace"
 msgstr "[Réplàcé~~~]"
 
@@ -5069,7 +5073,7 @@ msgstr "[Scàttér · sôôn~~~~~~]"
 msgid "Schemes"
 msgstr "[Schémés~~~]"
 
-#: web/app/components/AdminAi.vue:48
+#: web/app/components/AdminAi.vue:54
 msgid "Scripted stand-in"
 msgstr "[Scrîptéd stànd-în~~~~~~~]"
 
@@ -5773,7 +5777,7 @@ msgstr "[Téàl~~]"
 msgid "Tell them in the chat:"
 msgstr "[Téll thém în thé chàt:~~~~~~~~~]"
 
-#: web/app/components/AdminAi.vue:208
+#: web/app/components/AdminAi.vue:215
 msgid "Test answered"
 msgstr "[Tést ànswéréd~~~~~]"
 
@@ -5889,7 +5893,7 @@ msgstr "[Thé Ûnîcôdé côdé pôînt ôf thé fîrst chàràctér ôf à té
 msgid "The address of a cell as text, from its row and column number. The third argument is 1 (default) for $A$1, 2 for A$1, 3 for $A1, 4 for A1; the fourth FALSE for R1C1 style; the fifth names a sheet."
 msgstr "[Thé àddréss ôf à céll às téxt, frôm îts rôw ànd côlûmn nûmbér. Thé thîrd àrgûmént îs 1 (défàûlt) fôr $À$1, 2 fôr À$1, 3 fôr $À1, 4 fôr À1; thé fôûrth FÀLSÉ fôr R1C1 stylé; thé fîfth nàmés à shéét.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/AdminAi.vue:136
+#: web/app/components/AdminAi.vue:142
 msgid "The administrator decides: add credit, or choose another provider."
 msgstr "[Thé àdmînîstràtôr décîdés: àdd crédît, ôr chôôsé ànôthér prôvîdér.~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -6013,7 +6017,7 @@ msgstr "[Thé côvàrîàncé ôf twô ràngés fôr à whôlé pôpûlàtîôn 
 msgid "The covariance of two ranges for a whole population."
 msgstr "[Thé côvàrîàncé ôf twô ràngés fôr à whôlé pôpûlàtîôn.~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/admin-ai.ts:28
+#: web/app/lib/admin-ai.ts:52
 msgid "The credit balance at Anthropic is used up."
 msgstr "[Thé crédît bàlàncé àt Ànthrôpîc îs ûséd ûp.~~~~~~~~~~~~~~~~~]"
 
@@ -6261,7 +6265,7 @@ msgstr "[Thé k-th smàllést nûmbér în thé ràngé (1 îs thé smàllést).
 msgid "The kept original file goes either way: it holds the same content."
 msgstr "[Thé képt ôrîgînàl fîlé gôés éîthér wày: ît hôlds thé sàmé côntént.~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/AdminAi.vue:162
+#: web/app/components/AdminAi.vue:168
 msgid "The key is given by the server’s operator."
 msgstr "[Thé kéy îs gîvén by thé sérvér’s ôpéràtôr.~~~~~~~~~~~~~~~~~]"
 
@@ -7217,7 +7221,7 @@ msgstr "[Thîs îs à téxt. Ôpén ît wîth Clàûdîà Cômpôsés.~~~~~~~~~~
 msgid "This is not a file Claudia can open."
 msgstr "[Thîs îs nôt à fîlé Clàûdîà càn ôpén.~~~~~~~~~~~~~~]"
 
-#: web/app/components/AdminAi.vue:203
+#: web/app/components/AdminAi.vue:210
 msgid "This is not enough on its own: the owner of each document must also allow Claude (Preferences ▸ AI…, off by default). Until it is allowed, @ai in that document uses the local model or the stand-in, and says so."
 msgstr "[Thîs îs nôt énôûgh ôn îts ôwn: thé ôwnér ôf éàch dôcûmént mûst àlsô àllôw Clàûdé (Préféréncés ▸ ÀÎ…, ôff by défàûlt). Ûntîl ît îs àllôwéd, @àî în thàt dôcûmént ûsés thé lôcàl môdél ôr thé stànd-în, ànd sàys sô.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -7381,7 +7385,7 @@ msgstr "[Tîmé~~]"
 msgid "Time to check one password, in seconds"
 msgstr "[Tîmé tô chéck ôné pàsswôrd, în sécônds~~~~~~~~~~~~~~~]"
 
-#: web/app/components/AdminAi.vue:191
+#: web/app/components/AdminAi.vue:198
 msgid "Timeout (seconds)"
 msgstr "[Tîméôût (sécônds)~~~~~~~]"
 
@@ -7485,7 +7489,7 @@ msgstr "[Typé~~]"
 msgid "Type a server address."
 msgstr "[Typé à sérvér àddréss.~~~~~~~~~]"
 
-#: web/app/components/AdminAi.vue:182
+#: web/app/components/AdminAi.vue:188
 msgid "Type any model id: the list of models changes faster than this app does."
 msgstr "[Typé àny môdél îd: thé lîst ôf môdéls chàngés fàstér thàn thîs àpp dôés.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -7645,7 +7649,7 @@ msgstr "[Whàt à qûéry gàvé~~~~~~~]"
 msgid "What a sum and regular payments are worth after a number of periods at a fixed rate."
 msgstr "[Whàt à sûm ànd régûlàr pàyménts àré wôrth àftér à nûmbér ôf pérîôds àt à fîxéd ràté.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/AdminAi.vue:125
+#: web/app/components/AdminAi.vue:131
 msgid "What answers @ai in every document on this server."
 msgstr "[Whàt ànswérs @àî în évéry dôcûmént ôn thîs sérvér.~~~~~~~~~~~~~~~~~~~~]"
 
@@ -9637,7 +9641,7 @@ msgstr "[rédô~~]"
 msgid "remark"
 msgstr "[rémàrk~~]"
 
-#: web/app/components/AdminAi.vue:130 web/app/lib/ai-provider.ts:52
+#: web/app/components/AdminAi.vue:136 web/app/lib/ai-provider.ts:52
 msgid "remote"
 msgstr "[rémôté~~]"
 

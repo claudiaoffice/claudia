@@ -75,6 +75,8 @@ export interface AiSettings {
   timeout: number
   claude: {
     model: string
+    /** The longest answer Claude may give, in tokens; the local model's is `max_tokens` above. */
+    max_tokens: number
     /** Who confirmed that document content is sent to Anthropic, and when; `null` before anybody did. */
     confirmed: Changed | null
     /** The key is never sent here: whether there is one, its last four characters, and whether the operator gave it. */
@@ -97,7 +99,7 @@ export interface AiRequest {
   device: string
   max_tokens: number
   timeout: number
-  claude: { model: string; key?: string; remove_key?: boolean; confirm?: boolean }
+  claude: { model: string; max_tokens?: number; key?: string; remove_key?: boolean; confirm?: boolean }
 }
 
 export interface TypesetSettings {
