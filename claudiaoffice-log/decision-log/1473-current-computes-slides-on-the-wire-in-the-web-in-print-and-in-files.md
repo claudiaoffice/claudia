@@ -24,7 +24,8 @@ superseded-by: []
   their pictures; printing the workbook prints each slide between the sheets, in tab order.
 - **Files.** `claudia_computes_io/slide_plan.py` writes a slide to ods and xlsx as an empty worksheet with its objects
   on it (scaled from 1600 × 900 to the size a chart tab has today), with the loss "The slide “…” was written as a
-  sheet: a workbook in this format has no slides." What was a slide is read back as a sheet.
+  sheet: a workbook in this format has no slides." What was a slide is read back as a sheet. *Replaced by D1477: a
+  slide is a tab of its own with its objects where they were, and nothing is reported.*
 
 **Why.** Agreed with the owner on 2026-11-22 (architecture A6 to A9; answers Q2, Q3, Q5, Q6, Q7 of the review of
 `specs/computes/slides.feature`). Defining and placing a chart in one call supersedes D204: the dialog's chart is one

@@ -42,12 +42,9 @@ from zipfile import BadZipFile
 from lxml import etree
 
 from claudia_computes import (
-    CellAnchor,
     Content,
-    ObjectBody,
     Sheet,
     SheetId,
-    VisualObject,
     WorkbookModel,
     function_catalog,
 )
@@ -76,7 +73,9 @@ from claudia_odf_io import (
 )
 from claudia_opc_io import read_parts, write_parts
 
-from ._pictures import picture_losses, written_pictures
+from ._charts import hold_charts, written_charts
+from ._pictures import MEDIA_TYPES, picture_losses, written_pictures
+from ._placed import ONE_TO_ONE, Placed, SlideSize, file_tabs, placed_objects
 from ._unwritten import FRESH_ONLY, ODS_WRITTEN, workbook_unwritten_changes
 from .cell_looks import Dressing, Lines, LookExport, SheetLooks, changed_styles, restyling, sheet_styling
 from .chart_plan import chart_losses
@@ -84,16 +83,15 @@ from .extensions import INVERSE_NAMES, NOTE_MARKER, from_excel, restore_alternat
 from .layout_sizes import MAX_SIZED_COLUMNS, MAX_SIZED_ROWS, changed_sizes
 from .ods_chart_files import FileChart, file_charts
 from .ods_chart_patch import ChartPatch
-from .ods_charts import new_shapes, written_charts
+from .ods_charts import Parts, a_chart, new_shapes
 from .ods_layout import OdsSizes, read_sizes
 from .ods_looks import OdsLooks, column_styles, read_looks
 from .ods_names import NamesPatch, SheetPlace, global_elements, local_expressions, read_names, sheet_names
-from .ods_pictures import add_pictures, decorative_count
+from .ods_pictures import decorative_count, part_name, picture_frame
 from .ods_pivots import data_pilot_tables, read_pivots
 from .ods_write_looks import OdsLookWriter, OdsRestyler
 from .openformula import Untranslatable, from_openformula, to_openformula
 from .pivot_exchange import adopt_pivots, outside_pivots, sheet_cells, written_pivots
-from .slide_plan import slide_losses, with_slides_as_sheets
 from .xlsx import UnsupportedEdit
 
 _DECLARATION = '<?xml version="1.0" encoding="UTF-8"?>\n'
@@ -625,13 +623,7 @@ def _model_of(
     places = _places(_spreadsheet(content))
     for named in read_names(_spreadsheet(content), places).names:
         model.names.put(named)
-    for chart in _held_charts(tables, parts):
-        if chart.held is not None:
-            model.charts.define(chart.spec)
-            body = ObjectBody(chart.object_id, "chart", chart.width, chart.height, "plain-image", ref=chart.spec_id)
-            if chart.description:
-                body = replace(body, description=chart.description)
-            model.insert_object(VisualObject(body, CellAnchor(chart.sheet, chart.row, chart.col)))
+    hold_charts(model, _held_charts(tables, parts))
     model._calculate_loaded()  # noqa: SLF001 (the restore()-mirroring construction idiom; see xlsx_to_workbook)
     read = read_pivots(_spreadsheet(content), places)
     adoption = adopt_pivots(model, read.found)
@@ -893,30 +885,33 @@ def _styles_part(writer: OdsLookWriter | None = None) -> bytes:
 
 
 def workbook_to_ods(
-    model: WorkbookModel, *, info: DocumentInfo | None = None, rasterise: Rasterise | None = None
+    model: WorkbookModel,
+    *,
+    info: DocumentInfo | None = None,
+    rasterise: Rasterise | None = None,
+    slide_size: SlideSize = ONE_TO_ONE,
 ) -> bytes:
     """``model`` as ods bytes: a table per sheet, and in it a row per row that holds something (empty stretches are
     written once, with a count). A formula is written as OpenFormula with the value it shows, a constant as its value.
     The charts and pictures floating on a sheet are in its ``table:shapes``, stacked as they are (D462, D1233;
     ``rasterise`` draws an SVG as a PNG). ``info`` is the metadata (D411). Anything the file cannot hold is in
-    :func:`ods_export_losses`. A slide is a sheet of its own in the file (``slide_plan``, D1473)."""
-    model = with_slides_as_sheets(model)
+    :func:`ods_export_losses`. A slide is a table of its own without cells, its objects where they are on it,
+    ``slide_size`` pixels to one unit of the slide (``_placed``, D1477)."""
     root = _el("office", "document-content", {"office:version": "1.3"})
     for name in ("scripts", "font-face-decls", "automatic-styles"):
         etree.SubElement(root, _q("office", name))
     spreadsheet = etree.SubElement(etree.SubElement(root, _q("office", "body")), _q("office", "spreadsheet"))
     writer = OdsLookWriter(model)
-    charts = written_charts(model)
-    pictures = written_pictures(model, rasterise=rasterise, svg_beside_png=False)
-    picture_parts = add_pictures(model, pictures, charts.shapes, new_shapes)
-    for sheet in model.sheets.values():
+    shapes, parts = _drawings(model, placed_objects(model, slide_size), rasterise)
+    for tab in file_tabs(model):
+        sheet = tab.sheet(model)
         spreadsheet.append(
             _new_table(
                 sheet,
                 None,
                 writer,
                 local_expressions(model, sheet.id),
-                charts.shapes.get(sheet.id),
+                shapes.get(tab.id),
                 sheet_cells(model, sheet),
             )
         )
@@ -935,8 +930,31 @@ def workbook_to_ods(
         content.encode(),
         styles,
         meta=new_meta(info or DocumentInfo()),
-        extra={**charts.parts, **picture_parts} or None,
+        extra=parts or None,
     )
+
+
+def _drawings(
+    model: WorkbookModel, placed: tuple[Placed, ...], rasterise: Rasterise | None
+) -> tuple[dict[SheetId, etree._Element], Parts]:
+    """The ``table:shapes`` of each tab that has drawings, in the order they are stacked, and the parts they need. A
+    chart that reads nothing is left out (``chart``, ``empty``)."""
+    frames: list[tuple[Placed, etree._Element]] = []
+    parts: Parts = {}
+    number = 1
+    for chart in written_charts(model, placed):
+        made = a_chart(model, chart.spec, number, chart.placed)
+        if made is not None:
+            frames.append((chart.placed, made.frame))
+            parts.update(made.parts)
+            number += 1
+    for count, picture in enumerate(written_pictures(model, placed, rasterise=rasterise, svg_beside_png=False), 1):
+        frames.append((picture.placed, picture_frame(picture, count)))
+        parts[part_name(picture)] = (picture.data, MEDIA_TYPES[picture.format])
+    shapes: dict[SheetId, etree._Element] = {}
+    for where, frame in sorted(frames, key=lambda each: each[0].layer):
+        shapes.setdefault(where.tab.id, new_shapes()).append(frame)
+    return shapes, parts
 
 
 def ods_export_losses(model: WorkbookModel, *, rasterised: bool = False) -> tuple[Loss, ...]:
@@ -948,16 +966,13 @@ def ods_export_losses(model: WorkbookModel, *, rasterised: bool = False) -> tupl
     ``"rendering-pending"`` (a container nothing has been drawn for: left out), ``"decorative"`` (a picture
     marked as having nothing to say: ODF has no way to say so), ``"object"`` (a text box or shape floating on a sheet,
     which computes does not have, is not written) and ``"look"`` (``too-many-cells``: cells of style ranges too large
-    to write one by one). A slide is ``"slide"``, with its name: it is written as a sheet (``slide_plan``, D1473)."""
+    to write one by one). A slide written as a table of its own is not reported (``_placed``, D1477)."""
     losses = LossLog()
-    for slide in slide_losses(model):
-        losses.add(slide.kind, slide.detail)
-    model = with_slides_as_sheets(model)
     for detail in chart_losses(model):
         losses.add("chart", detail)
     for loss in picture_losses(model, rasterised=rasterised):
         losses.add(loss.kind, loss.detail, loss.count)
-    if decorative := decorative_count(written_pictures(model, svg_beside_png=False)):
+    if decorative := decorative_count(written_pictures(model, placed_objects(model), svg_beside_png=False)):
         losses.add("decorative", count=decorative)
     dropped = sum(sheet_styling(sheet).dropped for sheet in model.sheets.values())
     if dropped:
@@ -1556,8 +1571,8 @@ def apply_edits_to_ods(
     was changed (D411).
 
     Raises :class:`~claudia_computes_io.UnsupportedEdit` for what cannot be patched: a baseline that is not the
-    workbook the file holds, sheets moved relative to each other, a slide (written as a sheet of its own, D1473) and a
+    workbook the file holds, sheets moved relative to each other, a slide (written as a tab of its own, D1477) and a
     cell of an array formula."""
     if current.slide_ids():
-        raise UnsupportedEdit("a slide is written as a sheet of its own, which cannot be patched onto the file yet")
+        raise UnsupportedEdit("a slide is written as a tab of its own, which cannot be patched onto the file yet")
     return _Patch(original_bytes, baseline, current, losses=losses, info=info).run()

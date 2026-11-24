@@ -187,21 +187,53 @@ Feature: Slides in computes (E6.31)
 
   # ================================================================ files and print
 
-  @extended @io:packages/claudia-computes-io/tests/test_slide_plan.py
-  Rule: A slide is written to ods and xlsx as a sheet with its objects on it
+  @core @io:packages/claudia-computes-io/tests/test_slide_tabs.py
+  Rule: A slide is a tab of its own in an xlsx or ods file, with its objects where they were
 
-    Scenario: Downloading as xlsx or ods says that a slide became a sheet
-      # Q6
-      Given I inserted a bar chart "Sales" of A1:B4 as a slide
-      When I export the document as xlsx
-      Then the file has the sheets "Sheet1" and "Slide 1", and the chart is on "Slide 1"
-      And I am told "The slide “Slide 1” was written as a sheet: a workbook in this format has no slides."
+    # E6.31 step 5 (D1477 to D1479): one slide unit is one pixel of the tab, so a slide of 1600 × 900 covers
+    # 1600 × 900 pixels from the tab's corner. The file says in a property which tabs were slides.
+    Background:
+      Given the slide "Sales chart" holds the chart "Sales" at 100, 50, 800 by 450
+      And the text box "East leads" at 1000, 100, 400 by 100
+      And the picture "Logo" at 1200, 700, 200 by 100
 
-    Scenario: Read back, what was a slide is a sheet
+    Scenario Outline: The objects of a slide are where they were
+      When I export the document as <format>
+      Then the file has the tabs "Sheet1" and "Sales chart", and "Sales chart" has no cells
+      And on "Sales chart" the chart is at 100, 50, 800 by 450 pixels from the corner of the tab
+      And the text box is at 1000, 100, 400 by 100, saying "East leads" in the look of its style
+      And the picture is at 1200, 700, 200 by 100
+      And I am told nothing about the slide
+      Examples:
+        | format |
+        | xlsx   |
+        | ods    |
+
+    Scenario Outline: A slide comes back as a slide
+      Given the document was exported as <format>
+      When I import the file
+      Then the tabs read "Sheet1", "Sales chart", and "Sales chart" is a slide
+      And the chart, the text box and the picture are where they were, as big, with the styles they had
+      Examples:
+        | format |
+        | xlsx   |
+        | ods    |
+
+  @extended @io:packages/claudia-computes-io/tests/test_slide_tabs.py
+  Rule: A tab that no longer fits the mark is a sheet
+
+    Scenario: The tab was renamed in another program
       Given an xlsx file written from a workbook with the slide "Sales chart"
+      And the tab was renamed "Chart tab" in another program
       When I import it
-      Then the tabs read "Sheet1", "Sales chart"
-      And "Sales chart" is a sheet with the chart floating on it
+      Then "Chart tab" is a sheet with the chart and the picture floating on it where they were
+      And the text box is reported as not shown, as one on a sheet is
+
+    Scenario: Someone typed into the tab in another program
+      Given an ods file written from a workbook with the slide "Sales chart"
+      And someone typed "note" into A1 of "Sales chart" in another program
+      When I import it
+      Then "Sales chart" is a sheet with "note" in A1 and the chart and the picture floating on it
 
   @extended
   Rule: A slide is printed as a page of its own

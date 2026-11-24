@@ -211,3 +211,33 @@ text box is CODE-83; the commit that fixed it still says CODE-79 in its message.
   `.charts` of the ods and xlsx patches, which are the file's chart frames; the versions and `PROTOCOL_VERSION`, which
   move when main is released, as for step 3; repeated `kind === 'chart'` checks and the twin xlsx/ods chart code,
   which this rename did not make and does not change.
+
+## Main merged in with D1499 (one owner), 2026-11-24
+
+The server's changelog had entries on both sides under Unreleased; the compiled catalogs were made again from the merged
+`.po` files.
+
+## Step 5a · A slide is a tab of its own, its objects where they were (D1477), 2026-11-24
+
+- **One plan** (`claudia_computes_io/_placed.py`). `file_tabs(model)` is the tabs of a file in the workbook's order: a
+  sheet by its name, a slide by its name as a sheet may be called in Excel (`tab_name`, which was `sheet_name` of
+  `xlsx_charts`). `placed_objects(model, size)` is every object on its tab, bottom first: `x`, `y` in pixels from the
+  corner of the tab (what ods writes), `pin` the cell the corner is in and how far into it (what xlsx writes), and the
+  size in pixels. An object of a sheet is at the corner of its cell, as before; one of a slide where it is, scaled by
+  `SlideSize.px_per_unit` (1.0, `ONE_TO_ONE`). `offset_of` moved here from `chart_plan`, and `cell_at` (the ods reader
+  had one) is its inverse with the offset in the cell. A slide's tab has no cells and is written with the model's
+  default sizes of a column and a row (96, 26 pixels), which `cell_at` counts with.
+- **No duplicates.** `_charts.py`: `definition_of` (was `_definition` in both patches), `chart_change` (the comparison
+  both patches made of a chart before and after), `written_charts(model, placed)` (both formats had a loop of their own),
+  `hold_charts` (the block both readers had) and the base `FileChart` (both readers' fields and `spec`; each format adds
+  where the chart is in its file). One placing function per format: xlsx `pinned_at(pin, width, height)` for the anchor
+  of a chart and a picture; ods `place_of(placed, rotation)` for the frame of a chart, a picture and a frame moved by
+  the patch. The patches place a chart with `placed_on_its_sheet`, the same plan.
+- **The writers** go through `file_tabs` instead of `model.sheets`; `FileTab.sheet(model)` is what a tab writes (a
+  slide: a sheet without cells by its name). The drawings of a tab are added in the order they are stacked, charts and
+  pictures together (ods put the charts first and the pictures after, with the right `z-index`).
+- **Not reported.** Writing a slide as a tab is no loss (owner, Q5); `slide_losses` went with `slide_plan`.
+- **Not written (yet).** What was written about a slide (its description): neither format writes one for a sheet
+  either, and the step-2 copy only carried it to a sheet that was not written with it.
+- **Tests.** `tests/test_slide_tabs.py` replaces `test_slide_plan.py`; the two tests of `Drawings` in
+  `test_xlsx_charts.py` give it a placed chart.

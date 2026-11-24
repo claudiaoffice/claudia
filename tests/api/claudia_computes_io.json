@@ -1,5 +1,13 @@
 {
  "version": "0.12.0",
+ "SlideSize": {
+  "class": [
+   "object"
+  ],
+  "init": "(px_per_unit: 'float' = 1.0) -> None",
+  "methods": {},
+  "properties": []
+ },
  "UnsupportedEdit": {
   "class": [
    "Exception"
@@ -52,10 +60,10 @@
   "function": "(formula: 'str') -> 'str'"
  },
  "workbook_to_ods": {
-  "function": "(model: 'WorkbookModel', *, info: 'DocumentInfo | None' = None, rasterise: 'Rasterise | None' = None) -> 'bytes'"
+  "function": "(model: 'WorkbookModel', *, info: 'DocumentInfo | None' = None, rasterise: 'Rasterise | None' = None, slide_size: 'SlideSize' = SlideSize(px_per_unit=1.0)) -> 'bytes'"
  },
  "workbook_to_xlsx": {
-  "function": "(model: 'WorkbookModel', *, info: 'DocumentInfo | None' = None, rasterise: 'Rasterise | None' = None) -> 'bytes'"
+  "function": "(model: 'WorkbookModel', *, info: 'DocumentInfo | None' = None, rasterise: 'Rasterise | None' = None, slide_size: 'SlideSize' = SlideSize(px_per_unit=1.0)) -> 'bytes'"
  },
  "xlsx_export_losses": {
   "function": "(model: 'WorkbookModel', *, rasterised: 'bool' = False) -> 'tuple[Loss, ...]'"

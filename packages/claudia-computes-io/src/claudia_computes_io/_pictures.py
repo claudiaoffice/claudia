@@ -1,5 +1,5 @@
-"""The pictures floating on a sheet, as a file format needs them (D1233): where each is pinned, how big it is, how it is
-turned, what it is called and says, and the bytes that are embedded for it.
+"""The pictures floating on a sheet or a slide, as a file format needs them (D1233, D1477): where each is
+(:mod:`._placed`), how it is turned, what it is called and says, and the bytes that are embedded for it.
 
 A *picture* is an image object, or a container (its picture is the one last made of its text, D390). Computes
 has no text boxes and no shapes (D1232), so these are the floating objects that are not charts. Both converters take
@@ -8,12 +8,14 @@ their pictures from here and differ only in how a file holds them (:mod:`.xlsx_p
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 
-from claudia_computes import SheetId, VisualObject, WorkbookModel
+from claudia_computes import WorkbookModel
 from claudia_core import ImageAsset, Rasterise, blank_png
 from claudia_odf_io import Loss, LossLog
+
+from ._placed import Placed, placed_objects
 
 #: The kinds of floating object that show a picture.
 PICTURE_KINDS = ("image", "container")
@@ -28,39 +30,40 @@ MEDIA_TYPES = {
 
 @dataclass(frozen=True)
 class WrittenPicture:
-    """One picture ready for a file.
+    """One picture ready for a file: where it is (``placed``), and what is shown.
 
-    ``layer`` is its place in the stack of its sheet (the last is in front), which a chart on the same sheet shares.
     ``asset`` names what is shown, so that a picture shown twice is one part. ``data`` is what is embedded, in
     ``format``; an SVG that was drawn as a PNG is that PNG, and one that was not has ``svg`` beside a blank PNG (for a
     file that has no way to show an SVG on its own)."""
 
-    sheet: SheetId
-    sheet_name: str
-    row: int
-    col: int
-    width: int
-    height: int
-    rotation: int
-    name: str
-    description: str
-    decorative: bool
-    layer: int
+    placed: Placed
     asset: str
     format: str
     data: bytes
     svg: bytes | None = None
 
+    @property
+    def name(self) -> str:
+        return self.placed.obj.body.name
 
-def _shown(model: WorkbookModel) -> Iterator[tuple[SheetId, int, VisualObject, ImageAsset | None]]:
-    """Every picture of every sheet, bottom first: the object, its place in the stack of its sheet and the image it
-    shows (``None``: a container nothing has been drawn for, or an image the model lost)."""
-    for sheet_id in model.sheets:
-        for layer, object_id in enumerate(model.stack_of(str(sheet_id))):
-            obj = model.get_object(object_id)
-            if obj.body.kind in PICTURE_KINDS:
-                picture = model.picture_of(obj.body)
-                yield sheet_id, layer, obj, (model.images.get(picture) if picture else None)
+    @property
+    def description(self) -> str:
+        """What it says to someone who cannot see it: nothing, for a decorative one."""
+        body = self.placed.obj.body
+        return "" if body.decorative else body.description
+
+    @property
+    def decorative(self) -> bool:
+        return self.placed.obj.body.decorative
+
+
+def _shown(model: WorkbookModel, placed: Iterable[Placed]) -> Iterator[tuple[Placed, ImageAsset | None]]:
+    """The pictures among ``placed``, in their order, each with the image it shows (``None``: a container nothing has
+    been drawn for, or an image the model lost)."""
+    for one in placed:
+        if one.obj.body.kind in PICTURE_KINDS:
+            picture = model.picture_of(one.obj.body)
+            yield one, (model.images.get(picture) if picture else None)
 
 
 def picture_losses(model: WorkbookModel, *, rasterised: bool) -> tuple[Loss, ...]:
@@ -68,52 +71,32 @@ def picture_losses(model: WorkbookModel, *, rasterised: bool) -> tuple[Loss, ...
     drawn for: left out), ``image-missing`` and ``svg-fallback`` (an SVG nothing draws as a PNG, ``rasterised``: other
     programs may show it empty or leave out what its style sheet gives)."""
     lost = LossLog()
-    for _, _, obj, asset in _shown(model):
+    for one, asset in _shown(model, placed_objects(model)):
         if asset is None:
-            lost.add("rendering-pending" if obj.body.kind == "container" else "image-missing")
+            lost.add("rendering-pending" if one.obj.body.kind == "container" else "image-missing")
         elif asset.format == "svg" and not rasterised:
             lost.add("svg-fallback")
     return lost.result()
 
 
 def written_pictures(
-    model: WorkbookModel, *, rasterise: Rasterise | None = None, svg_beside_png: bool
+    model: WorkbookModel, placed: Iterable[Placed], *, rasterise: Rasterise | None = None, svg_beside_png: bool
 ) -> tuple[WrittenPicture, ...]:
-    """The pictures of ``model`` for a file, sheet by sheet, each bottom first (those :func:`picture_losses` leaves
-    out are not there).
+    """The pictures among ``placed`` for a file, in their order (those :func:`picture_losses` leaves out are not
+    there).
 
     ``rasterise`` draws an SVG as a PNG, which every program then shows the same way. Without it an SVG is embedded as
     it is (``svg_beside_png`` false: a format that shows one, ods) or beside a blank PNG (true: xlsx)."""
     written: list[WrittenPicture] = []
-    for sheet_id, layer, obj, asset in _shown(model):
+    for one, asset in _shown(model, placed):
         if asset is None:
             continue
-        body = obj.body
-        data, fmt, svg = asset.data, asset.format, None
+        width, height = round(one.width), round(one.height)
+        data, fmt, svg, key = asset.data, asset.format, None, asset.id
         if asset.format == "svg":
             if rasterise is not None:
-                data, fmt = rasterise(asset.data, round(body.w), round(body.h)), "png"
+                data, fmt, key = rasterise(asset.data, width, height), "png", f"{asset.id}-{width}x{height}"
             elif svg_beside_png:
-                data, fmt, svg = blank_png(round(body.w), round(body.h)), "png", asset.data
-        written.append(
-            WrittenPicture(
-                sheet_id,
-                model.sheets[sheet_id].name,
-                obj.anchor.row,
-                obj.anchor.col,
-                body.w,
-                body.h,
-                body.rotation,
-                body.name,
-                "" if body.decorative else body.description,
-                body.decorative,
-                layer,
-                f"{asset.id}-{round(body.w)}x{round(body.h)}"
-                if rasterise is not None and asset.format == "svg"
-                else asset.id,
-                fmt,
-                data,
-                svg,
-            )
-        )
+                data, fmt, svg = blank_png(width, height), "png", asset.data
+        written.append(WrittenPicture(one, key, fmt, data, svg))
     return tuple(written)

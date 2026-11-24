@@ -17,7 +17,7 @@ from lxml import etree
 from claudia_odf_io import xml_safe
 
 from ._pictures import WrittenPicture
-from .xlsx_charts import EMU, NS
+from .xlsx_charts import NS, emu, pinned_at
 
 DECORATIVE_URI = "{C183D7F6-B498-43B3-948B-1728B52AA6E4}"
 DECORATIVE_NS = "http://schemas.microsoft.com/office/drawing/2017/decorative"
@@ -30,14 +30,15 @@ ANGLE = 60000
 def picture_anchor(picture: WrittenPicture, number: int, rid: str, svg_rid: str | None = None) -> etree._Element:
     """The ``oneCellAnchor`` of a picture whose picture part ``rid`` points at (and, for an SVG shown as such,
     ``svg_rid`` its SVG), numbered ``number`` among the shapes of its drawing."""
-    turn = f' rot="{(picture.rotation % 360) * ANGLE}"' if picture.rotation % 360 else ""
+    placed = picture.placed
+    rotation = placed.obj.body.rotation % 360
+    turn = f' rot="{rotation * ANGLE}"' if rotation else ""
     xml = (
         f'<xdr:oneCellAnchor xmlns:xdr="{NS["xdr"]}" xmlns:a="{NS["a"]}" xmlns:r="{NS["r"]}">'
-        f"<xdr:from><xdr:col>{picture.col}</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>{picture.row}</xdr:row>"
-        f'<xdr:rowOff>0</xdr:rowOff></xdr:from><xdr:ext cx="{picture.width * EMU}" cy="{picture.height * EMU}"/>'
+        f"{pinned_at(placed.pin, placed.width, placed.height)}"
         '<xdr:pic><xdr:nvPicPr><xdr:cNvPr/><xdr:cNvPicPr><a:picLocks noChangeAspect="1"/></xdr:cNvPicPr></xdr:nvPicPr>'
         f'<xdr:blipFill><a:blip r:embed="{rid}"/><a:stretch><a:fillRect/></a:stretch></xdr:blipFill>'
-        f'<xdr:spPr><a:xfrm{turn}><a:off x="0" y="0"/><a:ext cx="{picture.width * EMU}" cy="{picture.height * EMU}"/>'
+        f'<xdr:spPr><a:xfrm{turn}><a:off x="0" y="0"/><a:ext cx="{emu(placed.width)}" cy="{emu(placed.height)}"/>'
         '</a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></xdr:spPr></xdr:pic><xdr:clientData/>'
         "</xdr:oneCellAnchor>"
     )

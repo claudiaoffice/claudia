@@ -16,6 +16,7 @@ from claudia_computes_io import (
     xlsx_import_losses,
     xlsx_to_workbook,
 )
+from claudia_computes_io._placed import placed_on_its_sheet
 from claudia_computes_io.xlsx_chart_patch import Drawings
 from claudia_computes_io.xlsx_patch import PackagePatch
 from claudia_computes_io.xlsx_read import open_package
@@ -294,10 +295,17 @@ def test_the_drawing_of_a_sheet_goes_where_the_standard_has_it():
     sheet = patch.parts["xl/worksheets/sheet1.xml"]
     patch.parts["xl/worksheets/sheet1.xml"] = sheet.replace(b"</worksheet>", b'<tableParts count="0"/></worksheet>')
     drawings = Drawings(patch)
-    drawings.add("xl/worksheets/sheet1.xml", b"<c:chartSpace/>", 0, 0, 100, 100)
+    drawings.add("xl/worksheets/sheet1.xml", b"<c:chartSpace/>", _placed_at(0, 0))
     drawings.finish()
     names = [etree.QName(e).localname for e in etree.fromstring(patch.parts["xl/worksheets/sheet1.xml"])]
     assert names.index("drawing") == names.index("tableParts") - 1
+
+
+def _placed_at(row: int, col: int):
+    """A chart of 100 by 100 pinned to the cell ``row``, ``col`` of the sheet Data, placed for a file."""
+    model = a_workbook()
+    obj = VisualObject(ObjectBody("o9", "chart", 100, 100, "plain-image", ref="c9"), CellAnchor(S1, row, col))
+    return placed_on_its_sheet(model, obj)
 
 
 def a_workbook_without_charts() -> WorkbookModel:
@@ -309,7 +317,7 @@ def test_a_second_chart_on_a_sheet_goes_in_the_drawing_the_sheet_has_with_an_id_
     package = open_package(data)
     patch = PackagePatch(package.parts)
     drawings = Drawings(patch, {"xl/drawings/drawing1.xml": etree.fromstring(patch.parts["xl/drawings/drawing1.xml"])})
-    drawings.add("xl/worksheets/sheet1.xml", b"<c:chartSpace/>", 9, 9, 100, 100)
+    drawings.add("xl/worksheets/sheet1.xml", b"<c:chartSpace/>", _placed_at(9, 9))
     drawings.finish()
     ids = [p.get("id") for p in etree.fromstring(patch.parts["xl/drawings/drawing1.xml"]).iter(f"{{{XDR}}}cNvPr")]
     assert len(ids) == 2 and len(set(ids)) == 2

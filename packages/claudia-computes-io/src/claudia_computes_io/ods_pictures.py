@@ -15,13 +15,10 @@ import re
 
 from lxml import etree
 
-from claudia_computes import SheetId, WorkbookModel
-from claudia_odf_io import NS, qname, transform_of, xml_safe
+from claudia_odf_io import NS, qname, xml_safe
 
-from ._pictures import MEDIA_TYPES, WrittenPicture
-from .chart_plan import offset_of
-from .ods_charts import Parts
-from .ods_layout import _CM_PER_PIXEL, text_of  # noqa: PLC2701 (one length, one conversion)
+from ._pictures import WrittenPicture
+from .ods_charts import place_of
 
 #: What the package calls each format: ``image/jpeg`` pictures are ``.jpg`` files in an OpenDocument package.
 EXTENSIONS = {"jpeg": "jpg", "png": "png", "gif": "gif", "bmp": "bmp", "svg": "svg"}
@@ -32,22 +29,15 @@ def part_name(picture: WrittenPicture) -> str:
     return f"Pictures/{re.sub(r'[^A-Za-z0-9_-]', '_', picture.asset)}.{EXTENSIONS[picture.format]}"
 
 
-def picture_frame(picture: WrittenPicture, offset: tuple[float, float], number: int) -> etree._Element:
-    """The ``draw:frame`` of ``picture`` on a sheet whose cell ``(row, col)`` is ``offset`` pixels from its corner;
-    ``number`` names a picture that has no name of its own."""
+def picture_frame(picture: WrittenPicture, number: int) -> etree._Element:
+    """The ``draw:frame`` of ``picture``; ``number`` names a picture that has no name of its own."""
+    placed = picture.placed
     frame = etree.Element(qname("draw:frame"), nsmap={p: u for p, u in NS.items() if p != "xml"})
     attributes = {
-        "draw:z-index": str(picture.layer),
+        "draw:z-index": str(placed.layer),
         "draw:name": xml_safe(picture.name or f"Picture {number}"),
-        "svg:width": text_of(picture.width),
-        "svg:height": text_of(picture.height),
+        **place_of(placed, placed.obj.body.rotation),
     }
-    box = tuple(pixels * _CM_PER_PIXEL for pixels in (*offset, picture.width, picture.height))
-    transform = transform_of(picture.rotation, box)  # type: ignore[arg-type]
-    if transform is None:
-        attributes |= {"svg:x": text_of(offset[0]), "svg:y": text_of(offset[1])}
-    else:
-        attributes["draw:transform"] = transform
     for key, value in attributes.items():
         frame.set(qname(key), value)
     image = etree.SubElement(frame, qname("draw:image"))
@@ -58,27 +48,9 @@ def picture_frame(picture: WrittenPicture, offset: tuple[float, float], number: 
     return frame
 
 
-def add_pictures(
-    model: WorkbookModel,
-    pictures: tuple[WrittenPicture, ...],
-    shapes: dict[SheetId, etree._Element],
-    new_shapes,  # noqa: ANN001 (``ods_charts.new_shapes``: an empty ``table:shapes``)
-) -> Parts:
-    """The frames of ``pictures`` put into the ``table:shapes`` of their sheets (made where a sheet has none yet),
-    and the parts that hold their bytes, each once."""
-    parts: Parts = {}
-    for number, picture in enumerate(pictures, start=1):
-        sheet = model.sheets[picture.sheet]
-        shapes.setdefault(picture.sheet, new_shapes()).append(
-            picture_frame(picture, offset_of(sheet.col_widths, sheet.row_heights, picture.row, picture.col), number)
-        )
-        parts[part_name(picture)] = (picture.data, MEDIA_TYPES[picture.format])
-    return parts
-
-
 def decorative_count(pictures: tuple[WrittenPicture, ...]) -> int:
     """How many pictures say they have nothing to say: a file cannot hold that."""
     return sum(1 for picture in pictures if picture.decorative)
 
 
-__all__ = ["add_pictures", "decorative_count", "part_name", "picture_frame"]
+__all__ = ["decorative_count", "part_name", "picture_frame"]

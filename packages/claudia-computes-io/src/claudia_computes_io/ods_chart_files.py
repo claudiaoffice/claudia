@@ -14,13 +14,12 @@ from typing import TYPE_CHECKING
 
 from lxml import etree
 
-from claudia_computes import MAX_OBJECTS_PER_SHEET, ChartSpec, SheetId
-from claudia_computes.limits import MAX_COLS, MAX_ROWS
-from claudia_computes.model import DEFAULT_COL_WIDTH, DEFAULT_ROW_HEIGHT
+from claudia_computes import MAX_OBJECTS_PER_SHEET, SheetId
 from claudia_core.assets import MAX_ALT_CHARS
 from claudia_odf_io import NS, local_name
 
-from .chart_plan import ReadChart, with_id
+from ._charts import FileChart as SharedFileChart
+from ._placed import cell_at
 from .ods_charts import describe, holds_a_chart, read_chart, sizes_of
 from .ods_layout import pixels_of
 
@@ -32,43 +31,13 @@ _DRAWN_TAGS = tuple(f"{{{NS['draw']}}}{name}" for name in _DRAWN)
 _CELLS = ("table-cell", "covered-table-cell")
 
 
-@dataclass
-class FileChart:
-    """One chart frame of a file."""
+@dataclass(kw_only=True)
+class FileChart(SharedFileChart):
+    """One chart frame of a file: the frame, and the folder of its part. It is pinned to the cell it is in, or the one
+    at its position when it is on the sheet itself."""
 
-    sheet: SheetId
     frame: etree._Element
     folder: str
-    #: Where its frame is pinned: the cell it is in, or the one at its position when it is on the sheet itself.
-    row: int
-    col: int
-    #: What the model makes of it, and the ids it has there; ``None`` for a chart the model does not hold.
-    held: ReadChart | None = None
-    width: int = 0
-    height: int = 0
-    description: str = ""
-    object_id: str = ""
-    spec_id: str = ""
-
-    @property
-    def spec(self) -> ChartSpec:
-        """The definition the model has of this chart (only for one the model holds)."""
-        assert self.held is not None
-        return with_id(self.held.spec, self.spec_id)
-
-
-def cell_at(table: _Table, x: float, y: float) -> tuple[int, int]:
-    """The cell at ``x`` and ``y`` pixels from the corner of the sheet, by the widths and heights the sheet has."""
-    widths, heights = table.col_widths, table.row_heights
-    column = row = 0
-    left = top = 0.0
-    while column < MAX_COLS - 1 and left + widths.get(column, DEFAULT_COL_WIDTH) <= x:
-        left += widths.get(column, DEFAULT_COL_WIDTH)
-        column += 1
-    while row < MAX_ROWS - 1 and top + heights.get(row, DEFAULT_ROW_HEIGHT) <= y:
-        top += heights.get(row, DEFAULT_ROW_HEIGHT)
-        row += 1
-    return row, column
 
 
 def _cells_of(table: _Table) -> dict[etree._Element, tuple[int, int]]:
@@ -91,7 +60,8 @@ def _position(table: _Table, frame: etree._Element, cells: Mapping[etree._Elemen
         return cells.get(parent, (0, 0))
     x = pixels_of(frame.get(f"{{{NS['svg']}}}x")) or 0
     y = pixels_of(frame.get(f"{{{NS['svg']}}}y")) or 0
-    return cell_at(table, x, y)
+    pin = cell_at(table.col_widths, table.row_heights, x, y)
+    return pin.row, pin.col
 
 
 def file_charts(tables: Sequence[_Table], parts: Mapping[str, bytes]) -> list[FileChart]:
@@ -112,7 +82,7 @@ def file_charts(tables: Sequence[_Table], parts: Mapping[str, bytes]) -> list[Fi
             if folder is None or not _is_alone(frame, table.element):
                 continue
             row, col = _position(table, frame, cells)
-            chart = FileChart(SheetId(table.id), frame, folder, row, col)
+            chart = FileChart(sheet=SheetId(table.id), row=row, col=col, frame=frame, folder=folder)
             part = parts.get(f"{folder}/content.xml")
             read = None if part is None else read_chart(part, resolve)
             size = None if read is None else sizes_of(frame, read)

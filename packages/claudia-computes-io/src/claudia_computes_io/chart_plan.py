@@ -11,13 +11,11 @@ the charts of a workbook.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from dataclasses import dataclass, replace
 from typing import NamedTuple
 
 from claudia_computes import CellRef, ChartError, ChartSpec, RangeRef, SheetId, WorkbookModel
 from claudia_computes.limits import MAX_COLS, MAX_ROWS
-from claudia_computes.model import DEFAULT_COL_WIDTH, DEFAULT_ROW_HEIGHT
 
 
 class Series(NamedTuple):
@@ -149,10 +147,3 @@ def chart_losses(model: WorkbookModel) -> list[str]:
 
 def number_text(value: float) -> str:
     return repr(int(value)) if float(value).is_integer() else repr(float(value))
-
-
-def offset_of(widths: Mapping[int, float], heights: Mapping[int, float], row: int, col: int) -> tuple[float, float]:
-    """Where the corner of a cell is, in pixels from the corner of the sheet (the inverse of ``cell_at``)."""
-    left = sum(widths.get(column, DEFAULT_COL_WIDTH) for column in range(col))
-    top = sum(heights.get(line, DEFAULT_ROW_HEIGHT) for line in range(row))
-    return left, top
