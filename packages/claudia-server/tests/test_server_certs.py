@@ -121,23 +121,42 @@ def test_a_client_that_trusts_exactly_our_certificate_connects(certificate):
 
 
 def test_a_certificate_of_ours_that_can_sign_others_is_replaced(tmp_path):
-    from cryptography import x509
+    """A server made its certificate as an authority before SEC-06 (D2001): at the next start it makes a new one."""
+    import datetime as dt
+    import ipaddress
 
-    from claudia_server import certs
+    from cryptography import x509
+    from cryptography.hazmat.primitives import hashes, serialization
+    from cryptography.hazmat.primitives.asymmetric import ec
+    from cryptography.x509.oid import NameOID
 
     folder = tmp_path / "state"
     old = ensure_certificate(folder)
-    authority = x509.BasicConstraints(ca=True, path_length=0)
-    original = x509.CertificateBuilder.add_extension
-
-    def as_before_sec_06(builder, extension, critical):
-        if isinstance(extension, x509.BasicConstraints):
-            extension = authority
-        return original(builder, extension, critical)
-
-    with pytest.MonkeyPatch.context() as patch:
-        patch.setattr(x509.CertificateBuilder, "add_extension", as_before_sec_06)
-        certs._make(list(old.names), old.cert_file, old.key_file)
-    made_before = ensure_certificate(folder)
-    loaded = x509.load_pem_x509_certificate(made_before.cert_file.read_bytes())
-    assert not loaded.extensions.get_extension_for_class(x509.BasicConstraints).value.ca
+    key = ec.generate_private_key(ec.SECP256R1())
+    name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "localhost")])
+    now = dt.datetime.now(dt.UTC)
+    as_before = (
+        x509.CertificateBuilder()
+        .subject_name(name)
+        .issuer_name(name)
+        .public_key(key.public_key())
+        .serial_number(x509.random_serial_number())
+        .not_valid_before(now - dt.timedelta(hours=1))
+        .not_valid_after(now + dt.timedelta(days=365))
+        .add_extension(
+            x509.SubjectAlternativeName(
+                [x509.DNSName("localhost")] + [x509.IPAddress(ipaddress.ip_address(a)) for a in ("127.0.0.1", "::1")]
+            ),
+            critical=False,
+        )
+        .add_extension(x509.BasicConstraints(ca=True, path_length=0), critical=True)
+        .sign(key, hashes.SHA256())
+    )
+    old.cert_file.write_bytes(as_before.public_bytes(serialization.Encoding.PEM))
+    old.key_file.write_bytes(
+        key.private_bytes(serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8, serialization.NoEncryption())
+    )
+    renewed = ensure_certificate(folder)
+    made = x509.load_pem_x509_certificate(renewed.cert_file.read_bytes())
+    assert renewed.fingerprint != old.fingerprint
+    assert not made.extensions.get_extension_for_class(x509.BasicConstraints).value.ca
