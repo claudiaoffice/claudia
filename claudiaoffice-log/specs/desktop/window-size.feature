@@ -13,7 +13,7 @@ Feature: The window of a desktop app shows the whole page at any display scale
     When I start an app of the Windows client
     Then its window is as large, as seen by the page, as it is at 100%
 
-  @unit:clients/neutralino/tests/launch.test.ts @unit:clients/neutralino/tests/core-command.test.ts
+  @extended @unit:clients/neutralino/tests/launch.test.ts @unit:clients/neutralino/tests/core-command.test.ts
   Scenario: The sizes of the config are what they were afterwards
     Given I started an app of the Windows client, or its window could not be started
     Then the config of the app is as it was before, with no window option left in it

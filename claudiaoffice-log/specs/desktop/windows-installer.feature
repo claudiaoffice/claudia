@@ -18,7 +18,7 @@ Feature: Claudia Office installed on Windows opens its apps
     And the window of Claudia Composes opens
 
   # UX-79, D751
-  @unit:tests/test_windows_packaging.py
+  @extended @unit:tests/test_windows_packaging.py
   Scenario: The installer and the list of programs show the suite's icon
     Given I installed Claudia Office on Windows
     When I look at the setup file and at the entry of Claudia Office in the list of installed programs

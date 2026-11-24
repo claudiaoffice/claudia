@@ -2890,9 +2890,8 @@ and nothing said where it is used).
 **Found** by the owner on the first install with the fixes of this round: all three apps stayed on "Starting…"; the server ran and
 answered in a browser. **Cause** (**measured**, the owner's `shell.log`: the core connected at 20:36:41 and no `<- page: start`
 followed, while the starts before show it a second after the connection): UX-77's resize (`window.setSize`, then `window.center`)
-was awaited before the page asked the core to start, and the window never answered. **Fixed** 2026-11-24 (D749): the page asks
-for the size and does not wait for the answer; a failure is logged in the page's console. **Test:**
-`clients/neutralino/tests/shell-page.test.ts`, *does not wait for the window to answer* (red before: it timed out).
+was awaited before the page asked the core to start, and the window never answered. **Fixed** 2026-11-24 (D749, as first written): the page asks
+for the size and does not wait for the answer. **Since then** the page no longer asks at all (UX-77's second fix, D749 rewritten): the cause is gone with the code. **Test** (red before: it timed out): *does not wait for the window to answer* in `shell-page.test.ts`, removed with the code.
 **Not understood:** why `window.setSize` or `window.center` never answers on the owner's machine; the call is gone with the second fix of UX-77. The page's console says (`--debug`). **Escaped** because: the unit test
 answered immediately, and no test can ask a real window; the CI step that starts a window has no display.
 

@@ -154,6 +154,7 @@ export interface RunDeps {
   setCommand?: (appDir: string, command: string) => void
   /** Switches the window's web inspector on or off in the app's config (default: in neutralino.config.json). */
   setInspector?: (appDir: string, enabled: boolean) => void
+  /** Has Neutralino size the window in logical pixels, or not (default: in neutralino.config.json; UX-77, D749). */
   setLogicalPixels?: (appDir: string, enabled: boolean) => void
   out?: (line: string) => void
   err?: (line: string) => void
@@ -244,7 +245,8 @@ export async function run(options: Options, deps: RunDeps = {}): Promise<number>
     )
     // Neutralino opens the DevTools window by itself when the inspector is on: only --debug wants that.
     inspector(workDir, options.debug)
-    // The config's 1280 x 860 are what the page needs as CSS pixels: Windows has them multiplied by the display scale.
+    // The config's 1280 x 860 are what the page needs as CSS pixels: on Windows Neutralino multiplies them by the display
+    // scale only when asked to (D749).
     if (platform.windowSizeInPhysicalPixels) logicalPixels(workDir, true)
   } catch (problem) {
     err(`Could not set up the core's command: ${(problem as Error).message}`)

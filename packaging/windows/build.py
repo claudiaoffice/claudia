@@ -30,7 +30,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 APPS = ("composes", "computes", "creates")
-# The icon of the suite as a whole (three dots), in clients/neutralino: what the setup and Programs show (UX-79).
+# The icon of the suite as a whole (three dots), in clients/neutralino: what the setup and Programs show (UX-79, D751).
 SUITE_ICON = "suite-icon.png"
 NEUTRALINO_BINARY = "neutralino-win_x64.exe"
 LAUNCHER_PROGRAM = "claudia-start.exe"
