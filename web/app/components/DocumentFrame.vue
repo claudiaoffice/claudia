@@ -180,14 +180,17 @@ onBeforeUnmount(() => clearTimeout(timer))
 
 <template>
   <div ref="frame" class="frame" :class="{ wide: !panelOpen }">
-    <TopBar :session="session" :panel-open="panelOpen" @toggle-panel="panelOpen = !panelOpen" />
-    <div v-if="state.preview" class="banner preview" role="status" data-testid="redaction-preview">{{ t('Preview of the redaction: the marked places as they would be. Nothing has changed yet.') }}</div>
-    <div v-if="state.status === 'reconnecting'" class="banner" role="alert">{{ t('The connection was lost. Trying to get back… what you do now is not saved.') }}</div>
-    <FontReportBanner :session="session" />
-    <MenuBar data-region="menus" :class="{ hidden: shell.nativeMenu }" :menus="menus" />
-    <slot name="toolbar" />
+    <!-- The landmarks (UX-32): the menus and the tools in the header, the document in main, the panel beside it, the footer. -->
+    <header class="top">
+      <TopBar :session="session" :panel-open="panelOpen" @toggle-panel="panelOpen = !panelOpen" />
+      <div v-if="state.preview" class="banner preview" role="status" data-testid="redaction-preview">{{ t('Preview of the redaction: the marked places as they would be. Nothing has changed yet.') }}</div>
+      <div v-if="state.status === 'reconnecting'" class="banner" role="alert">{{ t('The connection was lost. Trying to get back… what you do now is not saved.') }}</div>
+      <FontReportBanner :session="session" />
+      <MenuBar data-region="menus" :class="{ hidden: shell.nativeMenu }" :menus="menus" />
+      <slot name="toolbar" />
+    </header>
     <div class="main" :class="{ wide: !panelOpen }">
-      <slot />
+      <main class="document"><slot /></main>
       <SidePanel v-show="panelOpen" ref="panel" data-region="panel" :session="session" @redact="redact">
         <template #top><slot name="side-top" /></template>
       </SidePanel>
@@ -270,6 +273,10 @@ onBeforeUnmount(() => clearTimeout(timer))
 .frame.wide {
   --dock-width: 0px;
 }
+.top {
+  display: flex;
+  flex-direction: column;
+}
 .main {
   flex: 1;
   display: grid;
@@ -278,6 +285,11 @@ onBeforeUnmount(() => clearTimeout(timer))
 }
 .main.wide {
   grid-template-columns: minmax(0, 1fr);
+}
+.document {
+  display: grid;
+  grid-template: minmax(0, 1fr) / minmax(0, 1fr);
+  min-height: 0;
 }
 .banner {
   background: var(--apricot);
