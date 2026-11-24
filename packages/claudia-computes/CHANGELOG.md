@@ -5,6 +5,8 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-11-24
+
 Heavy functions in worker processes (E4.4, D37, D1314).
 
 ### Added
