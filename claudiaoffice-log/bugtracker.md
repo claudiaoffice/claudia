@@ -35,7 +35,7 @@ The index is the status of record; a section below keeps the status of the round
 re-checked. **Opened** and **Fixed** are filled from 2026-11-20 on: for older items only where the status already gave
 the date.
 
-### Open (89)
+### Open (90)
 
 By priority (P1, P2, P3, then items that wait for a decision without one), then by ID.
 
@@ -2676,8 +2676,8 @@ carries `@pending:CODE-77` as well as `@pending:UX-76`.
 **Fixed** 2026-11-23 on `e6-31-slides-in-computes` (E6.31 step 3, D1475): a chart and its definition are made in one
 step (`insert_chart`, `claudia_computes.chart_steps`), so the undo forgets the definition; `ChartView.vue` checks that
 its element is still there once Plotly has loaded. The row `workbook | a chart` is in the scenario's examples now.
-When E6.31 reaches `main`, the names scenario "A new object, slide, sheet and chart have names" can lose
-`@pending:CODE-77` (it keeps `@pending:UX-76`).
+With E6.31 the names scenario "A new object, slide, sheet and chart have names" lost `@pending:CODE-77`
+(it keeps `@pending:UX-76`).
 
 ## Round of 2026-11-22 (E6.31 step 2: slides in computes, branch `e6-31-slides-in-computes`)
 
