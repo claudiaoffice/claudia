@@ -150,6 +150,11 @@ class Result:
     note: str = ""
 
 
+def pytest_command(path: str) -> list[str]:
+    """pytest on ``path``, its summary naming what failed or broke and what it skipped and why (PROC-52)."""
+    return [sys.executable, "-m", "pytest", "-rfEs", path]
+
+
 class Runner:
     def __init__(self, args: argparse.Namespace) -> None:
         self.args = args
@@ -386,8 +391,13 @@ class Runner:
             return True
         self.results.append(Result(name, code == 0, seconds))
         if code:
-            self.say(f"   FAILED ({seconds:.0f} s). Last lines of {log.relative_to(ROOT)}:")
-            for line in log.read_text(errors="replace").splitlines()[-20:]:
+            lines = log.read_text(errors="replace").splitlines()
+            failed = [line for line in lines if line.startswith(("FAILED ", "ERROR "))]  # pytest's summary (PROC-52)
+            self.say(f"   FAILED ({seconds:.0f} s).")
+            for line in failed:
+                self.say("   | " + line)
+            self.say(f"   Last lines of {log.relative_to(ROOT)}:")
+            for line in lines[-20:]:
                 self.say("   | " + line)
         else:
             lines = [line for line in log.read_text(errors="replace").splitlines() if line.strip()]
@@ -407,7 +417,7 @@ class Runner:
 
         if not only or "pytest" in only:
             self.head("tests/e2e, with the specs (real servers, one Chromium)")
-            self._record("pytest-e2e", [sys.executable, "-m", "pytest", "-rs", "tests/e2e"])
+            self._record("pytest-e2e", pytest_command("tests/e2e"))
 
         shared = [script for script in chosen if script.runs in SHARED]
         if shared:

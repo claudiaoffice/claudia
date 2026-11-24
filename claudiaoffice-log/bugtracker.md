@@ -56,6 +56,7 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | UX-69 | P2 | UX / all apps | A viewer is not told she can only look: greyed entries, hidden controls and object gestures are silent (only Delete on a sheet's object says so) | open (scenario `@pending:UX-69`) | 2026-11-22 |  |
 | UX-70 | P2 | UX / all apps | What an export could not keep is never shown: the losses come back with the file and no client says them (a workbook's slide written as a sheet among them) | **new, open** (read; size 2) | 2026-11-22 |  |
 | UX-71 | P2 | UX / computes | Text on a workbook's slide is drawn in the workbook's Body text (13 px), tiny on a 1600-unit slide | **needs decision** (measured; size 2) | 2026-11-22 |  |
+| UX-76 | P3 | UX / computes | The New sheet dialog proposes no name: the field is empty (placeholder "Forecast") and Add Sheet stays off until one is typed, though a new sheet is to get a name like "Sheet2" (E1.13) | open (scenario `@pending:UX-76`) | 2026-11-22 |  |
 | CODE-25 | P2 | Code / Export | A renamed object loses its name in pptx and odp without the export saying so (D450) | **new, open** |  |  |
 | CODE-31 | P2 | Code / i18n | The history speaks English to everybody: command labels and summaries are not translated | **new, open** |  |  |
 | CODE-45 | P2 | Code / Import | pptx placeholders (titles, body text) are not imported at all | **new, open** |  |  |
@@ -132,7 +133,7 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |  |  |
 | UX-06 | — | UX | Web menu differs from decisions D4/D5 | needs decision |  |  |
 
-### Fixed (159)
+### Fixed (160)
 
 By ID. Items closed without a fix (superseded, wontfix) are here too.
 
@@ -292,6 +293,7 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | PROC-49 | P2 | Process / CI | The Penpot generator on `main` made the Python jobs red: its `package-lock.json` was neither audited nor watched by dependabot, and `tools/transplant.py` failed ruff | **fixed** 2026-11-22 (size 3) | 2026-11-22 | 2026-11-22 |
 | PROC-50 | P2 | Process / E2E | `./run-e2e.sh regression` ran 27 browser scripts, CI 30: `objects.cjs` and the two client windows ran only in CI | **fixed** 2026-11-22 (D1452, `e2e-guard`) | 2026-11-21 | 2026-11-22 |
 | PROC-51 | P2 | Process / E2E | Every full local regression stopped after the shared servers with "port 8766 is in use" (TIME_WAIT, no `SO_REUSEADDR` in the runner's probe) | **fixed** 2026-11-22 (`e2e-guard`) | 2026-11-22 | 2026-11-22 |
+| PROC-52 | P2 | Process / E2E | When the specs fail, the runner (and so CI) does not say which test: `pytest -rs` leaves failures out of the summary, and the last 20 lines it prints are skipped scenarios | **fixed** 2026-11-23 (`e2e-guard`) | 2026-11-23 | 2026-11-23 |
 | DOC-01 | P2 | Docs | Decision numbers D70–D82 and D97–D99 are used twice for different decisions | fixed |  |  |
 | DOC-02 | P3 | Docs | `start-client.sh` was renamed; the Linux README and the other launchers still named it | **fixed** 2026-11-13 |  | 2026-11-13 |
 | DOC-03 | P3 | Docs | Current decisions that later ones contradict (D2, D44, D84, D115, D242); a stale row in `ranges.md`; stale lines in two notes | **fixed** 2026-11-17 (log audit: D44, D84, D115 superseded; D2, D242 noted) |  | 2026-11-17 |
@@ -2663,6 +2665,9 @@ event that forgets the chart (it does for a picture, a shape and a container, D1
 `Error: DOM element provided is null or undefined` from Plotly's `getGraphDiv`. **Test:** the row `workbook | a chart`
 of the undo scenario, in an `Examples` block of its own tagged `@pending:CODE-77`; it waits with the chart renames of
 E1.18.
+Measured again with the step code of `specs/objects/names.feature`: insert a chart on Sheet1, add a sheet and go back
+to Sheet1; the same Plotly error is in the console. The scenario "A new object, slide, sheet and chart tab have names"
+carries `@pending:CODE-77` as well as `@pending:UX-76`.
 
 ## Round of 2026-11-22 (E6.31 step 2: slides in computes, branch `e6-31-slides-in-computes`)
 
@@ -2762,3 +2767,21 @@ so nothing leaves; but it stays on and comes back with the administrator's next 
 ### UX-75 · The badge of an open window does not follow the administrator's change · P3 · size 3 · new, open
 The badge and the dialog read `ai_consent` at join and on `ai_consent_changed` only. **Fix.** Publish the same event to
 the open documents when the provider changes (`AiRuntime.apply`).
+
+## Round of 2026-11-22, second part (step code for the names spec, E1.13; branch `e2e-guard`)
+
+### UX-76 · The New sheet dialog proposes no name · P3 · size 3 · open
+**Measured** with the new step code of `specs/objects/names.feature` (computes, Chromium): the footer's "+" opens
+*New sheet* with an empty Name field (placeholder "Forecast") and *Add Sheet* is off until a name is typed. The spec
+says a new sheet has a name like "Sheet 2", and the server gives default names to things that have none
+(`thing_names.py`). **Fix.** Fill the field with the next free default name in the maker's language, selected, so
+Enter takes it and typing replaces it. **Test:** "A new object, slide, sheet and chart tab have names",
+`@pending:UX-76` (strict). (Filed as UX-70 on `e2e-guard`; renumbered when
+`main` had given UX-70 to another bug.)
+
+### PROC-52 · A failed run of the specs does not say which test failed · P2 · size 3 · fixed 2026-11-23
+**Measured** on CI run 45072645568 of `e2e-guard`, twice: "1 failed, 140 passed, 125 skipped, 26 xfailed", and the 20
+lines the runner printed were all skipped scenarios; the log is only in the run's artifact. `scripts/run_e2e.py` ran
+`pytest -rs`, which leaves failures out of pytest's summary. **Fix.** `pytest -rfEs` (`pytest_command`), and on a
+failure the runner prints pytest's `FAILED`/`ERROR` lines before the last lines of the log. **Test:**
+`tests/test_run_e2e.py::test_a_failed_pytest_run_names_the_tests_that_failed`.
