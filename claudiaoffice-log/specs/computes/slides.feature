@@ -70,11 +70,6 @@ Feature: Slides in computes (E6.31)
       When I choose Edit ▸ Chart… while the slide "Slide 1" is shown
       Then the dialog offers to show the chart as "A slide" or "On this slide"
 
-    Scenario: A second chart on the slide
-      When I insert a bar chart "Sales 2" of A1:B4 on this slide
-      Then the slide "Slide 1" shows the charts "Sales" and "Sales 2"
-      And the tabs read "Sheet1", "Slide 1"
-
   # ================================================================ Move to Slide
 
   @core @firefox

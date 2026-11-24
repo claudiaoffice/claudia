@@ -166,10 +166,10 @@ English: only a wrong client fails them.
 - **E2E.** `tests/e2e/specs/test_computes_slides.py` binds the @core rules of `slides.feature`; the name of a chart is
   read in Name & describe…, and whether something was selected is noted when the slide is shown. The browser script
   `e2e:computes-slides` keeps the rules of search and print. Not bound yet (they skip, saying the step): the @extended
-  scenarios of a chart on a sheet "at the selected cells", the dialog and a second chart while a slide is shown, two
-  people (Ben, Vera), a slide with a text box left, renaming a slide, "+" and printing. "A second chart on the slide"
-  cannot pass as written: its Background has no table or query result, and on a slide the dialog offers only those
-  (D1475); the owner is asked.
+  scenarios of a chart on a sheet "at the selected cells", the dialog while a slide is shown, two
+  people (Ben, Vera), a slide with a text box left, renaming a slide, "+" and printing. The scenario "A second chart on the
+  slide" is dropped (owner, 2026-11-24): its Background had no table or query result, and on a slide the dialog offers
+  only those (D1475).
 - **Review (two axes) and what changed after it:** the undo of `AddSlide` is a command of its own, `TakeBackSlide`,
   not a flag on `RemoveSlide` (CONTRIBUTING §2); `may_change_holder` takes the object (D1471 named it `(old, new)`, two
   anchors), so in a workbook only a chart changes holder (a text box cannot leave a slide and leave it empty); `_check_place` and one table of the places
