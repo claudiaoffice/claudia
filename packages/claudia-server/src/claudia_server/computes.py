@@ -136,16 +136,19 @@ from claudia_core import (
     name_problem,
 )
 from claudia_core.asset_store import DIAGRAM
+from claudia_core.slides import SlideAnchor
+from claudia_creates import ShapeLibrary
 
 from .computes_search import add_search_methods
 from .containers import add_container_methods
 from .font_report import add_font_report_method
-from .i18n import msg, translate
+from .i18n import message_of, msg, translate
 from .object_methods import Placement, add_object_methods
 from .office_export import document_info, export_with_original, office_export
 from .printing import add_language_methods, people_only
-from .protocol import Context, RequestError, core_methods
+from .protocol import Context, MethodTable, RequestError, core_methods
 from .replay import add_replay_methods
+from .shape_methods import add_shape_methods
 from .style_targets import OBJECTS
 from .styles import add_style_methods
 from .thing_names import add_name_methods, default_name
@@ -247,6 +250,27 @@ def _sheets(ctx):
         {"id": sheet.id, "name": sheet.name, **dict(zip(("rows", "cols"), sheet.extent(), strict=True))}
         for sheet in _workbook(ctx).sheets.values()
     ]
+
+
+@computes_methods.method("tabs")
+def _tabs(ctx):
+    """The tabs below the workbook in their one order (E6.31, D1471), each as `{kind, id, name}`: `kind` is `"sheet"`
+    or `"slide"`. The event `tabs` says they changed (one came, went, or has another name). The chart tabs are still
+    apart (`charts`) until a chart is shown on a slide."""
+    workbook = _workbook(ctx)
+    return [{**tab.to_data(), "name": workbook.thing_name(tab.id)} for tab in workbook.tabs]
+
+
+@computes_methods.method("slide", "slide:str")
+def _slide(ctx, *, slide):
+    """The objects of a slide, the one in front last, as `{revision, slide, objects}`: the same answer as creates'
+    `slide` without speaker notes and planned time, which a workbook's slides do not have. An object is placed on a
+    slide with `x` and `y`, its top left corner in the slide's 1600 × 900 units."""
+    workbook = _workbook(ctx)
+    if slide not in workbook.slides:
+        raise RequestError("command_error", msg("unknown slide {slide!r}", slide=slide))
+    objects = [obj.to_data_for(ctx.user) for obj in workbook.objects_on(slide)]
+    return {"revision": current_revision(ctx), "slide": slide, "objects": objects}
 
 
 @computes_methods.method("export_office", "format:str", leaves="export")
@@ -355,7 +379,7 @@ def _set_print_page(ctx, *, page, base):
     try:
         command = SetPrintPage(PageSetup.from_data(page))
     except PageSetupError as exc:
-        raise RequestError("command_error", str(exc)) from None
+        raise RequestError("command_error", message_of(exc)) from None
     return done(ctx, command, base)
 
 
@@ -368,7 +392,7 @@ def _set_sheet_print(ctx, *, sheet, setup, base):
     try:
         command = SetSheetPrint(sheet, SheetPrintSetup.from_data(setup))
     except PrintSetupError as exc:
-        raise RequestError("command_error", str(exc)) from None
+        raise RequestError("command_error", message_of(exc)) from None
     return done(ctx, command, base)
 
 
@@ -434,7 +458,7 @@ def _outcome_table(ctx, *, sheet, row, col, combine):
     try:
         table = _workbook(ctx).outcome_table(SheetId(sheet), row, col, combine=combine)
     except (KeyError, ValueError) as exc:
-        raise RequestError("command_error", str(exc)) from None
+        raise RequestError("command_error", message_of(exc)) from None
     return {"revision": current_revision(ctx), "table": None if table is None else table.to_data()}
 
 
@@ -465,7 +489,7 @@ def _trace(ctx, *, sheet, row, col, reach, window):
     try:
         found = _workbook(ctx).trace(SheetId(sheet), row, col, reach=reach, window=area)
     except KeyError as exc:
-        raise RequestError("command_error", str(exc)) from None
+        raise RequestError("command_error", message_of(exc)) from None
     return {"revision": current_revision(ctx), "trace": found.to_data()}
 
 
@@ -532,11 +556,11 @@ def _clear_cell_style(ctx, *, sheet, range, slot, base):
         model = _workbook(ctx)
         steps = [SetCellStyle.applying(model, SheetId(sheet), one, area, None) for one in slots]
     except (KeyError, ValueError) as exc:
-        raise RequestError("command_error", str(exc)) from None
+        raise RequestError("command_error", message_of(exc)) from None
     try:
         applied = ctx.document.execute(Batch(tuple(steps), "Clear cell style"), author=ctx.user, base=base)
     except ValueError as exc:
-        raise RequestError("command_error", str(exc)) from None
+        raise RequestError("command_error", message_of(exc)) from None
     return {"revision": applied.revision.to_data()}
 
 
@@ -556,8 +580,9 @@ def _set_cells(ctx, sheet, cells, base):
     return done(ctx, SetCells(sheet, _typed(ctx, cells)), base)
 
 
-def _fresh_sheet_id(taken) -> str:
-    """The next sheet id (``s2``, ``s3`` ...) that no sheet of the workbook has."""
+def _fresh_sheet_id(workbook: WorkbookModel) -> str:
+    """The next sheet id (``s2``, ``s3`` ...) that no sheet or slide of the workbook has (they share the tabs)."""
+    taken = {tab.id for tab in workbook.tabs}
     number = len(taken) + 1
     while f"s{number}" in taken:
         number += 1
@@ -574,7 +599,7 @@ def _add_sheet(ctx, name, base):
             "bad_request",
             msg("add_sheet: the name must have 1 to {limit} characters", limit=MAX_SHEET_NAME),
         )
-    sheet_id = _fresh_sheet_id(_workbook(ctx).sheets)
+    sheet_id = _fresh_sheet_id(_workbook(ctx))
     return done(ctx, AddSheet(SheetId(sheet_id), name), base, sheet=sheet_id)
 
 
@@ -838,7 +863,7 @@ def _name_from(workbook: WorkbookModel, definition: dict, what: str) -> NamedRan
             _fresh_range_id(workbook),
         )
     except (ValueError, TypeError) as problem:
-        raise RequestError("bad_request", msg("{what}: {problem}", what=what, problem=problem)) from None
+        raise RequestError("bad_request", msg("{what}: {problem}", what=what, problem=message_of(problem))) from None
 
 
 def _name_data(workbook: WorkbookModel, named: NamedRange) -> dict:
@@ -915,7 +940,7 @@ def _name_and_describe_range(ctx, *, range, name, description, base):  # noqa: A
     to give `name_and_describe` from then on."""
     problem = name_problem(name)
     if problem is not None:
-        raise RequestError("bad_request", problem)
+        raise RequestError("bad_request", message_of(problem))
     named = _name_from(_workbook(ctx), {"name": clean_name(name), "range": range}, "name_and_describe_range")
     steps: list[Command] = [DefineName(named)]
     if description:
@@ -998,7 +1023,7 @@ def _define_sql(ctx, *, sheet, row, col, query, name, base):
                 DefineName(NamedRange(name, None, None, True, False, "result", (), anchor, _fresh_range_id(workbook)))
             )
         except ValueError as problem:
-            raise RequestError("bad_request", msg("define_sql: {problem}", problem=problem)) from None
+            raise RequestError("bad_request", msg("define_sql: {problem}", problem=message_of(problem))) from None
     return done(ctx, steps[0] if len(steps) == 1 else Batch(tuple(steps)), base)
 
 
@@ -1046,7 +1071,7 @@ def _pivot_definition(data, what: str) -> PivotDefinition:
     try:
         return PivotDefinition.from_data(data)
     except PivotError as problem:
-        raise RequestError("bad_request", msg("{what}: {problem}", what=what, problem=problem)) from None
+        raise RequestError("bad_request", msg("{what}: {problem}", what=what, problem=message_of(problem))) from None
 
 
 def _pivot_labels(data, what: str) -> PivotLabels | None:
@@ -1055,11 +1080,11 @@ def _pivot_labels(data, what: str) -> PivotLabels | None:
     try:
         return PivotLabels.from_data(data)
     except PivotError as problem:
-        raise RequestError("bad_request", msg("{what}: {problem}", what=what, problem=problem)) from None
+        raise RequestError("bad_request", msg("{what}: {problem}", what=what, problem=message_of(problem))) from None
 
 
 def _refused(problem: ValueError):
-    return RequestError("command_error", msg("{problem}", problem=problem))
+    return RequestError("command_error", msg("{problem}", problem=message_of(problem)))
 
 
 @computes_methods.method("pivots")
@@ -1103,7 +1128,7 @@ def _define_pivot(ctx, *, name, definition, labels, sheet, row, col, new_sheet, 
                 "bad_request",
                 msg("define_pivot: the name of the new sheet must have 1 to {limit} characters", limit=MAX_SHEET_NAME),
             )
-        target = _fresh_sheet_id(workbook.sheets)
+        target = _fresh_sheet_id(workbook)
     try:
         command = create_pivot(workbook, name, (SheetId(target), row, col), parsed, words, new_sheet)
     except ValueError as problem:
@@ -1162,28 +1187,89 @@ def _pivot_to_sql(ctx, *, name, base):
     return done(ctx, command, base)
 
 
-def _at_cell(workbook: WorkbookModel, held, *, row: int, col: int, sheet: str | None = None) -> dict:
-    """Where an object of a workbook is: a cell of a sheet. A new one names its sheet; a moved one stays on its own."""
+def _placed(
+    workbook: WorkbookModel,
+    held: CellAnchor | SlideAnchor | None,
+    *,
+    sheet: str | None = None,
+    row: int | None = None,
+    col: int | None = None,
+    slide: str | None = None,
+    x: int | None = None,
+    y: int | None = None,
+) -> dict:
+    """Where an object of a workbook is: a cell of a sheet (`row`, `col`), or a point of a slide (`x`, `y`, the words
+    creates uses, D1473). A new one names its sheet or its slide; a moved one stays on its own tab."""
     if held is not None:
-        sheet = held.sheet
-    elif sheet not in workbook.sheets:
+        return (
+            _at_point(held.holder, x, y, row, col)
+            if isinstance(held, SlideAnchor)
+            else _at_cell(held.holder, row, col, x, y)
+        )
+    if (sheet is None) == (slide is None):
+        raise RequestError("bad_request", msg("name the sheet or the slide the object goes on"))
+    if slide is not None:
+        if slide not in workbook.slides:
+            raise RequestError("command_error", msg("unknown slide {slide!r}", slide=slide))
+        return _at_point(slide, x, y, row, col)
+    if sheet not in workbook.sheets:
         raise RequestError("command_error", msg("unknown sheet {sheet!r}", sheet=sheet))
+    return _at_cell(str(sheet), row, col, x, y)
+
+
+def _at_point(slide: str, x: int | None, y: int | None, row: int | None, col: int | None) -> dict:
+    if x is None or y is None or row is not None or col is not None:
+        raise RequestError("bad_request", msg("an object on a slide is placed with x and y"))
+    return SlideAnchor(slide, x, y).to_data()
+
+
+def _at_cell(sheet: str, row: int | None, col: int | None, x: int | None, y: int | None) -> dict:
+    if row is None or col is None or x is not None or y is not None:
+        raise RequestError("bad_request", msg("an object on a sheet is placed with row and col"))
     return CellAnchor(SheetId(sheet), row, col).to_data()
 
 
-CELLS = Placement(
-    new="sheet:str row:int col:int",
-    move="row:int col:int",
-    frame="row:int col:int",
-    anchor=_at_cell,
+CELLS_AND_SLIDES = Placement(
+    new="sheet:str? row:int? col:int? slide:str? x:int? y:int?",
+    move="row:int? col:int? x:int? y:int?",
+    frame="row:int? col:int? x:int? y:int?",
+    anchor=_placed,
     says={
-        "add_image": "`row` and `col` name the cell it hangs from; its pixel size (and anchor) never change on their "
-        "own afterwards.",
-        "move_object": "`row` and `col` name the cell it hangs from now.",
-        "resize_object": "The cell it hangs from (`row`, `col`) comes with the size, since dragging a corner moves the "
-        "corner.",
-        "rotate_object": "Its anchor cell stays.",
+        "add_image": "On a sheet, `row` and `col` name the cell it hangs from; its pixel size (and anchor) never "
+        "change on their own afterwards. On a slide, `x` and `y` are its top left corner.",
+        "move_object": "On a sheet, `row` and `col` name the cell it hangs from now; on a slide, `x` and `y` are its "
+        "top left corner now. It stays on its own sheet or slide.",
+        "resize_object": "The cell it hangs from (`row`, `col`), or on a slide its top left corner (`x`, `y`), comes "
+        "with the size, since dragging a corner moves the corner.",
+        "rotate_object": "On a sheet its anchor cell stays; a slide keeps the turned outline on the slide, moving the "
+        "object just far enough in, in the same step of the history.",
     },
 )
-add_object_methods(computes_methods, model_of=_workbook, placement=CELLS)
-add_container_methods(computes_methods, model_of=_workbook, placement=CELLS)
+add_object_methods(computes_methods, model_of=_workbook, placement=CELLS_AND_SLIDES)
+add_container_methods(computes_methods, model_of=_workbook, placement=CELLS_AND_SLIDES)
+
+
+def _on_a_slide(workbook: WorkbookModel, held: SlideAnchor | None, *, slide: str, x: int, y: int) -> dict:
+    """Where a new text box or shape of a workbook goes: a point of a slide. A sheet has neither (D1232)."""
+    return _placed(workbook, held, slide=slide, x=x, y=y)
+
+
+ON_A_SLIDE = Placement(
+    new="slide:str x:int y:int",
+    move="x:int y:int",
+    frame="x:int y:int",
+    anchor=_on_a_slide,
+    says={
+        "add_object": "In a workbook a text box or a shape goes on a slide (a sheet has neither, D1232); `x` and `y` "
+        "are its top left corner."
+    },
+)
+add_shape_methods(computes_methods, model_of=_workbook, library=ShapeLibrary.load(), placement=ON_A_SLIDE)
+
+
+def computes_methods_with(library: ShapeLibrary) -> MethodTable:
+    """The method table of workbooks on a server whose shape library is ``library``: the outlines a slide's shapes
+    are drawn from."""
+    table = computes_methods.extended()
+    add_shape_methods(table, model_of=_workbook, library=library, placement=ON_A_SLIDE)
+    return table

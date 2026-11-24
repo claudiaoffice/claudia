@@ -52,6 +52,35 @@ def test_extract_python_reports_a_call_it_cannot_read_as_one_plain_string(tmp_pa
         assert len(problems) == 1 and problems[0].line == 1, bad
 
 
+def test_extract_python_finds_a_refusal_with_its_parameters(tmp_path, monkeypatch):
+    """A model's refusal (CODE-78, D1510) is translated by the server, like its own ``msg``."""
+    monkeypatch.setattr(extract_i18n, "ROOT", tmp_path)
+    path = write(tmp_path, "a.py", 'raise Refusal("There is already a sheet called “{name}”", name=name)\n')
+    found, problems = extract_i18n.extract_python(path)
+    assert found == {"There is already a sheet called “{name}”": ["a.py:1"]}
+    assert problems == []
+
+
+def test_extract_python_reports_a_refusal_built_at_runtime(tmp_path, monkeypatch):
+    monkeypatch.setattr(extract_i18n, "ROOT", tmp_path)
+    for built in ('f"There is already a sheet called {name}"', '"There is " + what', "str(error)", "text.format(n=1)"):
+        path = write(tmp_path, "a.py", f"raise Refusal({built})\n")
+        found, problems = extract_i18n.extract_python(path)
+        assert found == {} and len(problems) == 1, built
+
+
+def test_extract_python_finds_a_template_kept_apart_from_its_refusal(tmp_path, monkeypatch):
+    monkeypatch.setattr(extract_i18n, "ROOT", tmp_path)
+    text = 'TAKEN = {"sheet": N_("There is already a sheet called “{name}”")}\nraise Refusal(TAKEN[kind], name=name)\n'
+    found, problems = extract_i18n.extract_python(write(tmp_path, "a.py", text))
+    assert found == {"There is already a sheet called “{name}”": ["a.py:1"]}
+    assert problems == []
+
+
+def test_the_core_is_searched_for_refusals():
+    assert "packages/claudia-core/src" in extract_i18n.PY_DIRS
+
+
 # ------------------------------------------------------------------------------------------------------------ web
 def test_extract_web_finds_single_and_double_quoted_calls(tmp_path, monkeypatch):
     monkeypatch.setattr(extract_i18n, "ROOT", tmp_path)

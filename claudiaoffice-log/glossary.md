@@ -249,11 +249,11 @@ A text box, shape, image, chart, container or table placed in a page, a slide or
 _avoid_: element, figure, shape (for objects of other kinds)
 
 **Holder**
-The slide, sheet or paragraph that an object is at.
+The slide, layout, sheet or paragraph that an object is at.
 _avoid_: container, parent, owner
 
 **Object layer**
-The invisible layer of a page, a slide or a sheet that floating objects sit on, the same in all three apps.
+The invisible layer of a page, a slide, a layout or a sheet that floating objects sit on, the same in all three apps.
 _avoid_: canvas, overlay, drawing layer
 
 **Chart**
@@ -270,7 +270,7 @@ _avoid_: name (in this sense), defined name, range name
 
 **Style**
 A named look, defined by its purpose, put into slots; every slot with the same style serves the same purpose.
-_avoid_: format, formatting, theme, look
+_avoid_: format, formatting, look
 
 **Facet**
 One of four sides of a look, naming what can be set for it: text (how characters look), paragraph (how a stretch of text is laid out), box (the background, border and padding around content) and outline (a shape's paint). The values are always a style's own.
@@ -281,12 +281,28 @@ Which facets a style may hold, and so which slots it fits: a paragraph style (te
 _avoid_: style type, category
 
 **Palette**
-The colours of a document, each named by what it means, shared by all its styles.
-_avoid_: colour scheme, theme
+The colours of a document, each named by what it means, shared by all its styles; with the styles it makes a theme.
+_avoid_: colour scheme
 
 **Palette colour**
 One colour of a palette, named by what it means (accent, muted); every style that uses it follows when it changes.
-_avoid_: colour role, swatch, theme colour
+_avoid_: colour role, swatch
+
+**Theme**
+A named set of styles together with the palette they refer to, which can exist without a document.
+_avoid_: skin, look
+
+**Template**
+A named combination of layouts and a theme, made for a purpose; a new presentation starts as a copy of it and keeps no link to it.
+_avoid_: master, POTX, design
+
+**Layout**
+A named arrangement of placeholders and other objects that a slide follows.
+_avoid_: slide master, slide type
+
+**Placeholder**
+An object on a layout, labelled by its purpose, that an object on a slide can take.
+_avoid_: slot, frame
 
 **Number format**
 How the value of a cell reads (a percentage, an amount in euros, a date, a number of decimals), chosen for the cell itself, apart from its style, and never changing the value.
@@ -346,17 +362,49 @@ _avoid_: ping, address
 
 ### The ai at work
 
+**Action**
+Something a person can do in an app, by menu, shortcut or context menu: number a list, turn a shape, merge two cells.
+_avoid_: feature, command, capability, function
+
+**Action catalog**
+The list of all actions of one app, kept so that nothing a person can do is forgotten when the ai is taught what it may do and see.
+_avoid_: feature list, capability matrix
+
 **AI mode**
 How one person wants the ai to treat her requests in one document: act (it makes the change) or propose (it offers the change).
 _avoid_: autopilot, review mode, permission, suggest
+
+**AI provider**
+What answers when someone asks the ai: the scripted stand-in, a model on the server's own machine, or Claude. The administrator chooses it in the server's settings.
+_avoid_: engine, backend, connection, model
+
+**Owner's consent**
+A switch in a document that lets one named remote provider receive its content; it is off until the owner turns it on, and it records who did and when.
+_avoid_: opt-in, permission
+
+**Persona**
+How the ai behaves in an app: its tone, how short it is, that it never invents, when it asks. Written once for each app, in the app's persona.md.
+_avoid_: system prompt
 
 **Proposal**
 Changes to a document that are offered but not made, until a person accepts or rejects them; seen by everybody or only by the one who asked.
 _avoid_: suggestion, tracked change
 
+**Provider key**
+The secret a server uses to reach a remote provider; once saved it is never shown again, only replaced or removed.
+_avoid_: API key, token, access secret
+
 **Remark**
 A note the ai leaves at a place in a document that offers no change; a person dismisses it.
 _avoid_: comment, annotation
+
+**Remote provider**
+An AI provider that sends a document's content out of the server; it answers only in a document whose owners have consented to it.
+_avoid_: cloud AI
+
+**Skill**
+A recipe in an app's skills.md: how to do one kind of task there with the ai's requests, with a worked example. The ai is given only the skills for what it may do.
+_avoid_: prompt, macro
 
 **What-if**
 A private copy of a document in which one person tries changes before carrying them out as one step.

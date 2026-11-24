@@ -1,18 +1,20 @@
 """Search and replace in a workbook (E6.20, D284-D286): computes' part of the search methods.
 
 What is shared by every app lives in :mod:`claudia_server.search_methods`; this is what a workbook brings: its kinds
-of text, its scope (a sheet, and a range on it), a place as ``{sheet, row, col}`` (CODE-18) and who holds a cell.
+of text, its scope (a sheet, and a range on it, or a slide), a place as ``{sheet, row, col}`` or, for the words of an
+object on a slide, ``{slide, object, source}`` (CODE-18, UX-72) and who holds a cell or an object.
 """
 
 from __future__ import annotations
 
-from claudia_computes.model import MAX_COLS, MAX_ROWS
+from claudia_computes.model import MAX_COLS, MAX_ROWS, WorkbookModel
 from claudia_computes.refs import SheetId
 from claudia_computes.region import CellRegion
 from claudia_computes.search import (
     EXTRA_PARTS,
     KINDS,
     cell_of,
+    place_of,
     plan_replacement,
     replace_command,
     scan_workbook,
@@ -31,12 +33,13 @@ FIND_DOC = """Search and replace, the looking (E6.20). `query` is what a person 
         filter}` (her own pattern); each may carry `match_case`, and the first two `whole` (`none`, `entire` or
         `word`) and, to show what a replacement would do, `replace`. A part is `{what, ...}`: `text`, `any_of`,
         `none_of`, `letter`, `digit`, `space`, `any`, `number`, `start`, `end` or, in a workbook, `cellref`. `kinds`
-        is any of `text`, `formulas` and `values` (default `["text"]`): the text people typed, formulas as typed, and
-        what cells show that was not typed as text. `scope` is `{}` (every sheet), `{sheet}` or `{sheet, range: [r0,
-        c0, r1, c1]}`.
+        is any of `text`, `formulas` and `values` (default `["text"]`): the text people typed (in cells, and the words
+        of the text boxes and shapes on slides), formulas as typed, and what cells show that was not typed as text.
+        `scope` is `{}` (every sheet and slide), `{sheet}`, `{sheet, range: [r0, c0, r1, c1]}` or `{slide}`.
 
         Answers `{revision, matches, left_out, counts, total, truncated, timed_out, pattern}`. A match is `{at, kind,
-        number, start, end, parts, after, text, excerpt, clipped}`: `at` is the cell, `{sheet, row, col}`; `kind` is
+        number, start, end, parts, after, text, excerpt, clipped}`: `at` is the cell, `{sheet, row, col}`, or the
+        words of an object on a slide, `{slide, object, source}` (`source` `box` or `label`); `kind` is
         `text`, `formula` or `value`, `number` the match's place among those of its cell, `start`/`end` where it is
         in the cell's text, `parts` what the kept parts matched, `after` what a replacement would make of it (`null`
         for a value, or without one), `text` the stretch of the cell around it, `excerpt` the match inside that and
@@ -70,22 +73,22 @@ def add_search_methods(table: MethodTable, *, workbook) -> None:
     """Add the three search methods to computes' method table; ``workbook`` is the document's model, or refuses."""
 
     def plan(ctx, compiled, kinds, where, leave, deadline):
-        sheets, area = where
+        tabs, area = where
         return plan_replacement(
             workbook(ctx),
             compiled,
             kinds=kinds,
-            sheets=sheets,
+            tabs=tabs,
             area=area,
             leave=leave,
-            held=_holder(ctx),
+            held=_holder(ctx, workbook(ctx)),
             max_length=ctx.limits.max_text,
             deadline=deadline,
         )
 
     def scan(model, compiled, kinds, where, deadline):
-        sheets, area = where
-        return scan_workbook(model, compiled, kinds=kinds, sheets=sheets, area=area, deadline=deadline)
+        tabs, area = where
+        return scan_workbook(model, compiled, kinds=kinds, tabs=tabs, area=area, deadline=deadline)
 
     _add(
         table,
@@ -97,14 +100,15 @@ def add_search_methods(table: MethodTable, *, workbook) -> None:
             place=_place,
             scan=scan,
             plan=plan,
-            command=lambda model, made, user: replace_command(made),
+            command=replace_command,
             too_many=lambda count, limit: msg(
                 "search_replace: that would change {count} cells, at most {limit} at a time: narrow the search",
                 count=count,
                 limit=limit,
             ),
             bad_place=lambda: msg(
-                "leave: each is {at, match}, at being a cell {sheet, row, col} and match a number or null"
+                "leave: each is {at, match}, at being a cell {sheet, row, col} or the words of an object "
+                "{slide, object, source}, and match a number or null"
             ),
             max_replaced=lambda: MAX_REPLACED_CELLS,
             find_doc=FIND_DOC,
@@ -115,20 +119,26 @@ def add_search_methods(table: MethodTable, *, workbook) -> None:
 
 
 def _place(at) -> Location:
-    sheet, row, col = cell_of(at)
-    if row >= MAX_ROWS or col >= MAX_COLS:
+    place = place_of(at)
+    if "sheet" in place and (place["row"] >= MAX_ROWS or place["col"] >= MAX_COLS):
         raise ValueError("outside any sheet")
-    return {"sheet": sheet, "row": row, "col": col}
+    return place
 
 
 def _search_scope(
     ctx: Context, scope: dict | None, method: str, workbook
 ) -> tuple[list[str] | None, tuple[int, int, int, int] | None]:
-    """``(sheets, area)``: no scope is every sheet, ``{"sheet": id}`` one sheet, and with ``"range": [r0, c0, r1,
-    c1]`` a selection on it."""
+    """``(tabs, area)``: no scope is every sheet and slide, ``{"sheet": id}`` one sheet, and with ``"range": [r0, c0,
+    r1, c1]`` a selection on it; ``{"slide": id}`` one slide (UX-72)."""
     scope = scope or {}
+    if set(scope) == {"slide"} and isinstance(scope["slide"], str):
+        if scope["slide"] not in workbook(ctx).slides:
+            raise RequestError("command_error", msg("unknown slide {slide!r}", slide=scope["slide"]))
+        return [scope["slide"]], None
     if set(scope) - {"sheet", "range"}:
-        raise RequestError("bad_request", msg("{method}: a scope has a sheet and, on it, a range", method=method))
+        raise RequestError(
+            "bad_request", msg("{method}: a scope has a sheet and, on it, a range, or a slide", method=method)
+        )
     sheet, area = scope.get("sheet"), scope.get("range")
     if area is not None and sheet is None:
         raise RequestError("bad_request", msg("{method}: a range is on a sheet: say which", method=method))
@@ -147,11 +157,19 @@ def _search_scope(
     return [sheet], (area[0], area[1], area[2], area[3])
 
 
-def _holder(ctx: Context):
-    """Who holds a cell, when it is somebody else: asks the document's locks once per sheet."""
+def _holder(ctx: Context, model: WorkbookModel):
+    """Who holds a cell or an object, when it is somebody else: asks the document's locks once per sheet, and once per
+    object for the words of one on a slide (its box and its label are asked about together)."""
     locks: dict[str, list] = {}
+    objects: dict[str, str | None] = {}
 
-    def held(sheet: str, row: int, col: int) -> str | None:
+    def held(at: Location) -> str | None:
+        if "object" in at:
+            if at["object"] not in objects:
+                found = ctx.document.presence.conflicts(ctx.user, list(model.selection_of(at["object"])))
+                objects[at["object"]] = found[0][0] if found else None
+            return objects[at["object"]]
+        sheet, row, col = cell_of(at)
         if sheet not in locks:
             whole = CellRegion.of(SheetId(sheet), 0, 0, MAX_ROWS - 1, MAX_COLS - 1)
             locks[sheet] = ctx.document.presence.conflicts(ctx.user, [whole])

@@ -48,7 +48,7 @@ from .events import (
 from .history import History
 from .log import CommandLog, Step
 from .manifest import Environment, Manifest, RequirementReport, check
-from .messages import ChatRecord, Ephemeral, parse_chat
+from .messages import ChatRecord, Ephemeral, Via, parse_chat
 from .model import DocumentModel, Snapshot
 from .presence import Presence
 from .region import Region, transform
@@ -413,10 +413,11 @@ class Document:
         return message
 
     # ------------------------------------------------------------------ chat (E1.6)
-    def post_chat(self, author: str, raw: str, *, users: Iterable[str] = ()) -> ChatRecord:
-        """``@name message`` or a message for everybody. Chat is not part of the command log."""
+    def post_chat(self, author: str, raw: str, *, users: Iterable[str] = (), via: Via | None = None) -> ChatRecord:
+        """``@name message`` or a message for everybody. Chat is not part of the command log. ``via`` says who answered,
+        for a message of the AI (E7.11)."""
         to, text = parse_chat(raw, users)
-        record = ChatRecord(len(self.chat) + 1, author, to, text, self._clock(), self.revision)
+        record = ChatRecord(len(self.chat) + 1, author, to, text, self._clock(), self.revision, via=via)
         if self.store is not None:
             self.store.append_chat(record)
         self.chat.append(record)

@@ -42,9 +42,10 @@ POT_PATH = ROOT / "po" / "claudia.pot"
 MANIFEST_SRC_DIR = ROOT / "clients" / "linux" / "src"
 MANIFEST_PATH = MANIFEST_SRC_DIR / "claudia_shell_gtk" / "manifest.py"
 
-# Where each extractor looks. claudia-core is deliberately absent: the kernel stays dependency-free and
-# catalog-agnostic (test_purity.py), so it must never grow a call this script would find.
+# Where each extractor looks. The kernel stays dependency-free and catalog-agnostic (test_purity.py): it only marks the
+# templates of its refusals (CODE-78, D1510), which the server translates.
 PY_DIRS = (
+    "packages/claudia-core/src",
     "packages/claudia-server/src",
     "packages/claudia-computes/src",
     "packages/claudia-composes/src",
@@ -76,8 +77,11 @@ class Problem:
         return f"{self.path.relative_to(ROOT)}:{self.line}: {self.reason}"
 
 
-#: The names that mark a text for translation in Python: gettext's ``_`` and the server's ``msg`` (D322).
-MARKERS = ("_", "msg")
+#: The names that mark a text for translation in Python: gettext's ``_``, the server's ``msg`` (D322), a model's
+#: ``Refusal`` and ``N_`` for the template of one that is kept apart from its call (CODE-78, D1510).
+MARKERS = ("_", "msg", "Refusal", "N_")
+#: The markers whose template is filled in by keywords: ``msg("{n} cells", n=n)``.
+FILLED = ("msg", "Refusal")
 
 
 def _existing_dirs(names: tuple[str, ...]) -> list[Path]:
@@ -95,8 +99,20 @@ def _call_arg_string(call: ast.Call, *, keywords: bool = False) -> str | None:
     return arg.value if isinstance(arg, ast.Constant) and isinstance(arg.value, str) else None
 
 
+def _looked_up(call: ast.Call) -> bool:
+    """Is this a ``Refusal`` whose template is looked up (a name, an item of a table), not written in the call? Its
+    template is marked where it is kept, with ``N_``. A template built in the call (an f-string, two strings added) is
+    not looked up: it has no fixed text a translator could work from."""
+    if not (isinstance(call.func, ast.Name) and call.func.id == "Refusal" and len(call.args) == 1):
+        return False
+    (arg,) = call.args
+    lookup = isinstance(arg, ast.Call) and isinstance(arg.func, ast.Attribute) and arg.func.attr == "get"
+    return lookup or isinstance(arg, (ast.Name, ast.Attribute, ast.Subscript))
+
+
 def extract_python(path: Path) -> tuple[dict[str, list[str]], list[Problem]]:
-    """``_("...")`` and the server's ``msg("...", name=value)`` calls in one file: ``{msgid: [occurrence, ...]}`` and
+    """``_("...")``, the server's ``msg("...", name=value)`` and the models' ``Refusal("...", name=value)`` and
+    ``N_("...")`` calls in one file: ``{msgid: [occurrence, ...]}`` and
     anything that looked like a call but was not one plain string literal."""
     found: dict[str, list[str]] = {}
     problems: list[Problem] = []
@@ -104,8 +120,10 @@ def extract_python(path: Path) -> tuple[dict[str, list[str]], list[Problem]]:
     for node in ast.walk(tree):
         if not (isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id in MARKERS):
             continue
-        msgid = _call_arg_string(node, keywords=node.func.id == "msg")
+        msgid = _call_arg_string(node, keywords=node.func.id in FILLED)
         occurrence = f"{path.relative_to(ROOT).as_posix()}:{node.lineno}"
+        if msgid is None and _looked_up(node):
+            continue  # a refusal whose template is kept in a table, marked there with N_
         if msgid is None:
             problems.append(Problem(path, node.lineno, f"{node.func.id}(...) is not a single plain string literal"))
         else:

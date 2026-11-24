@@ -52,7 +52,7 @@ def test_a_sheet_cannot_take_the_name_of_a_chart_tab(doc):
 
 def test_a_sheet_cannot_take_the_name_of_an_object(doc):
     put_image(doc, "i1", name="Logo")
-    with pytest.raises(ValueError, match="There is already an image called “Logo”"):
+    with pytest.raises(ValueError, match="There is already a picture called “Logo”"):
         doc.execute(AddSheet("s2", "logo"), author="ana")
 
 
@@ -64,11 +64,11 @@ def test_an_object_cannot_take_the_name_of_a_sheet(doc):
         doc.execute(RenameThing("i2", "SHEET1"), author="ana")
 
 
-def test_the_old_messages_for_two_sheets_or_two_charts_are_kept(doc):
-    with pytest.raises(ValueError, match="a sheet called 'sheet1' exists"):
+def test_two_sheets_or_two_charts_of_one_name_are_refused_with_the_sentence_of_a_taken_name(doc):
+    with pytest.raises(ValueError, match="There is already a sheet called “sheet1”"):
         doc.execute(AddSheet("s2", "sheet1"), author="ana")
     a_chart(doc)
-    with pytest.raises(ValueError, match="a chart called 'revenue' exists"):
+    with pytest.raises(ValueError, match="There is already a chart called “revenue”"):
         doc.execute(AddChart("t2", "revenue", "c1"), author="ana")
 
 
@@ -164,7 +164,7 @@ def test_a_formula_that_named_a_sheet_there_was_none_of_is_not_touched(doc):
 def test_the_name_of_a_sheet_is_free_in_the_whole_document(doc):
     two_sheets(doc)
     define(doc, "Revenue", "A1:B2")
-    for taken, match in (("Sheet1", "a sheet"), ("sheet1", "a sheet"), ("Revenue", "a range")):
+    for taken, match in (("Sheet1", "a sheet"), ("sheet1", "a sheet"), ("Revenue", "a named range")):
         with pytest.raises(ValueError, match=f"There is already {match} called"):
             doc.execute(RenameThing("s2", taken), author="ana")
     assert doc.model.sheet("s2").name == "Data"

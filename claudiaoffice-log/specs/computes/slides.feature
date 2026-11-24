@@ -4,7 +4,8 @@ Feature: Slides in computes (E6.31)
   boxes and shapes, so that a chart can have a page of its own with words beside it, and works like a slide in creates.
   A slide comes into existence only for a chart, and goes with its last object. The screens are
   `notes/mockups/computes-slides-*.svg`, the architecture `notes/e6-31-slides-in-computes.md`. The owner's answers
-  to the review of 2026-11-22 are written into the scenarios (`Q<n>` names the question they answer).
+  to the review of 2026-11-22 are written into the scenarios (`Q<n>` names the question they answer); the decisions
+  are D1470 to D1473.
   What every object does (selecting, moving, scaling, naming, the object menu as such) is in `specs/objects/` and is
   not repeated here.
 
@@ -202,3 +203,40 @@ Feature: Slides in computes (E6.31)
       And I inserted a bar chart of A1:B4 as a slide named "Sales chart" while Sheet1 was shown
       When I print the whole workbook
       Then the pages are Sheet1, the slide "Sales chart" on a landscape page, then Costs
+
+    @e2e:computes-slides
+    Scenario: The print bar speaks of the slide shown as a slide
+      # UX-73
+      Given the slide "Sales chart" is shown
+      When I open the print preview
+      Then "Contents" offers "This slide", "Whole workbook"
+      When I print the whole workbook
+      Then the status line counts 2 sheets and 1 slide
+
+  # ================================================================ search
+
+  @extended @e2e:computes-slides
+  Rule: Search looks at the words on the slides too
+
+    Scenario: A word on a slide is found and shown
+      # UX-72
+      Given the slide "Sales chart" has a text box saying "East leads"
+      And Sheet1 is shown
+      When I search for "East" in all sheets and slides
+      Then a match is listed in "Sales chart" and one in Sheet1!A2
+      When I go to the match in "Sales chart"
+      Then the slide "Sales chart" is shown with the match marked in the text box
+
+    Scenario: With a slide shown, "This slide" searches only that slide
+      # UX-72
+      Given the slide "Sales chart" is shown
+      When I search for "East" in this slide
+      Then the only match is in the text box of "Sales chart"
+
+    Scenario: A replacement changes the words on a slide in the same step as the cells
+      # UX-72
+      Given Sheet1 is shown
+      When I replace "East" with "Ost" in all sheets and slides
+      Then Sheet1!A2 reads "Ost" and the text box on "Sales chart" says "Ost leads"
+      When I undo
+      Then both read "East" again

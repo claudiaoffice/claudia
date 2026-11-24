@@ -21,7 +21,7 @@ def test_an_object_can_carry_a_name(doc):
 
 def test_two_objects_cannot_have_the_same_name_however_it_is_written(doc):
     put(doc, named("t1", "Figure 1"))
-    with pytest.raises(ValueError, match="There is already a text called “Figure 1”"):
+    with pytest.raises(ValueError, match="There is already a text box called “Figure 1”"):
         put(doc, named("t2", "figure 1", y=300))
     assert "t2" not in doc.model.objects, "a refused command changes nothing"
 
@@ -57,7 +57,7 @@ def test_renaming_an_unnamed_object_and_undoing_it_makes_it_unnamed_again(doc):
 def test_a_rename_to_a_name_somebody_has_is_refused_with_a_sentence_that_says_who(doc):
     put(doc, named("t1", "Intro"))
     put(doc, named("t2", "Outro", y=300))
-    with pytest.raises(ValueError, match="There is already a text called “Intro”"):
+    with pytest.raises(ValueError, match="There is already a text box called “Intro”"):
         doc.execute(RenameThing("t2", "INTRO"), author="ana")
     assert doc.model.get("t2").body.name == "Outro"
 
@@ -87,7 +87,7 @@ def test_a_slide_and_an_object_cannot_share_a_name(doc):
         put(doc, named("t1", "method"))
 
     put(doc, named("t1", "Steps"))
-    with pytest.raises(ValueError, match="There is already a text called “Steps”"):
+    with pytest.raises(ValueError, match="There is already a text box called “Steps”"):
         doc.execute(RenameThing("s1", "steps"), author="ana")
 
 
@@ -115,12 +115,6 @@ def test_names_survive_a_rebuild_from_the_log_and_a_snapshot(doc):
 
     restored = type(doc.model).restore(doc.model.serialize())
     assert restored.thing_name("s1") == "Method"
-
-
-def test_a_snapshot_written_before_names_still_restores(doc):
-    state = doc.model.serialize()
-    del state["names"]
-    assert type(doc.model).restore(state).thing_name("s1") == ""
 
 
 def test_clean_name_is_what_the_command_stores():

@@ -8,11 +8,11 @@ from collections.abc import Callable
 from typing import Any
 
 from claudia_computes import WorkbookModel, column_name
-from claudia_computes.events import CellsChanged, SheetsChanged, StructureChanged
+from claudia_computes.events import CellsChanged, StructureChanged, TabsChanged
 from claudia_computes.refs import StructuralEdit
 from claudia_core import Document
 
-from .lens import fence, shorten
+from .lens import HELP_METHODS, count, fence, look_first, shorten, show_help
 
 MAX_LISTED_SHEETS = 50  # sheets named to the model; a small model has little room
 MAX_SHEET_NAME = 30
@@ -27,8 +27,8 @@ ORIENTATION = (
     "column 0. What you are shown is written as A1, B7 and so on.{example}"
 )
 EXAMPLE = (
-    ' A request looks like {{"method": "set_cells", "params": {{"sheet": "s1", "cells": '
-    '[{{"row": 0, "col": 0, "input": "42"}}]}}}}.'
+    ' A request looks like {"method": "set_cells", "params": {"sheet": "s1", "cells": '
+    '[{"row": 0, "col": 0, "input": "42"}]}}.'
 )  # left out when the asker's mode or role lets the AI change nothing: it would only invite a refused request
 
 
@@ -66,7 +66,7 @@ def describe_cell(row: int, col: int, content: dict | None) -> str:
 class WorkbookLens:
     """The lens for computes."""
 
-    look_methods: tuple[str, ...] = ("sheets", "cells", "functions", "function_help")
+    look_methods: tuple[str, ...] = ("sheets", "cells", "functions", "function_help", *HELP_METHODS)
 
     # -- where the model starts
     def orient(
@@ -78,12 +78,10 @@ class WorkbookLens:
         writes: frozenset[str] | None = None,
     ) -> str:
         """How cells are counted, the sheets with what they hold, and the top left corner of the first few."""
-        model = document.model
-        assert isinstance(model, WorkbookModel)
-        sheets = list(model.sheets.values())
+        sheets = self._sheets(document)
         text = ORIENTATION.format(example=EXAMPLE if can_write else "")
         if not sheets:
-            return text + "\nThere are no sheets yet: add one with add_sheet."
+            return text + self.NO_SHEETS
         lines = []
         for sheet in sheets[:MAX_LISTED_SHEETS]:
             rows, cols = sheet.extent()
@@ -97,6 +95,32 @@ class WorkbookLens:
             text += "\nTop left of the first sheets:\n" + fence("\n".join(previews))
         return text
 
+    def outline(
+        self,
+        document: Document,
+        *,
+        can_write: bool,
+        asker: str | None = None,
+        writes: frozenset[str] | None = None,
+    ) -> str:
+        """How cells are counted, how many sheets there are and their ids; no name and no cell (D1568)."""
+        sheets = self._sheets(document)
+        text = ORIENTATION.format(example=EXAMPLE if can_write else "")
+        if not sheets:
+            return text + self.NO_SHEETS
+        ids = [sheet.id for sheet in sheets[:MAX_LISTED_SHEETS]]
+        if len(sheets) > MAX_LISTED_SHEETS:
+            ids.append(f"... and {len(sheets) - MAX_LISTED_SHEETS} more")
+        has = f"The document has {count(len(sheets), 'sheet', 'sheets')} ({', '.join(ids)})."
+        return f"{text}\n{has} {look_first('sheets')}"
+
+    NO_SHEETS = "\nThere are no sheets yet: add one with add_sheet."
+
+    @staticmethod
+    def _sheets(document: Document) -> list[Any]:
+        assert isinstance(document.model, WorkbookModel)
+        return list(document.model.sheets.values())
+
     @staticmethod
     def _preview(sheet: Any) -> str:
         found = sheet.cells_in(0, PREVIEW_ROWS - 1, 0, PREVIEW_COLS - 1)[:PREVIEW_CELLS]
@@ -106,7 +130,9 @@ class WorkbookLens:
 
     # -- what the read requests show
     def show(self, method: str, params: dict, result: Any) -> str:
-        """The answer of a read request, fenced as data."""
+        """The answer of a read request, fenced as data (help is not data, it is the product's own text)."""
+        if method in HELP_METHODS:
+            return show_help(method, result)
         if method == "cells":
             return fence(self._cells(params, result["cells"]))
         if method == "sheets":
@@ -155,8 +181,8 @@ class WorkbookRecorder:
                 self._cells[(event.sheet, row, col)] = content
         elif isinstance(event, StructureChanged):
             self._notes.append(self._structure(event.edit))
-        elif isinstance(event, SheetsChanged):
-            self._notes.append("The sheets changed.")
+        elif isinstance(event, TabsChanged):
+            self._notes.append("The sheets or slides changed.")
 
     @staticmethod
     def _structure(edit: StructuralEdit) -> str:

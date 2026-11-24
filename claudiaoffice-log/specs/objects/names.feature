@@ -10,7 +10,7 @@ Feature: A person can point at anything by its name, change the name, describe i
     Then Name & describe… on it shows a name like "Paragraph 3"
     And the name is in my own language
 
-  @core @app:composes @app:computes @app:creates @pending:UX-70 @pending:CODE-77
+  @core @app:composes @app:computes @app:creates @pending:UX-76 @pending:CODE-77
   Scenario: A new object, slide, sheet and chart tab have names
     Given a new document
     When I add a text box, or a slide, or a sheet, or a chart

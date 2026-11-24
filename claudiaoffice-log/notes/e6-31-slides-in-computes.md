@@ -3,7 +3,8 @@
 Story: `Projects/claudia-office/_tasks/e6.31-slides-in-computes.md`. Glossary: Slide, Tab, Chart, Holder, Object layer.
 Screens: `notes/mockups/computes-slides-1-a-slide-among-the-sheets.svg`, `-2-insert-chart-as-a-slide.svg`,
 `-3-move-a-chart-to-a-slide.svg`, and the page "E6.31 Slides in computes" of `penpot/claudia.penpot` (branch `penpot`).
-Agreed with the owner on 2026-11-22 (see "Agreed").
+Agreed with the owner on 2026-11-22 (see "Agreed"); decisions D1470 (A1, A2), D1471 (A3′, A4, A10), D1472 (A5)
+and D1473 (A6 to A9, superseding D204).
 
 ## What the code does today
 
@@ -42,7 +43,7 @@ namespace claudia_core {
   }
   class Slides {
     id to Slide, no order
-    add(slide), remove(id) only when empty
+    check_new(id), add(slide), remove(id)
     rename(id), describe(id)
   }
   class Slide {
@@ -100,10 +101,11 @@ WorkbookModel ..> ChartSpec
 
 **A1 · The slide in the core** (step 1). `claudia_core/slides.py`: `SLIDE_WIDTH`, `SLIDE_HEIGHT` and `SlideAnchor`
 (moved from creates), the rule that keeps an object on the slide (creates' `check_anchor`/`turned_anchor`, as
-functions), `Slide(id, name, description)` and `Slides`, a keyed collection without an order of its own that refuses to
-remove a slide that still has objects. Why: two apps have slides now, as all three have paragraphs. Creates' stored state
-changes from a list of ids plus name and description maps to its order plus slide records: a new state schema, no
-upgrade (pre-release, E1.16).
+functions), `Slide(id, name, description)` and `Slides`, a keyed collection without an order of its own (that a slide
+which still has objects cannot be taken away is the core's `close_holder`, as for every holder). Why: two apps have
+slides now, as all three have paragraphs. Creates' stored state changes from a list of ids plus name and description
+maps to slide records in the order of the presentation (the records are `SlideModel.slides`, the order is
+`SlideModel.order`, as in computes): a new state schema, no upgrade (pre-release, D1430).
 
 **A2 · Each app keeps its own `AddSlide`/`RemoveSlide`.** Creates' carry the notes and the planned time, computes' the
 place in the tab order; `Slides` has the shared rules. A core command with optional extras would mix the two apps.
@@ -122,9 +124,9 @@ new)`, the flag's behaviour by default; computes allows sheet → slide only. "M
 
 **A5 · One place decides what a chart step takes along**: `claudia_computes/chart_steps.py` returns one `Batch` (one
 undo step) for a chart on a new slide (the spec, the slide after the current tab, the chart filling the frame), for
-moving a chart to a slide (the slide after the sheet, named after the chart; `MoveObject`; `ResizeObject` to the frame)
-and for removing objects (the objects, each chart's spec, and every slide left empty: Q11, Q20). The server, cut and
-delete, and later the ai get the same rules without repeating them.
+moving a chart to a slide (the slide after the sheet, named with the next free "Slide N" while the chart keeps its name;
+`MoveObject`; `ResizeObject` to the frame) and for removing objects (the objects, each chart's spec, and every slide
+left empty: Q11, Q20). The server, cut and delete, and later the ai get the same rules without repeating them.
 
 ## The server, the web client and the files
 

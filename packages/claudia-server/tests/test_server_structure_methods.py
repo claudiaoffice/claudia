@@ -215,7 +215,7 @@ def test_typing_into_a_table_of_contents_is_refused_and_removing_it_keeps_its_ti
 
 def test_an_agenda_lists_the_slide_titles_with_their_slide_numbers(deck):
     ids = deck.ids
-    agenda = call(deck, "insert_agenda", {"slide": deck.model.slides[0]})["object"]
+    agenda = call(deck, "insert_agenda", {"slide": deck.model.order[0]})["object"]
     assert entries_of(deck, agenda) == [(ids["t1"], None, "t1", "1"), (ids["t2"], None, "t2", "2")]
     call(deck, "number_headings", {"on": True})
     assert [e[1] for e in entries_of(deck, agenda)] == ["1", "2"]

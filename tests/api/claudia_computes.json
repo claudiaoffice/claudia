@@ -55,6 +55,23 @@
    "summary"
   ]
  },
+ "AddSlide": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str', name: 'str', index: 'int | None' = None, description: 'str' = '') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context[WorkbookModel]') -> 'Command'",
+   "from_data": "(data, registry) -> 'AddSlide'",
+   "redacted": "(self) -> 'Command'",
+   "stub": "(self) -> 'dict'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
  "Aggregation": {
   "class": [
    "StrEnum"
@@ -190,9 +207,9 @@
  },
  "ChartError": {
   "class": [
-   "ValueError"
+   "Refusal"
   ],
-  "init": "(...)",
+  "init": "(template: 'str', **params: 'object')",
   "methods": {},
   "properties": []
  },
@@ -536,9 +553,9 @@
  },
  "PivotError": {
   "class": [
-   "ValueError"
+   "Refusal"
   ],
-  "init": "(...)",
+  "init": "(template: 'str', **params: 'object')",
   "methods": {},
   "properties": []
  },
@@ -625,9 +642,9 @@
  },
  "PrintSetupError": {
   "class": [
-   "ValueError"
+   "Refusal"
   ],
-  "init": "(...)",
+  "init": "(template: 'str', **params: 'object')",
   "methods": {},
   "properties": []
  },
@@ -728,6 +745,22 @@
   "methods": {
    "apply": "(self, ctx: 'Context[WorkbookModel]') -> 'Command'",
    "from_data": "(data, registry) -> 'RemoveSheet'",
+   "redacted": "(self) -> 'Command'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "RemoveSlide": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context[WorkbookModel]') -> 'Command'",
+   "from_data": "(data, registry) -> 'RemoveSlide'",
    "redacted": "(self) -> 'Command'",
    "to_data": "(self) -> 'dict'"
   },
@@ -1067,6 +1100,27 @@
   },
   "properties": []
  },
+ "Tab": {
+  "class": [
+   "object"
+  ],
+  "init": "(kind: \"Literal['sheet', 'slide']\", id: 'str') -> None",
+  "methods": {
+   "from_data": "(data: 'dict') -> 'Tab'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "TabsChanged": {
+  "class": [
+   "object"
+  ],
+  "init": "() -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
  "Trace": {
   "class": [
    "object"
@@ -1112,15 +1166,17 @@
   "methods": {
    "add_chart": "(self, chart: 'Chart', index: 'int | None') -> 'None'",
    "add_sheet": "(self, sheet: 'Sheet', index: 'int | None') -> 'None'",
-   "anchor_from_data": "(self, data: 'dict') -> 'CellAnchor'",
+   "add_slide": "(self, slide: 'Slide', index: 'int | None') -> 'None'",
+   "anchor_from_data": "(self, data: 'dict') -> 'CellAnchor | SlideAnchor'",
    "blank": "(self, parts: 'frozenset[str] | None') -> 'None'",
    "blank_diagram": "(definition: 'dict') -> 'dict'",
    "chart": "(self, chart_id: 'str') -> 'Chart'",
    "chart_cells": "(self, diagram_id: 'str') -> 'tuple[RangeRef, bool] | None'",
    "chart_figure": "(self, diagram_id: 'str') -> 'dict'",
    "charts_reading": "(self, sheet_id: 'SheetId') -> 'list[str]'",
-   "check_anchor": "(self, anchor: 'CellAnchor', body: 'ObjectBody') -> 'None'",
+   "check_anchor": "(self, anchor: 'CellAnchor | SlideAnchor', body: 'ObjectBody') -> 'None'",
    "check_name": "(self, named: 'NamedRange', *, shared: 'bool' = True) -> 'None'",
+   "check_new_tab": "(self, tab_id: 'str', index: 'int | None') -> 'None'",
    "check_writable": "(self, sheet: 'Sheet', positions) -> 'None'",
    "columns_of": "(self, named: 'NamedRange', sample: 'int' = 2000) -> 'list[tuple[str, str]]'",
    "diagram_from_data": "(self, data: 'dict') -> 'ChartSpec'",
@@ -1141,6 +1197,7 @@
    "region_from_data": "(self, data: 'dict') -> 'Region'",
    "region_of": "(self, named: 'NamedRange') -> 'Rect | None'",
    "remove_chart": "(self, chart_id: 'str') -> 'None'",
+   "remove_slide": "(self, slide_id: 'str') -> 'tuple[Slide, int]'",
    "rename_command": "(self, thing_id: 'str', name: 'str')",
    "rename_name": "(self, scope: 'SheetId | None', old: 'str', new: 'str', *, shared: 'bool' = True) -> 'dict[SheetId, Cells]'",
    "rename_sheet": "(self, sheet_id: 'SheetId', name: 'str') -> 'tuple[str, dict[SheetId, Cells]]'",
@@ -1149,6 +1206,7 @@
    "restore": "(state: 'dict') -> 'Self'",
    "restructure": "(self, edit: 'StructuralEdit') -> 'tuple[Cells, dict[SheetId, Cells], tuple[tuple[int, float], ...], list[tuple[str, str, Piece]], NameRestores]'",
    "restyle_users": "(self, old: 'str', new: 'str') -> 'list[Command]'",
+   "room_for_new_object": "(self, anchor: 'CellAnchor | SlideAnchor | None') -> 'int | None'",
    "serialize": "(self) -> 'dict'",
    "set_thing_description": "(self, thing_id: 'str', description: 'str') -> 'str'",
    "set_thing_name": "(self, thing_id: 'str', name: 'str') -> 'str'",
@@ -1158,11 +1216,14 @@
    "sheet_id_of": "(self, name: 'str') -> 'SheetId | None'",
    "sheet_name_of": "(self, sheet_id: 'SheetId') -> 'str | None'",
    "sheet_print_of": "(self, target: 'str') -> 'SheetPrintSetup'",
+   "slide_ids": "(self) -> 'list[str]'",
    "store": "(self, sheet: 'Sheet', row: 'int', col: 'int', content: 'Content') -> 'Content'",
    "style_in_use": "(self, style_id: 'str') -> 'bool'",
+   "tab_index": "(self, tab_id: 'str') -> 'int'",
    "thing_description": "(self, thing_id: 'str') -> 'str'",
    "thing_name": "(self, thing_id: 'str') -> 'str'",
    "trace": "(self, sheet_id: 'SheetId', row: 'int', col: 'int', *, reach: 'str' = 'group', window: 'Window | None' = None) -> 'Trace'",
+   "turned_anchor": "(self, obj: 'VisualObject[CellAnchor | SlideAnchor]', rotation: 'int') -> 'CellAnchor | SlideAnchor'",
    "users_of": "(self, kind: 'AssetKind', asset_id: 'str') -> 'list[str]'",
    "value": "(self, sheet_id: 'SheetId', row: 'int', col: 'int') -> 'Value'"
   },

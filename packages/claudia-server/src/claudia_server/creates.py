@@ -52,7 +52,7 @@ from claudia_creates import (
 from .containers import add_container_methods
 from .creates_search import add_search_methods
 from .font_report import add_font_report_method
-from .i18n import msg
+from .i18n import message_of, msg
 from .object_methods import Placement, add_object_methods
 from .office_export import document_info, export_with_original, office_export
 from .printing import add_language_methods, people_only
@@ -129,7 +129,7 @@ def _add_print_methods(table: MethodTable) -> None:
         try:
             command = SetPrintSetup(PrintSetup.from_data(setup))
         except (PrintSetupError, PageSetupError) as exc:
-            raise RequestError("command_error", str(exc)) from None
+            raise RequestError("command_error", message_of(exc)) from None
         return done(ctx, command, base)
 
 
@@ -184,9 +184,9 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
                 "objects": len(deck.objects_on(slide)),
                 "seconds": deck.times.get(slide),
                 "has_notes": slide in deck.notes,
-                "name": deck.slide_names.get(slide, ""),
+                "name": deck.slides[slide].name,
             }
-            for slide in deck.slides
+            for slide in deck.order
         ]
 
     @table.method("slide", "slide:str")
@@ -200,7 +200,7 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
         to show or hide on its own — `snap` is unaffected by that and is the document's own state, set with
         `set_snap`."""
         deck = _deck(ctx)
-        if slide not in deck.slides:
+        if slide not in deck.order:
             raise RequestError("command_error", msg("unknown slide {slide!r}", slide=slide))
         objects = [obj.to_data_for(ctx.user) for obj in deck.objects_on(slide)]
         return {
@@ -254,7 +254,7 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
     @table.method("add_slide", "base:revision?", write=True)
     def _add_slide(ctx, base):
         """Add an empty slide at the end. Returns its id and the revision."""
-        slide = fresh_id("s", _deck(ctx).slides)
+        slide = fresh_id("s", _deck(ctx).order)
         return done(ctx, AddSlide(slide, name=default_name(ctx, "slide")), base, slide=slide)
 
     @table.method("insert_agenda", "slide:str base:revision?", write=True)

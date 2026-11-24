@@ -21,7 +21,7 @@ from claudia_composes.search import (
 )
 from claudia_search import Location
 
-from .i18n import msg
+from .i18n import message_of, msg
 from .protocol import Context, MethodTable, RequestError
 from .search_methods import SearchApp
 from .search_methods import add_search_methods as _add
@@ -88,7 +88,7 @@ def _scope(ctx: Context, scope: dict | None, method: str) -> dict | None:
     try:
         text_texts(_text(ctx), (), scope)  # (reads the scope, and refuses it if it names nothing that exists)
     except ValueError as error:
-        raise RequestError("bad_request", msg("{method}: {why}", method=method, why=str(error))) from None
+        raise RequestError("bad_request", msg("{method}: {why}", method=method, why=message_of(error))) from None
     return scope or None
 
 

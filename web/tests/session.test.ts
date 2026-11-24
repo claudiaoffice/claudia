@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { STYLE_MODEL } from './style-model.fixture'
 import { ProtocolError, type CloseHandler, type EventHandler, type LinkLike, type Welcome } from '~/lib/protocol'
 import { Session } from '~/lib/session'
@@ -359,8 +359,8 @@ describe('floating objects (images, E6.17)', () => {
     const session = new Session(() => link)
     await session.open()
     expect(session.state.images[ASSET.id]).toEqual(ASSET)
-    expect(session.objectsOn('s1').map((o) => o.id)).toEqual(['i1'])
-    const o = session.objectsOn('s1')[0]!
+    expect(session.sheetObjects('s1').map((o) => o.id)).toEqual(['i1'])
+    const o = session.sheetObjects('s1')[0]!
     expect(o.ref).toBe(ASSET.id)
     expect(o.imported).toEqual(IMPORT)
   })
@@ -368,11 +368,11 @@ describe('floating objects (images, E6.17)', () => {
   it('follows the stacking order the server sends, and takes objects away', async () => {
     const { link, session } = await opened()
     link.push('objects', { type: 'objects', holder: 's1', changed: [image('a'), image('b')], removed: [], order: ['a', 'b'] })
-    expect(session.objectsOn('s1').map((o) => o.id)).toEqual(['a', 'b'])
+    expect(session.sheetObjects('s1').map((o) => o.id)).toEqual(['a', 'b'])
     link.push('objects', { type: 'objects', holder: 's1', changed: [image('a', { anchor: { kind: 'cell', holder: 's1', row: 3, col: 2 } })], removed: [], order: ['a', 'b'] })
-    expect(session.objectsOn('s1')[0]?.anchor).toMatchObject({ row: 3, col: 2 })
+    expect(session.sheetObjects('s1')[0]?.anchor).toMatchObject({ row: 3, col: 2 })
     link.push('objects', { type: 'objects', holder: 's1', changed: [], removed: ['a'], order: ['b'] })
-    expect(session.objectsOn('s1').map((o) => o.id)).toEqual(['b'])
+    expect(session.sheetObjects('s1').map((o) => o.id)).toEqual(['b'])
     expect(session.state.objects.a).toBeUndefined()
   })
 
@@ -1060,6 +1060,42 @@ describe('the Manage menu (leaving, handing over ownership, deleting, exporting)
     const session = new Session(() => old)
     await session.open()
     expect(session.state.audit).toEqual([])
+  })
+
+  it('knows whether Claude is allowed, who decided, and hears of a change as it happens', async () => {
+    const link = new FakeLink()
+    server(link)
+    const off = { provider: 'claude', allowed: false, by: null, at: null, owners: ['ann'], history: [], answering: { provider: 'local', label: 'Qwen', remote: false, note: '' } }
+    const on = { ...off, allowed: true, by: 'ann', at: '2026-11-22T09:40:00Z', history: [{ allowed: true, who: 'ann', when: '2026-11-22T09:40:00Z' }], answering: { provider: 'claude', label: 'Claude', remote: true, note: '' } }
+    let current = off
+    link.handlers.ai_consent = () => current
+    const session = new Session(() => link)
+    await session.open()
+    expect(session.state.consent).toEqual(off)
+    current = on
+    link.push('ephemeral', { kind: 'ai_consent_changed', sender: 'ann', data: { allowed: true, by: 'ann', at: on.at } })
+    await vi.waitFor(() => expect(session.state.consent).toEqual(on))
+  })
+
+  it('lets an owner allow or withdraw Claude, and takes what the server says back as the state', async () => {
+    const link = new FakeLink()
+    server(link)
+    const on = { provider: 'claude', allowed: true, by: 'ann', at: '2026-11-22T09:40:00Z', owners: ['ann'], history: [], answering: null }
+    link.handlers.ai_consent = () => ({ ...on, allowed: false })
+    link.handlers.set_ai_consent = () => on
+    const session = new Session(() => link)
+    await session.open()
+    expect(await session.setAiConsent(true)).toBe(true)
+    expect(link.last('set_ai_consent')).toEqual({ allowed: true })
+    expect(session.state.consent?.allowed).toBe(true)
+  })
+
+  it('is no trouble for a server that does not know the consent', async () => {
+    const link = new FakeLink()
+    server(link)
+    const session = new Session(() => link)
+    await session.open()
+    expect(session.state.consent).toBeNull()
   })
 
   it('exports the current content as a Word, Excel or PowerPoint file', async () => {
@@ -1828,5 +1864,120 @@ describe('a range to blank in an imported workbook (D723)', () => {
     expect(session.redactionRangePart('C7')).toBe('s1!C7')
     expect(session.redactionRangePart('Payments')).toBeNull()
     expect(session.redactionRangePart('A0')).toBeNull()
+  })
+})
+
+describe('slides among the sheets (E6.31, D1471, D1473)', () => {
+  const box = (id: string, extra: object = {}) => ({
+    id,
+    kind: 'text',
+    w: 400,
+    h: 120,
+    style: 'plain-box',
+    paragraph: { id, style: 'body-text', text: 'East leads', runs: [] },
+    ref: null,
+    rotation: 0,
+    snap: false,
+    anchor: { kind: 'slide', holder: 'p1', x: 100, y: 80 },
+    ...extra,
+  })
+  async function withASlide() {
+    const opening = await opened()
+    const { link, session } = opening
+    link.handlers.tabs = () => [
+      { kind: 'sheet', id: 's1', name: 'Budget' },
+      { kind: 'slide', id: 'p1', name: 'Sales chart' },
+    ]
+    link.handlers.slide = (p: any) => ({ revision: 'main:3', slide: p.slide, objects: [box('t1')] })
+    link.handlers.shapes = () => ({ library: [{ format: 1, id: 'circle', name: 'Circle', path: 'M0 0', aspect: 1 }], document: [] })
+    link.push('tabs', { type: 'tabs' })
+    await session.settled()
+    return opening
+  }
+
+  it('reads the sheets and slides as one list of tabs, and the objects of each slide', async () => {
+    const { session } = await withASlide()
+    expect(session.state.tabs).toEqual([
+      { kind: 'sheet', id: 's1', name: 'Budget' },
+      { kind: 'slide', id: 'p1', name: 'Sales chart' },
+    ])
+    expect(session.slideObjects('p1').map((o) => o.id)).toEqual(['t1'])
+    expect(session.sheetObjects('s1')).toEqual([])
+    expect(session.state.library.map((s) => s.id)).toEqual(['circle'])
+  })
+
+  it('reads the tabs again when the server says they changed', async () => {
+    const { session, link } = await withASlide()
+    link.handlers.tabs = () => [{ kind: 'sheet', id: 's1', name: 'Budget' }]
+    link.push('tabs', { type: 'tabs' })
+    await session.settled()
+    expect(session.state.tabs.map((tab) => tab.id)).toEqual(['s1'])
+  })
+
+  it('shows a slide with nothing selected, and a sheet again when the slide is gone', async () => {
+    const { session, link } = await withASlide()
+    await session.showSlide('p1')
+    expect(session.state.activeSlide).toBe('p1')
+    await session.select('t1')
+    expect(link.last('lock')).toEqual({ regions: [{ kind: 'objects', holder: 'p1', ids: ['t1'] }] })
+    link.handlers.tabs = () => [{ kind: 'sheet', id: 's1', name: 'Budget' }]
+    link.push('tabs', { type: 'tabs' })
+    await session.settled()
+    expect(session.state.activeSlide).toBe('')
+    expect(session.state.selected).toBe(null)
+  })
+
+  it('shows the tab before a slide that went, or the one after it when it was the first', async () => {
+    const { session, link } = await withASlide()
+    link.handlers.tabs = () => [
+      { kind: 'sheet', id: 's1', name: 'Budget' },
+      { kind: 'slide', id: 'p1', name: 'Sales chart' },
+      { kind: 'sheet', id: 's2', name: 'Costs' },
+    ]
+    link.handlers.sheets = () => [{ id: 's1', name: 'Budget', rows: 2, cols: 2 }, { id: 's2', name: 'Costs', rows: 0, cols: 0 }]
+    link.push('tabs', { type: 'tabs' })
+    await session.settled()
+    session.state.activeSheet = 's2' // the person came to the slide from Costs
+    await session.showSlide('p1')
+    link.handlers.tabs = () => [
+      { kind: 'sheet', id: 's1', name: 'Budget' },
+      { kind: 'sheet', id: 's2', name: 'Costs' },
+    ]
+    link.push('tabs', { type: 'tabs' })
+    await session.settled()
+    expect([session.state.activeSlide, session.state.activeSheet]).toEqual(['', 's1'])
+
+    link.handlers.tabs = () => [
+      { kind: 'slide', id: 'p2', name: 'First' },
+      { kind: 'sheet', id: 's1', name: 'Budget' },
+    ]
+    link.push('tabs', { type: 'tabs' })
+    await session.settled()
+    await session.showSlide('p2')
+    link.handlers.tabs = () => [{ kind: 'sheet', id: 's1', name: 'Budget' }]
+    link.push('tabs', { type: 'tabs' })
+    await session.settled()
+    expect([session.state.activeSlide, session.state.activeSheet]).toEqual(['', 's1'])
+  })
+
+  it('moves, resizes and adds on a slide with the words creates uses', async () => {
+    const { session, link } = await withASlide()
+    await session.showSlide('p1')
+    for (const method of ['move_object', 'resize_object', 'add_object', 'add_image']) link.handlers[method] = () => ({ revision: 'main:4', object: 'o9' })
+    await session.move('t1', 300, 200)
+    expect(link.last('move_object')).toMatchObject({ id: 't1', x: 300, y: 200 })
+    await session.resize('t1', { x: 280, y: 180, w: 500, h: 160 })
+    expect(link.last('resize_object')).toMatchObject({ id: 't1', x: 280, y: 180, w: 500, h: 160 })
+    await session.addText({ x: 10, y: 20, w: 400, h: 120 })
+    expect(link.last('add_object')).toMatchObject({ slide: 'p1', kind: 'text', x: 10, y: 20, w: 400, h: 120 })
+    await session.addImage({ data: 'AA==', alt: '', sourceName: 'a.gif', sourcePath: null }, { x: 0, y: 0, w: 40, h: 20 })
+    expect(link.last('add_image')).toMatchObject({ slide: 'p1', x: 0, y: 0, w: 40, h: 20 })
+    await session.addImage({ data: 'AA==', alt: '', sourceName: 'a.gif', sourcePath: null }, { row: 1, col: 2, w: 40, h: 20 })
+    expect(link.last('add_image')).toMatchObject({ sheet: 's1', row: 1, col: 2 })
+  })
+
+  it('keeps working with a server from before slides: the tabs are its sheets', async () => {
+    const { session } = await opened()
+    expect(session.state.tabs).toEqual([{ kind: 'sheet', id: 's1', name: 'Budget' }])
   })
 })

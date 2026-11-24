@@ -19,6 +19,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import StrEnum
 
+from claudia_core import N_, Refusal
+
 from .values import Value
 
 #: The version of this definition's own data format (mirrors ``charts.FORMAT``).
@@ -32,7 +34,7 @@ _VALUE_KEYS = {"field", "aggregation", "name"}
 _FILTER_KEYS = {"field", "keep"}
 
 
-class PivotError(ValueError):
+class PivotError(Refusal):
     """A pivot that is not right, or cannot be made; the message says what is wrong in words."""
 
 
@@ -159,14 +161,15 @@ class PivotDefinition:
         if not isinstance(self.source, str) or not self.source.strip():
             raise PivotError("source: must be the name of a table or range")
         if len(self.rows) > MAX_ROW_FIELDS:
-            raise PivotError("rows: at most one row field in this version")
+            raise PivotError(N_("rows: at most one row field in this version"))
         if len(self.columns) > MAX_COLUMN_FIELDS:
-            raise PivotError("columns: at most one column field in this version")
+            raise PivotError(N_("columns: at most one column field in this version"))
         seen: dict[str, str] = {}
         for field in (*self.rows, *self.columns, *(each.field for each in self.filters)):
             if field.casefold() in seen:
                 raise PivotError(
-                    f"{seen[field.casefold()]!r} is in two places: a field is in rows, columns or filters, not in more"
+                    N_("“{field}” is in two places: a field is in rows, columns or filters, not in more"),
+                    field=seen[field.casefold()],
                 )
             seen.setdefault(field.casefold(), field)
 

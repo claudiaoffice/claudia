@@ -27,14 +27,18 @@ SAME_EVERYWHERE = {
 }
 # Text boxes and shapes are put with the same words wherever a person can put them; the app says where.
 ADD_OBJECT = "{where} kind:str w:int h:int shape:str? text:text? base:revision?"
+CELL_OR_POINT = "sheet:str? row:int? col:int? slide:str? x:int? y:int?"
 # The words of each app: where a new object goes, where one is moved to, what a new frame is besides its size.
 WORDS = {
+    # a workbook's objects hang at a cell of a sheet or sit at a point of a slide, with creates' words (E6.31, D1473);
+    # a text box or a shape only on a slide (D1232)
     "computes": {
-        "add_image": f"sheet:str row:int col:int {PICTURE}",
-        "add_container": "sheet:str row:int col:int w:int h:int type:str source:text params:dict? alt:text? "
-        "fit:bool? base:revision?",
-        "move_object": "id:str row:int col:int base:revision?",
-        "resize_object": "id:str row:int col:int w:int h:int base:revision?",
+        "add_image": f"{CELL_OR_POINT} {PICTURE}",
+        "add_container": f"{CELL_OR_POINT} w:int h:int type:str source:text params:dict? alt:text? fit:bool? "
+        "base:revision?",
+        "add_object": ADD_OBJECT.format(where="slide:str x:int y:int"),
+        "move_object": "id:str row:int? col:int? x:int? y:int? base:revision?",
+        "resize_object": "id:str row:int? col:int? x:int? y:int? w:int h:int base:revision?",
     },
     "creates": {
         "add_image": f"slide:str x:int y:int {PICTURE}",

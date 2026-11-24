@@ -18,6 +18,8 @@ from functools import cache
 from importlib import resources
 from typing import Any
 
+from claudia_core import Refusal
+
 DOMAIN = "claudia"
 DEFAULT_LOCALE = "en"
 
@@ -42,6 +44,14 @@ def msg(template: str, **params: Any) -> Message:
     ``{name}`` for each of the ``params``. A template without parameters is used as it stands, so braces in it need
     no doubling."""
     return Message(template, params)
+
+
+def message_of(error: BaseException) -> str:
+    """What ``error`` says, as a message that :func:`localized` can say in another language: the template of a
+    :class:`~claudia_core.Refusal` of a model (CODE-78, D1510), anything else as its English text."""
+    if isinstance(error, Refusal):
+        return Message(error.template, error.params)
+    return str(error)
 
 
 def available_locales() -> tuple[str, ...]:
@@ -78,15 +88,18 @@ def translate(text: str, locale: str) -> str:
 
 
 def localized(text: str, locale: str) -> str:
-    """``text`` in ``locale``: a :class:`Message` is translated and filled in, anything else (what the core packages
-    raise) is returned as it is. A translation whose placeholders do not fit the parameters is never an error: the
-    English text is said instead."""
+    """``text`` in ``locale``: a :class:`Message` is translated and filled in (a parameter that is a message too, as the
+    refusal in "{method}: {reason}" is, is said in ``locale`` as well), anything else is returned as it is. A
+    translation whose placeholders do not fit the parameters is never an error: the English text is said instead."""
     if not isinstance(text, Message):
         return text
     translated = _lookup(text.template, locale)
-    if translated == text.template:
-        return str(text)
+    if not text.params:
+        return translated
+    params = {
+        key: localized(value, locale) if isinstance(value, Message) else value for key, value in text.params.items()
+    }
     try:
-        return translated.format(**text.params) if text.params else translated
+        return translated.format(**params)
     except (KeyError, IndexError, ValueError):
-        return str(text)
+        return text.template.format(**params)

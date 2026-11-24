@@ -32,7 +32,7 @@ from typing import TYPE_CHECKING, Protocol, runtime_checkable
 from .i18n import msg
 
 if TYPE_CHECKING:
-    from claudia_document_file import AuditRecord
+    from claudia_document_file import AuditRecord, ConsentRecord
 
 ROLES = ("owner", "editor", "viewer")
 WRITE_ROLES = ("owner", "editor")
@@ -248,6 +248,17 @@ class AuditDirectory(Protocol):
 
     def audit_rows(self, doc_id: str) -> list[AuditRecord]:
         """Everything recorded for the document, oldest first."""
+
+
+@runtime_checkable
+class ConsentDirectory(Protocol):
+    """A directory whose documents keep the owner's consent to a remote AI provider (E7.11, D264)."""
+
+    def consent_rows(self, doc_id: str) -> list[ConsentRecord]:
+        """Every decision of the owner about a remote provider, oldest first."""
+
+    def record_consent(self, doc_id: str, record: ConsentRecord) -> None:
+        """Add ``record`` to the document's consent. The directory holds the keys of the open document."""
 
 
 @runtime_checkable

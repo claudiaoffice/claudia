@@ -136,3 +136,28 @@ class ReplayError(KernelError):
         super().__init__(f"Replay failed at revision {revision}: {cause}")
         self.revision = revision
         self.__cause__ = cause
+
+
+class Refusal(ValueError):
+    """A document will not do what a person asked: a name another thing has, a table that cannot be sorted (CODE-78,
+    D1510). It reads as the English sentence, and keeps the ``template`` it was made from and the ``params`` that fill
+    it in, so that whoever tells the person (the server) can say it in her language. A ``ValueError``, so that every
+    ``except ValueError`` catches it as before.
+
+    ``template`` is one plain string literal with ``{name}`` for each parameter, never built at runtime: it is the key
+    of its translations, and the extractor of the catalog finds it in the call (``scripts/extract_i18n.py``), or in
+    :func:`N_` where it is kept apart from the call. A template without parameters is used as it stands, so braces in
+    it need no doubling.
+
+    A check that only a wrong client can fail (a malformed request) stays a plain ``ValueError``: no person meets it."""
+
+    def __init__(self, template: str, **params: object):
+        super().__init__(template.format(**params) if params else template)
+        self.template = template
+        self.params = params
+
+
+def N_(template: str) -> str:  # noqa: N802 (the name gettext gives this marker)
+    """Mark the template of a :class:`Refusal` that is kept apart from its call (in a table of sentences by kind), so
+    that the extractor of the catalog finds it; returns it as it is."""
+    return template

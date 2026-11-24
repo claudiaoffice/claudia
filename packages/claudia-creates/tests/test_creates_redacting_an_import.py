@@ -32,7 +32,7 @@ def test_an_imported_presentation_is_blanked_in_full():
     doc = imported()
     doc.redact(doc.plan_redaction([Revision("main", 1)]), author="ana")
     assert words(doc, "t1") == FILLER * len("Q3 layoffs: 40 people") and words(doc, "t2") == FILLER * 6
-    assert doc.model.notes == {} and doc.model.slides == ["s1", "s2"]
+    assert doc.model.notes == {} and doc.model.order == ["s1", "s2"]
     assert "layoffs" not in json.dumps(doc.log.to_data()) and "the number" not in json.dumps(doc.log.to_data())
 
 

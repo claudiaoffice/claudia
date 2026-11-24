@@ -87,4 +87,4 @@ export type { PrintSetupData, SlideDocument, SlideLayout, SlideLayoutOptions, Sl
 export { fontsNeeded, layoutText } from './apps/composes'
 export type { ImageInfo, Note, PageSetupData, ShapeOutline, OutlineEntry, TextParagraph, TextContents, TextDocument, TextLayoutOptions, TextObject, TextPages, TextStyle } from './apps/composes'
 export { columnLetters, DEFAULT_SHEET_PRINT, layoutSheet, sheetFontsNeeded } from './apps/computes'
-export type { CellArea, CellPurpose, PrintedChart, PrintedSheet, SheetCell, SheetDocument, SheetPageInfo, SheetPages, SheetPicture, SheetPrint, SheetScale } from './apps/computes'
+export type { CellArea, CellPurpose, PrintedChart, PrintedSheet, PrintedSlide, SheetCell, SheetDocument, SheetPageInfo, SheetPages, SheetPicture, SheetPrint, SheetScale } from './apps/computes'

@@ -420,7 +420,8 @@ export interface SearchHost<Scope = unknown> {
   where(at: SearchPlace): string
   /** Show the place in the document. */
   jump(at: SearchPlace): void
-  /** Changes when the document does, so that a search that is showing can run again. */
+  /** Changes when the document does, or what the scopes name (the sheet shown), so that a search that is showing can
+   *  run again. */
   revision(): string | null
 }
 

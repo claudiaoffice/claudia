@@ -72,6 +72,7 @@ from .admin import AdminDirectory
 from .admin_api import AdminContext, AiRuntime, any_lens, assistants_for
 from .admin_sessions import AdminSessions
 from .admin_start import AdminOptions, AdminStart, prepare_administrators
+from .ai_desk import ProviderDesk
 from .app import DEFAULT_MAX_WAITING, DEFAULT_MAX_WAITING_PER_ADDRESS, MIN_ACCESS_SECRET, create_app
 from .apps import methods_for
 from .assistant import Assistant
@@ -89,7 +90,7 @@ from .kdf_policy import KdfPolicy
 from .protocol import Limits
 from .rasterise import svg_rasteriser
 from .sealed import SealedDocuments
-from .server_settings import ServerSettings, load_admins, load_settings
+from .server_settings import CLAUDE, LOCAL, STAND_IN, AiSettings, ServerSettings, load_admins, load_settings
 from .state import default_state_dir
 from .suite import APP_MODELS, Module, Suite
 
@@ -190,6 +191,13 @@ def build_parser() -> argparse.ArgumentParser:
         metavar="MODEL_DIR",
         help="the AI user answers with the language model in MODEL_DIR (converted for OpenVINO), not the stand-in",
     )
+    ai.add_argument(
+        "--anthropic-key-file",
+        metavar="FILE",
+        help="the file that holds the key for Claude (without it the environment variable ANTHROPIC_API_KEY is used if "
+        "it is set); it wins over a key saved in the server settings",
+    )
+    ai.add_argument("--anthropic-base-url", default=None, help=argparse.SUPPRESS)  # for tests: never a field of a page
     ai.add_argument(
         "--ai-device", default=DEFAULT_DEVICE, metavar="DEVICE", help="where the model runs: CPU, GPU, NPU or AUTO"
     )
@@ -466,14 +474,16 @@ def _hyphenation(args: argparse.Namespace, state_dir: Path) -> HyphenationServic
     return HyphenationService.from_folder(Path(args.hyphenation) if args.hyphenation else state_dir / "hyphenation")
 
 
-def _what_is_loaded(library: ShapeLibrary | None, runner: ModelRunner | None) -> list[str]:
-    """The lines of the start-up report about the shapes (and the files skipped) and the AI model."""
+def _what_is_loaded(library: ShapeLibrary | None, desk: ProviderDesk) -> list[str]:
+    """The lines of the start-up report about the shapes (and the files skipped) and the AI providers."""
     lines: list[str] = []
     if library is not None:
         lines.append("shapes: " + ", ".join(shape.id for shape in library))
         lines += [f"  not used, {name}: {message}" for name, message in library.problems]
-    if runner is not None:
-        lines.append(f'AI assistant: user "ai", model {runner.name}')
+    if desk.local is not None:
+        lines.append(f'AI assistant: user "ai", model {desk.local.name}')
+    if desk.claude is not None:
+        lines.append(f'AI assistant: user "ai", {desk.claude.name} where the document owners allow it')
     return lines
 
 
@@ -486,44 +496,81 @@ def _load_runner(model_dir: str, device: str, max_tokens: int, timeout: float) -
         raise UsageError(f"--ai: {exc}") from exc
 
 
+def _operator_anthropic_key(args: argparse.Namespace) -> str | None:
+    """The provider key given on the command line or in the environment (``--anthropic-key-file``, else
+    ``ANTHROPIC_API_KEY``), or none. Like the access secret: asked for but empty stops the server, and it is never
+    written back to the saved settings (D154)."""
+    if args.anthropic_key_file:
+        try:
+            key = Path(args.anthropic_key_file).expanduser().read_text(encoding="utf-8").strip()
+        except (OSError, UnicodeDecodeError) as exc:
+            raise UsageError(f"--anthropic-key-file: cannot read {args.anthropic_key_file}: {exc}") from exc
+    elif "ANTHROPIC_API_KEY" in os.environ:
+        key = os.environ["ANTHROPIC_API_KEY"].strip()
+    else:
+        return None
+    if not key:
+        raise UsageError("the Anthropic key is empty")
+    return key
+
+
 def _build_assistant(
     args: argparse.Namespace, models: list[type[DocumentModel]], settings: ServerSettings
 ) -> tuple[dict[str, Callable[[], Assistant] | None], AiRuntime]:
     """The assistant factory of each app to start with, by app, and the ``AiRuntime`` the admin API changes them
-    through afterwards. One language model serves every app that has a lens for it (D432).
+    through afterwards. Every document's assistant asks the runtime's ``ProviderDesk`` for each question who answers:
+    the scripted stand-in, the one language model of the server (D432) or Claude (E7.11).
 
     ``--ai`` is an operator override (see the module docstring on precedence): given, it is used exactly as before
     this existed, and the saved AI settings are not even consulted. Without it, the settings last saved through the
-    settings pages are used instead (if any), so that a model chosen there survives a restart; with neither, a
+    settings pages are used instead (if any), so that a provider chosen there survives a restart; with neither, a
     document gets the scripted stand-in, unless ``--no-assistant`` says it gets nothing — an operator's own
     decision that the settings pages must not be able to undo (``AiRuntime.enabled``)."""
     enabled = not args.no_assistant
+    ai = AiRuntime(
+        models=tuple(models),
+        enabled=enabled,
+        anthropic_key=_operator_anthropic_key(args),
+        anthropic_url=args.anthropic_base_url,
+    )
     if args.ai:
         if args.no_assistant:
             raise UsageError("--ai and --no-assistant contradict each other")
         if args.ai_max_tokens < 1 or args.ai_timeout <= 0:
             raise UsageError("--ai-max-tokens and --ai-timeout must be positive")
         runner = _load_runner(args.ai, args.ai_device, args.ai_max_tokens, args.ai_timeout)
-        if not any_lens(models, runner):
+        if not any_lens(models):
             runner.close()
             raise UsageError("--ai: the AI assistant does not know documents of this kind yet")
-        return assistants_for(models, runner), AiRuntime(models=tuple(models), enabled=enabled, runner=runner)
-    model_dir = settings.ai.model_dir
-    if enabled and model_dir:
-        ai = settings.ai
+        ai.desk.install(provider=LOCAL, local=runner)
+    elif enabled:
+        _start_saved_provider(ai, settings.ai)
+    return assistants_for(models, ai.desk) if enabled else dict.fromkeys((m.app for m in models), None), ai
+
+
+def _start_saved_provider(ai: AiRuntime, saved: AiSettings) -> None:
+    """Start with the providers last saved through the settings pages. What cannot be started is said on stderr and
+    the stand-in answers until the administrator fixes it; the server itself always starts."""
+    if saved.provider == STAND_IN:
+        return
+    local = None
+    if saved.model_dir:
         try:
-            runner = _load_runner(model_dir, ai.device, ai.max_tokens, ai.timeout)
+            local = _load_runner(saved.model_dir, saved.device, saved.max_tokens, saved.timeout)
         except UsageError as exc:
             print(f"warning: the AI model saved in the server settings could not be loaded: {exc}", file=sys.stderr)
             print("starting without it; open the server settings to fix or change it", file=sys.stderr)
         else:
-            if any_lens(models, runner):
-                return assistants_for(models, runner), AiRuntime(models=tuple(models), enabled=enabled, runner=runner)
-            runner.close()  # the saved model_dir does not match this server's document models any more
-    stand_ins: dict[str, Callable[[], Assistant] | None] = (
-        assistants_for(models, None) if enabled else dict.fromkeys((model.app for model in models), None)
-    )
-    return stand_ins, AiRuntime(models=tuple(models), enabled=enabled)
+            if not any_lens(ai.models):  # the saved model_dir does not match this server's document models any more
+                local.close()
+                local = None
+    claude = None
+    if saved.provider == CLAUDE:
+        try:
+            claude = ai.claude_runner(saved)
+        except ValueError as exc:
+            print(f"warning: Claude, saved in the server settings, cannot be used: {exc}", file=sys.stderr)
+    ai.desk.install(provider=saved.provider, local=local, claude=claude, approved=saved.claude.confirmed is not None)
 
 
 def _storage(
@@ -781,7 +828,7 @@ def make_plan(argv: list[str] | None = None) -> Plan:
     banner += rendering_lines
     banner.append(hyphenation.summary())
     banner += [f"  not used, {problem}" for problem in hyphenation.problems if hyphenation.languages]
-    banner += _what_is_loaded(library, ai.runner)
+    banner += _what_is_loaded(library, ai.desk)
     if idle is not None:
         banner.append(f"stops once nothing has used it for {args.exit_when_idle:g} seconds (--exit-when-idle)")
     options = {
@@ -792,14 +839,7 @@ def make_plan(argv: list[str] | None = None) -> Plan:
         **tls_options,
     }
 
-    # a closure, not ai.runner.close itself: the settings pages may swap it for another one while the server runs
-    # (AiRuntime.apply, which closes whatever it replaces), and it is the one running when the server stops that
-    # must be closed then, not the one that happened to be running at start-up.
-    def _close_ai() -> None:
-        if ai.runner is not None:
-            ai.runner.close()
-
-    closers = [_close_ai] if lock is None else [_close_ai, lock.release]
+    closers = [ai.desk.close] if lock is None else [ai.desk.close, lock.release]
     return Plan(app, options, banner, args.redirect_port, closers, idle, kdf)
 
 

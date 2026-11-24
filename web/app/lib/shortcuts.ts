@@ -25,7 +25,7 @@ export interface KeyChord {
 }
 
 export interface ShortcutDef {
-  /** Matches the shell-contract action id where one exists (manifest.py), so Config ▸ Shortcuts can show one table. */
+  /** Matches the shell-contract action id where one exists (manifest.py), so Preferences ▸ Shortcuts can show one table. */
   id: string
   label: string
   chord: KeyChord
@@ -112,7 +112,7 @@ export function searchShortcuts(actions: { find: () => void; replace: () => void
 
 const KEY_NAMES: Readonly<Record<string, string>> = { ArrowUp: '↑', ArrowDown: '↓', ArrowLeft: '←', ArrowRight: '→', Delete: 'Del' }
 
-/** `Ctrl+Shift+Z` for the Config ▸ Shortcuts list and the menu's `hint`. A symbol that is typed with Shift (`?`, `_`)
+/** `Ctrl+Shift+Z` for the Preferences ▸ Shortcuts list and the menu's `hint`. A symbol that is typed with Shift (`?`, `_`)
  * is shown as the symbol, without the Shift. */
 export function chordLabel(chord: KeyChord): string {
   const parts: string[] = []

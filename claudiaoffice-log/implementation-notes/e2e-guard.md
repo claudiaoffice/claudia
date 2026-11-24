@@ -100,7 +100,7 @@ switched off by hand on 2026-11-22.
 * `tests/e2e/specs/test_names.py` (new) binds `specs/objects/names.feature`, which leaves `NOT_BOUND_YET`. All 28
   scenarios have steps; 21 pass in Chromium and lost `@pending:e1.13`. Six keep it, each failing for a reason of the
   story (the E1.13 story file lists them). "A new object, slide, sheet and chart tab have names" (not pending before;
-  it never ran) now carries `@pending:UX-70 @pending:CODE-77`.
+  it never ran) now carries `@pending:UX-76 @pending:CODE-77`.
 * `tests/e2e/specs/things.py` (new): what the cross-app spec and the names spec both use to find, insert and drag
   objects, moved out of `test_the_same_in_all_three_apps.py`.
 * `conftest.Person.menu_item(label)`: an entry of the open menu whose label *starts* with `label`. `has-text` matched

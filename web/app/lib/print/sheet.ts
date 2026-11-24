@@ -93,11 +93,23 @@ export function withScale(setup: SheetPrintData, id: string): SheetPrintData {
   return scale ? { ...setup, scale } : setup
 }
 
-/** The status line under the pages: "3 pages · Sheet1 · A4 portrait" or, for more than one sheet, "5 pages · 2 sheets ·
- * A4" (the sheets lie each their way, so no orientation is said). */
-export function describeSheets(pages: number, sheets: number, name: string, paper: string, orientation: 'portrait' | 'landscape' | null): string {
+/** What of a workbook was printed, for the status line: how many sheets and chart tabs, how many slides, the name of
+ *  the first, and how it lies when it is the only one (`null` for more than one). */
+export interface PrintedTabs {
+  sheets: number
+  slides: number
+  name: string
+  orientation: 'portrait' | 'landscape' | null
+}
+
+/** The status line under the pages: "3 pages · Sheet1 · A4 portrait" or, for more than one tab, "5 pages · 2 sheets ·
+ * A4", or with slides among them "5 pages · 2 sheets and 1 slide · A4" (the tabs lie each their way, so no orientation
+ * is said). */
+export function describeSheets(pages: number, { sheets, slides, name, orientation }: PrintedTabs, paper: string): string {
   const what = pages === 1 ? t('1 page') : t('{count} pages', { count: pages })
-  const of = sheets === 1 ? name : t('{count} sheets', { count: sheets })
+  const sheetsSaid = sheets === 1 ? t('1 sheet') : t('{count} sheets', { count: sheets })
+  const slidesSaid = slides === 1 ? t('1 slide') : t('{count} slides', { count: slides })
+  const of = sheets + slides === 1 ? name : slides === 0 ? sheetsSaid : t('{sheets} and {slides}', { sheets: sheetsSaid, slides: slidesSaid })
   const lies = orientation === null ? '' : ` ${orientation === 'landscape' ? t('landscape') : t('portrait')}`
   return `${what} · ${of} · ${paper}${lies}`
 }

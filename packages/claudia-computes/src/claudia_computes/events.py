@@ -43,9 +43,12 @@ class StructureChanged:
 
 
 @dataclass(frozen=True)
-class SheetsChanged:
+class TabsChanged:
+    """A sheet or a slide came, went or has another name (E6.31, D1473): the clients read the tabs again."""
+
     def to_data(self) -> dict:
-        return {"type": "sheets"}
+        """The event as it goes to the clients: only its type, since they read the tabs off the state."""
+        return {"type": "tabs"}
 
 
 @dataclass(frozen=True)

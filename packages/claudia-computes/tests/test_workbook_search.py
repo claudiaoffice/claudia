@@ -158,18 +158,18 @@ def test_one_sheet_and_all_sheets(doc):
         ("s1", 0),
         ("s2", 4),
     ]
-    only = scan_workbook(doc.model, find("needle"), kinds=("text",), sheets=["s2"])
+    only = scan_workbook(doc.model, find("needle"), kinds=("text",), tabs=["s2"])
     assert [(m.at["sheet"], m.at["row"]) for m in only.matches] == [("s2", 4)]
 
 
 def test_a_selection_limits_the_search_to_its_cells(budget):
-    result = scan_workbook(budget, find("€"), kinds=("text",), sheets=[S1], area=(1, 1, 2, 1))
+    result = scan_workbook(budget, find("€"), kinds=("text",), tabs=[S1], area=(1, 1, 2, 1))
     assert places(result) == [(1, 1, "text")]
 
 
 def test_an_unknown_sheet_is_an_error(doc):
-    with pytest.raises(ValueError, match="unknown sheet"):
-        scan_workbook(doc.model, find("x"), kinds=("text",), sheets=["nope"])
+    with pytest.raises(ValueError, match="no sheet or slide"):
+        scan_workbook(doc.model, find("x"), kinds=("text",), tabs=["nope"])
 
 
 def test_the_order_is_by_sheet_then_row_then_column(doc):
@@ -323,7 +323,7 @@ def test_a_replacement_that_changes_nothing_is_no_change(doc):
 def test_replacing_a_whole_text_by_nothing_empties_the_cell(doc):
     typed(doc, [(0, 0, "gone")])
     q = query(mode="text", text="gone", replace=[{"text": ""}])
-    command = replace_command(plan_replacement(doc.model, q, kinds=("text",)))
+    command = replace_command(doc.model, plan_replacement(doc.model, q, kinds=("text",)), "ana")
     doc.execute(command, author="ana")
     assert doc.model.get(S1, 0, 0) is None
 
@@ -331,7 +331,7 @@ def test_replacing_a_whole_text_by_nothing_empties_the_cell(doc):
 def test_the_new_text_stays_text_even_if_it_looks_like_a_number(doc):
     typed(doc, [(0, 0, "x12")])
     q = query(mode="text", text="x", replace=[{"text": ""}])
-    doc.execute(replace_command(plan_replacement(doc.model, q, kinds=("text",))), author="ana")
+    doc.execute(replace_command(doc.model, plan_replacement(doc.model, q, kinds=("text",)), "ana"), author="ana")
     assert doc.model.get(S1, 0, 0) == {"t": "text", "v": "12"}
 
 
@@ -352,14 +352,14 @@ def test_a_formula_that_stops_being_one_is_skipped(doc):
 def test_a_formula_replacement_is_stored_as_a_formula(doc):
     typed(doc, [(0, 0, "=B1+B2")])
     q = query(mode="text", text="B1", replace=[{"text": "C9"}])
-    doc.execute(replace_command(plan_replacement(doc.model, q, kinds=("formulas",))), author="ana")
+    doc.execute(replace_command(doc.model, plan_replacement(doc.model, q, kinds=("formulas",)), "ana"), author="ana")
     assert doc.model.get(S1, 0, 0) == {"t": "formula", "v": "=C9+B2"}
 
 
 def test_a_cell_held_by_somebody_else_is_skipped_and_named(budget, doc):
     q = query(mode="text", text="€", replace=[{"text": ""}])
     held = {(S1, 1, 1): "anna"}
-    plan = plan_replacement(budget, q, kinds=("text",), held=lambda sheet, r, c: held.get((sheet, r, c)))
+    plan = plan_replacement(budget, q, kinds=("text",), held=lambda at: held.get((at["sheet"], at["row"], at["col"])))
     assert [(c.at["row"], c.at["col"]) for c in plan.changes] == [(0, 1)]
     assert [(s.at["row"], s.at["col"], s.reason, s.by) for s in plan.skipped] == [(1, 1, "locked", "anna")]
 
@@ -372,7 +372,7 @@ def test_a_search_without_a_replacement_cannot_be_planned(budget):
 def test_the_command_is_one_undo_step_that_restores_everything(doc):
     typed(doc, [(0, 0, "€1"), (0, 1, "€2"), (3, 0, "€3")])
     q = query(mode="text", text="€", replace=[{"text": "$"}])
-    command = replace_command(plan_replacement(doc.model, q, kinds=("text",)))
+    command = replace_command(doc.model, plan_replacement(doc.model, q, kinds=("text",)), "ana")
     doc.execute(command, author="ana")
     assert [doc.model.get(S1, r, c)["v"] for r, c in ((0, 0), (0, 1), (3, 0))] == ["$1", "$2", "$3"]
     doc.undo("ana")
@@ -382,7 +382,7 @@ def test_the_command_is_one_undo_step_that_restores_everything(doc):
 def test_the_command_holds_only_the_cells_it_changes(doc):
     typed(doc, [(0, 0, "x"), (5, 5, "x")])
     q = query(mode="text", text="x", replace=[{"text": "y"}])
-    command = replace_command(plan_replacement(doc.model, q, kinds=("text",)))
+    command = replace_command(doc.model, plan_replacement(doc.model, q, kinds=("text",)), "ana")
     regions = command.regions(doc.model)
     assert all(isinstance(r, CellRegion) for r in regions)
     assert not any(r.overlaps(CellRegion.of(S1, 3, 3, 3, 3)) for r in regions)  # (the box between them is not touched)
@@ -391,7 +391,7 @@ def test_the_command_holds_only_the_cells_it_changes(doc):
 def test_the_command_says_what_it_did(doc):
     typed(doc, [(0, 0, "x"), (1, 0, "x")])
     q = query(mode="text", text="x", replace=[{"text": "y"}])
-    command = replace_command(plan_replacement(doc.model, q, kinds=("text",)))
+    command = replace_command(doc.model, plan_replacement(doc.model, q, kinds=("text",)), "ana")
     assert command.label == "Replace in 2 cells"
     assert command.summary == "Replace in 2 cells"
 
@@ -399,7 +399,7 @@ def test_the_command_says_what_it_did(doc):
 def test_no_change_gives_no_command(doc):
     typed(doc, [(0, 0, "x")])
     q = query(mode="text", text="zzz", replace=[{"text": "y"}])
-    assert replace_command(plan_replacement(doc.model, q, kinds=("text",))) is None
+    assert replace_command(doc.model, plan_replacement(doc.model, q, kinds=("text",)), "ana") is None
 
 
 def test_replay_never_depends_on_the_engine(doc):
@@ -410,7 +410,7 @@ def test_replay_never_depends_on_the_engine(doc):
         parts=[{"what": "text", "value": "a"}, {"what": "digit", "keep": "n"}],
         replace=[{"keep": "n"}],
     )
-    command = replace_command(plan_replacement(doc.model, q, kinds=("text",)))
+    command = replace_command(doc.model, plan_replacement(doc.model, q, kinds=("text",)), "ana")
     again = Document(WorkbookModel(), store=MemoryStore())
     again.execute(AddSheet(S1, "Sheet1"), author="ana")
     typed(again, [(0, 0, "a1"), (1, 0, "a2")])

@@ -1088,7 +1088,7 @@ def slides_to_odp(model: SlideModel, *, info: DocumentInfo | None = None, raster
     automatic = etree.SubElement(root, _q("office", "automatic-styles"))
     presentation = etree.SubElement(etree.SubElement(root, _q("office", "body")), _q("office", "presentation"))
     background = colour_of({"fill": page_colour(model) or ""}, "fill")
-    for number, slide_id in enumerate(model.slides, start=1):
+    for number, slide_id in enumerate(model.order, start=1):
         page = etree.SubElement(presentation, _q("draw", "page"))
         page.set(_q("draw", "name"), f"page{number}")
         if background:
@@ -1219,16 +1219,16 @@ class _Patch:
 
     def _check_baseline(self) -> None:
         if not self.slides:
-            if self.baseline.slides != SlideModel.empty().slides or self.baseline.objects:
+            if self.baseline.order != SlideModel.empty().order or self.baseline.objects:
                 raise UnsupportedEdit("the baseline is not the deck this file holds")
             return
-        if list(self.baseline.slides) != _slide_ids(self.slides):
+        if list(self.baseline.order) != _slide_ids(self.slides):
             raise UnsupportedEdit("the baseline is not the deck this file holds")
         for slide in self.slides:
             if list(self.baseline.stack_of(slide.id)) != [obj.id for obj in slide.objects]:
                 raise UnsupportedEdit("the baseline is not the deck this file holds")
-        kept = [slide_id for slide_id in self.current.slides if slide_id in self.by_id]
-        if kept != [slide_id for slide_id in self.baseline.slides if slide_id in set(kept)]:
+        kept = [slide_id for slide_id in self.current.order if slide_id in self.by_id]
+        if kept != [slide_id for slide_id in self.baseline.order if slide_id in set(kept)]:
             raise UnsupportedEdit("slides cannot be moved relative to each other in the file")
         for slide_id in kept:
             now = [i for i in self.current.stack_of(slide_id) if i in self.found]
@@ -1247,7 +1247,7 @@ class _Patch:
         ):
             raise UnsupportedEdit("an agenda that changed cannot be patched onto the original file yet")
         for slide in self.slides:
-            if slide.id not in self.current.slides:
+            if slide.id not in self.current.order:
                 self._remove_slide(slide)
         self._patch_slides()
         self._flush()
@@ -1292,7 +1292,7 @@ class _Patch:
 
     def _patch_slides(self) -> None:
         previous: etree._Element | None = None  # the page of the slide before this one in the file
-        for slide_id in self.current.slides:
+        for slide_id in self.current.order:
             slide = self.by_id.get(slide_id)
             if slide is not None:
                 self._patch_slide(slide)

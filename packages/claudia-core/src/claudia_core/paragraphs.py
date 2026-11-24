@@ -30,6 +30,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from dataclasses import dataclass, field, replace
 
+from .errors import Refusal
 from .fields import FIELD_CHAR, Field, field_from_data, fields_before, plain
 from .generated import Generated, generated_from_data
 
@@ -199,7 +200,7 @@ class Paragraph:
         """The same paragraph generated as ``generated`` says (``None``: plain again). Only an empty paragraph can be
         generated: ``ValueError`` otherwise."""
         if generated is not None and self.text:
-            raise ValueError("only an empty paragraph can become a table of contents")
+            raise Refusal("only an empty paragraph can become a table of contents")
         return replace(self, generated=generated)
 
     def written_by(self, author: str | None, via: str | None = None) -> Paragraph:
@@ -210,7 +211,10 @@ class Paragraph:
     def check(self) -> None:
         """``ValueError`` with a sentence if the paragraph does not hold together."""
         if not isinstance(self.text, str) or len(self.text) > MAX_PARAGRAPH_TEXT:
-            raise ValueError(f"a paragraph holds text of at most {MAX_PARAGRAPH_TEXT} characters")
+            raise Refusal(
+                "a paragraph holds text of at most {limit} characters",
+                limit=MAX_PARAGRAPH_TEXT,
+            )
         if total(self.runs) != len(self.text):
             raise ValueError("the runs must cover exactly the paragraph's text")
         if self.item is not None:

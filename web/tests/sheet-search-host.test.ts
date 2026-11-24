@@ -6,14 +6,14 @@ import { single } from '~/lib/selection'
 
 function setup(role: 'owner' | 'editor' | 'viewer' = 'editor') {
   const session = {
-    state: { activeSheet: 's2', sheets: [{ id: 's1', name: 'Costs' }, { id: 's2', name: 'Rates' }], me: { role }, revision: 'main:7' },
+    state: { activeSheet: 's2', activeSlide: '', sheets: [{ id: 's1', name: 'Costs' }, { id: 's2', name: 'Rates' }], tabs: [], me: { role }, revision: 'main:7' },
     searchFind: vi.fn(async () => ({ matches: [] })),
     searchPreview: vi.fn(async () => ({ changes: [] })),
     searchReplace: vi.fn(async () => ({ replaced: 1 })),
   }
   let sel = single(2, 3)
   const goTo = vi.fn()
-  const host = sheetSearchHost({ session: session as never, selection: () => sel, goTo, t: createTranslator({}) })
+  const host = sheetSearchHost({ session: session as never, selection: () => sel, goTo, goToSlide: vi.fn(), t: createTranslator({}) })
   return { host, session, goTo, select: (s: typeof sel) => (sel = s) }
 }
 
@@ -84,7 +84,8 @@ describe('the search host of a workbook', () => {
   })
 
   it('says which revision the answers are for, so that a change by somebody else is noticed', () => {
-    expect(setup().host.revision()).toBe('main:7')
+    expect(setup().host.revision()).toBe('main:7@s2')
+
   })
 })
 
@@ -132,5 +133,55 @@ describe('a cell and its marks on the grid', () => {
     expect(marks.after.get(0)).toBe('y')
     expect(marks.after.size).toBe(1)
     expect(marks.blocked.get(300_000)).toBe('anna')
+  })
+})
+
+describe('the words on the slides of a workbook (UX-72)', () => {
+  const onSlide = { slide: 'p1', object: 't1', source: 'box' }
+  function withSlide(activeSlide = '') {
+    const session = {
+      state: {
+        activeSheet: 's1',
+        activeSlide,
+        sheets: [{ id: 's1', name: 'Costs' }],
+        tabs: [{ kind: 'sheet', id: 's1', name: 'Costs' }, { kind: 'slide', id: 'p1', name: 'Sales chart' }],
+        objects: { t1: { id: 't1', name: 'Note' } },
+        me: { role: 'editor' },
+        revision: 'main:7',
+      },
+    }
+    const goTo = vi.fn()
+    const goToSlide = vi.fn()
+    const host = sheetSearchHost({ session: session as never, selection: () => single(0, 0), goTo, goToSlide, t: createTranslator({}) })
+    return { host, goTo, goToSlide }
+  }
+
+  it('says "this slide" while a slide is shown, and looks only there', () => {
+    const { host } = withSlide('p1')
+    expect(host.scopeLabel('sheet')).toBe('This slide')
+    expect(host.scopeOf('sheet')).toEqual({ slide: 'p1' })
+    expect(host.scopeOf('selection')).toEqual({ slide: 'p1' })
+    expect(host.scopeLabel('all')).toBe('All sheets and slides')
+    expect(host.scopes).toEqual(['sheet', 'all']) // a slide has no cells to select
+    expect(withSlide().host.scopeLabel('sheet')).toBe('This sheet')
+    expect(withSlide().host.scopes).toEqual(['sheet', 'all', 'selection'])
+  })
+
+  it('changes its revision with the tab shown, so that "This sheet" is looked in again (UX-72)', () => {
+    expect(withSlide('p1').host.revision()).not.toBe(withSlide().host.revision())
+  })
+
+  it('names, keys and goes to a match on a slide, selecting nothing there', () => {
+    const { host, goToSlide, goTo } = withSlide()
+    expect(host.keyOf(onSlide)).toBe('p1/t1/box')
+    expect(host.where(onSlide)).toBe('Sales chart: Note')
+    host.jump(onSlide)
+    expect(goToSlide).toHaveBeenCalledWith('p1')
+    expect(goTo).not.toHaveBeenCalled()
+  })
+
+  it('marks no cell for a match on a slide', () => {
+    const matches = [{ at: onSlide, kind: 'text', number: 0, start: 0, end: 4 }, { at: { sheet: 's1', row: 1, col: 0 }, kind: 'text', number: 0, start: 0, end: 4 }] as SearchMatch[]
+    expect([...marksFor(matches, 's1', null).cells.keys()]).toHaveLength(1)
   })
 })

@@ -1024,7 +1024,7 @@
       ]
     },
     {
-      "label": "Config",
+      "label": "Preferences",
       "sections": [
         [
           {
@@ -1036,6 +1036,18 @@
             "key_owner": "page",
             "kind": "page",
             "label": "Shortcuts",
+            "role": null,
+            "start": false
+          },
+          {
+            "accelerators": [
+              "<Primary><Shift><Alt>e"
+            ],
+            "checkable": false,
+            "id": "config.ai",
+            "key_owner": "page",
+            "kind": "page",
+            "label": "AI\u2026",
             "role": null,
             "start": false
           }

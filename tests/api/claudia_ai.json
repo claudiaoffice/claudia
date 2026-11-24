@@ -1,5 +1,5 @@
 {
- "version": "0.2.0",
+ "version": "0.5.0",
  "Agent": {
   "class": [
    "object"
@@ -12,11 +12,43 @@
   },
   "properties": []
  },
+ "Answerer": {
+  "class": [
+   "Protocol"
+  ],
+  "init": "(*args, **kwargs)",
+  "methods": {
+   "answer": "(self, request: 'Request') -> 'Turn'"
+  },
+  "properties": [
+   "remote"
+  ]
+ },
  "CALL_LIMIT": {
   "value": "50"
  },
+ "ClaudeModel": {
+  "class": [
+   "object"
+  ],
+  "init": "(key: 'str', model: 'str', *, base_url: 'str' = 'https://api.anthropic.com', transport: 'Transport | None' = None, read_timeout: 'float' = 30.0)",
+  "methods": {
+   "generate": "(self, messages: 'list[Message]', *, max_new_tokens: 'int', stop: 'Callable[[], bool]') -> 'str'"
+  },
+  "properties": []
+ },
  "DEFAULT_DEVICE": {
   "value": "'GPU'"
+ },
+ "FailureReason": {
+  "class": [
+   "Enum"
+  ],
+  "init": "(*values)",
+  "methods": {
+   "admin_sentence": "(self, *, model: 'str' = '', seconds: 'float' = 0, detail: 'str' = '') -> 'str'"
+  },
+  "properties": []
  },
  "LanguageModel": {
   "class": [
@@ -49,8 +81,17 @@
    "close": "(self) -> 'None'"
   },
   "properties": [
-   "name"
+   "name",
+   "remote"
   ]
+ },
+ "ModelTimeout": {
+  "class": [
+   "ModelError"
+  ],
+  "init": "(...)",
+  "methods": {},
+  "properties": []
  },
  "OpenVinoModel": {
   "class": [
@@ -62,11 +103,19 @@
   },
   "properties": []
  },
+ "ProviderError": {
+  "class": [
+   "ModelError"
+  ],
+  "init": "(reason: 'FailureReason', detail: 'str' = '', *, provider: 'str' = 'Claude')",
+  "methods": {},
+  "properties": []
+ },
  "Request": {
   "class": [
    "object"
   ],
-  "init": "(asker: 'str', text: 'str', context: 'str' = '', tools: 'tuple[ToolSpec, ...]' = (), history: 'Sequence[Message]' = (), exchange: 'Sequence[Message]' = ()) -> None",
+  "init": "(asker: 'str', text: 'str', context: 'str' = '', tools: 'tuple[ToolSpec, ...]' = (), history: 'Sequence[Message]' = (), exchange: 'Sequence[Message]' = (), persona: 'str' = '', skills: 'str' = '') -> None",
   "methods": {},
   "properties": []
  },

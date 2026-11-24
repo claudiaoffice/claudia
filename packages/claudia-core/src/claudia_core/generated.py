@@ -22,6 +22,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, ClassVar, Protocol
 
 from .commands import Command, CommandRegistry, core_commands
+from .errors import Refusal
 
 if TYPE_CHECKING:
     from .context import Context
@@ -52,7 +53,11 @@ class Toc:
             if isinstance(value, bool) or not isinstance(value, int) or not 1 <= value <= MAX_LEVEL:
                 raise ValueError(f"A table of contents lists heading levels 1 to {MAX_LEVEL}, got {value!r}")
         if self.first > self.last:
-            raise ValueError(f"A table of contents lists levels {self.first} to {self.last}: the first is deeper")
+            raise Refusal(
+                "A table of contents lists levels {first} to {last}: the first is deeper",
+                first=self.first,
+                last=self.last,
+            )
         if not isinstance(self.numbers, bool) or not isinstance(self.places, bool):
             raise ValueError("Numbers and places are on or off")
         if self.leader not in LEADERS:

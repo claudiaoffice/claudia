@@ -17,7 +17,7 @@ function fake() {
   }
   const session: any = {
     state,
-    objectsOn: (slide: string) => state.order[slide].map((id: string) => state.objects[id]),
+    slideObjects: (slide: string) => state.order[slide].map((id: string) => state.objects[id]),
     notesOf: (slide: string) => state.notes[slide] ?? '',
     secondsOf: (slide: string) => state.times[slide] ?? null,
   }

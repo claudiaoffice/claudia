@@ -34,7 +34,7 @@ ROWS = [
 def workbook_with_data() -> WorkbookModel:
     model = WorkbookModel()
     sheet = Sheet(SheetId("s1"), "Data")
-    model.sheets[sheet.id] = sheet
+    model.add_sheet(sheet, None)
     sheet.cells[(0, 0)] = {"t": "text", "v": "Region"}
     sheet.cells[(0, 1)] = {"t": "text", "v": "Product"}
     sheet.cells[(0, 2)] = {"t": "text", "v": "Amount"}
@@ -58,7 +58,7 @@ def test_cells_and_a_formula_survive_the_base_export():
 
 def test_several_sheets_keep_their_names_and_order():
     model = workbook_with_data()
-    model.sheets[SheetId("s2")] = Sheet(SheetId("s2"), "Notes")
+    model.add_sheet(Sheet(SheetId("s2"), "Notes"), None)
     wb = openpyxl.load_workbook(BytesIO(workbook_to_xlsx(model)))
     assert wb.sheetnames == ["Data", "Notes"]
 
@@ -83,7 +83,7 @@ def test_cells_and_a_formula_survive_import():
 def test_a_formula_calculates_after_import():
     model = WorkbookModel()
     sheet = Sheet(SheetId("s1"), "Data")
-    model.sheets[sheet.id] = sheet
+    model.add_sheet(sheet, None)
     sheet.cells[(0, 0)] = {"t": "int", "v": 10}
     sheet.cells[(1, 0)] = {"t": "int", "v": 20}
     sheet.cells[(2, 0)] = {"t": "formula", "v": "=SUM(A1:A2)"}
@@ -93,7 +93,7 @@ def test_a_formula_calculates_after_import():
 
 def test_several_sheets_keep_their_names_and_order_on_import():
     model = workbook_with_data()
-    model.sheets[SheetId("s2")] = Sheet(SheetId("s2"), "Notes")
+    model.add_sheet(Sheet(SheetId("s2"), "Notes"), None)
     reimported = xlsx_to_workbook(workbook_to_xlsx(model))
     assert [sheet.name for sheet in reimported.sheets.values()] == ["Data", "Notes"]
 
@@ -128,7 +128,7 @@ def test_apply_edits_can_clear_a_cell_and_add_a_new_one():
 
 def test_apply_edits_leaves_an_untouched_sheet_byte_identical():
     model = workbook_with_data()
-    model.sheets[SheetId("s2")] = Sheet(SheetId("s2"), "Notes")
+    model.add_sheet(Sheet(SheetId("s2"), "Notes"), None)
     model.sheets[SheetId("s2")].cells[(0, 0)] = {"t": "text", "v": "Do not touch me"}
     base = workbook_to_xlsx(model)
     baseline = xlsx_to_workbook(base)
@@ -183,7 +183,7 @@ def test_apply_edits_refuses_an_added_sheet():
     base = workbook_to_xlsx(workbook_with_data())
     baseline = xlsx_to_workbook(base)
     current = xlsx_to_workbook(base)
-    current.sheets[SheetId("s2")] = Sheet(SheetId("s2"), "Extra")
+    current.add_sheet(Sheet(SheetId("s2"), "Extra"), None)
     with pytest.raises(UnsupportedEdit):
         apply_edits_to_xlsx(base, baseline, current)
 
@@ -236,7 +236,7 @@ def test_add_pivot_table_escapes_xml_metacharacters_in_cell_data():
     # passes straight through unescaped if the XML is hand-built with plain string interpolation.
     model = WorkbookModel()
     sheet = Sheet(SheetId("s1"), "Data")
-    model.sheets[sheet.id] = sheet
+    model.add_sheet(sheet, None)
     sheet.cells[(0, 0)] = {"t": "text", "v": "Region"}
     sheet.cells[(0, 1)] = {"t": "text", "v": "Amount"}
     malicious = 'North"><injected/><x a="'

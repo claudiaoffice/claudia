@@ -256,7 +256,7 @@ def test_a_name_cannot_be_called_like_a_sheet_and_a_sheet_not_like_a_name(book):
     with pytest.raises(RequestError, match="There is already a sheet called “Data”"):
         define(book, name="data")
     define(book)
-    with pytest.raises(RequestError, match="There is already a range called “Sales”"):
+    with pytest.raises(RequestError, match="There is already a named range called “Sales”"):
         call(book, "add_sheet", {"name": "SALES"})
     with pytest.raises(RequestError, match="There is already a sheet called “Data”"):
         call(book, "rename_name", {"old": "Sales", "new": "DATA"})

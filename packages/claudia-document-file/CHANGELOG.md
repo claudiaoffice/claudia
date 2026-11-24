@@ -5,6 +5,18 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-11-22
+
+### Added
+- **Format 3** (`claudia-document 3`, D1490): the owners' consent to a remote provider of the AI is a chain of blocks of
+  its own (`consent/`, with a head), sealed with the content key. `ConsentRecord(provider, allowed, who, when)` with `to_bytes`, `from_bytes` and `check`;
+  `record_consent(path, keys, record)` and `read_consent(path, keys)` (oldest first). A file of format 2 opens and is
+  written as format 3 with no consent, which means off. A file of format 3 is refused by an older version as newer.
+
+### Changed
+- `FORMAT_TEXT` is `claudia-document 3`.
+
+
 ### Changed
 - **Breaking** — the package is `claudia-document-file`, imported as `claudia_document_file` (was `claudia-container`,
   `claudia_container`): it is the document file, not the glossary's container (D1430, E1.18). Its main module is

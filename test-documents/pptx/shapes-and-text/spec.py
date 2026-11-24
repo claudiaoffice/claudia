@@ -11,7 +11,7 @@ from claudia_test_documents.case import Case
 
 
 def import_checks(model: SlideModel) -> None:
-    assert model.slides == ["s1", "s2"]
+    assert model.order == ["s1", "s2"]
     assert [(o.body.kind, o.body.paragraph.text, o.body.shape) for o in model.objects_on("s1")] == [
         ("text", "Welcome to Claudia", None),
         ("shape", "Idea", "circle"),

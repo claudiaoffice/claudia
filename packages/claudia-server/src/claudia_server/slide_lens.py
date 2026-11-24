@@ -16,12 +16,11 @@ import json
 from collections.abc import Callable
 from typing import Any
 
-from claudia_core import Document, ObjectsChanged
+from claudia_core import SLIDE_HEIGHT, SLIDE_WIDTH, Document, ObjectsChanged
 from claudia_creates import SlideModel
 from claudia_creates.events import SlidesChanged
-from claudia_creates.model import SLIDE_HEIGHT, SLIDE_WIDTH
 
-from .lens import fence, shorten
+from .lens import HELP_METHODS, fence, look_first, shorten, show_help
 
 MAX_LISTED_SLIDES = 40  # slides named to the model; a small model has little room
 PREVIEW_SLIDES = 3  # slides whose objects are shown at the start
@@ -41,8 +40,8 @@ ORIENTATION = (
     "shape is drawn from an outline of the shapes list (circle, rectangle, triangle, ...).{example}"
 )
 EXAMPLE = (
-    ' A request looks like {{"method": "add_object", "params": {{"slide": "s1", "kind": "text", "x": 160, "y": 120, '
-    '"w": 1280, "h": 160, "text": "Agenda"}}}}.'
+    ' A request looks like {"method": "add_object", "params": {"slide": "s1", "kind": "text", "x": 160, "y": 120, '
+    '"w": 1280, "h": 160, "text": "Agenda"}}.'
 )  # left out when the asker's mode or role lets the AI change nothing: it would only invite a refused request
 
 
@@ -77,7 +76,7 @@ def describe_slide(model: SlideModel, slide: str) -> str:
 class SlideLens:
     """The lens for creates."""
 
-    look_methods: tuple[str, ...] = ("slides", "slide", "shapes", "styles")
+    look_methods: tuple[str, ...] = ("slides", "slide", "shapes", "styles", *HELP_METHODS)
 
     # -- where the model starts
     def orient(
@@ -89,22 +88,49 @@ class SlideLens:
         writes: frozenset[str] | None = None,
     ) -> str:
         """How a slide is measured, the slides with how many objects, and what is on the first few."""
-        model = document.model
-        assert isinstance(model, SlideModel)
+        model = self._model(document)
+        text = self._listing(model, can_write)
+        if not model.order:
+            return text
+        shown = [describe_slide(model, s) for s in list(model.order)[:PREVIEW_SLIDES]]
+        return text + "\nThe first slides:\n" + fence("\n".join(shown))
+
+    def outline(
+        self,
+        document: Document,
+        *,
+        can_write: bool,
+        asker: str | None = None,
+        writes: frozenset[str] | None = None,
+    ) -> str:
+        """How a slide is measured, the slides with how many objects; nothing that is on them (D1568)."""
+        model = self._model(document)
+        text = self._listing(model, can_write)
+        return text if not model.order else f"{text}\n{look_first('slide')}"
+
+    @staticmethod
+    def _model(document: Document) -> SlideModel:
+        assert isinstance(document.model, SlideModel)
+        return document.model
+
+    @staticmethod
+    def _listing(model: SlideModel, can_write: bool) -> str:
+        """How a slide is measured and the slides in order with their number of objects."""
         text = ORIENTATION.format(w=SLIDE_WIDTH, h=SLIDE_HEIGHT, example=EXAMPLE if can_write else "")
-        slides = list(model.slides)
+        slides = list(model.order)
         if not slides:
             return text + "\nThere are no slides yet: add one with add_slide."
         names = [f"{s} ({len(model.objects_on(s))})" for s in slides[:MAX_LISTED_SLIDES]]
         if len(slides) > MAX_LISTED_SLIDES:
             names.append(f"... and {len(slides) - MAX_LISTED_SLIDES} more")
-        text += "\nSlides in order (id (objects)): " + ", ".join(names)
-        shown = [describe_slide(model, s) for s in slides[:PREVIEW_SLIDES]]
-        return text + "\nThe first slides:\n" + fence("\n".join(shown))
+        return text + "\nSlides in order (id (objects)): " + ", ".join(names)
 
     # -- what the read requests show
     def show(self, method: str, params: dict, result: Any) -> str:
-        """The answer of a read request, fenced as data and without what a model cannot use (outline paths)."""
+        """The answer of a read request, fenced as data and without what a model cannot use (outline paths); help is
+        not data, it is the product's own text."""
+        if method in HELP_METHODS:
+            return show_help(method, result)
         if method == "slides":
             return fence("\n".join(f"{s['id']} ({s['objects']} objects)" for s in result) or "There are no slides.")
         if method == "slide":
@@ -167,8 +193,8 @@ class SlideRecorder:
         assert isinstance(model, SlideModel)
         lines = []
         if self._slides_changed:
-            lines.append("The slides are now: " + (", ".join(model.slides) or "none"))
-        lines += [describe_slide(model, s) for s in self._slides if s in model.slides]
+            lines.append("The slides are now: " + (", ".join(model.order) or "none"))
+        lines += [describe_slide(model, s) for s in self._slides if s in model.order]
         if self._removed:
             lines.append("Removed: " + ", ".join(self._removed))
         return fence("\n".join(lines) or "Nothing changed.")

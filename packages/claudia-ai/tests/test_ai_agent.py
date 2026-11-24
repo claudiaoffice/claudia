@@ -34,6 +34,41 @@ def test_without_tools_the_model_is_told_it_can_only_answer():
     assert "cannot change" in system and "```commands" not in system
 
 
+def test_the_persona_comes_first_and_the_recipes_last_in_the_system_message():
+    request = Request(
+        "ann",
+        "put 1 in A1",
+        context="Sheets: s1: Budget",
+        tools=(ToolSpec("cells", "cells()", "Read cells.", "look"), SET),
+        persona="PERSONA: be brief.",
+        skills="SKILLS: how to write cells.",
+    )
+    system = Agent().messages(request)[0]["content"]
+    order = [
+        "You are",
+        "PERSONA: be brief.",
+        "Sheets: s1: Budget",
+        "To make requests",
+        "Read cells.",
+        "Type into cells.",
+    ]
+    positions = [system.index(part) for part in order]
+    assert positions == sorted(positions), "identity, persona, context, how to ask, look, change"
+    assert system.index("Type into cells.") < system.index("SKILLS: how to write cells.")
+    assert system.rstrip().endswith("SKILLS: how to write cells.")
+
+
+def test_without_a_persona_or_recipes_the_system_message_has_no_gap_for_them():
+    system = Agent().messages(Request("ann", "hello", context="Sheets: s1: Budget", tools=TOOLS))[0]["content"]
+    assert "\n\n\n" not in system and not system.endswith("\n")
+
+
+def test_the_persona_says_how_to_answer_and_the_identity_only_who_the_model_is():
+    system = Agent().messages(Request("ann", "hello", persona="Answer briefly."))[0]["content"]
+    assert system.splitlines()[0].startswith('You are "ai"') and "Answer briefly." in system
+    assert "Answer briefly" not in Agent().messages(Request("ann", "hello"))[0]["content"], "it is the persona's to say"
+
+
 # ---------------------------------------------------------------- what the model answered
 def test_plain_text_is_just_said():
     turn = Agent().parse("There are two sheets.", TOOLS)

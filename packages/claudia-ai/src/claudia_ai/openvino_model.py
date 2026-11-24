@@ -27,6 +27,8 @@ class OpenVinoModel:
     ``genai`` is the module to use (``openvino_genai``; given in tests). ``temperature`` 0 means greedy decoding.
     """
 
+    remote = False
+
     def __init__(
         self, model_dir: str | Path, device: str = DEFAULT_DEVICE, *, temperature: float = 0.3, genai: Any = None
     ):

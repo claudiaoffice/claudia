@@ -28,6 +28,8 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 from typing import ClassVar, TypeIs
 
+from claudia_core import Refusal
+
 from .spans import Span
 
 #: How the text flows round an object, in the order the one key (Format ▸ Wrap Text) steps through them (D1064).
@@ -130,4 +132,6 @@ class ParagraphAnchor:
         if self.wrap not in WRAPS:
             raise ValueError(f"the wrap of an object is one of {', '.join(WRAPS)}, not {self.wrap!r}")
         if not _is_whole(self.gap) or not 0 <= self.gap <= MAX_WRAP_GAP:
-            raise ValueError(f"the gap between an object and the text is a whole number from 0 to {MAX_WRAP_GAP} units")
+            raise Refusal(
+                "the gap between an object and the text is a whole number from 0 to {limit} units", limit=MAX_WRAP_GAP
+            )

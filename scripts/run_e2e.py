@@ -110,6 +110,7 @@ SCRIPTS: list[Script] = [
     Script("grid-a11y", "computes"),
     Script("describe", "computes"),
     Script("redaction", "computes"),
+    Script("computes-slides", "computes"),
     Script("composes", "composes"),
     Script("composes-wrap", "composes"),
     Script("styling", "composes"),
