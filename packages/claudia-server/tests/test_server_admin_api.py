@@ -3,7 +3,9 @@
 import contextlib
 import itertools
 import json
+import sys
 
+import pytest
 from starlette.testclient import TestClient
 from starlette.websockets import WebSocketDisconnect
 
@@ -369,28 +371,23 @@ def test_the_access_secret_is_rejected_when_too_short(tmp_path):
 
 
 def test_typeset_settings_are_saved_and_diagnosed(tmp_path):
+    """A program that cannot be found is refused with a sentence (SEC-16: nothing is kept that was not seen to run);
+    with nothing configured the programs are looked up on the PATH, and the answer says whether they are there."""
     app, _, _ = serve(state_dir=tmp_path)
     with TestClient(app) as client:
-        token = client.post("/api/admin/setup", json={"name": "tobi", "password": PASSWORD, "code": CODE}).json()[
-            "token"
-        ]
-        headers = {"Authorization": f"Bearer {token}"}
+        headers = _admin(client)
+        missing = client.put("/api/admin/settings/typeset", headers=headers, json={"xelatex": "/no/such/xelatex"})
+        assert missing.status_code == 400
+        assert "/no/such/xelatex" in missing.json()["detail"]
+
         response = client.put(
-            "/api/admin/settings/typeset",
-            headers=headers,
-            json={"xelatex": "/no/such/xelatex", "pdftocairo": None},
+            "/api/admin/settings/typeset", headers=headers, json={"xelatex": None, "pdftocairo": None}
         )
         assert response.status_code == 200
         body = response.json()
-        assert body["typeset"]["xelatex"] == "/no/such/xelatex"
-        assert body["typeset_diagnosis"]["xelatex"]["ok"] is False
-        assert (
-            "install" in body["typeset_diagnosis"]["xelatex"]["detail"].lower()
-            or body["typeset_diagnosis"]["xelatex"]["detail"]
-        )
-
-        settings_view = client.get("/api/admin/settings", headers=headers).json()
-        assert settings_view["typeset"]["xelatex"] == "/no/such/xelatex"
+        assert body["typeset"] == {"xelatex": None, "pdftocairo": None}
+        assert set(body["typeset_diagnosis"]) == {"xelatex", "pdftocairo"}
+        assert client.get("/api/admin/settings", headers=headers).json()["typeset"]["xelatex"] is None
 
 
 def test_ai_settings_are_refused_when_the_assistant_is_disabled(tmp_path):
@@ -431,3 +428,58 @@ def answer_create(client, **extra):
         with contextlib.suppress(WebSocketDisconnect):
             ws.receive_json()
         return frame["error"]["code"]
+
+
+# SEC-16: the LaTeX programs are run for every formula, so a setting is accepted only when the program says it is one.
+
+
+def _program(folder, name: str, says: str, *, to_stderr: bool = False):
+    """A stand-in program in ``folder`` that prints ``says`` and ends well."""
+    import stat
+
+    script = folder / name
+    redirect = " >&2" if to_stderr else ""
+    script.write_text(f"#!/bin/sh\necho '{says}'{redirect}\n")
+    script.chmod(script.stat().st_mode | stat.S_IXUSR)
+    return str(script)
+
+
+def _admin(client) -> dict:
+    token = client.post("/api/admin/setup", json={"name": "tobi", "password": PASSWORD, "code": CODE}).json()["token"]
+    return {"Authorization": f"Bearer {token}"}
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="the stand-in programs are shell scripts")
+def test_a_program_that_is_not_xelatex_is_refused_as_xelatex(tmp_path):
+    app, _, _ = serve(state_dir=tmp_path / "state")
+    other = _program(tmp_path, "true-ish", "hello")
+    with TestClient(app) as client:
+        headers = _admin(client)
+        response = client.put("/api/admin/settings/typeset", headers=headers, json={"xelatex": other})
+        assert response.status_code == 400
+        assert "XeTeX" in response.json()["detail"]
+        assert client.get("/api/admin/settings", headers=headers).json()["typeset"]["xelatex"] is None
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="the stand-in programs are shell scripts")
+def test_a_program_that_says_it_is_xelatex_and_pdftocairo_is_kept(tmp_path):
+    app, _, _ = serve(state_dir=tmp_path / "state")
+    xelatex = _program(tmp_path, "xelatex", "XeTeX 3.141592653-2.6-0.999996 (TeX Live 2025)")
+    pdftocairo = _program(tmp_path, "pdftocairo", "pdftocairo version 24.02.0", to_stderr=True)
+    with TestClient(app) as client:
+        headers = _admin(client)
+        response = client.put(
+            "/api/admin/settings/typeset", headers=headers, json={"xelatex": xelatex, "pdftocairo": pdftocairo}
+        )
+        assert response.status_code == 200
+        assert response.json()["typeset"] == {"xelatex": xelatex, "pdftocairo": pdftocairo}
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="the stand-in programs are shell scripts")
+def test_a_program_that_is_not_pdftocairo_is_refused_as_pdftocairo(tmp_path):
+    app, _, _ = serve(state_dir=tmp_path / "state")
+    other = _program(tmp_path, "echo-ish", "XeTeX 3.14")
+    with TestClient(app) as client:
+        response = client.put("/api/admin/settings/typeset", headers=_admin(client), json={"pdftocairo": other})
+        assert response.status_code == 400
+        assert "pdftocairo" in response.json()["detail"]

@@ -56,6 +56,7 @@ from .server_settings import (
 )
 from .setup_code import SetupCode, remove_code
 from .suite import Suite
+from .typeset_check import identify
 
 log = logging.getLogger("claudia_server")
 JsonBody = Annotated[dict, Body()]
@@ -521,10 +522,21 @@ def _settings_routes(
 
     @router.put("/settings/typeset")
     async def set_typeset(admin: Signedin, body: JsonBody):
-        context.settings.typeset = TypesetSettings(xelatex=body.get("xelatex"), pdftocairo=body.get("pdftocairo"))
+        context.settings.typeset = await _typeset_settings_asked(body)
         context.settings.note_changed("typeset", admin)
         _save()
         return _dict()
+
+
+async def _typeset_settings_asked(body: dict) -> TypesetSettings:
+    """The typesetting programs a ``PUT`` asks for, each seen to name itself (SEC-16, D2002); HTTP 400 otherwise."""
+    asked = TypesetSettings(xelatex=body.get("xelatex"), pdftocairo=body.get("pdftocairo"))
+    try:
+        await identify("xelatex", asked.xelatex)
+        await identify("pdftocairo", asked.pdftocairo)
+    except ValueError as refused:
+        raise HTTPException(400, str(refused)) from refused
+    return asked
 
 
 def _ai_settings_asked(context: AdminContext, body: dict, admin: str) -> AiSettings:
