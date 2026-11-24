@@ -53,11 +53,11 @@ msgstr "(geschwärzt, Länge {n})"
 msgid "+ Add administrator…"
 msgstr "+ Administrator hinzufügen…"
 
-#: web/app/components/OpenDialog.vue:849
+#: web/app/components/OpenDialog.vue:856
 msgid "+ Connect to a server…"
 msgstr "+ Mit einem Server verbinden…"
 
-#: web/app/components/OpenDialog.vue:880
+#: web/app/components/OpenDialog.vue:887
 msgid "+ New collection"
 msgstr "+ Neue Sammlung"
 
@@ -361,7 +361,7 @@ msgstr "Ein Name wie dieser existiert bereits und verweist künftig hierher."
 msgid "A named range is renamed in the list of names, which also changes the formulas that use it"
 msgstr "Ein benannter Bereich wird in der Liste der Namen umbenannt; dort ändern sich auch die Formeln, die ihn verwenden"
 
-#: web/app/components/OpenDialog.vue:1081
+#: web/app/components/OpenDialog.vue:1088
 msgid "A new document belongs to whoever creates it first. The password protects this document only (at least 8 characters, with a capital letter, a small letter and a digit)."
 msgstr "Ein neues Dokument gehört demjenigen, der es zuerst erstellt. Das Passwort schützt nur dieses Dokument (mindestens 8 Zeichen, mit einem Großbuchstaben, einem Kleinbuchstaben und einer Ziffer)."
 
@@ -485,7 +485,7 @@ msgstr "Eine ganze Zahl als Text in einer anderen Basis (2 bis 36), mit Nullen a
 msgid "A1:B5"
 msgstr "A1:B5"
 
-#: web/app/components/OpenDialog.vue:1035
+#: web/app/components/OpenDialog.vue:1042
 msgid "ABCD-EFGH-…"
 msgstr "ABCD-EFGH-…"
 
@@ -517,7 +517,7 @@ msgstr "Über Claudia Computes"
 msgid "About Claudia Creates"
 msgstr "Über Claudia Creates"
 
-#: web/app/components/AboutDialog.vue:33 web/app/lib/document-menus.ts:288
+#: web/app/components/AboutDialog.vue:32 web/app/lib/document-menus.ts:288
 msgid "About claudia"
 msgstr "Über Claudia"
 
@@ -709,7 +709,7 @@ msgstr "Alle Zellen ausgewählt"
 msgid "All combinations"
 msgstr "Alle Kombinationen"
 
-#: web/app/components/OpenDialog.vue:892
+#: web/app/components/OpenDialog.vue:899
 msgid "All documents"
 msgstr "Alle Dokumente"
 
@@ -985,7 +985,7 @@ msgstr "Mittelwert von {field}"
 msgid "Average {value}"
 msgstr "Mittelwert {value}"
 
-#: web/app/components/AddFontsDialog.vue:207 web/app/components/OpenDialog.vue:1048
+#: web/app/components/AddFontsDialog.vue:207 web/app/components/OpenDialog.vue:1055
 msgid "Back"
 msgstr "Zurück"
 
@@ -1153,7 +1153,7 @@ msgstr "Berechnung"
 msgid "Calculation step"
 msgstr "Rechenschritt"
 
-#: web/app/components/AcceptOwnershipDialog.vue:34 web/app/components/AddFontsDialog.vue:181 web/app/components/AdminAccessDocuments.vue:229 web/app/components/AdminAccessDocuments.vue:245 web/app/components/AdminFonts.vue:211 web/app/components/AdminPageFooter.vue:21 web/app/components/AiConsentDialog.vue:65 web/app/components/AssignOwnerDialog.vue:57 web/app/components/ChangePasswordDialog.vue:44 web/app/components/DeleteDocumentDialog.vue:32 web/app/components/DeleteStyleDialog.vue:134 web/app/components/DetailsDialog.vue:48 web/app/components/DownloadDialog.vue:67 web/app/components/ExportFormatDialog.vue:131 web/app/components/ExportFormatDialog.vue:132 web/app/components/ImageImportDialog.vue:103 web/app/components/ImportDialog.vue:192 web/app/components/LeaveDocumentDialog.vue:32 web/app/components/LineSizeDialog.vue:120 web/app/components/NameAndDescribeDialog.vue:69 web/app/components/NameDefinePopover.vue:68 web/app/components/NamesDialog.vue:89 web/app/components/OpenDialog.vue:854 web/app/components/OpenDialog.vue:885 web/app/components/PivotCreateDialog.vue:108 web/app/components/PivotDeleteDialog.vue:30 web/app/components/PivotMembersDialog.vue:72 web/app/components/PivotValueDialog.vue:68 web/app/components/PromptDialog.vue:30 web/app/components/RedactionDialog.vue:304 web/app/components/RotatePopover.vue:108 web/app/components/ShareDialog.vue:89 web/app/components/ShareDialog.vue:99 web/app/components/SheetChartInsertDialog.vue:191 web/app/components/SidePanel.vue:552 web/app/components/SqlEditor.vue:164 web/app/components/TableDialog.vue:44
+#: web/app/components/AcceptOwnershipDialog.vue:34 web/app/components/AddFontsDialog.vue:181 web/app/components/AdminAccessDocuments.vue:229 web/app/components/AdminAccessDocuments.vue:245 web/app/components/AdminFonts.vue:211 web/app/components/AdminPageFooter.vue:21 web/app/components/AiConsentDialog.vue:65 web/app/components/AssignOwnerDialog.vue:57 web/app/components/ChangePasswordDialog.vue:44 web/app/components/DeleteDocumentDialog.vue:32 web/app/components/DeleteStyleDialog.vue:134 web/app/components/DetailsDialog.vue:48 web/app/components/DownloadDialog.vue:67 web/app/components/ExportFormatDialog.vue:131 web/app/components/ExportFormatDialog.vue:132 web/app/components/ImageImportDialog.vue:103 web/app/components/ImportDialog.vue:192 web/app/components/LeaveDocumentDialog.vue:32 web/app/components/LineSizeDialog.vue:120 web/app/components/NameAndDescribeDialog.vue:69 web/app/components/NameDefinePopover.vue:68 web/app/components/NamesDialog.vue:89 web/app/components/OpenDialog.vue:861 web/app/components/OpenDialog.vue:892 web/app/components/PivotCreateDialog.vue:108 web/app/components/PivotDeleteDialog.vue:30 web/app/components/PivotMembersDialog.vue:72 web/app/components/PivotValueDialog.vue:68 web/app/components/PromptDialog.vue:30 web/app/components/RedactionDialog.vue:304 web/app/components/RotatePopover.vue:108 web/app/components/ShareDialog.vue:89 web/app/components/ShareDialog.vue:99 web/app/components/SheetChartInsertDialog.vue:191 web/app/components/SidePanel.vue:552 web/app/components/SqlEditor.vue:164 web/app/components/TableDialog.vue:44
 msgid "Cancel"
 msgstr "Abbrechen"
 
@@ -1281,7 +1281,7 @@ msgstr "Die Dateien werden geprüft …"
 msgid "Checkpoint saved."
 msgstr "Prüfpunkt gespeichert."
 
-#: web/app/components/OpenDialog.vue:739
+#: web/app/components/OpenDialog.vue:746
 msgid "Choose Table, Text or Slides first."
 msgstr "Erst Tabelle, Text oder Folien wählen."
 
@@ -1385,7 +1385,7 @@ msgstr "Klicke etwas im Dokument an, um ein Tag dafür zu schreiben."
 msgid "Click {what} in the document to pick them · {n} picked"
 msgstr "Klicken Sie {what} im Dokument an, um sie auszuwählen · {n} ausgewählt"
 
-#: web/app/components/AboutDialog.vue:41 web/app/components/AdminLogin.vue:44 web/app/components/AdminShell.vue:26 web/app/components/AiConsentDialog.vue:68 web/app/components/AssignOwnerDialog.vue:57 web/app/components/ContentsDialog.vue:82 web/app/components/DocumentFrame.vue:246 web/app/components/ImagePropertiesDialog.vue:95 web/app/components/NamesDialog.vue:101 web/app/components/NumberingDialog.vue:204 web/app/components/OutcomePopover.vue:156 web/app/components/PivotPanel.vue:243 web/app/components/PivotSqlDialog.vue:72 web/app/components/RandomDialog.vue:221 web/app/components/SearchPanel.vue:473 web/app/components/ShortcutsDialog.vue:35 web/app/components/StylesDialog.vue:145 web/app/components/TableOptionsDialog.vue:108
+#: web/app/components/AboutDialog.vue:40 web/app/components/AdminLogin.vue:44 web/app/components/AdminShell.vue:26 web/app/components/AiConsentDialog.vue:68 web/app/components/AssignOwnerDialog.vue:57 web/app/components/ContentsDialog.vue:82 web/app/components/DocumentFrame.vue:246 web/app/components/ImagePropertiesDialog.vue:95 web/app/components/NamesDialog.vue:101 web/app/components/NumberingDialog.vue:204 web/app/components/OutcomePopover.vue:156 web/app/components/PivotPanel.vue:243 web/app/components/PivotSqlDialog.vue:72 web/app/components/RandomDialog.vue:221 web/app/components/SearchPanel.vue:473 web/app/components/ShortcutsDialog.vue:35 web/app/components/StylesDialog.vue:145 web/app/components/TableOptionsDialog.vue:108
 msgid "Close"
 msgstr "Schließen"
 
@@ -1429,11 +1429,11 @@ msgstr "Sammlung entfernt."
 msgid "Collection renamed."
 msgstr "Sammlung umbenannt."
 
-#: web/app/components/AdminFonts.vue:133 web/app/components/OpenDialog.vue:859
+#: web/app/components/AdminFonts.vue:133 web/app/components/OpenDialog.vue:866
 msgid "Collections"
 msgstr "Sammlungen"
 
-#: web/app/components/OpenDialog.vue:1010 web/app/components/OpenDialog.vue:1011 web/app/components/OpenDialog.vue:939 web/app/components/OpenDialog.vue:940
+#: web/app/components/OpenDialog.vue:1017 web/app/components/OpenDialog.vue:1018 web/app/components/OpenDialog.vue:946 web/app/components/OpenDialog.vue:947
 msgid "Collections of {id}…"
 msgstr "Sammlungen von {id}…"
 
@@ -1505,7 +1505,7 @@ msgstr "Verbunden"
 msgid "Connecting to {address}…"
 msgstr "Verbinde mit {address}…"
 
-#: web/app/components/OpenDialog.vue:857 web/app/lib/connection.ts:32
+#: web/app/components/OpenDialog.vue:864 web/app/lib/connection.ts:32
 msgid "Connecting…"
 msgstr "Verbinde…"
 
@@ -1589,7 +1589,7 @@ msgstr "Kann ein Eigentümer bitte schwärzen, was ich um {times} getan habe? Es
 msgid "Could not connect"
 msgstr "Verbindung nicht möglich"
 
-#: web/app/components/OpenDialog.vue:788
+#: web/app/components/OpenDialog.vue:795
 msgid "Could not connect."
 msgstr "Verbindung nicht möglich."
 
@@ -1633,7 +1633,7 @@ msgstr "Erstellen"
 msgid "Create administrator"
 msgstr "Administrator erstellen"
 
-#: web/app/components/OpenDialog.vue:1080
+#: web/app/components/OpenDialog.vue:1087
 msgid "Create document"
 msgstr "Dokument erstellen"
 
@@ -1849,7 +1849,7 @@ msgstr "Beschreibungen"
 msgid "Details of {id}"
 msgstr "Details von {id}"
 
-#: web/app/components/OpenDialog.vue:1001 web/app/components/OpenDialog.vue:1002 web/app/components/OpenDialog.vue:930 web/app/components/OpenDialog.vue:931
+#: web/app/components/OpenDialog.vue:1008 web/app/components/OpenDialog.vue:1009 web/app/components/OpenDialog.vue:937 web/app/components/OpenDialog.vue:938
 msgid "Details of {id}…"
 msgstr "Details von {id} …"
 
@@ -1889,7 +1889,7 @@ msgstr "Diesen Teil nicht behalten"
 msgid "Do your last undone step again"
 msgstr "Den zuletzt rückgängig gemachten Schritt wiederherstellen"
 
-#: web/app/components/OpenDialog.vue:1032
+#: web/app/components/OpenDialog.vue:1039
 msgid "Document"
 msgstr "Dokument"
 
@@ -2181,11 +2181,11 @@ msgstr "Dateigröße"
 msgid "Fill"
 msgstr "Füllung"
 
-#: web/app/components/OpenDialog.vue:747
+#: web/app/components/OpenDialog.vue:754
 msgid "Fill in the document, your name and your password."
 msgstr "Geben Sie das Dokument, Ihren Namen und Ihr Passwort an."
 
-#: web/app/components/OpenDialog.vue:746
+#: web/app/components/OpenDialog.vue:753
 msgid "Fill in the document, your name, the recovery key and a new password."
 msgstr "Geben Sie das Dokument, Ihren Namen, den Wiederherstellungsschlüssel und ein neues Passwort an."
 
@@ -2213,7 +2213,7 @@ msgstr "Füllt {range}. Ihre Zellen lassen sich nicht überschreiben."
 msgid "Filters"
 msgstr "Filter"
 
-#: web/app/components/OpenDialog.vue:882
+#: web/app/components/OpenDialog.vue:889
 msgid "Finance"
 msgstr "Finanzen"
 
@@ -2433,7 +2433,7 @@ msgstr "Abstand…"
 msgid "Get"
 msgstr "Holen"
 
-#: web/app/components/OpenDialog.vue:1047
+#: web/app/components/OpenDialog.vue:1054
 msgid "Get back in"
 msgstr "Wieder anmelden"
 
@@ -2457,7 +2457,7 @@ msgstr "Gibt der aktuellen Folie einen anderen Namen; ein Tag im Chat zeigt weit
 msgid "Give the thing you have selected a name, and say what it shows to someone who cannot see it"
 msgstr "Dem ausgewählten Objekt einen Namen geben und sagen, was es jemandem zeigt, der es nicht sehen kann"
 
-#: web/app/components/OpenDialog.vue:853
+#: web/app/components/OpenDialog.vue:860
 msgid "Go"
 msgstr "Los"
 
@@ -2737,7 +2737,7 @@ msgstr "Wie das Format gelöscht wird"
 msgid "Hyphenate"
 msgstr "Silbentrennung"
 
-#: web/app/components/OpenDialog.vue:1058
+#: web/app/components/OpenDialog.vue:1065
 msgid "I forgot my password"
 msgstr "Ich habe mein Passwort vergessen"
 
@@ -2785,7 +2785,7 @@ msgstr "Von der Festplatte importiert"
 msgid "In an Excel file"
 msgstr "In einer Excel-Datei"
 
-#: web/app/components/OpenDialog.vue:1060
+#: web/app/components/OpenDialog.vue:1067
 msgid "In collections"
 msgstr "In Sammlungen"
 
@@ -2801,7 +2801,7 @@ msgstr "Im Protokoll des Servers, wo er gestartet wurde, oder in admin/setup-cod
 msgid "In this document now:"
 msgstr "Jetzt in diesem Dokument:"
 
-#: web/app/components/OpenDialog.vue:914
+#: web/app/components/OpenDialog.vue:921
 msgid "In {name}"
 msgstr "In {name}"
 
@@ -3017,7 +3017,7 @@ msgstr "Wird nur auf diesem Server aufbewahrt. Er wird nie wieder angezeigt und 
 msgid "Kept parts, click to insert:"
 msgstr "Behaltene Teile, zum Einfügen anklicken:"
 
-#: web/app/components/OpenDialog.vue:1067
+#: web/app/components/OpenDialog.vue:1074
 msgid "Kind of the new document"
 msgstr "Art des neuen Dokuments"
 
@@ -3097,7 +3097,7 @@ msgstr "Ausgelassen"
 msgid "Left out ({count})"
 msgstr "Ausgelassen ({count})"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/AboutDialog.vue:28
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/AboutDialog.vue:27
 msgid "Legal"
 msgstr "Rechtliches"
 
@@ -3217,7 +3217,7 @@ msgstr "Aus den Feldern der Leiste gebildet."
 msgid "Made from what you typed. Your own pattern replaces it."
 msgstr "Aus Ihrer Eingabe erstellt. Ihr eigenes Muster ersetzt sie."
 
-#: web/app/components/NumberingDialog.vue:127 web/app/components/OpenDialog.vue:884
+#: web/app/components/NumberingDialog.vue:127 web/app/components/OpenDialog.vue:891
 msgid "Make"
 msgstr "Anlegen"
 
@@ -3261,7 +3261,7 @@ msgstr "Verwalten"
 msgid "Manage this server…"
 msgstr "Diesen Server verwalten…"
 
-#: web/app/components/OpenDialog.vue:838 web/app/components/OpenDialog.vue:838
+#: web/app/components/OpenDialog.vue:845 web/app/components/OpenDialog.vue:845
 msgid "Manage {server}…"
 msgstr "{server} verwalten…"
 
@@ -3357,11 +3357,11 @@ msgstr "Min"
 msgid "Min of {field}"
 msgstr "Min von {field}"
 
-#: web/app/components/OpenDialog.vue:888
+#: web/app/components/OpenDialog.vue:895
 msgid "Mine and the collections are kept in this browser."
 msgstr "Meine und die Sammlungen werden in diesem Browser aufbewahrt."
 
-#: web/app/components/OpenDialog.vue:914
+#: web/app/components/OpenDialog.vue:921
 msgid "Mine · opened before"
 msgstr "Meine · zuvor geöffnet"
 
@@ -3429,11 +3429,11 @@ msgstr "„{name}“ hierher verschieben"
 msgid "Multiplies the ranges cell by cell (they must have the same shape) and adds up the products."
 msgstr "Multipliziert die Bereiche Zelle für Zelle (sie müssen dieselbe Form haben) und addiert die Produkte."
 
-#: web/app/components/OpenDialog.vue:812
+#: web/app/components/OpenDialog.vue:819
 msgid "My places"
 msgstr "Meine Orte"
 
-#: web/app/components/OpenDialog.vue:811
+#: web/app/components/OpenDialog.vue:818
 msgid "My places and collections"
 msgstr "Meine Orte und Sammlungen"
 
@@ -3469,7 +3469,7 @@ msgstr "Benennen"
 msgid "Name it…"
 msgstr "Benennen …"
 
-#: web/app/components/AddFontsDialog.vue:148 web/app/components/OpenDialog.vue:882
+#: web/app/components/AddFontsDialog.vue:148 web/app/components/OpenDialog.vue:889
 msgid "Name of the collection"
 msgstr "Name der Sammlung"
 
@@ -3521,11 +3521,11 @@ msgstr "Neues Blatt…"
 msgid "New Slide"
 msgstr "Neue Folie"
 
-#: web/app/components/OpenDialog.vue:1023 web/app/components/OpenDialog.vue:968
+#: web/app/components/OpenDialog.vue:1030 web/app/components/OpenDialog.vue:975
 msgid "New collection"
 msgstr "Neue Sammlung"
 
-#: web/app/components/OpenDialog.vue:1023 web/app/components/OpenDialog.vue:968
+#: web/app/components/OpenDialog.vue:1030 web/app/components/OpenDialog.vue:975
 msgid "New collection…"
 msgstr "Neue Sammlung…"
 
@@ -3541,7 +3541,7 @@ msgstr "Neuer Name für {name}"
 msgid "New owner"
 msgstr "Neuer Eigentümer"
 
-#: web/app/components/ChangePasswordDialog.vue:38 web/app/components/OpenDialog.vue:1038
+#: web/app/components/ChangePasswordDialog.vue:38 web/app/components/OpenDialog.vue:1045
 msgid "New password"
 msgstr "Neues Passwort"
 
@@ -3745,7 +3745,7 @@ msgstr "Nichts hat dieses Format und nichts baut darauf auf; es wird einfach gel
 msgid "Nothing has this style."
 msgstr "Nichts hat dieses Format."
 
-#: web/app/components/OpenDialog.vue:916
+#: web/app/components/OpenDialog.vue:923
 msgid "Nothing in this collection yet. Add a document with the bookmark button next to it, or drag it onto the collection."
 msgstr "Noch nichts in dieser Sammlung. Fügen Sie ein Dokument mit dem Lesezeichen-Knopf daneben hinzu oder ziehen Sie es auf die Sammlung."
 
@@ -3761,7 +3761,7 @@ msgstr "Nichts ausgewählt. Wählen Sie Änderungen oder Nachrichten in Verlauf 
 msgid "Nothing is replaced."
 msgstr "Es wird nichts ersetzt."
 
-#: web/app/components/OpenDialog.vue:916
+#: web/app/components/OpenDialog.vue:923
 msgid "Nothing opened yet from this browser."
 msgstr "In diesem Browser noch nichts geöffnet."
 
@@ -3793,7 +3793,7 @@ msgstr "Es wurde nichts geändert: @ai antwortet weiterhin mit {who}."
 msgid "Nothing was replaced."
 msgstr "Es wurde nichts ersetzt."
 
-#: web/app/components/OpenDialog.vue:989
+#: web/app/components/OpenDialog.vue:996
 msgid "Nothing yet. Create the first document."
 msgstr "Noch nichts. Erstellen Sie das erste Dokument."
 
@@ -3897,7 +3897,7 @@ msgstr "Offline"
 msgid "On a new sheet"
 msgstr "Auf einem neuen Blatt"
 
-#: web/app/components/OpenDialog.vue:976
+#: web/app/components/OpenDialog.vue:983
 msgid "On this server"
 msgstr "Auf diesem Server"
 
@@ -3905,7 +3905,7 @@ msgstr "Auf diesem Server"
 msgid "On this sheet at"
 msgstr "Auf diesem Blatt bei"
 
-#: web/app/components/OpenDialog.vue:976
+#: web/app/components/OpenDialog.vue:983
 msgid "On {place} · {count}"
 msgstr "Auf {place} · {count}"
 
@@ -3989,7 +3989,7 @@ msgstr "Nur, wenn es der ganze Text ist."
 msgid "Only whole words."
 msgstr "Nur ganze Wörter."
 
-#: web/app/components/ImportDialog.vue:194 web/app/components/OpenDialog.vue:1051 web/app/components/OpenDialog.vue:799
+#: web/app/components/ImportDialog.vue:194 web/app/components/OpenDialog.vue:1058 web/app/components/OpenDialog.vue:806
 msgid "Open"
 msgstr "Öffnen"
 
@@ -3997,7 +3997,7 @@ msgstr "Öffnen"
 msgid "Open a File"
 msgstr "Datei öffnen"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/OpenDialog.vue:904 web/app/lib/document-menus.ts:81
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/OpenDialog.vue:911 web/app/lib/document-menus.ts:81
 msgid "Open a File…"
 msgstr "Datei öffnen…"
 
@@ -4069,7 +4069,7 @@ msgstr "Öffnen…"
 msgid "Options…"
 msgstr "Optionen…"
 
-#: web/app/components/OpenDialog.vue:1066
+#: web/app/components/OpenDialog.vue:1073
 msgid "Or start a new one"
 msgstr "Oder ein neues anfangen"
 
@@ -4181,7 +4181,7 @@ msgstr "Ein Teil des Verlaufs wurde geschwärzt. Das Dokument wurde neu geladen.
 msgid "Part of the result of the query in {cell}"
 msgstr "Teil des Ergebnisses der Abfrage in {cell}"
 
-#: web/app/components/AdminLogin.vue:55 web/app/components/FirstAdminSetup.vue:155 web/app/components/ImportDialog.vue:164 web/app/components/OpenDialog.vue:1038
+#: web/app/components/AdminLogin.vue:55 web/app/components/FirstAdminSetup.vue:155 web/app/components/ImportDialog.vue:164 web/app/components/OpenDialog.vue:1045
 msgid "Password"
 msgstr "Passwort"
 
@@ -4561,7 +4561,7 @@ msgstr "Liest sich:"
 msgid "Reconnecting…"
 msgstr "Verbindung wird wiederhergestellt…"
 
-#: web/app/components/OpenDialog.vue:1035 web/app/components/ShareDialog.vue:139
+#: web/app/components/OpenDialog.vue:1042 web/app/components/ShareDialog.vue:139
 msgid "Recovery key"
 msgstr "Wiederherstellungsschlüssel"
 
@@ -4653,7 +4653,7 @@ msgstr "Verweis entfernen"
 msgid "Remove collection"
 msgstr "Sammlung entfernen"
 
-#: web/app/components/OpenDialog.vue:877 web/app/components/OpenDialog.vue:877
+#: web/app/components/OpenDialog.vue:884 web/app/components/OpenDialog.vue:884
 msgid "Remove collection {name}"
 msgstr "Sammlung {name} entfernen"
 
@@ -4713,7 +4713,7 @@ msgstr "Entfernt die nicht druckbaren Zeichen (Codes 0 bis 31) aus einem Text."
 msgid "Removing the key switches this server to the local model, because nothing else could answer."
 msgstr "Wird der Schlüssel entfernt, wechselt dieser Server zum lokalen Modell, denn sonst könnte nichts antworten."
 
-#: web/app/components/AdminFonts.vue:204 web/app/components/NamesDialog.vue:88 web/app/components/NamesDialog.vue:94 web/app/components/OpenDialog.vue:833 web/app/components/SlideWorkspace.vue:514 web/app/components/StylesDialog.vue:122 web/app/components/StylesDialog.vue:139 web/app/components/StylesDialog.vue:70 web/app/components/Workspace.vue:1342
+#: web/app/components/AdminFonts.vue:204 web/app/components/NamesDialog.vue:88 web/app/components/NamesDialog.vue:94 web/app/components/OpenDialog.vue:840 web/app/components/SlideWorkspace.vue:514 web/app/components/StylesDialog.vue:122 web/app/components/StylesDialog.vue:139 web/app/components/StylesDialog.vue:70 web/app/components/Workspace.vue:1342
 msgid "Rename"
 msgstr "Umbenennen"
 
@@ -4737,7 +4737,7 @@ msgstr "Blatt umbenennen"
 msgid "Rename slide"
 msgstr "Folie umbenennen"
 
-#: web/app/components/OpenDialog.vue:819 web/app/components/OpenDialog.vue:833
+#: web/app/components/OpenDialog.vue:826 web/app/components/OpenDialog.vue:840
 msgid "Rename {server}"
 msgstr "{server} umbenennen"
 
@@ -4821,7 +4821,7 @@ msgstr "Verlauf abspielen…"
 msgid "Replay the history: wheel over this panel, or Alt+Page Up"
 msgstr "Den Verlauf abspielen: Mausrad über diesem Bereich oder Alt+Bild auf"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/AboutDialog.vue:27
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/AboutDialog.vue:26
 msgid "Report an Issue"
 msgstr "Problem melden"
 
@@ -5077,7 +5077,7 @@ msgstr "Skriptgesteuerter Platzhalter"
 msgid "Sealed Claudia document"
 msgstr "Versiegeltes Claudia-Dokument"
 
-#: web/app/components/OpenDialog.vue:900
+#: web/app/components/OpenDialog.vue:907
 msgid "Search"
 msgstr "Suchen"
 
@@ -5093,7 +5093,7 @@ msgstr "Suchen & Ersetzen…"
 msgid "Search & replace"
 msgstr "Suchen & Ersetzen"
 
-#: web/app/components/OpenDialog.vue:901
+#: web/app/components/OpenDialog.vue:908
 msgid "Search Mine and {place}"
 msgstr "Meine und {place} durchsuchen"
 
@@ -5177,7 +5177,7 @@ msgstr "Gesendet"
 msgid "Series are in"
 msgstr "Datenreihen in"
 
-#: web/app/components/OpenDialog.vue:851
+#: web/app/components/OpenDialog.vue:858
 msgid "Server address"
 msgstr "Serveradresse"
 
@@ -5237,7 +5237,7 @@ msgstr "Blatt {name}"
 msgid "Sheet: {reason}."
 msgstr "Tabelle: {reason}."
 
-#: web/app/components/AboutDialog.vue:37
+#: web/app/components/AboutDialog.vue:36
 msgid "Shell contract v{SHELL_CONTRACT_VERSION}"
 msgstr "Shell-Vertrag v{SHELL_CONTRACT_VERSION}"
 
@@ -5337,7 +5337,7 @@ msgstr "Die Präsentation im Vollbild zeigen, beginnend mit der Folie, auf der S
 msgid "Show the text as pages instead of a flowing text"
 msgstr "Den Text als Seiten statt als Fließtext anzeigen"
 
-#: web/app/components/OpenDialog.vue:867
+#: web/app/components/OpenDialog.vue:874
 msgid "Shown now. Choose it again, or Esc, to see all documents."
 msgstr "Wird gerade angezeigt. Wählen Sie sie noch einmal oder drücken Sie Esc, um alle Dokumente zu sehen."
 
@@ -5713,7 +5713,7 @@ msgstr "Tabellen"
 msgid "Tables, named ranges and query results are offered; the pivot follows them when rows are added."
 msgstr "Angeboten werden Tabellen, benannte Bereiche und Abfrageergebnisse; die PivotTable folgt ihnen, wenn Zeilen hinzukommen."
 
-#: web/app/components/OpenDialog.vue:895
+#: web/app/components/OpenDialog.vue:902
 msgid "Tables, texts and slides on this place, and the documents you opened before."
 msgstr "Tabellen, Texte und Folien an diesem Ort, und die Dokumente, die Sie zuvor geöffnet haben."
 
@@ -5749,11 +5749,11 @@ msgstr "Das eigene Format der ausgewählten Zellen entfernen, zurück zu dem der
 msgid "Take the selected object off the slide"
 msgstr "Das ausgewählte Objekt von der Folie entfernen"
 
-#: web/app/components/OpenDialog.vue:949 web/app/components/OpenDialog.vue:950
+#: web/app/components/OpenDialog.vue:956 web/app/components/OpenDialog.vue:957
 msgid "Take {id} off Mine"
 msgstr "{id} aus Meine entfernen"
 
-#: web/app/components/OpenDialog.vue:957 web/app/components/OpenDialog.vue:958
+#: web/app/components/OpenDialog.vue:964 web/app/components/OpenDialog.vue:965
 msgid "Take {id} out of {name}"
 msgstr "{id} aus {name} nehmen"
 
@@ -5817,7 +5817,7 @@ msgstr "Textumbruch: {mode}"
 msgid "That cannot be pointed at yet."
 msgstr "Darauf kann noch nicht verwiesen werden."
 
-#: web/app/components/OpenDialog.vue:784
+#: web/app/components/OpenDialog.vue:791
 msgid "That document exists already — or the name or password is not acceptable. Try Open."
 msgstr "Dieses Dokument gibt es schon – oder der Name oder das Passwort ist nicht zulässig. Versuchen Sie es mit Öffnen."
 
@@ -5845,7 +5845,7 @@ msgstr "Das ist zu viel auf einmal zum Einfügen (höchstens 10.000 Zellen)."
 msgid "That range will not make a chart."
 msgstr "Aus diesem Bereich lässt sich kein Diagramm machen."
 
-#: web/app/components/OpenDialog.vue:786
+#: web/app/components/OpenDialog.vue:793
 msgid "That recovery key does not fit this document."
 msgstr "Dieser Wiederherstellungsschlüssel passt nicht zu diesem Dokument."
 
@@ -6073,7 +6073,7 @@ msgstr "Das Dokument ändert sich jetzt: Die markierten Stellen zeigen Füllzeic
 msgid "The document is full, or the connection was too slow."
 msgstr "Das Dokument ist voll, oder die Verbindung war zu langsam."
 
-#: web/app/components/OpenDialog.vue:895
+#: web/app/components/OpenDialog.vue:902
 msgid "The documents you put into this collection, on any place."
 msgstr "Die Dokumente, die Sie in diese Sammlung gelegt haben, an jedem Ort."
 
@@ -6125,7 +6125,7 @@ msgstr "Die Datei verbietet das Einbetten (fsType {fsType}), also könnte kein P
 msgid "The file holds the content as it is now. History and chat can only be exported by owners."
 msgstr "Die Datei enthält den Inhalt, wie er jetzt ist. Verlauf und Chat können nur Eigentümer exportieren."
 
-#: web/app/lib/open.ts:298
+#: web/app/lib/open.ts:319
 msgid "The file is too large for this server."
 msgstr "Die Datei ist für diesen Server zu groß."
 
@@ -6381,7 +6381,7 @@ msgstr "Der Monat eines Datums, 1 bis 12."
 msgid "The name is sealed into the file and cannot change."
 msgstr "Der Name ist in die Datei eingesiegelt und kann sich nicht ändern."
 
-#: web/app/components/OpenDialog.vue:787
+#: web/app/components/OpenDialog.vue:794
 msgid "The name or password is not right (or there is no such document)."
 msgstr "Name oder Passwort stimmen nicht (oder es gibt kein solches Dokument)."
 
@@ -6601,7 +6601,7 @@ msgstr "Der Rang eines Wertes unter den Zahlen als Anteil von 0 bis 1, auf die a
 msgid "The rate at which cash flows (the first one now, one per period after it) are worth nothing today."
 msgstr "Der Zins, bei dem Zahlungsströme (der erste jetzt, danach einer je Periode) heute nichts wert sind."
 
-#: web/app/components/OpenDialog.vue:1055
+#: web/app/components/OpenDialog.vue:1062
 msgid "The recovery key was shown to the owner when the document was made (or when they made a new one). With it you choose a new password; you keep what you were allowed to do."
 msgstr "Der Wiederherstellungsschlüssel wurde dem Eigentümer beim Erstellen des Dokuments gezeigt (oder als er einen neuen erstellte). Damit wählen Sie ein neues Passwort; Ihre Berechtigungen bleiben erhalten."
 
@@ -6657,11 +6657,11 @@ msgstr "Der Sekans eines Winkels im Bogenmaß (1 / COS)."
 msgid "The second, 0 to 59, of a time."
 msgstr "Die Sekunde, 0 bis 59, einer Uhrzeit."
 
-#: web/app/lib/open.ts:308 web/app/lib/open.ts:330 web/app/lib/open.ts:67
+#: web/app/lib/open.ts:329 web/app/lib/open.ts:351 web/app/lib/open.ts:67
 msgid "The server answered with an error ({status})."
 msgstr "Der Server hat mit einem Fehler geantwortet ({status})."
 
-#: web/app/lib/open.ts:204 web/app/lib/open.ts:287 web/app/lib/open.ts:317 web/app/lib/open.ts:56
+#: web/app/lib/open.ts:204 web/app/lib/open.ts:308 web/app/lib/open.ts:338 web/app/lib/open.ts:56
 msgid "The server cannot be reached."
 msgstr "Der Server ist nicht erreichbar."
 
@@ -7213,7 +7213,7 @@ msgstr "Das ist eine Tabelle. Öffnen Sie sie mit Claudia Computes."
 msgid "This is a text. Open it with Claudia Composes."
 msgstr "Das ist ein Text. Öffnen Sie ihn mit Claudia Composes."
 
-#: web/app/lib/open.ts:299
+#: web/app/lib/open.ts:320
 msgid "This is not a file Claudia can open."
 msgstr "Das ist keine Datei, die Claudia öffnen kann."
 
@@ -7481,7 +7481,7 @@ msgstr "Zwei Seiten nebeneinander"
 msgid "Type"
 msgstr "Typ"
 
-#: web/app/components/OpenDialog.vue:442 web/app/components/OpenDialog.vue:447
+#: web/app/components/OpenDialog.vue:449 web/app/components/OpenDialog.vue:454
 msgid "Type a server address."
 msgstr "Geben Sie eine Serveradresse ein."
 
@@ -7629,7 +7629,7 @@ msgstr "Wartet auf {names}."
 msgid "Want to change it by hand?"
 msgstr "Von Hand ändern?"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/AboutDialog.vue:26
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/AboutDialog.vue:25
 msgid "Website"
 msgstr "Website"
 
@@ -7741,7 +7741,7 @@ msgstr "Wo das Wort am Zeilenende getrennt werden darf"
 msgid "Where to look"
 msgstr "Wo gesucht wird"
 
-#: web/app/components/OpenDialog.vue:982
+#: web/app/components/OpenDialog.vue:989
 msgid "Which apps"
 msgstr "Welche Apps"
 
@@ -7757,7 +7757,7 @@ msgstr "Auf welcher Seite der Rahmen liegt"
 msgid "Which steps the wheel visits"
 msgstr "Welche Schritte das Mausrad besucht"
 
-#: web/app/components/OpenDialog.vue:978
+#: web/app/components/OpenDialog.vue:985
 msgid "Which tags"
 msgstr "Welche Schlagwörter"
 
@@ -8005,7 +8005,7 @@ msgstr "Ihre Änderung wurde nicht übernommen: Das Dokument hat sich unter Ihne
 msgid "Your changes to the pattern are dropped."
 msgstr "Ihre Änderungen am Muster gehen verloren."
 
-#: web/app/components/AdminLogin.vue:54 web/app/components/DetailsDialog.vue:42 web/app/components/FirstAdminSetup.vue:154 web/app/components/ImportDialog.vue:163 web/app/components/OpenDialog.vue:1033
+#: web/app/components/AdminLogin.vue:54 web/app/components/DetailsDialog.vue:42 web/app/components/FirstAdminSetup.vue:154 web/app/components/ImportDialog.vue:163 web/app/components/OpenDialog.vue:1040
 msgid "Your name"
 msgstr "Ihr Name"
 
@@ -8369,7 +8369,7 @@ msgstr "nach jedem Titel"
 msgid "alignment"
 msgstr "Ausrichtung"
 
-#: web/app/components/OpenDialog.vue:983
+#: web/app/components/OpenDialog.vue:990
 msgid "all apps"
 msgstr "alle Apps"
 
@@ -8381,7 +8381,7 @@ msgstr "alle müssen zutreffen"
 msgid "all parts"
 msgstr "alle Teile"
 
-#: web/app/components/OpenDialog.vue:979
+#: web/app/components/OpenDialog.vue:986
 msgid "all tags"
 msgstr "alle Schlagwörter"
 
@@ -8425,7 +8425,7 @@ msgstr "und {moreCount} weitere"
 msgid "and {n} more"
 msgstr "und {n} weitere"
 
-#: web/app/components/OpenDialog.vue:1033
+#: web/app/components/OpenDialog.vue:1040
 msgid "ann"
 msgstr "anna"
 
@@ -8517,7 +8517,7 @@ msgstr "Rahmen"
 msgid "branch {branch}"
 msgstr "Zweig {branch}"
 
-#: web/app/components/OpenDialog.vue:1032
+#: web/app/components/OpenDialog.vue:1039
 msgid "budget-2027"
 msgstr "budget-2027"
 
@@ -8809,7 +8809,7 @@ msgstr "alles, was mit diesem Dokument gemacht wurde"
 msgid "exactly"
 msgstr "genau"
 
-#: web/app/components/OpenDialog.vue:851
+#: web/app/components/OpenDialog.vue:858
 msgid "example.com:8420"
 msgstr "example.com:8420"
 
@@ -10917,7 +10917,7 @@ msgstr "{id} ist schon hier"
 msgid "{id} is here already: give the new document another name"
 msgstr "{id} ist schon hier: bitte dem neuen Dokument einen anderen Namen geben"
 
-#: web/app/components/OpenDialog.vue:712
+#: web/app/components/OpenDialog.vue:719
 msgid "{id} is here now. Open it with your name and password in it."
 msgstr "{id} ist jetzt hier. Öffnen Sie es mit Ihrem Namen und Passwort darin."
 
@@ -11073,15 +11073,15 @@ msgstr "{name} ist ein Wert, kein Name"
 msgid "{name} is already a name"
 msgstr "{name} ist schon ein Name"
 
-#: web/app/components/OpenDialog.vue:466
+#: web/app/components/OpenDialog.vue:473
 msgid "{name} is here, and kept inside the document for Download."
 msgstr "{name} ist da und für Herunterladen im Dokument aufbewahrt."
 
-#: web/app/components/OpenDialog.vue:467
+#: web/app/components/OpenDialog.vue:474
 msgid "{name} is here. The file was not kept: Download writes a new one."
 msgstr "{name} ist da. Die Datei wurde nicht aufbewahrt: Herunterladen schreibt eine neue."
 
-#: web/app/components/OpenDialog.vue:465
+#: web/app/components/OpenDialog.vue:472
 msgid "{name} is here. {count} things it holds are not shown, and stay in the kept file."
 msgstr "{name} ist da. {count} Dinge darin werden nicht gezeigt und bleiben in der aufbewahrten Datei."
 
@@ -11461,7 +11461,7 @@ msgstr "{width} × {height} px"
 msgid "· editing"
 msgstr "· bearbeitet gerade"
 
-#: web/app/components/OpenDialog.vue:995
+#: web/app/components/OpenDialog.vue:1002
 msgid "· {online} here now"
 msgstr "· {online} jetzt hier"
 

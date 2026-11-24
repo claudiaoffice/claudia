@@ -134,12 +134,13 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |  |  |
 | UX-06 | — | UX | Web menu differs from decisions D4/D5 | needs decision |  |  |
 
-### Fixed (157)
+### Fixed (158)
 
 By ID. Items closed without a fix (superseded, wontfix) are here too.
 
 | ID | Pri | Category | Title | Status | Opened | Fixed |
 |---|---|---|---|---|---|---|
+| CODE-82 | P2 | Code / Windows | Help ▸ About opens nothing on the start page of the Windows and macOS clients | **fixed** 2026-11-24 on `win-installer-fix` (D748) | 2026-11-24 | 2026-11-24 |
 | PROC-52 | P2 | Process / CI | The Windows install test let the launcher fail: its window step was advisory as a whole, so CODE-79 had a green CI | **fixed** 2026-11-23 on `win-installer-fix` (D747) | 2026-11-23 | 2026-11-23 |
 | CODE-81 | P1 | Code / Windows | The installed Windows client opens no window: the launcher looks for its apps in a repository that an installation does not have | **fixed** 2026-11-23 on `win-installer-fix` (D746) | 2026-11-23 | 2026-11-23 |
 | SEC-01 | P1 | Security | DNS rebinding defeats the Origin check | fixed (verified at `54d1245`) |  |  |
@@ -2771,3 +2772,17 @@ its own, *The launcher finds the installed app and prepares its window*, which n
 **Test:** `tests/test_windows_packaging.py::test_a_launcher_that_cannot_prepare_its_window_fails_the_install_test`, red
 before (the step did not exist). **Not run on Windows:** the first run of the workflow on the branch is the check.
 **Escaped** because: spec gap (nobody had said which part of "a window opens" may fail).
+
+
+## Round of 2026-11-24 (the first real use of the installed Windows client, branch `win-installer-fix`)
+
+Found by the owner on the Windows install that works since CODE-81: three usability bugs (CODE-82, UX-76, UX-77) and a
+question about the look of the native menu (not a bug: see the note).
+
+### CODE-82 · Help ▸ About opens nothing on the start page · P2 · size 2 · fixed
+**Found** by the owner: the native About entry showed nothing; in an open document it works, on the start page it does
+not. **Cause** (**read**): the manifest keeps `help.about` on the start page's short menu (`_START_ACTIONS`), the shell sends
+it to the page, and `OpenDialog.vue`'s handler had no case for it. **Fixed** 2026-11-24 (D748): `startPageAction` knows it
+and the start page mounts the About dialog of the window's app. **Test:** `web/tests/open.test.ts` (red before), the
+scenarios of `specs/desktop/about.feature`. **Not run** in a real window. **Escaped** because: spec gap (nothing said
+that every entry the shell keeps on a page must do something there).

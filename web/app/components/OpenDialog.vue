@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, shallowRef, watch, watchEffect } from 'vue'
 import { Link, socketUrl } from '~/lib/protocol'
-import { appOfFileName, appOfServer, fetchDocsListing, filterByTag, filterListed, openSession, openableFor, placeUpload, saveDetails, sendFile, tagCounts, type AnySession, type Listed, type Upload, type Uploaded } from '~/lib/open'
+import { appOfFileName, appOfServer, fetchDocsListing, filterByTag, filterListed, openSession, openableFor, placeUpload, saveDetails, sendFile, startPageAction, tagCounts, type AnySession, type Listed, type Upload, type Uploaded } from '~/lib/open'
 import type { ImportPhase } from '~/lib/import-progress'
 import { createCollection, deleteCollection, entriesOf, forgetMine, keyOf, listCollections, listMine, nextShown, parseKey, rememberOpened, setInCollection, stillShown, type MineEntry } from '~/lib/mine'
 import { holdPresence } from '~/lib/presence'
@@ -284,17 +284,24 @@ function settle() {
 /** Say hello to the shell, if there is one (not before this page knows which app its server runs, when it can). */
 const shellRemovers: Array<() => void> = []
 
-/** The native menu's entries on the front page (sheet 11): File ▸ New, Open…, Open a File…, View ▸ Dark Mode and
- * Preferences ▸ App Language. The shell shows no others here. Each does something the person sees (D503): before, Open…
- * and New only moved the focus, which a window whose page did not have the focus did not show at all. */
+/** The native menu's entries on the front page (sheet 11): File ▸ New, Open…, Open a File…, View ▸ Dark Mode,
+ * Preferences ▸ App Language and Help ▸ About. The shell shows no others here. Each does something the person sees
+ * (D503): before, Open… and New only moved the focus, which a window whose page did not have the focus did not show at
+ * all. */
 function onShellAction(action: string, target?: string) {
-  if (action === 'file.open-file') chooseFile()
-  else if (action === 'file.open') findDocument()
-  else if (action === 'file.new') startNew()
-  else if (action === 'view.dark') {
-    if (target === undefined || (target === 'on') !== dark()) toggleDark()
-  } else if (action.startsWith('config.language.')) void chooseLanguage(action.slice('config.language.'.length))
+  const todo = startPageAction(action, target)
+  if (todo === null) return
+  if (todo.kind === 'choose-file') chooseFile()
+  else if (todo.kind === 'find-document') findDocument()
+  else if (todo.kind === 'new-document') startNew()
+  else if (todo.kind === 'dark') {
+    if (todo.on === undefined || todo.on !== dark()) toggleDark()
+  } else if (todo.kind === 'language') void chooseLanguage(todo.tag)
+  else aboutOpen.value = true
 }
+
+/** Help ▸ About, asked for by the native menu: the Windows and macOS clients have no About dialog of their own (CODE-82). */
+const aboutOpen = ref(false)
 
 /** The ticks of Dark Mode and the language, for the shell's menu (only while this page owns the bridge). */
 watchEffect(() => {
@@ -1114,6 +1121,7 @@ async function go(how: 'open' | 'create' | 'recover', from?: { upload: string; k
       @place="placeFile"
       @existing="openExisting"
     />
+  <AboutDialog v-if="aboutOpen && windowApp" :app="windowApp" @close="aboutOpen = false" />
   </component>
 </template>
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { STYLE_MODEL } from './style-model.fixture'
-import { OPENABLE, appOfFileName, appOfServer, fetchDocsListing, filterListed, isSlides, openSession, openableFor, placeUpload, sendFile, type Upload } from '~/lib/open'
+import { OPENABLE, appOfFileName, startPageAction, appOfServer, fetchDocsListing, filterListed, isSlides, openSession, openableFor, placeUpload, sendFile, type Upload } from '~/lib/open'
 import { ProtocolError, type CloseHandler, type EventHandler, type LinkLike, type Welcome } from '~/lib/protocol'
 import { Session } from '~/lib/session'
 import { SlideSession } from '~/lib/slide-session'
@@ -341,5 +341,27 @@ describe('the files a window opens (D444)', () => {
     expect(appOfFileName('talk.pptx')).toBe('creates')
     expect(appOfFileName('mine.claudia')).toBeNull()
     expect(appOfFileName('notes.txt')).toBeNull()
+  })
+})
+
+describe('what the native menu does on the start page (sheet 11)', () => {
+  // CODE-82: the shell keeps Help > About on the start page's menu (the manifest's `start` actions), and the page did
+  // nothing with it, so the Windows and macOS clients, which have no About dialog of their own, showed nothing.
+  it('shows About, which every entry the shell keeps on that page must do something for', () => {
+    expect(startPageAction('help.about')).toEqual({ kind: 'about' })
+  })
+
+  it('knows the other entries of that menu', () => {
+    expect(startPageAction('file.open-file')).toEqual({ kind: 'choose-file' })
+    expect(startPageAction('file.open')).toEqual({ kind: 'find-document' })
+    expect(startPageAction('file.new')).toEqual({ kind: 'new-document' })
+    expect(startPageAction('view.dark', 'on')).toEqual({ kind: 'dark', on: true })
+    expect(startPageAction('view.dark', 'off')).toEqual({ kind: 'dark', on: false })
+    expect(startPageAction('view.dark')).toEqual({ kind: 'dark', on: undefined })
+    expect(startPageAction('config.language.de')).toEqual({ kind: 'language', tag: 'de' })
+  })
+
+  it('leaves what it does not know alone', () => {
+    expect(startPageAction('format.bold')).toBeNull()
   })
 })

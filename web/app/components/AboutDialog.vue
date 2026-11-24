@@ -3,11 +3,10 @@
 // the owner's report that the two had drifted apart): the app's own logo, its name, then the same three outbound
 // links the shell's `about_links()` gives it — Website, Report an Issue, Legal — in the same order, nothing added.
 //
-// Web-only: inside a real shell this never even mounts, since `help.about` there is `Kind.SHELL` (the window's own
-// native dialog, intercepted before it reaches the page at all) and the page isn't drawing its own `MenuBar` in the
-// first place once a shell's `welcome` advertises `native-menu` (see `shell.nativeMenu` in the workspace
-// components). This dialog exists for the one case that has no shell to ask: a plain browser tab. The version
-// shown is the shell-contract version both sides already agree on, not a separate build number, since the suite
+// Shown in a plain browser tab and in the Windows and macOS clients (Neutralino), which have no About dialog of their
+// own: there the native menu's Help ▸ About is sent to the page, which opens this (the document's menus, and the start
+// page, CODE-82). Only the Linux shell has a native dialog of its own, and never sends the action to the page. The
+// version shown is the shell-contract version both sides already agree on, not a separate build number, since the suite
 // doesn't version itself independently of the contract yet (the Linux shell's own `__version__` is that build
 // number, and has no web equivalent to show here).
 import { APP_NAME, SHELL_CONTRACT_VERSION } from '~/lib/shell-bridge'

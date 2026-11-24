@@ -250,6 +250,27 @@ const FORMATS: Record<string, readonly string[]> = {
   creates: ['.pptx', '.odp'],
 }
 
+/** What the shell's native menu asks of the start page (sheet 11): the entries the manifest keeps there (`start`). */
+export type StartPageAction =
+  | { kind: 'choose-file' }
+  | { kind: 'find-document' }
+  | { kind: 'new-document' }
+  | { kind: 'dark'; on: boolean | undefined }
+  | { kind: 'language'; tag: string }
+  | { kind: 'about' }
+
+/** The start page's own action for a menu entry of the shell, or `null` for one it has nothing to do for. About is on
+ * the list because the Windows and macOS clients have no About dialog of their own (CODE-82). */
+export function startPageAction(action: string, target?: string): StartPageAction | null {
+  if (action === 'file.open-file') return { kind: 'choose-file' }
+  if (action === 'file.open') return { kind: 'find-document' }
+  if (action === 'file.new') return { kind: 'new-document' }
+  if (action === 'help.about') return { kind: 'about' }
+  if (action === 'view.dark') return { kind: 'dark', on: target === undefined ? undefined : target === 'on' }
+  if (action.startsWith('config.language.')) return { kind: 'language', tag: action.slice('config.language.'.length) }
+  return null
+}
+
 /** What the file picker offers: everything in a browser tab, only the window's own app in a desktop window (D444). */
 export function openableFor(windowApp: string | null): string {
   const own = windowApp ? FORMATS[windowApp] : undefined
