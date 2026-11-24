@@ -8,6 +8,9 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 Heavy functions in worker processes (E4.4, D37, D1314).
 
 ### Added
+- `WorkbookModel.sheet_ids_used`: the id of every sheet the workbook has had, removed ones too, kept in the
+  snapshot as `sheet_ids_used` (an older snapshot reads it as the sheets there are); a new sheet never takes one of them
+  (CODE-56).
 - A chart becomes a slide (E6.31 step 3, D1475): `chart_steps` makes a chart with a definition of its own in one step
   of the history, as a slide of its own right after a tab (`as_new_slide`), on a slide (`on_slide`, half the frame in
   its middle) or floating on a sheet (`on_sheet`), from a `NewChart`; `to_new_slide` is "Move to Slide" (a new slide
