@@ -35,13 +35,12 @@ The index is the status of record; a section below keeps the status of the round
 re-checked. **Opened** and **Fixed** are filled from 2026-11-20 on: for older items only where the status already gave
 the date.
 
-### Open (90)
+### Open (89)
 
 By priority (P1, P2, P3, then items that wait for a decision without one), then by ID.
 
 | ID | Pri | Category | Title | Status | Opened | Fixed |
 |---|---|---|---|---|---|---|
-| WEB-01 | P1 | Website | The website describes features the product does not have | needs decision |  |  |
 | SEC-06 | P2 | Security | The server's self-signed certificate is a CA with no name constraints | verified open |  |  |
 | SEC-19 | P2 | Security / Perf | Imports run on the worker pool with no memory cap; `check_package` bounds the input, not the parsed model | **new, open** |  |  |
 | SEC-22 | P2 | Security | Who wrote which stretch (`runs`, E9.10) is part of the content state, so a viewer still receives it: in the `blocks` method, in `text` events, in the snapshot and in her own sealed file, although D1261 says no data should be behind "show who wrote what" for a viewer | **new, open**, needs the owner's decision (mask it live and in the viewer's file, or accept it as content) |  |  |
@@ -331,7 +330,7 @@ writes blocks; neither rewrites history to remove a redacted command. The kernel
 state and the log it replays, but the bytes stay in the file.
 **Why it matters.** Redaction is a stated product promise (D21, E1.8 "done (draft)") and the container is now the real
 store, so this is no longer only about a demo journal. Not reachable on the wire today (no `redact` method), so P2; it
-becomes P1 the day redaction is exposed or the website's privacy claim (WEB-01) is kept.
+becomes P1 the day redaction is exposed or the website's privacy claim is kept.
 **Fix.** The atomic rewrite named in the E2 design: on redaction rewrite the affected blocks and the journal (temp
 file, fsync, rename, directory fsync), drop the snapshot, rebuild. Also state plainly in the help text that copies and
 backups made earlier keep the content.
@@ -1984,15 +1983,6 @@ and composes): the second undo gives "a note", and a redo gives "a short note" a
 followed forward (`document._standing`): the two together changed nothing.
 
 ## Website
-
-### WEB-01 · The website describes features the product does not have · P1 · needs decision
-From the first round, and worth re-checking now that more is true: encryption, formulas and a Linux client now exist,
-so several of the claims have caught up. Import and export of Word, Excel, PowerPoint and OpenDocument files still do
-not exist in any form (no code under `packages/*/src` touches those formats), and "run in a European cloud" has no
-images or deployment behind it.
-**Decision needed.** Either mark each item *planned*, or soften the wording until it is true. The honest "what works
-today" block proposed in the first round would now be a strong one: live co-editing, history, presence, per-document
-passwords and encryption at rest, recovery keys, formulas, styles, three apps, a Linux client.
 
 ### WEB-02 · Download buttons are `#` placeholders · P3 · open
 
