@@ -21,7 +21,7 @@ from .auth import ConsentDirectory
 
 @dataclass(frozen=True)
 class AiConsent:
-    """What the owners decided, oldest decision first. No decision about a provider means *not allowed*."""
+    """What the owner decided, oldest decision first. No decision about a provider means *not allowed*."""
 
     records: tuple[ConsentRecord, ...] = ()
 
@@ -36,7 +36,7 @@ class AiConsent:
 
 
 class ConsentNotKept(Exception):
-    """This server keeps no place for the owners' consent (its documents are not files)."""
+    """This server keeps no place for the owner's consent (its documents are not files)."""
 
 
 class ConsentBook:
@@ -49,12 +49,12 @@ class ConsentBook:
 
     @property
     def kept(self) -> bool:
-        """Does this server keep the owners' consent at all?"""
+        """Does this server keep the owner's consent at all?"""
         return isinstance(self._directory, ConsentDirectory)
 
     @property
     def state(self) -> AiConsent:
-        """The owners' decisions as they stand. When nothing can be read (the document is sealed until somebody who
+        """The owner's decisions as they stand. When nothing can be read (the document is sealed until somebody who
         holds its keys has opened it), nothing is allowed: not being able to look means not being allowed."""
         if self._state is not None:
             return self._state

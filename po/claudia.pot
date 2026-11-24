@@ -1318,7 +1318,7 @@ msgid "Claude"
 msgstr ""
 
 #: web/app/lib/ai-provider.ts:45
-msgid "Claude is not allowed in this document. The owners can change that in Preferences ▸ AI…"
+msgid "Claude is not allowed in this document. The owner can change that in Preferences ▸ AI…"
 msgstr ""
 
 #: web/app/components/OpenDialog.vue:196
@@ -3874,7 +3874,7 @@ msgid "Objects"
 msgstr ""
 
 #: web/app/components/AiConsentDialog.vue:47
-msgid "Off by default. Only the owners can change it."
+msgid "Off by default. Only the owner can change it."
 msgstr ""
 
 #: web/app/components/SheetChartInsertDialog.vue:174
@@ -3970,7 +3970,7 @@ msgid "Only the first {count} matches are listed."
 msgstr ""
 
 #: web/app/lib/ai-provider.ts:91
-msgid "Only the owners can change this: {owners}."
+msgid "Only the owner can change this: {owner}."
 msgstr ""
 
 #: web/app/components/StylesDialog.vue:101
@@ -7214,7 +7214,7 @@ msgid "This is not a file Claudia can open."
 msgstr ""
 
 #: web/app/components/AdminAi.vue:203
-msgid "This is not enough on its own: the owners of each document must also allow Claude (Preferences ▸ AI…, off by default). Until they do, @ai in that document uses the local model or the stand-in, and says so."
+msgid "This is not enough on its own: the owner of each document must also allow Claude (Preferences ▸ AI…, off by default). Until it is allowed, @ai in that document uses the local model or the stand-in, and says so."
 msgstr ""
 
 #: web/app/components/RecoveryKeyDialog.vue:40
@@ -7310,7 +7310,7 @@ msgid "This server"
 msgstr ""
 
 #: web/app/components/AiConsentDialog.vue:31
-msgid "This server does not keep the owners’ choice about Claude."
+msgid "This server does not keep the owner’s choice about Claude."
 msgstr ""
 
 #: web/app/lib/open.ts:58
@@ -7330,7 +7330,7 @@ msgid "This server has no folder to add fonts to."
 msgstr ""
 
 #: web/app/components/AiConsentDialog.vue:39
-msgid "This server has no remote AI, so nothing in this document leaves it. An administrator can add Claude in the server settings. Then the owners can allow it here."
+msgid "This server has no remote AI, so nothing in this document leaves it. An administrator can add Claude in the server settings. Then the owner can allow it here."
 msgstr ""
 
 #: web/app/lib/containers.ts:121
@@ -9453,6 +9453,10 @@ msgstr ""
 msgid "only the owner of a document changes who may do what"
 msgstr ""
 
+#: packages/claudia-server/src/claudia_server/protocol.py:1413
+msgid "only the owner of a document decides whether Claude may be asked here"
+msgstr ""
+
 #: packages/claudia-server/src/claudia_server/protocol.py:796
 msgid "only the owner of a document discards its hidden lines"
 msgstr ""
@@ -9467,10 +9471,6 @@ msgstr ""
 
 #: packages/claudia-server/src/claudia_server/protocol.py:689
 msgid "only the owner of a document sets this"
-msgstr ""
-
-#: packages/claudia-server/src/claudia_server/protocol.py:1413
-msgid "only the owners of a document decide whether Claude may be asked here"
 msgstr ""
 
 #: web/app/lib/cell-style-host.ts:89
@@ -10410,7 +10410,7 @@ msgid "this server"
 msgstr ""
 
 #: packages/claudia-server/src/claudia_server/protocol.py:1415 packages/claudia-server/src/claudia_server/protocol.py:1420
-msgid "this server cannot keep the owners' consent, so Claude is not allowed"
+msgid "this server cannot keep the owner's consent, so Claude is not allowed"
 msgstr ""
 
 #: packages/claudia-server/src/claudia_server/protocol.py:1119

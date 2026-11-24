@@ -1410,14 +1410,14 @@ def _set_ai_consent(ctx, allowed):
     `ai_consent` returns. `forbidden` for anybody who is not an owner; `unavailable` on a server that keeps no
     document files, where it is always off."""
     if ctx.account.role != "owner" or ctx.account.system:
-        raise RequestError("forbidden", msg("only the owners of a document decide whether Claude may be asked here"))
+        raise RequestError("forbidden", msg("only the owner of a document decides whether Claude may be asked here"))
     if ctx.consent is None:
-        raise RequestError("unavailable", msg("this server cannot keep the owners' consent, so Claude is not allowed"))
+        raise RequestError("unavailable", msg("this server cannot keep the owner's consent, so Claude is not allowed"))
     try:
         record = ctx.consent.decide(CLAUDE, allowed, ctx.user, _now_text())
     except ConsentNotKept:
         raise RequestError(
-            "unavailable", msg("this server cannot keep the owners' consent, so Claude is not allowed")
+            "unavailable", msg("this server cannot keep the owner's consent, so Claude is not allowed")
         ) from None
     view = _consent_answer(ctx, ctx.consent.state)
     if record is not None:

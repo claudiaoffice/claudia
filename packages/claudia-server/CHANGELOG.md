@@ -19,6 +19,10 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
   the charts' definitions now (D1476).
 
 ### Changed
+- **One owner per document in the consent texts** (D1499). The words about Claude's consent say "the owner" where they
+  said "the owners": the note under an answer ("Claude is not allowed in this document. The owner can change that in
+  Preferences ▸ AI…", `ai_desk.NOTE_NOT_ALLOWED`) and the two refusals of `set_ai_consent`. German is updated with them.
+  The wire format is unchanged: `ai_consent` still lists `owners`.
 - **Breaking** — the chart names of E1.18 (D1476): computes' `diagrams`, `define_diagram`, `update_diagram` and
   `forget_diagram` are `charts`, `define_chart`, `update_chart` and `forget_chart`; `chart_figure(chart)`; the id of a
   chart's definition is answered as `chart` (by `define_chart` and `insert_chart`), the event of a definition is

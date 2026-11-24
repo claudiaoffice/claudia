@@ -1318,8 +1318,8 @@ msgid "Claude"
 msgstr "[Clàûdé~~]"
 
 #: web/app/lib/ai-provider.ts:45
-msgid "Claude is not allowed in this document. The owners can change that in Preferences ▸ AI…"
-msgstr "[Clàûdé îs nôt àllôwéd în thîs dôcûmént. Thé ôwnérs càn chàngé thàt în Préféréncés ▸ ÀÎ…~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+msgid "Claude is not allowed in this document. The owner can change that in Preferences ▸ AI…"
+msgstr "[Clàûdé îs nôt àllôwéd în thîs dôcûmént. Thé ôwnér càn chàngé thàt în Préféréncés ▸ ÀÎ…~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
 #: web/app/components/OpenDialog.vue:196
 msgid "Claudia cannot open this file."
@@ -3874,8 +3874,8 @@ msgid "Objects"
 msgstr "[Ôbjécts~~~]"
 
 #: web/app/components/AiConsentDialog.vue:47
-msgid "Off by default. Only the owners can change it."
-msgstr "[Ôff by défàûlt. Ônly thé ôwnérs càn chàngé ît.~~~~~~~~~~~~~~~~~~]"
+msgid "Off by default. Only the owner can change it."
+msgstr "[Ôff by défàûlt. Ônly thé ôwnér càn chàngé ît.~~~~~~~~~~~~~~~~~~]"
 
 #: web/app/components/SheetChartInsertDialog.vue:174
 msgid "Off reads every row as data — no row is skipped. On fills the axis titles below, for a field still blank."
@@ -3970,8 +3970,8 @@ msgid "Only the first {count} matches are listed."
 msgstr "[Ônly thé fîrst {count} màtchés àré lîstéd.~~~~~~~~~~~~~~~~~]"
 
 #: web/app/lib/ai-provider.ts:91
-msgid "Only the owners can change this: {owners}."
-msgstr "[Ônly thé ôwnérs càn chàngé thîs: {owners}.~~~~~~~~~~~~~~~~~]"
+msgid "Only the owner can change this: {owner}."
+msgstr "[Ônly thé ôwnér càn chàngé thîs: {owner}.~~~~~~~~~~~~~~~~]"
 
 #: web/app/components/StylesDialog.vue:101
 msgid "Only the {unnamed} waiting for a name"
@@ -7214,8 +7214,8 @@ msgid "This is not a file Claudia can open."
 msgstr "[Thîs îs nôt à fîlé Clàûdîà càn ôpén.~~~~~~~~~~~~~~]"
 
 #: web/app/components/AdminAi.vue:203
-msgid "This is not enough on its own: the owners of each document must also allow Claude (Preferences ▸ AI…, off by default). Until they do, @ai in that document uses the local model or the stand-in, and says so."
-msgstr "[Thîs îs nôt énôûgh ôn îts ôwn: thé ôwnérs ôf éàch dôcûmént mûst àlsô àllôw Clàûdé (Préféréncés ▸ ÀÎ…, ôff by défàûlt). Ûntîl théy dô, @àî în thàt dôcûmént ûsés thé lôcàl môdél ôr thé stànd-în, ànd sàys sô.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+msgid "This is not enough on its own: the owner of each document must also allow Claude (Preferences ▸ AI…, off by default). Until it is allowed, @ai in that document uses the local model or the stand-in, and says so."
+msgstr "[Thîs îs nôt énôûgh ôn îts ôwn: thé ôwnér ôf éàch dôcûmént mûst àlsô àllôw Clàûdé (Préféréncés ▸ ÀÎ…, ôff by défàûlt). Ûntîl ît îs àllôwéd, @àî în thàt dôcûmént ûsés thé lôcàl môdél ôr thé stànd-în, ànd sàys sô.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
 #: web/app/components/RecoveryKeyDialog.vue:40
 msgid "This is the only way back into {doc} for somebody who has forgotten their password."
@@ -7310,8 +7310,8 @@ msgid "This server"
 msgstr "[Thîs sérvér~~~~]"
 
 #: web/app/components/AiConsentDialog.vue:31
-msgid "This server does not keep the owners’ choice about Claude."
-msgstr "[Thîs sérvér dôés nôt kéép thé ôwnérs’ chôîcé àbôût Clàûdé.~~~~~~~~~~~~~~~~~~~~~~~]"
+msgid "This server does not keep the owner’s choice about Claude."
+msgstr "[Thîs sérvér dôés nôt kéép thé ôwnér’s chôîcé àbôût Clàûdé.~~~~~~~~~~~~~~~~~~~~~~~]"
 
 #: web/app/lib/open.ts:58
 msgid "This server does not list its documents. Type the name of yours."
@@ -7330,8 +7330,8 @@ msgid "This server has no folder to add fonts to."
 msgstr "[Thîs sérvér hàs nô fôldér tô àdd fônts tô.~~~~~~~~~~~~~~~~~]"
 
 #: web/app/components/AiConsentDialog.vue:39
-msgid "This server has no remote AI, so nothing in this document leaves it. An administrator can add Claude in the server settings. Then the owners can allow it here."
-msgstr "[Thîs sérvér hàs nô rémôté ÀÎ, sô nôthîng în thîs dôcûmént léàvés ît. Àn àdmînîstràtôr càn àdd Clàûdé în thé sérvér séttîngs. Thén thé ôwnérs càn àllôw ît héré.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+msgid "This server has no remote AI, so nothing in this document leaves it. An administrator can add Claude in the server settings. Then the owner can allow it here."
+msgstr "[Thîs sérvér hàs nô rémôté ÀÎ, sô nôthîng în thîs dôcûmént léàvés ît. Àn àdmînîstràtôr càn àdd Clàûdé în thé sérvér séttîngs. Thén thé ôwnér càn àllôw ît héré.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
 #: web/app/lib/containers.ts:121
 msgid "This server has no tool set up to draw {type}."
@@ -9453,6 +9453,10 @@ msgstr "[ônly thé ôwnér ôf à dôcûmént càn hànd ît ôvér~~~~~~~~~~~~
 msgid "only the owner of a document changes who may do what"
 msgstr "[ônly thé ôwnér ôf à dôcûmént chàngés whô mày dô whàt~~~~~~~~~~~~~~~~~~~~~]"
 
+#: packages/claudia-server/src/claudia_server/protocol.py:1413
+msgid "only the owner of a document decides whether Claude may be asked here"
+msgstr "[ônly thé ôwnér ôf à dôcûmént décîdés whéthér Clàûdé mày bé àskéd héré~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+
 #: packages/claudia-server/src/claudia_server/protocol.py:796
 msgid "only the owner of a document discards its hidden lines"
 msgstr "[ônly thé ôwnér ôf à dôcûmént dîscàrds îts hîddén lînés~~~~~~~~~~~~~~~~~~~~~~]"
@@ -9468,10 +9472,6 @@ msgstr "[ônly thé ôwnér ôf à dôcûmént rémôvés péôplé frôm ît~~~
 #: packages/claudia-server/src/claudia_server/protocol.py:689
 msgid "only the owner of a document sets this"
 msgstr "[ônly thé ôwnér ôf à dôcûmént séts thîs~~~~~~~~~~~~~~~]"
-
-#: packages/claudia-server/src/claudia_server/protocol.py:1413
-msgid "only the owners of a document decide whether Claude may be asked here"
-msgstr "[ônly thé ôwnérs ôf à dôcûmént décîdé whéthér Clàûdé mày bé àskéd héré~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
 #: web/app/lib/cell-style-host.ts:89
 msgid "only their box"
@@ -10410,8 +10410,8 @@ msgid "this server"
 msgstr "[thîs sérvér~~~~]"
 
 #: packages/claudia-server/src/claudia_server/protocol.py:1415 packages/claudia-server/src/claudia_server/protocol.py:1420
-msgid "this server cannot keep the owners' consent, so Claude is not allowed"
-msgstr "[thîs sérvér cànnôt kéép thé ôwnérs' cônsént, sô Clàûdé îs nôt àllôwéd~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+msgid "this server cannot keep the owner's consent, so Claude is not allowed"
+msgstr "[thîs sérvér cànnôt kéép thé ôwnér's cônsént, sô Clàûdé îs nôt àllôwéd~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
 #: packages/claudia-server/src/claudia_server/protocol.py:1119
 msgid "this server does not change roles"

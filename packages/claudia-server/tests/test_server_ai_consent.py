@@ -107,6 +107,13 @@ def test_an_editor_or_a_viewer_cannot_change_it_and_nothing_is_recorded(world, u
     assert consent(ann)["allowed"] is False and consent(ann)["history"] == []
 
 
+def test_an_editor_is_told_that_only_the_owner_decides(world):
+    """One owner per document (D1499): the refusal says "the owner", not "the owners"."""
+    client, _, peers, _ = world
+    answer = allow(join(client, peers, BEN, BEN_PW))
+    assert answer["error"]["message"] == "only the owner of a document decides whether Claude may be asked here"
+
+
 def test_who_decided_is_the_account_and_never_what_a_client_says(world):
     _, ann, _, _ = world
     answer = ann.request("set_ai_consent", {"allowed": True, "who": "Somebody Else"})
@@ -167,5 +174,6 @@ def test_a_server_that_keeps_no_files_has_no_consent_and_cannot_give_it():
             assert consent(ann)["allowed"] is False
             answer = allow(ann)
             assert answer["ok"] is False and answer["error"]["code"] == "unavailable"
+            assert answer["error"]["message"] == "this server cannot keep the owner's consent, so Claude is not allowed"
         finally:
             ann.close()
