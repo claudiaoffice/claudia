@@ -77,7 +77,8 @@ commits of the batch are not).
 
 ## What was run
 
-- Python: the whole suite (`pytest`, without `tests/e2e`), the gate `check_debt.py --fast`, ruff, mypy.
+- Python: the whole suite (`pytest`, without `tests/e2e`), the gate `check_debt.py --fast`, ruff, mypy, the docs build
+  (`sphinx-build -W`; it caught a docstring of CODE-56, fixed).
 - Web: `npm run lint`, `npm run typecheck`, `vitest` (2,019 tests), `npm run coverage` (90.2 / 87.1 / 86.2 / 91.6).
 - Layout: its typecheck and 265 tests (after `npm ci` in `layout/`).
 - E2E: `./run-e2e.sh core` in Chromium (the installed one, `CLAUDIA_CHROMIUM=/usr/bin/google-chrome`); the extended
