@@ -20,7 +20,7 @@ the owner approved with the batch.
 | PROC-31 | `render_pot` writes each text's files, not lines; the three catalogues regenerated | `test_extract_i18n.py`: moving a text to another line leaves the template as it was | missing test |
 | CODE-36 | `safeStorage`, `safeSessionStorage`, `remembered`, `rememberedText`, `remember` only in `web/app/lib/storage.ts` (11 users); it guards every storage call, the page's memory holds only what the browser refused; the callers' own guards are gone | `web/tests/storage.test.ts` (a refusing browser: `web/tests/refusing-browser.ts`) | missing test |
 | CODE-71 | Every key hint of the object menu comes from the manifest; "Del" and "Enter" are translated ("Entf", "Eingabe") in every menu | `web/tests/object-menu-hints.test.ts`, `shortcuts.test.ts` | missing test |
-| UX-63 | The print preview names the exit record, not the history (German: "Ausgangsverzeichnis") | `web/tests/print-preview-wording.test.ts` | spec gap |
+| UX-63 | The print preview names the exit record, not the history (German: "Export-Log", the owner's word) | `web/tests/print-preview-wording.test.ts` | spec gap |
 | UX-66 | `--apricot-dark` and `--shadow-raised` tokens; the Styles dialog has no colour literal left; no component may have more literals than the shrinking allow-list grants (40 files today) | `web/tests/tokens.test.ts` | missing test |
 | UX-67 | Heading and Numbering stay native selects inside the app's field look | `web/tests/style-spec-selects.test.ts` | missing test |
 | UX-74 | An owner can withdraw a consent given earlier while the server has no Claude, and is told that the server has no Claude | `web/tests/ai-provider.test.ts` | spec gap |
@@ -40,7 +40,7 @@ which ship them.
 - SEC-14: the switch covers the interactive page only; `/api/openapi.json` stays public.
 - CODE-20: the tag `0.11.32` is the uv used here; that the image exists on ghcr.io could not be checked from here.
 - UX-75: the event reuses `ai_consent_changed` (the tracker's fix) with other data; the web client only re-reads on it.
-- UX-63: "exit record" is not yet in the glossary's German; "Ausgangsverzeichnis" was chosen.
+- UX-63: the owner chose "Export-Log" as the German for "exit record" (2026-11-24).
 - UX-66: the pill keeps its light look in dark mode, so `--apricot-dark` has no dark value.
 
 ## Found along the way (not fixed; the owner decides)

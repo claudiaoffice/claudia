@@ -18,4 +18,9 @@ describe('the note in the print preview (UX-63)', () => {
     expect(recordedNote()).toContain("the document's exit record")
     expect(recordedNote()).not.toMatch(/history/i)
   })
+
+  it('calls the exit record the Export-Log in German', () => {
+    const german = JSON.parse(readFileSync(new URL('../public/i18n/de.json', import.meta.url), 'utf8')) as Record<string, string>
+    expect(german[recordedNote()]).toContain('im Export-Log des Dokuments')
+  })
 })

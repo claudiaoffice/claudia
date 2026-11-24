@@ -4423,7 +4423,7 @@ msgstr "Druckvorschau"
 
 #: web/app/components/PrintPreview.vue
 msgid "Printing and saving a PDF are recorded in the document's exit record: who, when and how many pages. It is written when the file is saved or the page is sent, not when the preview opens."
-msgstr "Drucken und das Speichern als PDF werden im Ausgangsverzeichnis des Dokuments festgehalten: wer, wann und wie viele Seiten. Es wird geschrieben, wenn die Datei gespeichert oder die Seite gesendet wird, nicht wenn die Vorschau geöffnet wird."
+msgstr "Drucken und das Speichern als PDF werden im Export-Log des Dokuments festgehalten: wer, wann und wie viele Seiten. Es wird geschrieben, wenn die Datei gespeichert oder die Seite gesendet wird, nicht wenn die Vorschau geöffnet wird."
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/PrintPreview.vue web/app/lib/document-menus.ts web/app/lib/print/use-print.ts
 msgid "Print…"
