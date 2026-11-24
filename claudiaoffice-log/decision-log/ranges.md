@@ -74,6 +74,7 @@ Unused numbers in a closed block stay unused.
 | D1510–D1529 | CODE-78: a refusal of the models reaches a person in her language, typed refusals in the core and the apps (branch `code-78-translated-refusals`) | 2026-11-23 | open |
 | D1530–D1559 | E10.4 Templates, layouts and placeholders, with E10.5, E10.22 and E10.23: the layout model, the offer, the template as an export, the server's templates (branch `e10-4-templates-and-layouts`, to be created after E6.31; the design is in notes/creates-templates-architecture.md) | 2026-11-23 | open |
 | D1560–D1579 | E7.2 Skills and persona per app, with CODE-80 (what a remote provider is first sent), CODE-81 (doubled braces in the prompts) and CODE-82 (an empty answer, Claude's answer length) (branch `e7-2-skills-and-persona`; D1560–D1568 used; the design is in notes/e7-2-architecture.md) | 2026-11-23 | open |
+| D1580–D1599 | E7.12 AI action catalog: the catalog of what a person can do per app, the checker and its rules, the ai's seeing, and the first gaps closed (lists in composes, turning in creates; UX-76, UX-77) (branch `e7-12-ai-action-catalog`; the design is in notes/e7-12-architecture.md) | 2026-11-24 | open |
 
 ## Never to be used
 
