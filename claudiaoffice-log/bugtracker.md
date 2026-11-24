@@ -35,7 +35,7 @@ The index is the status of record; a section below keeps the status of the round
 re-checked. **Opened** and **Fixed** are filled from 2026-11-20 on: for older items only where the status already gave
 the date.
 
-### Open (85)
+### Open (88)
 
 By priority (P1, P2, P3, then items that wait for a decision without one), then by ID.
 
@@ -63,6 +63,8 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | PROC-37 | P2 | Process / scope | D1272 says an export's history and chat come back in with their authors as text; slice B imports the content only (`import_state` returns the state, the `history.jsonl` and `chat.jsonl` of an export are written but never read back) | **new, open** (size 2; needs the owner's decision: build it in slice C or log it) |  |  |
 | PROC-40 | P2 | Process / E2E | Four spec files (51 scenarios) run nowhere: no step code binds them and no scenario names a unit or e2e test (`names`, `requirements`, `objects-in-composes`, `pictures-in-files`) | **new, open** (measured; size 2) | 2026-11-20 |  |
 | UX-64 | P2 | UX / all apps | Dark mode: a part of the sidebar (History & Chat / Help) is not readable or has too little contrast; the exact symptom was not written down when it was seen (see entry) | **needs decision** (symptom to be re-stated; size 2) | 2026-11-22 |  |
+| CODE-92 | P2 | Code / i18n | The server settings answer only in English: the administrator API's refusals were plain text, not messages | **new**, fix on `batch-1` (proposed, D2003) | 2026-11-24 |  |
+| PROC-53 | P2 | Process / E2E | A spec could press Create before the page had listed the kinds of document, then waited 30 s for a recovery key that never came (flaky) | **new**, fix on `batch-1` (proposed) | 2026-11-24 |  |
 | UX-76 | P3 | UX / computes | The New sheet dialog proposes no name: the field is empty (placeholder "Forecast") and Add Sheet stays off until one is typed, though a new sheet is to get a name like "Sheet2" (E1.13) | open (scenario `@pending:UX-76`) | 2026-11-22 |  |
 | SEC-09 | P3 | Security | User names can be confusable (homoglyphs) | open (unverified) |  |  |
 | SEC-14 | P3 | Security / Privacy | `/api/swagger` loads its script from a CDN; the API description is public | **new, open** |  |  |
@@ -125,6 +127,7 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | PROC-29 | P3 | Process / E2E | No scenario asserts that a second window sees a holder's outline and name tag (D1223), nor that a colleague's drag is not shown live | **new, open** |  |  |
 | PROC-31 | P3 | Process / i18n | `po/claudia.pot` goes stale at every merge of `main`: only its `#:` source lines move, no msgid changes, and the i18n check of `check_debt.py` fails on them | **new, open** (measured) |  |  |
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |  |  |
+| UX-79 | P3 | UX / a11y | The word "hidden" on its pill in the Styles dialog is light on light in dark mode (1.04:1, BITV 1.4.3) | **new**, fix on `batch-1` (proposed) | 2026-11-24 |  |
 | UX-06 | — | UX | Web menu differs from decisions D4/D5 | needs decision |  |  |
 
 ### Fixed (167)
@@ -2813,6 +2816,32 @@ lines the runner printed were all skipped scenarios; the log is only in the run'
 failure the runner prints pytest's `FAILED`/`ERROR` lines before the last lines of the log. **Test:**
 `tests/test_run_e2e.py::test_a_failed_pytest_run_names_the_tests_that_failed`.
 
+
+## Found in batch 1 of the bug eater (2026-11-24; branch `batch-1`)
+
+### UX-79 · The word "hidden" is light on light in dark mode · P3 · size 3 · new, fix proposed
+**Measured** (`web/tests/tokens.test.ts`): the Styles dialog's `.hiddenflag` pill keeps its light ground
+(`color-mix(in srgb, var(--mist) 60%, white)`) in both schemes but took `var(--text)`, which the dark scheme makes light:
+1.04:1 (BITV 1.4.3). **Fix** on `batch-1`: `var(--ink)`, as the apricot pill of UX-66. **Test:** "the word "hidden" reads on
+its light pill in the light and in the dark scheme".
+
+### CODE-92 · The server settings answer only in English · P2 · size 2 · new, fix proposed
+**Read** while fixing SEC-16: the administrator API's refusals were plain strings (`HTTPException(400, "...")`), so a
+German page showed English sentences; D31 gave a language only to a document's connection. **Fix** on `batch-1` (D2003):
+the pages send their App Language as `Accept-Language`; the server's own refusals are messages and are said in it; a
+refusal from another package stays English. **Tests:** `test_server_admin_i18n.py`, `admin-api.test.ts` ("asks to be
+answered in the App Language of the page").
+
+### PROC-53 · A spec pressed Create before the kinds of document were listed · P2 · size 2 · new, fix proposed
+**Measured** (seen once in `./run-e2e.sh core`, scenario "what one person does … the other sees at once", text-insert a
+picture: 30 s waiting for the recovery key). `Person.create` in `tests/e2e/specs/conftest.py` looked once, without
+waiting, for the choice of document kind, which the suite server's page shows only after its `GET /api/docs` answered.
+Margin when idle: 58–72 ms; the list slows as the server fills (1 ms empty, 20 ms at 120 documents); delaying it by 300 ms
+fails every time with "Choose Table, Text or Slides first.". The password hashing was measured and ruled out (1.9 s idle,
+11.7 s at most under 8 busy processes, never near 30 s). **Fix** on `batch-1`: `create` reads the kinds from the page's own
+`/api/docs` answer and clicks the kind's button, which waits for it. **Test:**
+`tests/e2e/specs/test_person.py::test_a_person_makes_a_document_of_her_kind_when_the_list_of_kinds_comes_late`.
+
 ## Round of 2026-11-24 (bug eater, batch 1; branch `batch-1`): proposed, not yet marked
 
 Proposed by the bug eater for the owner's agreement (`notes/bug-eater.md`); the index above changes only once the owner
@@ -2837,6 +2866,9 @@ agrees. Each item has its commit on `batch-1` and a test that was seen to fail f
 | UX-67 | fixed | `web/tests/style-spec-selects.test.ts` |
 | UX-74 | fixed | `web/tests/ai-provider.test.ts` |
 | UX-32 | fixed | `web/e2e/grid-a11y.cjs` |
+| UX-79 | fixed (found in this batch) | `web/tests/tokens.test.ts` |
+| PROC-53 | fixed (found in this batch) | `tests/e2e/specs/test_person.py` |
+| CODE-92 | fixed (found in this batch, D2003) | `test_server_admin_i18n.py`, `web/tests/admin-api.test.ts` |
 
 Also proposed for closing from the triage (`notes/bug-eater-queue.md`, section 1): CODE-35, CODE-37, CODE-69, UX-06,
 UX-09, UX-27, UX-07, WEB-02, UX-54, UX-59.

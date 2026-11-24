@@ -26,7 +26,7 @@ the owner approved with the batch.
 | UX-74 | An owner can withdraw a consent given earlier while the server has no Claude, and is told that the server has no Claude | `web/tests/ai-provider.test.ts` | spec gap |
 | UX-32 | The document page has one `header` (menus, banners, toolbar), `main`, the panel's `aside` and the `footer` | `web/e2e/grid-a11y.cjs`: axe `landmark-one-main` and `region` in the three apps | missing test |
 
-**Versions:** claudia-server 0.45.0 (`create_app(api_docs)`, `Hub.tell_open_documents`), claudia-render 0.3.0
+**Versions:** claudia-server 0.45.0 (`create_app(api_docs)`, `Hub.tell_open_documents`, the language of HTTP refusals), claudia-render 0.3.0
 (`Plugin.cache_token`), claudia-computes 0.12.0 (`WorkbookModel.sheet_ids_used`); changelogs and API snapshots. The
 changes that were under *[Unreleased]* in these three changelogs (E6.31, CODE-55) were folded into the new versions,
 which ship them.
@@ -43,12 +43,29 @@ which ship them.
 - UX-63: the owner chose "Export-Log" as the German for "exit record" (2026-11-24).
 - UX-66: the pill keeps its light look in dark mode, so `--apricot-dark` has no dark value.
 
-## Found along the way (not fixed; the owner decides)
+## Found along the way
 
-- **Size 3:** `.hiddenflag` in `StylesDialog.vue` sets `color: var(--text)` on a light mist background, so in dark mode
-  the text turns light on light (BITV 1.4.3).
-- **Size 2:** the administrator API answers in English only: its refusals (`HTTPException` details, SEC-16's sentence
-  among them) are not `msg(...)` and are shown as they are on the settings pages.
+Fixed on the owner's word (2026-11-24), each with its test first:
+
+| Item | Change | Test | Escaped because |
+|---|---|---|---|
+| UX-79 | The Styles dialog's "hidden" pill takes `var(--ink)`: it keeps its light ground in dark mode | `web/tests/tokens.test.ts` | missing test |
+| CODE-92 | The server settings' refusals are said in the page's App Language (`Accept-Language`, `http_refusal.py`, D2003); 32 German translations | `test_server_admin_i18n.py`, `web/tests/admin-api.test.ts` | spec gap |
+| PROC-53 | `Person.create` waits for the kinds of document the page lists before choosing one (a race, not the hashing) | `tests/e2e/specs/test_person.py` | test passed but wrong |
+| UX-63 | The German for "exit record" is "Export-Log" (the owner's word) | `web/tests/print-preview-wording.test.ts` | — |
+| UX-66 | `StyleBar.vue` and `StyleMenu.vue` take `--shadow-raised` too | `web/tests/tokens.test.ts` | — |
+
+Found while fixing PROC-53 (the owner decides: fix or log):
+
+- **Size 3:** a failing spec's screenshot is overwritten by the next example of the same outline: `looked_after` cuts the
+  file name at 80 characters, so all examples share it, and the evidence of a failure is lost.
+- The same unwaited `count()` branch as PROC-53 in `test_names.py` (lines 118 and 425) and `test_claude_consent.py` (216
+  and 230); not checked whether they race.
+- Speed: the E2E servers run at the production password-hashing cost (about 0.75 s a hash); the lowest cost the settings
+  allow makes creating a document 2–3 times faster in the specs.
+
+Not fixed (menu work is agreed with the owner first):
+
 - Context-menu entries with no entry in the manifest, so no key: "Snap to grid" / "Release from grid", "Move to Slide",
   "Gap…" and the four wrap modes (the project rule: every menu entry has a shortcut; see `claudia-menus.xlsx`).
 
