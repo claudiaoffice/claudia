@@ -27,8 +27,8 @@ ORIENTATION = (
     "column 0. What you are shown is written as A1, B7 and so on.{example}"
 )
 EXAMPLE = (
-    ' A request looks like {{"method": "set_cells", "params": {{"sheet": "s1", "cells": '
-    '[{{"row": 0, "col": 0, "input": "42"}}]}}}}.'
+    ' A request looks like {"method": "set_cells", "params": {"sheet": "s1", "cells": '
+    '[{"row": 0, "col": 0, "input": "42"}]}}.'
 )  # left out when the asker's mode or role lets the AI change nothing: it would only invite a refused request
 
 

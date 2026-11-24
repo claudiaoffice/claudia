@@ -40,8 +40,8 @@ ORIENTATION = (
     "shape is drawn from an outline of the shapes list (circle, rectangle, triangle, ...).{example}"
 )
 EXAMPLE = (
-    ' A request looks like {{"method": "add_object", "params": {{"slide": "s1", "kind": "text", "x": 160, "y": 120, '
-    '"w": 1280, "h": 160, "text": "Agenda"}}}}.'
+    ' A request looks like {"method": "add_object", "params": {"slide": "s1", "kind": "text", "x": 160, "y": 120, '
+    '"w": 1280, "h": 160, "text": "Agenda"}}.'
 )  # left out when the asker's mode or role lets the AI change nothing: it would only invite a refused request
 
 
