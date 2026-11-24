@@ -169,7 +169,7 @@ def test_the_client_is_whole_and_says_where_the_server_and_the_frontend_are(stag
 
 
 def test_the_launcher_finds_the_apps_where_the_stage_and_the_checkout_have_them(staged):
-    """CODE-79, D746: `appFolder` (clients/neutralino/src/paths.ts) is `apps/<app>` beside the launcher's own `dist/`.
+    """CODE-81, D746: `appFolder` (clients/neutralino/src/paths.ts) is `apps/<app>` beside the launcher's own `dist/`.
     The launcher of the first real install looked for them in a repository the installation does not have."""
     for client in (staged / "client", ROOT / "clients" / "neutralino"):
         for app in build.APPS:

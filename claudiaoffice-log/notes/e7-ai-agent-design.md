@@ -1,6 +1,6 @@
 # E7 — the AI agent: seeing the document, the local model in all three apps, Claude as a provider
 
-Written 2026-11-11 against `19e1779`. **No code was changed.** Three mock-ups go with it (`mockups/ai-settings-provider.svg`,
+Written 2026-11-11 against `19e1779`. **No code was changed.** Three mock-ups go with it (`mockups/ai-settings-provider.svg` (deleted 2026-11-22, see `ai-provider-1-server-settings.svg`),
 `mockups/ai-panel-observe-act.svg`, `mockups/ai-suggest-mode.svg`), as the project asks for screens before code.
 **Updated the same day after the owner's answers, for branch `ai_server`:** the AI acts with the asker's rights (D261), each
 person chooses *act* or *suggest* with **suggest as the default in all three apps** (D262, supersedes D63), a proposal is a
@@ -237,7 +237,7 @@ not a server setting. It can come later as a second kind of provider. The decisi
 
 ## 6. Screens
 
-- `mockups/ai-settings-provider.svg` — Server settings ▸ AI: a provider switch (Scripted stand-in / Local model /
+- `mockups/ai-settings-provider.svg` (deleted 2026-11-22, superseded by `ai-provider-1-server-settings.svg`) — Server settings ▸ AI: a provider switch (Scripted stand-in / Local model /
   Claude), the Claude form with the write-only key, model, limits, the opt-in sentence, a status line saying what is
   answering now, and the "test before apply" result. The shell, sidebar and "Signed in as" line are those of
   `AdminShell.vue`.

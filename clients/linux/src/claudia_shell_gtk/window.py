@@ -85,7 +85,7 @@ def _layout() -> str:
 
     The layout is read once, when this module is first imported (``@Gtk.Template`` needs it at class-definition time),
     so whoever imports ``.window`` (``__main__.py``, before ``.app``) must already have called
-    ``i18n.install_translation``. A language chosen later from Config ▸ App Language therefore reaches the native
+    ``i18n.install_translation``. A language chosen later from Preferences ▸ App Language therefore reaches the native
     chrome only on the *next* launch (:data:`_LANGUAGE_PREFIX`), while the page's own UI switches at once
     (``web/app/lib/i18n.ts``'s ``useI18n``)."""
     return resources.files("claudia_shell_gtk").joinpath("data/window.ui").read_text(encoding="utf-8")
@@ -191,7 +191,7 @@ class ClaudiaWindow(Adw.ApplicationWindow):
     menu_format = Gtk.Template.Child()
     menu_view = Gtk.Template.Child()
     menu_tools = Gtk.Template.Child()
-    menu_config = Gtk.Template.Child()
+    menu_preferences = Gtk.Template.Child()
     menu_help = Gtk.Template.Child()
 
     def __init__(

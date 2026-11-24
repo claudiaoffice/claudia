@@ -9,6 +9,7 @@ import { foundations, frontPage, laterFoundations, librarySheets } from './src/p
 import { buildDialogLibrary, searchPages, stylesPages } from './src/dialogs.mjs'
 import { buildWorkspaceLibrary, slidesInComputes } from './src/workspace.mjs'
 import { buildWorkflowLibrary, workflowPages } from './src/workflow.mjs'
+import { aiProviderPages, buildAiProviderLibrary } from './src/aiprovider.mjs'
 
 const REPO = process.env.CLAUDIA_REPO ?? '/home/claude/claudia'
 const OUT = process.argv[2] ?? 'out/claudia-front-page.penpot'
@@ -64,6 +65,14 @@ pages['Workflow components'] = await stack(Object.values(wf))
 pages['E16 Corkboard'] = await stack(wfPages.cork, 120)
 pages['E16 Quiet mode'] = await stack(wfPages.quiet, 120)
 pages['E16 Binder'] = await stack(wfPages.binder, 120)
+// E7.11 Claude as an AI provider comes last of all, for the same reason
+const ai = buildAiProviderLibrary()
+const aiPages = aiProviderPages(lib, ai, dialogs, workspace)
+pages['AI provider components'] = await stack(Object.values(ai))
+pages['E7.11 Server settings AI'] = await stack(aiPages.settings, 120)
+pages['E7.11 AI states'] = await stack(aiPages.states, 120)
+pages["E7.11 Owners' consent"] = await stack(aiPages.consent, 120)
+pages['E7.11 Chat panel'] = await stack(aiPages.chat, 120)
 void librarySheets
 
 // 3. the file

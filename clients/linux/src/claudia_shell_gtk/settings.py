@@ -83,7 +83,7 @@ def _update(path: Path | None, what: str, change: Callable[[dict[str, Any]], Non
 
 
 def load_shell_locale(path: Path | None = None) -> str | None:
-    """The locale last chosen from Config ▸ App Language, or ``None`` if nothing was ever chosen — in every such
+    """The locale last chosen from Preferences ▸ App Language, or ``None`` if nothing was ever chosen — in every such
     case the caller falls back to ``i18n.detect_system_locale``."""
     locale = _read(path).get("locale")
     return locale if isinstance(locale, str) and locale else None

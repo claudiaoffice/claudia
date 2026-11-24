@@ -1,4 +1,4 @@
-# Windows installer: the first real install (CODE-79, PROC-52, D746)
+# Windows installer: the first real install (CODE-81, PROC-52, D746)
 
 Branch `win-installer-fix`, written 2026-11-23. **Not run on Windows.** Run: the unit tests of `clients/neutralino`
 (534, then the new ones), `tsc` typecheck, and the real launcher (compiled before and after the change) from a folder
@@ -14,7 +14,7 @@ and Start menu) printed
 
 That folder does not exist; the apps are in `Programs\Claudia Office\client\apps\<app>`.
 
-## Cause (CODE-79)
+## Cause (CODE-81)
 
 `run()` in `launch.ts` built the app folder from `defaultRepo()`. In an installation `findRepo` finds nothing and
 `defaultRepo` returns the old "three levels up" guess: `client\dist` -> `Programs`. Reproduced on Linux with the
@@ -33,7 +33,7 @@ sandbox's, not the installation's).
 
 | Commit | What |
 |---|---|
-| CODE-79 | `appFolder` (`paths.ts`), used by `launch.ts` (`RunDeps.launcherFolder` to test it); tests `paths.test.ts`, `launch.test.ts` (red when `launch.ts` goes back to `defaultRepo`), `test_windows_packaging.py`; D746; the spec `specs/desktop/windows-installer.feature` (written with the fix, for the owner's review) |
+| CODE-81 | `appFolder` (`paths.ts`), used by `launch.ts` (`RunDeps.launcherFolder` to test it); tests `paths.test.ts`, `launch.test.ts` (red when `launch.ts` goes back to `defaultRepo`), `test_windows_packaging.py`; D746; the spec `specs/desktop/windows-installer.feature` (written with the fix, for the owner's review) |
 | PROC-52 | `windows.yml`: a step of its own that needs no display and may not fail (*The launcher finds the installed app and prepares its window*); D747; `test_windows_packaging.py` |
 
 ## PROC-52 in detail
@@ -53,7 +53,7 @@ and the config is read while the launcher is alive, so a very fast failure could
   failed does not depend on it, so not added; a profile-only run of the same steps is a follow-up if wanted.
 
 * The message of `missingFiles` still says "Run 'npm ci && npm run build'" for an installed client, which sent the first
-  reader the wrong way. It should say "reinstall Claudia" when `packaged.json` is there. Not part of CODE-79; offered as
+  reader the wrong way. It should say "reinstall Claudia" when `packaged.json` is there. Not part of CODE-81; offered as
   a follow-up.
 * Nothing after the lookup (copy to `%LOCALAPPDATA%\Claudia\run`, Neutralino, core, WebView2) has run on Windows yet.
 

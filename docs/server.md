@@ -196,6 +196,17 @@ answer `forbidden`. A person who was away gets the new keys at her next login, f
   and roles apply and its work is in the history under its name. The model behind it is a plug-in (`Engine`, or
   `AsyncEngine` for one that has to wait); the scripted stand-in understands a handful of phrases (`@ai help`) and
   `--no-assistant` switches it off.
+* **Claude as the model (E7.11, D1490–D1499).** The administrator chooses the provider of the `@ai` on the *AI* page of
+  the server settings (`PUT /api/admin/settings/ai`: `stand-in`, `local` or `claude`), names the Claude model, gives the key
+  (write-only: the page shows only that one is set and its last four characters) and approves the sentence "Document
+  content is sent to Anthropic when someone asks @ai." The key may also come from the operator (`ANTHROPIC_API_KEY` or
+  `--anthropic-key-file`), which wins. That is not enough: **the owners of each document must allow Claude for that
+  document** (off by default; `ai_consent`, `set_ai_consent`; sealed in the document file, so the administrator cannot give
+  it). Where either is missing the server's own provider answers and the chat says so. Each answer carries who gave it
+  (`ChatRecord.via`: "Claude · remote" or "Local model"). When Claude fails the person reads "Claude is not available at
+  the moment. The administrator can see why." and the page of the administrator says why in words (key refused, quota, no
+  answer in time, unreachable); there is no silent fallback. Switching Claude off, in the settings or for the document,
+  ends a running question before its next step. The health is kept in memory only.
 * **A real model (`--ai`).** `python3 -m claudia_server --ai MODEL_DIR --ai-device GPU` makes the AI user answer with a
   language model that runs on the server's own machine with OpenVINO GenAI (`pip install claudia-server[openvino]`;
   a model converted with `optimum-cli export openvino --model Qwen/Qwen2.5-7B-Instruct --weight-format int4 qwen-ov`, or

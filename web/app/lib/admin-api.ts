@@ -14,6 +14,8 @@ export class AdminApiError extends Error {
     message: string,
     /** For 429, a sign-in that came too soon after failed ones: the seconds to wait (D1266). */
     public retryAfter?: number,
+    /** For a provider that refused what the administrator applied (E7.11): the cause, like `key_refused`. */
+    public reason?: string,
   ) {
     super(message)
   }
@@ -65,10 +67,37 @@ export interface Changed {
 }
 
 export interface AiSettings {
+  /** What answers `@ai`: `stand-in`, `local` or `claude`. */
+  provider: string
   model_dir: string | null
   device: string
   max_tokens: number
   timeout: number
+  claude: {
+    model: string
+    /** Who confirmed that document content is sent to Anthropic, and when; `null` before anybody did. */
+    confirmed: Changed | null
+    /** The key is never sent here: whether there is one, its last four characters, and whether the operator gave it. */
+    key_set: boolean
+    key_tail: string | null
+    key_from_operator: boolean
+  }
+}
+
+/** What the server says about answering now, apart from what was saved (`answering`, `last_error`). */
+export interface AiState {
+  answering: { provider: string; label: string; remote: boolean; note: string }
+  last_error: { provider: string; reason: string; sentence: string; when: string } | null
+}
+
+/** What `PUT /settings/ai` takes: everything saved, and for Claude the key (only when typed) and the confirmation. */
+export interface AiRequest {
+  provider: string
+  model_dir: string | null
+  device: string
+  max_tokens: number
+  timeout: number
+  claude: { model: string; key?: string; remove_key?: boolean; confirm?: boolean }
 }
 
 export interface TypesetSettings {
@@ -97,7 +126,7 @@ export interface KdfView {
 export interface ServerSettingsView {
   max_documents: number
   access_secret_set: boolean
-  ai: AiSettings
+  ai: AiSettings & AiState
   typeset: TypesetSettings
   typeset_diagnosis: Record<string, TypesetDiagnosis>
   security: SecuritySettings
@@ -140,6 +169,7 @@ export function createAdminApi(fetchImpl: typeof fetch = fetch) {
         response.status,
         typeof detail === 'string' ? detail : `request failed (${response.status})`,
         typeof wait === 'number' ? wait : undefined,
+        typeof (parsed as { reason?: unknown })?.reason === 'string' ? (parsed as { reason: string }).reason : undefined,
       )
     }
     return parsed as T
@@ -171,7 +201,7 @@ export function createAdminApi(fetchImpl: typeof fetch = fetch) {
       call('PUT', '/settings/access-secret', { access_secret: accessSecret }, token),
     rotateAccessSecret: (token: string): Promise<ServerSettingsView & { access_secret: string }> =>
       call('POST', '/settings/access-secret/rotate', undefined, token),
-    setAi: (token: string, settings: AiSettings): Promise<ServerSettingsView> => call('PUT', '/settings/ai', settings, token),
+    setAi: (token: string, settings: AiRequest): Promise<ServerSettingsView> => call('PUT', '/settings/ai', settings, token),
     setSecurity: (token: string, settings: SecuritySettings): Promise<ServerSettingsView> => call('PUT', '/settings/security', settings, token),
     setTypeset: (token: string, settings: TypesetSettings): Promise<ServerSettingsView> => call('PUT', '/settings/typeset', settings, token),
 

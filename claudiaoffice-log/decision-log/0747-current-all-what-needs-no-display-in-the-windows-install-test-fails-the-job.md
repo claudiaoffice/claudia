@@ -24,7 +24,7 @@ superseded-by: []
    show a WebView2 window is not known (D742).
 
 **Why.** The step had been one, advisory as a whole, because of its last part. A launcher that stopped on its own error
-(CODE-79: it could not find the installed apps) looked the same as a runner without a display, and the first real install
+(CODE-81: it could not find the installed apps) looked the same as a runner without a display, and the first real install
 had a green CI and no working icon. Everything the launcher does before it starts the window needs no display; only that
 may be strict. The test `test_a_launcher_that_cannot_prepare_its_window_fails_the_install_test` keeps the step from being
 made advisory again.

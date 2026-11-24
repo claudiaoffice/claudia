@@ -110,6 +110,7 @@ EPHEMERAL_RULES: dict[str, Part] = {
     "person_removed": CONTENT,  # an owner removed somebody: {user}
     "document_deleted": CONTENT,
     "details_changed": CONTENT,
+    "ai_consent_changed": CONTENT,  # the owners allowed or withdrew a remote AI provider (E7.11): all may know
     "audit_recorded": HISTORY,  # somebody exported, printed or saved a PDF (D1271): the record is history
     "typing": CHAT,  # somebody is writing a chat message
 }

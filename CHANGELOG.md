@@ -6,6 +6,14 @@ While the major version is 0, a minor version may break the API; every break is 
 
 ## [Unreleased]
 
+## [0.37.0] - 2026-11-22
+
+### Added
+- Who gave an answer (E7.11, D1493): `Via(provider, label, remote, note="")` with `to_data` and `from_data`, and
+  `ChatRecord.via`, kept in the chat of the document and written only when set. `Document.post_chat(..., via=None)`
+  takes it. An old chat reads back with `via=None`.
+
+
 ### Added
 - The slide, shared by creates and computes (E6.31, D1470): `claudia_core.slides` with `SLIDE_WIDTH`, `SLIDE_HEIGHT`
   and `SlideAnchor` (until now creates'), the rule that keeps an object on a slide (`check_on_slide`,

@@ -2,6 +2,7 @@
 // checkpoints, undo/redo. The replica of the document itself belongs to the app (Session: cells, TextSession: text).
 // All changes go to the server as requests; nothing is believed until the server's events say it happened.
 import type { AuditRow } from './audit'
+import type { ConsentView, Via } from './ai-provider'
 import { reactive } from 'vue'
 import { DEFAULT_AI_MODE, readAiMode, safeStorage, storeAiMode, type AiMode, type ModeStorage } from './ai-mode'
 import type { PreviewAnswer, ReplaceAnswer, SearchAnswer, SearchLeave, SearchQuery } from './search'
@@ -76,6 +77,8 @@ export interface ChatMessage {
   at: string | null
   /** Its words were taken away (D724). */
   redacted?: boolean
+  /** Who answered, for a message of the ai (E7.11). */
+  via?: Via
 }
 export interface CheckpointInfo {
   number: number
@@ -196,6 +199,8 @@ export interface BaseState extends ObjectLayerState {
   chat: ChatMessage[]
   /** What has left the document (exports, prints, PDFs), oldest first; empty for a viewer, who is never sent it (D1271). */
   audit: AuditRow[]
+  /** What the owners decided about Claude here, and who answers `@ai` now (E7.11); `null` for a server that does not know. */
+  consent: ConsentView | null
   checkpoints: CheckpointInfo[]
   canUndo: boolean
   canRedo: boolean
@@ -256,6 +261,7 @@ function initialState(): BaseState {
     entries: [],
     chat: [],
     audit: [],
+    consent: null,
     checkpoints: [],
     canUndo: false,
     canRedo: false,
@@ -485,7 +491,7 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     const s = this.state
     // A viewer holds the content key only, and the server keeps the history and the chat from her (D1261).
     const reads = s.me.role !== 'viewer'
-    const [entries, chat, checkpoints, history, branches, restorePolicy, containerTypes, definitions, audit] = await Promise.all([
+    const [entries, chat, checkpoints, history, branches, restorePolicy, containerTypes, definitions, audit, consent] = await Promise.all([
       reads ? link.request<Step[]>('log', { limit: LOG_LIMIT }) : Promise.resolve<Step[]>([]),
       reads ? link.request<ChatMessage[]>('chat_log', { limit: LOG_LIMIT }) : Promise.resolve<ChatMessage[]>([]),
       reads ? link.request<CheckpointInfo[]>('checkpoints') : Promise.resolve<CheckpointInfo[]>([]),
@@ -499,11 +505,13 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
       this.optional<{ types: RenderType[] }>('container_types'),
       this.optional<ContainerDef[]>('containers'),
       reads ? this.optional<AuditRow[]>('audit_log') : Promise.resolve<AuditRow[] | null>(null),
+      this.optional<ConsentView>('ai_consent'),
       this.loadApp(),
-    ]).then(([e, c, k, h, l, p, rt, rd, au]) => [e, c, k, h, l, p, rt, rd, au] as const)
+    ]).then(([e, c, k, h, l, p, rt, rd, au, co]) => [e, c, k, h, l, p, rt, rd, au, co] as const)
     s.entries = entries
     s.chat = chat
     s.audit = audit ?? []
+    s.consent = consent
     s.checkpoints = checkpoints
     s.canUndo = history.can_undo
     s.canRedo = history.can_redo
@@ -626,6 +634,8 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
       s.typing = message.data.on ? [...others, who] : others
     } else if (message.kind === 'audit_recorded') {
       s.audit = [...s.audit, message.data as AuditRow]
+    } else if (message.kind === 'ai_consent_changed') {
+      this.track(this.readConsent()) // who answers now changes with it: ask, rather than work it out here
     } else if (message.kind === 'role_changed') {
       if (message.data.user === s.me.user) {
         this.notice(t('Your role in this document is now “{role}”.', { role: roleName(message.data.role) }))
@@ -1381,6 +1391,20 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
    *  a message without a mode means a client without the switch, which the server answers as *act* (UNSAID_MODE). */
   async say(text: string): Promise<boolean> {
     return (await this.attempt('chat', { text, ai_mode: this.state.aiMode })) !== false
+  }
+
+  /** Owners: allow Claude to be sent this document's content when somebody asks `@ai` (`true`), or withdraw it. What the
+   *  server answers is the state; every window of the document hears of the change as it happens (E7.11, D264). */
+  async setAiConsent(allowed: boolean): Promise<boolean> {
+    const view = await this.attempt('set_ai_consent', { allowed })
+    if (view === false) return false
+    this.state.consent = view as ConsentView
+    return true
+  }
+
+  private async readConsent(): Promise<void> {
+    const view = await this.optional<ConsentView>('ai_consent')
+    if (view) this.state.consent = view
   }
 
   /** The person's choice of how the AI treats their requests in this document; kept for next time. */

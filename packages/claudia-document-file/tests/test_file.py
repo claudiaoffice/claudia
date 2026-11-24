@@ -407,7 +407,7 @@ def test_a_cut_off_file_is_refused(path, owner):
 
 
 def test_a_document_of_a_newer_format_says_so(path, owner):
-    entries = [("format", b"claudia-document 3")] + [e for e in good_entries(path) if e[0] != "format"]
+    entries = [("format", b"claudia-document 4")] + [e for e in good_entries(path) if e[0] != "format"]
     path.write_bytes(zip_of(entries, zipfile.ZIP_STORED))
     with pytest.raises(UnsupportedFormat, match="newer"):
         read_manifest(path)

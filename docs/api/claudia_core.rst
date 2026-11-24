@@ -377,6 +377,7 @@ Messages and events
 
 .. autoclass:: claudia_core.ChatRecord
 .. autoclass:: claudia_core.Ephemeral
+.. autoclass:: claudia_core.Via
 .. autofunction:: claudia_core.parse_chat
 .. autoclass:: claudia_core.EventBus
 .. autoclass:: claudia_core.CommandApplied

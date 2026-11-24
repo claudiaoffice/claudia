@@ -125,6 +125,7 @@ What ``ModelEngine`` is given (not in ``__all__``; documented so its signature r
 app's view of its documents for the model.
 
 .. autoclass:: claudia_server.model_engine.Budget
+.. autoclass:: claudia_server.model_engine.ConversationMemory
 .. autoclass:: claudia_server.lens.Lens
 .. autoclass:: claudia_server.lens.Recorder
 
@@ -196,6 +197,10 @@ configured it to do.
 .. autoclass:: claudia_server.AdminSessions
 .. autoclass:: claudia_server.AdminContext
 .. autoclass:: claudia_server.AiRuntime
+.. autoclass:: claudia_server.ai_desk.ProviderDesk
+.. autoclass:: claudia_server.ai_desk.Decision
+.. autoclass:: claudia_server.ai_consent.AiConsent
+.. autoclass:: claudia_server.ai_consent.ConsentBook
 .. autofunction:: claudia_server.admin_router
 
 Server settings ▸ Fonts (E3.13 f, D1041): ``/api/admin/fonts``, its ``files``, ``check`` and ``collections`` routes.
@@ -212,6 +217,7 @@ Server settings ▸ Fonts (E3.13 f, D1041): ``/api/admin/fonts``, its ``files``,
 .. autoclass:: claudia_server.SecuritySettings
 .. autoclass:: claudia_server.TypesetSettings
 .. autoclass:: claudia_server.server_settings.RenderSettings
+.. autoclass:: claudia_server.server_settings.ClaudeSettings
 .. autoclass:: claudia_server.Changed
 .. autofunction:: claudia_server.load_settings
 .. autofunction:: claudia_server.save_settings

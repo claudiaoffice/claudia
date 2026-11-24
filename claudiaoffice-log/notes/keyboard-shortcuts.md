@@ -81,9 +81,10 @@ On a Mac, Ctrl is Cmd and Alt is Option.
 | Tools | Merge Cells | Ctrl+Shift+G |  |
 | Tools | Split Cell | Ctrl+Shift+H |  |
 | Tools | Table Options… | Ctrl+Shift+L |  |
-| Config | Shortcuts | Ctrl+? |  |
-| Config | App Language ▸ English | — |  |
-| Config | App Language ▸ Deutsch | — |  |
+| Preferences | Shortcuts | Ctrl+? |  |
+| Preferences | AI… | Ctrl+Shift+Alt+E |  |
+| Preferences | App Language ▸ English | — |  |
+| Preferences | App Language ▸ Deutsch | — |  |
 | Help | Ask ai | Ctrl+F1 |  |
 | Help | How Do I…? | F1 |  |
 | Help | Documentation | Shift+F1 |  |
@@ -169,9 +170,10 @@ On a Mac, Ctrl is Cmd and Alt is Option.
 | Tools | Value Field Settings… | Ctrl+Shift+Alt+U |  |
 | Tools | Show Pivot Table as SQL… | Ctrl+Shift+Alt+Q |  |
 | Tools | Delete Pivot Table… | Ctrl+Shift+Alt+V |  |
-| Config | Shortcuts | Ctrl+? |  |
-| Config | App Language ▸ English | — |  |
-| Config | App Language ▸ Deutsch | — |  |
+| Preferences | Shortcuts | Ctrl+? |  |
+| Preferences | AI… | Ctrl+Shift+Alt+E |  |
+| Preferences | App Language ▸ English | — |  |
+| Preferences | App Language ▸ Deutsch | — |  |
 | Help | Ask ai | Ctrl+F1 |  |
 | Help | How Do I…? | F1 |  |
 | Help | Documentation | Shift+F1 |  |
@@ -245,9 +247,10 @@ On a Mac, Ctrl is Cmd and Alt is Option.
 | View | Present from This Slide | Shift+F5 |  |
 | View | Speaker Notes | Ctrl+Alt+V |  |
 | Tools | Ask the Assistant… | Ctrl+Alt+J |  |
-| Config | Shortcuts | Ctrl+? |  |
-| Config | App Language ▸ English | — |  |
-| Config | App Language ▸ Deutsch | — |  |
+| Preferences | Shortcuts | Ctrl+? |  |
+| Preferences | AI… | Ctrl+Shift+Alt+E |  |
+| Preferences | App Language ▸ English | — |  |
+| Preferences | App Language ▸ Deutsch | — |  |
 | Help | Ask ai | Ctrl+F1 |  |
 | Help | How Do I…? | F1 |  |
 | Help | Documentation | Shift+F1 |  |

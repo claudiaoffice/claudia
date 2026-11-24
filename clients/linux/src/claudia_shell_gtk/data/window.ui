@@ -46,8 +46,8 @@
                   </object>
                 </child>
                 <child type="start">
-                  <object class="GtkMenuButton" id="menu_config">
-                    <property name="label" translatable="yes">Config</property>
+                  <object class="GtkMenuButton" id="menu_preferences">
+                    <property name="label" translatable="yes">Preferences</property>
                   </object>
                 </child>
                 <child type="start">
