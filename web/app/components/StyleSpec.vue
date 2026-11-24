@@ -194,13 +194,13 @@ const ALIGN = computed(
           <input type="checkbox" :checked="editor.hyphenates" :disabled="off" data-testid="hyphenate" @change="run(editor.setHyphens(($event.target as HTMLInputElement).checked))" >
           <span>{{ t('Hyphenate') }}</span>
         </label>
-        <label v-if="headings" class="row" :title="t('A heading starts a part of the text at its level: the title above all, then level 1, level 2 and so on')">
+        <label v-if="headings" class="row field" :title="t('A heading starts a part of the text at its level: the title above all, then level 1, level 2 and so on')">
           <span class="label">{{ t('Heading') }}</span>
           <select :value="settingValue(current!)" :disabled="off" data-testid="heading-level" @change="setHeading(($event.target as HTMLSelectElement).value)">
             <option v-for="choice in headings" :key="choice.value" :value="choice.value">{{ choice.label }}</option>
           </select>
         </label>
-        <label v-if="numberings" class="row" :title="t('Headings numbered in one list count together as one outline: 1, 1.1, 1.2, 2 …')">
+        <label v-if="numberings" class="row field" :title="t('Headings numbered in one list count together as one outline: 1, 1.1, 1.2, 2 …')">
           <span class="label">{{ t('Numbering') }}</span>
           <select :value="numberingValue(current!)" :disabled="off" data-testid="heading-numbering" @change="setNumbering(($event.target as HTMLSelectElement).value)">
             <option v-for="choice in numberings" :key="choice.value" :value="choice.value">{{ choice.label }}</option>
