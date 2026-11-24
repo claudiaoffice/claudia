@@ -12,7 +12,7 @@ from claudia_computes.events import CellsChanged, StructureChanged, TabsChanged
 from claudia_computes.refs import StructuralEdit
 from claudia_core import Document
 
-from .lens import count, fence, look_first, shorten
+from .lens import HELP_METHODS, count, fence, look_first, shorten, show_help
 
 MAX_LISTED_SHEETS = 50  # sheets named to the model; a small model has little room
 MAX_SHEET_NAME = 30
@@ -66,7 +66,7 @@ def describe_cell(row: int, col: int, content: dict | None) -> str:
 class WorkbookLens:
     """The lens for computes."""
 
-    look_methods: tuple[str, ...] = ("sheets", "cells", "functions", "function_help")
+    look_methods: tuple[str, ...] = ("sheets", "cells", "functions", "function_help", *HELP_METHODS)
 
     # -- where the model starts
     def orient(
@@ -130,7 +130,9 @@ class WorkbookLens:
 
     # -- what the read requests show
     def show(self, method: str, params: dict, result: Any) -> str:
-        """The answer of a read request, fenced as data."""
+        """The answer of a read request, fenced as data (help is not data, it is the product's own text)."""
+        if method in HELP_METHODS:
+            return show_help(method, result)
         if method == "cells":
             return fence(self._cells(params, result["cells"]))
         if method == "sheets":

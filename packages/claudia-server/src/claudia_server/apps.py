@@ -9,6 +9,7 @@ from claudia_core import Document, DocumentModel
 from claudia_creates import ShapeLibrary
 
 from .ai_desk import ProviderDesk
+from .ai_guidance import load_guidance
 from .ai_router import AiRouter, ModelParts
 from .assistant import AiTurn, Assistant, Engine, Say, Task
 from .composes import composes_methods, composes_methods_with
@@ -133,7 +134,7 @@ def _model_parts(model_cls: type[DocumentModel], budget: Budget | None) -> tuple
     table = methods_for(model_cls)
     hidden = NOT_FOR_A_MODEL.get(model_cls.app, ())
     tools = (*tools_of(table, lens.look_methods, kind="look"), *tools_of(table, [n for n in names if n not in hidden]))
-    return ModelParts(lens, tools, budget or Budget()), names
+    return ModelParts(lens, tools, budget or Budget(), load_guidance(model_cls)), names
 
 
 def has_lens(model_cls: type[DocumentModel]) -> bool:
@@ -155,7 +156,7 @@ def model_assistant_for(
     parts, names = found
     proposes = SUGGEST_METHODS.get(model_cls.app, ())
     return lambda: Assistant(
-        ModelEngine(runner, parts.tools, parts.lens, budget=parts.budget),
+        ModelEngine(runner, parts.tools, parts.lens, budget=parts.budget, guidance=parts.guidance),
         max_waiting=max_waiting,
         allowed_methods=names,
         suggest_methods=proposes,

@@ -29,8 +29,8 @@ from claudia_composes.events import (
 from claudia_core import Document, TableDef, TablesChanged, parse_entry_id
 
 from .composes_words import paragraph_view
+from .lens import HELP_METHODS, fence, look_first, shorten, show_help
 from .lens import count as _count
-from .lens import fence, look_first, shorten
 from .tables import table_view
 
 PREVIEW_PARAGRAPHS = 12  # paragraphs from the start shown at the beginning
@@ -134,7 +134,7 @@ def describe_suggestion(item: dict) -> str:
 class DocumentLens:
     """The lens for composes."""
 
-    look_methods: tuple[str, ...] = ("read_paragraphs", "outline", "styles", "suggestions", "tables")
+    look_methods: tuple[str, ...] = ("read_paragraphs", "outline", "styles", "suggestions", "tables", *HELP_METHODS)
 
     # -- where the model starts
     def orient(
@@ -270,7 +270,9 @@ class DocumentLens:
 
     # -- what the read requests show
     def show(self, method: str, params: dict, result: Any) -> str:
-        """The answer of a read request, fenced as data."""
+        """The answer of a read request, fenced as data (help is not data, it is the product's own text)."""
+        if method in HELP_METHODS:
+            return show_help(method, result)
         if method == "read_paragraphs":
             lines = [describe_paragraph(view, MAX_READ_TEXT) for view in result["paragraphs"]]
             if not lines:

@@ -20,7 +20,7 @@ from claudia_core import SLIDE_HEIGHT, SLIDE_WIDTH, Document, ObjectsChanged
 from claudia_creates import SlideModel
 from claudia_creates.events import SlidesChanged
 
-from .lens import fence, look_first, shorten
+from .lens import HELP_METHODS, fence, look_first, shorten, show_help
 
 MAX_LISTED_SLIDES = 40  # slides named to the model; a small model has little room
 PREVIEW_SLIDES = 3  # slides whose objects are shown at the start
@@ -76,7 +76,7 @@ def describe_slide(model: SlideModel, slide: str) -> str:
 class SlideLens:
     """The lens for creates."""
 
-    look_methods: tuple[str, ...] = ("slides", "slide", "shapes", "styles")
+    look_methods: tuple[str, ...] = ("slides", "slide", "shapes", "styles", *HELP_METHODS)
 
     # -- where the model starts
     def orient(
@@ -127,7 +127,10 @@ class SlideLens:
 
     # -- what the read requests show
     def show(self, method: str, params: dict, result: Any) -> str:
-        """The answer of a read request, fenced as data and without what a model cannot use (outline paths)."""
+        """The answer of a read request, fenced as data and without what a model cannot use (outline paths); help is
+        not data, it is the product's own text."""
+        if method in HELP_METHODS:
+            return show_help(method, result)
         if method == "slides":
             return fence("\n".join(f"{s['id']} ({s['objects']} objects)" for s in result) or "There are no slides.")
         if method == "slide":

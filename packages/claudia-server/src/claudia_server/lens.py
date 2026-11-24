@@ -22,6 +22,12 @@ FENCE = "```"
 #: look for what it needs, so that what leaves the server is what it asked to see.
 LOOK_FIRST = "Nothing a person wrote is shown here: look at what the question is about, with the requests below."
 
+#: The requests that read the product's own help, the same in every app (E7.2).
+HELP_METHODS = ("help_search", "help_topic")
+
+#: How much of one help topic the model is shown at a time.
+MAX_HELP_CHARACTERS = 4000
+
 _FENCES = re.compile(r"`{3,}")
 
 
@@ -33,6 +39,14 @@ def fence(text: str) -> str:
 def look_first(start: str) -> str:
     """The end of an outline: nothing is shown, so look, beginning with the request ``start``."""
     return f"{LOOK_FIRST} Start with {start}."
+
+
+def show_help(method: str, result: Any) -> str:
+    """The answer of ``help_search`` or ``help_topic`` as text for the model. Help is written by the product, not by
+    the people who wrote the document, so unlike what comes out of a document it is not fenced as data."""
+    if method == "help_search":
+        return "\n".join(f"- {topic['id']} — {topic['title']}" for topic in result) or "No help topic matches that."
+    return cut(f"{result['title']}\n\n{result['body']}", MAX_HELP_CHARACTERS)
 
 
 def count(number: int, one: str, many: str) -> str:

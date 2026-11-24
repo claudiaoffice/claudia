@@ -21,6 +21,7 @@ from dataclasses import dataclass, replace
 
 from claudia_ai import Answerer, Message, Request, ToolCall, ToolSpec, Turn
 
+from .ai_guidance import Guidance
 from .assistant import AiTurn, Say, Task
 from .lens import Lens, OutlineLens, cut
 from .protocol import MethodTable, RequestError
@@ -94,8 +95,10 @@ class ModelEngine:
         *,
         memory: ConversationMemory | None = None,
         budget: Budget = Budget(),  # noqa: B008  (frozen)
+        guidance: Guidance = Guidance(),  # noqa: B008  (frozen)
     ):
         self._runner = runner
+        self._guidance = guidance
         self._tools = tools
         # what a remote provider is first shown holds no word a person wrote (CODE-80): decided by the runner, so that
         # nobody who builds an engine can forget it
@@ -113,7 +116,9 @@ class ModelEngine:
         can_write = any(t.kind != "look" for t in tools)
         offered = frozenset(t.name for t in tools if t.kind != "look")
         context = self._lens.orient(task.document, can_write=can_write, asker=task.sender, writes=offered)
-        request = Request(task.sender, task.text, context, tools, history)
+        skills = self._guidance.skills_for({tool.name for tool in tools})
+        persona = self._guidance.persona
+        request = Request(task.sender, task.text, context, tools, history, persona=persona, skills=skills)
         say = await self._converse(task, request)
         self._memory.remember(task.sender, task.text, say)
         return [Say(say)]

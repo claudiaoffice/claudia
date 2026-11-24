@@ -27,6 +27,7 @@ from claudia_core import Via
 
 from .ai_consent import AiConsent
 from .ai_desk import CLAUDE_VIA, Failure, ProviderDesk
+from .ai_guidance import Guidance
 from .assistant import AiTurn, Engine, Say, Task
 from .lens import Lens
 from .model_engine import Budget, ConversationMemory, ModelEngine
@@ -67,11 +68,12 @@ class GatedRunner:
 @dataclass(frozen=True)
 class ModelParts:
     """What a language model needs to work in one app: the lens through which it sees a document, the requests it may
-    make, and what one question may cost."""
+    make, what one question may cost, and what the app teaches the AI about working in it (E7.2)."""
 
     lens: Lens
     tools: tuple[ToolSpec, ...]
     budget: Budget = Budget()  # noqa: B008  (frozen)
+    guidance: Guidance = Guidance()  # noqa: B008  (frozen)
 
 
 class AiRouter:
@@ -111,7 +113,9 @@ class AiRouter:
     def _engine(self, runner: Answerer) -> ModelEngine:
         assert self._parts is not None
         parts = self._parts
-        return ModelEngine(runner, parts.tools, parts.lens, memory=self._memory, budget=parts.budget)
+        return ModelEngine(
+            runner, parts.tools, parts.lens, memory=self._memory, budget=parts.budget, guidance=parts.guidance
+        )
 
     async def _ask_claude(self, task: Task, runner: ModelRunner, via: Via) -> list[AiTurn]:
         def may() -> bool:
