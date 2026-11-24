@@ -35,7 +35,7 @@ The index is the status of record; a section below keeps the status of the round
 re-checked. **Opened** and **Fixed** are filled from 2026-11-20 on: for older items only where the status already gave
 the date.
 
-### Open (91)
+### Open (90)
 
 By priority (P1, P2, P3, then items that wait for a decision without one), then by ID.
 
@@ -49,7 +49,6 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | PERF-10 | P2 | Performance | What-if outcomes are recalculated on the event loop: 9 s per edit in a 1,000-cell model | **new, open** |  |  |
 | UX-07 | P2 | UX / Web | Website blocks pinch-zoom (`user-scalable=no`) | open; the website is not in this repository (searched 2026-11-13) |  |  |
 | UX-09 | P2 | UX | Six web menus against four in D4; the Linux shell maps between them | **new** |  |  |
-| UX-21 | P2 | UX / AI | The chat promises `@ai` where no AI answers (creates), and the refusal names a missing switch | **new, open** |  |  |
 | UX-22 | P2 | UX | The history speaks three dialects: one per app | **new, open** |  |  |
 | UX-42 | P2 | UX / all | A document cannot be renamed: its name is sealed into the file, which the uid was meant to avoid | **decided, open** (D536, E5.21) |  |  |
 | UX-51 | P2 | UX / composes | The words go round the unturned frame of a turned object, not its bounding box (D1226 decides the box); turning is on screen in composes since D1232 | **new, open** (read) |  |  |
@@ -133,7 +132,7 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |  |  |
 | UX-06 | — | UX | Web menu differs from decisions D4/D5 | needs decision |  |  |
 
-### Fixed (158)
+### Fixed (159)
 
 By ID. Items closed without a fix (superseded, wontfix) are here too.
 
@@ -178,6 +177,7 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | UX-18 | P2 | UX / computes | The formula hint covers the column letters exactly when a whole column is to be picked | **fixed** |  |  |
 | UX-19 | P2 | UX | Picking the caret's own style back in the gallery pins it: a deviation is then not offered a name, and the next change goes to the old style everywhere | **fixed** |  |  |
 | UX-20 | **P1** | UX / AI | The AI in computes does nothing and points at an act/suggest switch no client has | **fixed** 2026-11-12 |  | 2026-11-12 |
+| UX-21 | P2 | UX / AI | The chat promises `@ai` where no AI answers (creates), and the refusal names a missing switch | **fixed** 2026-11-24 (closed by the owner: all three apps have an `ai` participant) |  | 2026-11-24 |
 | UX-24 | P1 | UX / creates | A named style could not be applied to another text box from where people look for it | **fixed** 2026-11-12 |  | 2026-11-12 |
 | UX-25 | P3 | UX / creates | All styles… counted every style's uses as "shapes" when a shape was selected | **fixed** 2026-11-12 |  | 2026-11-12 |
 | UX-26 | P2 | UX | The AI mode switch: the unchosen half invisible in the light theme, and the switch below the history | **fixed** 2026-11-12 |  | 2026-11-12 |
@@ -877,7 +877,7 @@ none gets act"; computes cannot propose yet (E7.8), so the AI wrote nothing, eve
 `UNSAID_MODE = ACT` for a request without a mode; `DEFAULT_MODE` stays *suggest* for a client with the switch (D262).
 Tests in `test_server_ai_account.py`; `demo.cjs` passes again.
 
-### UX-21 · The chat promises an AI where none answers · P2 · new, open
+### UX-21 · The chat promises an AI where none answers · P2 · fixed 2026-11-24
 **Evidence (measured, screenshots of `slides.cjs`).** creates' chat says "Write to everybody, or @ai to ask the
 assistant. Say @ai help to see what it can do", but creates has no AI user (no `ai` avatar; E7.9 is `todo`). Until
 UX-20 the computes refusal also named "act mode", a switch that exists in no client. **Fix.** The hint comes from what
