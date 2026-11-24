@@ -112,9 +112,19 @@ def look_of(model: Styled, body: ObjectBody) -> BoxLook:
 # ------------------------------------------------------------------------------------------------------ OpenDocument
 #: The name an OpenDocument file gives the outline of each shape of the model (an ellipse and a rectangle are elements
 #: of their own).
-_TRIANGLE = "isosceles-triangle"
-_GEOMETRY = {"rectangle": "rectangle", "ellipse": "ellipse", _TRIANGLE: "triangle"}
+#: The outline of the model a ``draw:custom-shape`` of a ``draw:type`` is (LibreOffice names the preset geometries it
+#: takes from PowerPoint ``ooxml-*``).
+OUTLINES = {
+    "ellipse": "circle",
+    "rectangle": "rectangle",
+    "isosceles-triangle": "triangle",
+    "ooxml-ellipse": "circle",
+    "ooxml-rect": "rectangle",
+    "ooxml-triangle": "triangle",
+    "ooxml-isosceles-triangle": "triangle",
+}
 _BASIC = {"rect": "rectangle", "ellipse": "circle", "circle": "circle"}
+_TAG = {"circle": "ellipse", "rectangle": "rect", "triangle": "custom-shape"}
 _TRIANGLE_GEOMETRY = (
     '<draw:enhanced-geometry xmlns:draw="{draw}" xmlns:svg="{svg}" svg:viewBox="0 0 21600 21600" '
     'draw:type="isosceles-triangle" draw:text-areas="5400 10800 16200 21600" '
@@ -239,8 +249,8 @@ def _shape_of(element: etree._Element) -> tuple[str | None, bool] | None:
         )
         return None if any(key in element.attrib for key in flat) else (_BASIC[tag], False)
     geometry = element.find("draw:enhanced-geometry", NS)
-    kind = _GEOMETRY.get(geometry.get(_q("draw", "type"), "")) if geometry is not None else None
-    return None if kind is None else ("circle" if kind == "ellipse" else kind, False)
+    kind = OUTLINES.get(geometry.get(_q("draw", "type"), "")) if geometry is not None else None
+    return None if kind is None else (kind, False)
 
 
 def held_box(
@@ -274,28 +284,31 @@ def held_box(
     return body, box_look(element, graphics)
 
 
-def _colour(rgb: tuple[int, int, int] | None) -> str:
-    assert rgb is not None
+def hex_of(rgb: tuple[int, int, int]) -> str:
+    """A colour as a file says it: ``#rrggbb``."""
     return f"#{rgb[0]:02x}{rgb[1]:02x}{rgb[2]:02x}"
+
+
+def fill_and_line(look: BoxLook) -> str:
+    """The attributes of a ``style:graphic-properties`` that fill a drawing and draw its line as ``look`` says."""
+    fill = f'draw:fill="solid" draw:fill-color="{hex_of(look.fill)}"' if look.fill else 'draw:fill="none"'
+    if look.line:
+        width = f"{look.width / EMU_PER_POINT:.4g}pt"
+        return f'{fill} draw:stroke="solid" svg:stroke-color="{hex_of(look.line)}" svg:stroke-width="{width}"'
+    return f'{fill} draw:stroke="none"'
 
 
 def graphic_properties(kind: str, look: BoxLook) -> str:
     """The attributes of the ``style:graphic-properties`` that give a box of ``kind`` (``"text"`` or ``"shape"``)
     ``look``: its fill, its line, and its words inside it (a text box's at its top left, a shape's in its middle), at
     the size the box has (a program would else fit the box to its words)."""
-    fill = f'draw:fill="solid" draw:fill-color="{_colour(look.fill)}"' if look.fill else 'draw:fill="none"'
-    if look.line:
-        width = f"{look.width / EMU_PER_POINT:.4g}pt"
-        line = f'draw:stroke="solid" svg:stroke-color="{_colour(look.line)}" svg:stroke-width="{width}"'
-    else:
-        line = 'draw:stroke="none"'
     fixed = 'draw:auto-grow-height="false" draw:auto-grow-width="false"'
     inside = (
         f'fo:padding="0cm" {fixed}'
         if kind == "text"
         else f'{fixed} draw:textarea-vertical-align="middle" draw:textarea-horizontal-align="center"'
     )
-    return f"{fill} {line} {inside}"
+    return f"{fill_and_line(look)} {inside}"
 
 
 def default_name(body: ObjectBody, number: int) -> str:
@@ -303,23 +316,41 @@ def default_name(body: ObjectBody, number: int) -> str:
     return f"{'Text box' if body.kind == 'text' else 'Shape'} {number}"
 
 
+def outline_element(shape: str | None) -> etree._Element:
+    """The element a file draws the outline ``shape`` of the model with (``None``: a text box, a ``draw:frame`` with a
+    ``draw:text-box``); the caller gives it its style, its place and its words (:func:`put_words`)."""
+    tag = "frame" if shape is None else _TAG.get(shape, "rect")
+    element = etree.Element(_q("draw", tag), nsmap={prefix: NS[prefix] for prefix in ("draw", "svg", "xlink", "text")})
+    if shape is None:
+        etree.SubElement(element, _q("draw", "text-box"))
+    elif tag == "custom-shape":
+        element.append(etree.fromstring(_TRIANGLE_GEOMETRY.format(draw=NS["draw"], svg=NS["svg"])))
+    return element
+
+
+def put_words(element: etree._Element, paragraphs: Iterable[etree._Element]) -> None:
+    """The paragraphs of a box into the element :func:`outline_element` made: into a frame's text box, before a
+    custom shape's geometry, else at the end."""
+    holder = element.find("draw:text-box", NS)
+    geometry = element.find("draw:enhanced-geometry", NS)
+    for paragraph in paragraphs:
+        if holder is not None:
+            holder.append(paragraph)
+        elif geometry is not None:
+            geometry.addprevious(paragraph)
+        else:
+            element.append(paragraph)
+
+
 def box_element(body: ObjectBody, style: str, name: str, words: etree._Element | None) -> etree._Element:
     """The ``draw:frame`` (a text box) or the shape element of ``body``, drawn with the graphic style ``style``, called
     ``name``, with ``words`` (its paragraph, written by the caller) in it; the caller places it."""
     is_box = body.kind == "text"
-    tag = "frame" if is_box else {"circle": "ellipse", "rectangle": "rect"}.get(body.shape or "", "custom-shape")
-    element = etree.Element(_q("draw", tag), nsmap={prefix: NS[prefix] for prefix in ("draw", "svg", "xlink", "text")})
+    element = outline_element(None if is_box else body.shape or "rectangle")
     element.set(_q("draw", "style-name"), style)
     element.set(_q("draw", "name"), xml_safe(name))
-    if is_box:
-        text_box = etree.SubElement(element, _q("draw", "text-box"))
-        if words is not None:
-            text_box.append(words)
-    else:
-        if words is not None and body.paragraph is not None and body.paragraph.text:
-            element.append(words)
-        if tag == "custom-shape":
-            element.append(etree.fromstring(_TRIANGLE_GEOMETRY.format(draw=NS["draw"], svg=NS["svg"])))
+    if words is not None and (is_box or (body.paragraph is not None and body.paragraph.text)):
+        put_words(element, [words])
     if body.description and not body.decorative:  # (ODF 1.3 has no mark for decoration: see the losses)
         etree.SubElement(element, _q("svg", "desc")).text = xml_safe(body.description)
     return element

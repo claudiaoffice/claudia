@@ -25,13 +25,11 @@ from lxml import etree
 from claudia_computes import MIN_OBJECT_SIZE
 from claudia_core import asset_of, keeps_proportions, picture_body
 from claudia_odf_io import xml_safe
-from claudia_opc_io import ANGLE, DRAWINGML, SVG_URI, cropped, is_decorative, mark_decorative, shown_part, turn_of
+from claudia_opc_io import ANGLE, add_svg, cropped, is_decorative, mark_decorative, shown_part, turn_of
 
 from ._pictures import WrittenPicture
 from ._read_back import FileObject
 from .xlsx_charts import NS, DrawnAnchor, emu, names_of, pinned_at
-
-SVG_NS = DRAWINGML["asvg"]
 
 
 def picture_anchor(picture: WrittenPicture, number: int, rid: str, svg_rid: str | None = None) -> etree._Element:
@@ -61,9 +59,7 @@ def picture_anchor(picture: WrittenPicture, number: int, rid: str, svg_rid: str 
     if svg_rid is not None:
         blip = anchor.find("xdr:pic/xdr:blipFill/a:blip", NS)
         assert blip is not None
-        extension = etree.SubElement(etree.SubElement(blip, f"{{{NS['a']}}}extLst"), f"{{{NS['a']}}}ext")
-        extension.set("uri", SVG_URI)
-        etree.SubElement(extension, f"{{{SVG_NS}}}svgBlip", nsmap={"asvg": SVG_NS}).set(f"{{{NS['r']}}}embed", svg_rid)
+        add_svg(blip, svg_rid)
     return anchor
 
 

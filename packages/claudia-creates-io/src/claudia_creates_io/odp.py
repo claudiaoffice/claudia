@@ -53,8 +53,11 @@ from claudia_core import (
 from claudia_core.stand_ins import file_font
 from claudia_creates import MAX_NOTES_LENGTH, SLIDE_HEIGHT, SLIDE_WIDTH, ShapeLibrary, SlideAnchor, SlideModel
 from claudia_odf_io import (
+    CM_PER_INCH,
     MIME,
     NS,
+    OUTLINES,
+    BoxLook,
     DocumentInfo,
     Loss,
     LossLog,
@@ -63,14 +66,20 @@ from claudia_odf_io import (
     default_style_xml,
     description_element,
     description_of,
+    fill_and_line,
+    graphic_styles,
+    hex_of,
     hidden_content,
     inches,
     local_name,
     name_of,
     new_meta,
     new_package,
+    odf_properties,
+    outline_element,
     patch_language,
     picture_of,
+    put_words,
     read_language,
     read_text,
     set_text,
@@ -79,7 +88,7 @@ from claudia_odf_io import (
     update_package_meta,
     xml_safe,
 )
-from claudia_opc_io import read_parts, write_parts
+from claudia_opc_io import EMU_PER_POINT, read_parts, write_parts
 
 from ._file_looks import Look, LookBook
 from ._items import Mark, OdpListReader, OdpLists, agendas, list_styles, marks_of, odp_level, references, words_of
@@ -95,7 +104,6 @@ _NS_DECLS = {prefix: uri for prefix, uri in NS.items() if prefix != "xml"}
 
 #: The size of a new slide, 16:9 the way LibreOffice makes one: what a model's 1600 by 900 units are written as.
 _SLIDE_CM = (28.0, 15.75)
-_CM_PER_INCH = 2.54
 
 _DEFAULT_TEXT_STYLE, _DEFAULT_SHAPE_STYLE, _DEFAULT_LABEL_STYLE = "body-text", "plain-shape", "shape-label"
 #: A text box's own box (D310): its words are Body text, its box this style without properties.
@@ -110,17 +118,6 @@ def _default_styles(kind: str) -> tuple[str, str]:
     return _DEFAULT_SHAPE_STYLE, _DEFAULT_LABEL_STYLE
 
 
-#: What a ``draw:type`` of a custom shape is, as one of the three shapes the app has.
-_CUSTOM = {
-    "ellipse": "circle",
-    "rectangle": "rectangle",
-    "isosceles-triangle": "triangle",
-    # LibreOffice names the preset geometries it takes from PowerPoint ``ooxml-*``.
-    "ooxml-ellipse": "circle",
-    "ooxml-rect": "rectangle",
-    "ooxml-triangle": "triangle",
-    "ooxml-isosceles-triangle": "triangle",
-}
 #: Things on a slide that are drawn (the others -- notes, animations, forms -- are not objects).
 _DRAWN = {
     "frame",
@@ -141,7 +138,6 @@ _DRAWN = {
     "regular-polygon",
 }
 _MAX_OBJECTS = 500
-_TRIANGLE_PATH = "M 10800 0 L 21600 21600 0 21600 10800 0 Z N"
 
 
 def _q(prefix: str, local: str) -> str:
@@ -222,7 +218,7 @@ class _Probe:
         self.model = SlideModel()
         self.model.insert_slide("probe")
         library = ShapeLibrary.load()
-        for shape_id in set(_CUSTOM.values()):
+        for shape_id in set(OUTLINES.values()):
             definition = library.get(shape_id)
             if definition is None:  # pragma: no cover - the three ids are always shipped
                 raise ValueError(f"the built-in shape library has no shape {shape_id!r}")
@@ -290,31 +286,12 @@ def _drawing_page_styles(*roots: etree._Element | None) -> dict[str, etree._Elem
     return found
 
 
-def _graphic_styles(*roots: etree._Element | None) -> dict[str, etree._Element]:
-    found: dict[str, etree._Element] = {}
-    for root in roots:
-        if root is None:
-            continue
-        for style in root.iter(_q("style", "style")):
-            if style.get(_q("style", "family")) == "graphic":
-                found.setdefault(style.get(_q("style", "name")) or "", style)
-    return found
-
-
 def _bare(element: etree._Element, graphics: dict[str, etree._Element]) -> bool:
     """Is this shape drawn with neither a fill nor an outline (its style, or one it is based on, says both are
     ``none``)? That is how LibreOffice writes what PowerPoint calls a text box: an unfilled rectangle with words in
     it."""
-    fill = stroke = None
-    name, seen = element.get(_q("draw", "style-name")), set()
-    while name and name not in seen and name in graphics:
-        seen.add(name)
-        style = graphics[name]
-        for props in style.findall("style:graphic-properties", NS):
-            fill = fill or props.get(_q("draw", "fill"))
-            stroke = stroke or props.get(_q("draw", "stroke"))
-        name = style.get(_q("style", "parent-style-name"))
-    return fill == "none" and stroke == "none"
+    said = odf_properties(element, graphics)
+    return said.get("draw:fill") == "none" and said.get("draw:stroke") == "none"
 
 
 def _background(
@@ -367,10 +344,10 @@ def _classify(
     if tag == "custom-shape":
         geometry = element.find("draw:enhanced-geometry", NS)
         outline = geometry.get(_q("draw", "type")) if geometry is not None else None
-        if outline in _CUSTOM:
-            if _CUSTOM[outline] == "rectangle" and _has_words(element) and _bare(element, graphics):
+        if outline in OUTLINES:
+            if OUTLINES[outline] == "rectangle" and _has_words(element) and _bare(element, graphics):
                 return "text", None
-            return "shape", _CUSTOM[outline]
+            return "shape", OUTLINES[outline]
         return None, ("shape", outline or "custom")
     if tag in ("g", "a"):
         return None, ("group", "")
@@ -546,14 +523,14 @@ def _scan(content: etree._Element, styles: etree._Element | None, parts: Mapping
     looks = _TextLooks(content, styles)
     masters = _masters(styles)
     page_styles = _drawing_page_styles(content, styles)
-    graphics = _graphic_styles(content, styles)
+    graphics = graphic_styles(content, styles)
     index = StyleIndex(content, styles)
     probe, found, numbers = _Probe(), [], iter(range(1, 10**9))
     for number, page in enumerate(_presentation(content).findall("draw:page", NS), start=1):
         master = page.get(_q("draw", "master-page-name"))
         size = layouts.get(masters.get(master or "", ""))
         if size is None:
-            size = next(iter(layouts.values()), (_SLIDE_CM[0] / _CM_PER_INCH, _SLIDE_CM[1] / _CM_PER_INCH))
+            size = next(iter(layouts.values()), (_SLIDE_CM[0] / CM_PER_INCH, _SLIDE_CM[1] / CM_PER_INCH))
         slide = _Slide(f"s{number}", page, master, size, _background(page, master, index, styles))
         for child in page:
             _scan_child(slide, child, probe, numbers, (graphics, parts, index))
@@ -748,13 +725,18 @@ def _in_order(losses: tuple[Loss, ...]) -> tuple[Loss, ...]:
 
 
 # -- writing ---------------------------------------------------------------------------------------------------------
-def _hex(colour: tuple[int, int, int]) -> str:
-    return "#{:02x}{:02x}{:02x}".format(*colour)
-
-
 def _length(units: float, cm_per_unit: float) -> str:
     text = f"{units * cm_per_unit:.3f}".rstrip("0").rstrip(".")
     return f"{'0' if text in ('', '-0') else text}cm"
+
+
+def _drawn(shape: str | None, attributes: Mapping[str, str]) -> etree._Element:
+    """The element of a text box (``shape`` ``None``) or of the outline ``shape``, with ``attributes``."""
+    element = outline_element(shape)
+    for name, value in attributes.items():
+        key_prefix, _, key_local = name.partition(":")
+        element.set(_q(key_prefix, key_local), value)
+    return element
 
 
 def _el(prefix: str, local: str, attributes: Mapping[str, str] | None = None) -> etree._Element:
@@ -793,19 +775,13 @@ class _Looks:
     def graphic(self, css: dict[str, str], over: str | None, pt_per_unit: float) -> str:
         """A graphic style for a fill and a line: ``css``'s ``fill``, ``stroke`` and ``stroke-width``."""
         fill, stroke = colour_of(css, "fill", over), colour_of(css, "stroke", over)
-        width = points_of(css, "stroke-width", pt_per_unit)
-        props: dict[str, str] = {
-            "draw:fill": "solid" if fill else "none",
-            "draw:stroke": "solid" if stroke else "none",
-        }
-        if fill:
-            props["draw:fill-color"] = _hex(fill)
-        if stroke:
-            props["svg:stroke-color"] = _hex(stroke)
-            if width:
-                props["svg:stroke-width"] = _length(width, _CM_PER_INCH / 72)
-        key = ("graphic", *sorted(props.items()))
-        return self._style(key, "clg", "graphic", [_el("style", "graphic-properties", props)])
+        width = points_of(css, "stroke-width", pt_per_unit) or 0
+        said = fill_and_line(BoxLook(fill, stroke, round(width * EMU_PER_POINT) if stroke else 0))
+        properties = etree.fromstring(
+            f'<style:graphic-properties xmlns:style="{NS["style"]}" xmlns:draw="{NS["draw"]}" '
+            f'xmlns:svg="{NS["svg"]}" {said}/>'
+        )
+        return self._style(("graphic", said), "clg", "graphic", [properties])
 
     def text(self, *, bold: bool, italic: bool) -> str:
         """A text style that makes words bold, italic or both."""
@@ -818,7 +794,7 @@ class _Looks:
 
     def page(self, colour: tuple[int, int, int]) -> str:
         """A drawing page style that fills the page with ``colour``."""
-        props = {"draw:fill": "solid", "draw:fill-color": _hex(colour)}
+        props = {"draw:fill": "solid", "draw:fill-color": hex_of(colour)}
         return self._style(
             ("page", *props.items()), "dp", "drawing-page", [_el("style", "drawing-page-properties", props)]
         )
@@ -836,7 +812,7 @@ class _Looks:
         if size:
             text["fo:font-size"] = f"{size:.1f}".rstrip("0").rstrip(".") + "pt"
         if colour:
-            text["fo:color"] = _hex(colour)
+            text["fo:color"] = hex_of(colour)
         if is_bold(css):
             text["fo:font-weight"] = "bold"
         if css.get("font-style") in ("italic", "oblique"):
@@ -931,30 +907,16 @@ class _Writer:
         if body.kind in ("image", "container"):
             return self._picture(body, placing)
         if body.kind == "text":
-            graphic = self.looks.graphic({}, over, self.pt_per_unit)
-            frame = _el("draw", "frame", {"draw:style-name": graphic, **placing})
-            box = etree.SubElement(frame, _q("draw", "text-box"))
-            box.extend(self.words(obj, text, words))
+            frame = _drawn(None, {"draw:style-name": self.looks.graphic({}, over, self.pt_per_unit), **placing})
+            put_words(frame, self.words(obj, text, words))
             return frame
         graphic = self.looks.graphic(look(self.model, body.style), over, self.pt_per_unit)
         definition = self.model.shapes.get(body.shape) if body.shape else None
         shape_id = definition.id if definition else "rectangle"
         if body.kind == "chart":  # pragma: no cover - the presentation app has no chart objects yet (E6.6)
             self.losses.add("chart")
-        attributes = {"draw:style-name": graphic, **placing}
-        if shape_id == "circle":
-            element = _el("draw", "ellipse", attributes)
-            element.extend(self.words(obj, text, words, empty=False))
-        elif shape_id == "triangle":
-            element = _el("draw", "custom-shape", attributes)
-            element.extend(self.words(obj, text, words))
-            geometry = etree.SubElement(element, _q("draw", "enhanced-geometry"))
-            geometry.set(_q("svg", "viewBox"), "0 0 21600 21600")
-            geometry.set(_q("draw", "type"), "isosceles-triangle")
-            geometry.set(_q("draw", "enhanced-path"), _TRIANGLE_PATH)
-        else:
-            element = _el("draw", "rect", attributes)
-            element.extend(self.words(obj, text, words, empty=False))
+        element = _drawn(shape_id, {"draw:style-name": graphic, **placing})
+        put_words(element, self.words(obj, text, words, empty=shape_id == "triangle"))
         return element
 
     def notes(self, markdown: str) -> etree._Element:
@@ -1079,7 +1041,7 @@ def slides_to_odp(model: SlideModel, *, info: DocumentInfo | None = None, raster
     ``rasterise`` (see ``claudia_core.raster``) a PNG every program draws, without it the SVG itself. ``info`` is the
     metadata (D411). Anything the file cannot hold is in :func:`odp_export_losses`."""
     cm_per_unit = (_SLIDE_CM[0] / SLIDE_WIDTH, _SLIDE_CM[1] / SLIDE_HEIGHT)
-    pt_per_unit = _SLIDE_CM[1] / _CM_PER_INCH * 72 / SLIDE_HEIGHT
+    pt_per_unit = _SLIDE_CM[1] / CM_PER_INCH * 72 / SLIDE_HEIGHT
     writer = _Writer(model, _Looks(set()), cm_per_unit, pt_per_unit, rasterise=rasterise)
     writer.marks, writer.lists = marks_of(model), OdpLists(model)
     root = _el("office", "document-content", {"office:version": "1.3"})
@@ -1304,7 +1266,7 @@ class _Patch:
             self._new_slide(slide_id, objects, previous)
 
     def _per_cm(self, slide_size: tuple[float, float]) -> tuple[float, float]:
-        return slide_size[0] * _CM_PER_INCH / SLIDE_WIDTH, slide_size[1] * _CM_PER_INCH / SLIDE_HEIGHT
+        return slide_size[0] * CM_PER_INCH / SLIDE_WIDTH, slide_size[1] * CM_PER_INCH / SLIDE_HEIGHT
 
     def _writer(self, size: tuple[float, float]) -> _Writer:
         return _Writer(self.current, self.looks, self._per_cm(size), size[1] * 72 / SLIDE_HEIGHT)
@@ -1392,7 +1354,7 @@ class _Patch:
             self.slides[0] if self.slides else None
         )
         master = neighbour.master if neighbour is not None else self._first_master()
-        size = neighbour.size if neighbour is not None else (_SLIDE_CM[0] / _CM_PER_INCH, _SLIDE_CM[1] / _CM_PER_INCH)
+        size = neighbour.size if neighbour is not None else (_SLIDE_CM[0] / CM_PER_INCH, _SLIDE_CM[1] / CM_PER_INCH)
         page = _el("draw", "page", {"draw:name": self._page_name()})
         if master:
             page.set(_q("draw", "master-page-name"), master)

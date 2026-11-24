@@ -37,7 +37,8 @@ def _clipped(element: etree._Element, graphics: Mapping[str, etree._Element]) ->
 
 
 def graphic_styles(*roots: etree._Element | None) -> dict[str, etree._Element]:
-    """Every style of graphics of the parts ``roots`` (content and styles), by name."""
+    """Every style of graphics of the parts ``roots`` (content and styles), by name; of two of the same name the first
+    (an automatic style of the content, before a common style of the same name)."""
     found: dict[str, etree._Element] = {}
     for root in roots:
         if root is None:
@@ -45,7 +46,7 @@ def graphic_styles(*roots: etree._Element | None) -> dict[str, etree._Element]:
         for style in root.iter(_q("style", "style")):
             name = style.get(_q("style", "name"))
             if name and style.get(_q("style", "family")) == "graphic":
-                found[name] = style
+                found.setdefault(name, style)
     return found
 
 

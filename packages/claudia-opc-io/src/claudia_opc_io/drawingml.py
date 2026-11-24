@@ -59,6 +59,15 @@ def mark_decorative(properties: etree._Element) -> None:
     etree.SubElement(ext, f"{{{DRAWINGML['adec']}}}decorative", nsmap={"adec": DRAWINGML["adec"]}).set("val", "1")
 
 
+def add_svg(blip: etree._Element, rid: str) -> None:
+    """Put the SVG the relationship ``rid`` points at beside the picture of ``blip``, as Office 2016 and later draw it
+    (the picture itself is the fallback of programs that do not)."""
+    a = DRAWINGML["a"]
+    ext = etree.SubElement(etree.SubElement(blip, f"{{{a}}}extLst"), f"{{{a}}}ext", uri=SVG_URI)
+    svg = etree.SubElement(ext, f"{{{DRAWINGML['asvg']}}}svgBlip", nsmap={"asvg": DRAWINGML["asvg"]})
+    svg.set(f"{{{DRAWINGML['r']}}}embed", rid)
+
+
 def is_decorative(properties: etree._Element | None) -> bool:
     """Does the drawing's ``docPr`` or ``cNvPr`` carry Office's mark of a decorative one?"""
     if properties is None:

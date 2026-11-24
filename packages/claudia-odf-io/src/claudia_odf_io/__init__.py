@@ -20,17 +20,22 @@ fonts      font_faces, font_of -- the font faces of a file and the font a style'
 
 from ._version import __version__
 from .boxes import (
+    OUTLINES,
     BoxLook,
     Styled,
     authored,
     box_element,
     default_name,
+    fill_and_line,
     graphic_properties,
     held_box,
+    hex_of,
     is_written,
     line_points,
     look_of,
     odf_properties,
+    outline_element,
+    put_words,
 )
 from .fonts import font_faces, font_of
 from .language import (
@@ -79,6 +84,11 @@ from .splice import OdfError, Span, XmlPart
 from .transform import CM_PER_INCH, CM_PER_PIXEL, angle_of, inches, pixels, transform_of, turned_box
 
 __all__ = [
+    "OUTLINES",
+    "fill_and_line",
+    "hex_of",
+    "outline_element",
+    "put_words",
     "CM_PER_INCH",
     "CM_PER_PIXEL",
     "BoxLook",

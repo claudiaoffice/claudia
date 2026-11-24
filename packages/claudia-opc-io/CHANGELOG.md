@@ -6,6 +6,7 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 ## [Unreleased]
 
 ### Added
+- `add_svg`: an SVG beside a picture, as Office 2016 and later draw it (CODE-84, D1480).
 - `claudia_opc_io.drawingml`: `solid`, `outline`, `look_in`, `PRESET`, `SHAPE_OF`, `UNKNOWN`, `EMU_PER_POINT`: how a
   DrawingML shape is filled and outlined, and what its properties say of that (D1479; composes' docx had them).
 - `claudia_opc_io.custom`: `custom_properties(parts)` and `set_custom_properties(parts, values)`, the text properties of

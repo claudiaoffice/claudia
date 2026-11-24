@@ -32,6 +32,7 @@ from claudia_computes.model import MIN_OBJECT_SIZE
 from claudia_computes.refs import column_index, column_name
 from claudia_core.assets import MAX_ALT_CHARS
 from claudia_odf_io import xml_safe
+from claudia_opc_io import EMU_PER_PIXEL
 
 from ._charts import FileChart as SharedFileChart
 from ._placed import Pin, Placed
@@ -49,8 +50,6 @@ NS = {
 #: The media types of a chart and of a drawing.
 CHART_TYPE = "application/vnd.openxmlformats-officedocument.drawingml.chart+xml"
 DRAWING_TYPE = "application/vnd.openxmlformats-officedocument.drawing+xml"
-#: English Metric Units in a pixel (at 96 dots to the inch).
-EMU = 9525
 _DECLARATION = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'
 _ROOT = 'xmlns:c="{c}" xmlns:a="{a}" xmlns:r="{r}"'.format(**NS)
 _ANCHORS = ("oneCellAnchor", "twoCellAnchor")
@@ -296,14 +295,14 @@ def read_chart(content: bytes, sheet_ids: Mapping[str, SheetId]) -> ReadChart | 
 def pixels(emu: str | None) -> int:
     """A length in EMU as pixels."""
     try:
-        return round(int(emu or 0) / EMU)
+        return round(int(emu or 0) / EMU_PER_PIXEL)
     except ValueError:
         return 0
 
 
 def emu(pixels: float) -> int:
     """A length in pixels as EMU."""
-    return round(pixels * EMU)
+    return round(pixels * EMU_PER_PIXEL)
 
 
 def pinned_at(pin: Pin, width: float, height: float) -> str:
