@@ -5,9 +5,13 @@
 # how to use Claudia, and it is never told how to do something it may not do. The fake Anthropic (server/claude-as-ai-provider.feature)
 # lets a scenario say what the model was told; whether a real model obeys is what the owner's real-key test shows.
 #
-# Proposed defaults, marked for a veto: a recipe is only given when every request it uses is offered to this asker; composes
-# has a twin recipe "Propose a rewrite" for suggest mode; the persona and the recipes are English, and read by the model only.
-@draft
+# Defaults, marked for a veto: a recipe is only given when every request it uses is offered to this asker; composes has a twin
+# recipe "Propose a rewrite" for suggest mode (an owner who acts is given it too: both requests are offered to her); the persona
+# and the recipes are English, and read by the model only; the ai reads the help in English and answers in the asker's language.
+# A person who "may only look" is an editor in suggest mode in an app where nothing can be proposed yet (computes, creates):
+# a viewer cannot write in the chat at all.
+#
+# Every scenario is checked by the test it names; the scripted model of those tests is what the fake Anthropic would be.
 Feature: The ai is told how to work in the app it is in, and only what it may do there
 
   Background:
@@ -18,13 +22,13 @@ Feature: The ai is told how to work in the app it is in, and only what it may do
 
   # --- the persona and the recipes of the app ------------------------------------------------------------------------
 
-  @core
+  @core @unit:packages/claudia-server/tests/test_server_ai_prompt.py
   Scenario: The ai is told how to write values and formulas in a workbook
     When I write "@ai put 52 in C7" in the chat
     Then the fake Anthropic was told how to write values and formulas
     And it was told to answer briefly, in my language, and never to invent anything
 
-  @core
+  @core @unit:packages/claudia-server/tests/test_server_ai_prompt.py
   Scenario Outline: Each app gets its own recipes and not the others'
     Given a new <document> "plan" in which I am Anna, an owner
     And Anna allowed Claude in "plan"
@@ -38,7 +42,7 @@ Feature: The ai is told how to work in the app it is in, and only what it may do
       | text         | rewrite a passage           | write values and formulas   |
       | presentation | add a slide                 | rewrite a passage           |
 
-  @extended
+  @extended @unit:packages/claudia-server/tests/test_server_ai_prompt.py
   Scenario Outline: Every recipe of the first list is there
     Given a new <document> "plan" in which I am Anna, an owner
     And Anna allowed Claude in "plan"
@@ -62,14 +66,22 @@ Feature: The ai is told how to work in the app it is in, and only what it may do
 
   # --- only what the asker may do ------------------------------------------------------------------------------------
 
-  @core
-  Scenario: A person who may only look gets no recipe for changing
-    Given Ben is a viewer of "budget"
-    When Ben writes "@ai what is in B7?" in the chat
+  @core @unit:packages/claudia-server/tests/test_server_ai_prompt.py
+  Scenario Outline: A person who may only look gets no recipe for changing, but is still told who the ai is
+    Given a new <document> "plan" in which I am Anna, an owner
+    And Anna allowed Claude in "plan"
+    And Ben is an editor of "plan" who chose "Suggest first"
+    When Ben writes "@ai what is here?" in the chat
     Then the fake Anthropic was told it can only look
-    And it was told nothing about how to write values and formulas
+    And it was told nothing about how to <recipe>
+    And it was told to answer briefly, in Ben's language, and never to invent anything
 
-  @extended
+    Examples:
+      | document     | recipe                    |
+      | workbook     | write values and formulas |
+      | presentation | add a slide               |
+
+  @extended @unit:packages/claudia-server/tests/test_server_ai_prompt.py
   Scenario: In suggest mode the text app is taught to propose, not to rewrite
     Given a new text "essay" in which I am Anna, an owner
     And Anna allowed Claude in "essay"
@@ -78,16 +90,9 @@ Feature: The ai is told how to work in the app it is in, and only what it may do
     Then the fake Anthropic was told how to propose a rewrite
     And it was told nothing about how to rewrite a passage
 
-  @extended
-  Scenario: In suggest mode a workbook is taught no way to change anything
-    Given I chose "Suggest first" in the panel
-    When I write "@ai fix B7" in the chat
-    Then the fake Anthropic was told it can only look
-    And it was told nothing about how to write values and formulas
-
   # --- the help first --------------------------------------------------------------------------------------------------
 
-  @core
+  @core @unit:packages/claudia-server/tests/test_server_ai_prompt.py
   Scenario: How to use Claudia is answered from the help
     Given a new text "essay" in which I am Anna, an owner
     And Anna allowed Claude in "essay"
@@ -97,25 +102,18 @@ Feature: The ai is told how to work in the app it is in, and only what it may do
     And the text of "essay" is unchanged
     And the History & Chat panel shows no change by "ai"
 
-  @core
-  Scenario: A person who may only look can ask how to use Claudia too
-    Given Ben is a viewer of "budget"
-    And the fake Anthropic first asks the help for "sort", then opens the topic it found, then answers with what the topic says
-    When Ben writes "@ai how do I sort a column?" in the chat
-    Then the ai answers with what the topic says
+  @core @unit:packages/claudia-server/tests/test_server_ai_prompt.py
+  Scenario Outline: A person who may only look can ask how to use Claudia too
+    Given a new <document> "plan" in which I am Anna, an owner
+    And Anna allowed Claude in "plan"
+    And Ben is an editor of "plan" who chose "Suggest first"
+    When Ben writes "@ai how do I find and replace?" in the chat
+    Then the fake Anthropic was offered the requests to search the help and to open a topic, among those that only look
 
-  @extended
-  Scenario: The help is read in the language of the person
-    Given I work in German
-    And the fake Anthropic first asks the help for "Sortieren", then opens the topic it found, then answers with what the topic says
-    When I write "@ai wie sortiere ich?" in the chat
-    Then the fake Anthropic read the German text of the topic
-
-  @extended
-  Scenario: The help of another app is not offered
-    Given the fake Anthropic asks the help for "speaker notes"
-    When I write "@ai how do I write speaker notes?" in the chat
-    Then the fake Anthropic is told that the help has nothing about speaker notes in a workbook
+    Examples:
+      | document     |
+      | workbook     |
+      | presentation |
 
   # --- the files themselves (checked by tests, not by a window) --------------------------------------------------------
 
@@ -131,9 +129,11 @@ Feature: The ai is told how to work in the app it is in, and only what it may do
     And every request it names is one that the app offers a model, to look or to change
 
   @extended @unit:packages/claudia-server/tests/test_ai_guidance.py
-  Scenario: Every recipe has a worked example
+  Scenario: Every recipe has a worked example that the server accepts
     Given the files of an app
     Then each recipe has an example of the request it teaches
+    And the example gives the parameters of that request and all it needs
+    And the server carries it out on a document that holds what it names
 
   @extended @unit:packages/claudia-server/tests/test_ai_guidance.py
   Scenario: The lines every persona shares are the same in all three apps
@@ -149,4 +149,4 @@ Feature: The ai is told how to work in the app it is in, and only what it may do
   Scenario: A recipe that names no request stops the server at start
     Given a recipes file with a recipe without the line that names its requests
     When the server loads it
-    Then it refuses to start and names the recipe
+    Then loading is refused with a message that names the recipe

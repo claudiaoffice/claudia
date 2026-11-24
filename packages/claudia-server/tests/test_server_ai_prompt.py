@@ -7,6 +7,7 @@ what it was sent. These tests say what reaches the model, not whether a model ob
 
 import asyncio
 import json
+import re
 
 import pytest
 from test_server_assistant import ANN, BEN, Person
@@ -36,8 +37,10 @@ def system_message(app: str, who: Account = ANN, mode: str = "act") -> str:
     return asked(app, "@ai hello", FakeModel(lambda messages: "ok"), who, mode).calls[0][0]["content"]
 
 
-def asked(app: str, text: str, model: FakeModel, who: Account = ANN, mode: str = "act") -> FakeModel:
-    """Write ``text`` in the chat of a new document of ``app`` as ``who`` and let the scripted ``model`` answer."""
+def asked(app: str, text: str, model: FakeModel, who: Account = ANN, mode: str = "act", then=None) -> FakeModel:
+    """Write ``text`` in the chat of a new document of ``app`` as ``who`` and let the scripted ``model`` answer.
+
+    ``then`` is called with the document and the person once the question is answered."""
     model_cls, methods = APPS[app]
     runner = ModelRunner(model, timeout=5)
 
@@ -46,8 +49,11 @@ def asked(app: str, text: str, model: FakeModel, who: Account = ANN, mode: str =
         hosted = await hub.open("plan", create=True)
         hosted.assistant.pause = 0
         try:
-            Person(hosted, who, ai_mode=mode).request("chat", {"text": text})
+            person = Person(hosted, who, ai_mode=mode)
+            person.request("chat", {"text": text})
             await hosted.assistant.idle()
+            if then is not None:
+                then(hosted, person)
         finally:
             await asyncio.to_thread(runner.close)
 
@@ -140,3 +146,38 @@ def test_the_help_is_read_from_the_topic_and_is_not_fenced_as_data():
     assert len(model.calls) == 3
     assert "```data" not in seen[1] and "```data" not in seen[2], "the help is the product's own text"
     assert "composes.editing-a-style" in seen[1] and "how a style looks" in seen[2].lower()
+
+
+# -- a request made in the form the model was shown is carried out, in the apps where it failed on 2026-11-23 (CODE-81)
+def test_a_text_gets_a_long_story_as_paragraphs_in_the_document():
+    story = " ".join(f"word{n}" for n in range(300))
+    script = iter([commands_block("add_paragraphs", text=story), "I wrote it."])
+    seen = {}
+
+    def check(hosted, person):
+        paragraphs = person.request("read_paragraphs", {"count": 50})["result"]["paragraphs"]
+        seen["words"] = len(" ".join(p["text"] for p in paragraphs).split())
+        seen["said"] = person.said()
+
+    asked("composes", "@ai write me a story about a boy, 300 words", FakeModel(lambda m: next(script)), then=check)
+    assert seen == {"words": 300, "said": ["I wrote it."]}
+
+
+def test_a_presentation_gets_the_text_box_and_the_chat_shows_no_list_of_requests():
+    script = iter([commands_block("add_slide"), None, "Added."])
+    seen = {}
+
+    def reply(messages):
+        step = next(script)
+        if step is not None:
+            return step
+        slide = re.search(r"\bs[0-9a-f]+\b", messages[-1]["content"]).group(0)  # the id the report of add_slide gave
+        return commands_block("add_object", slide=slide, kind="text", x=160, y=120, w=1280, h=160, text="Hello")
+
+    def check(hosted, person):
+        slide = person.request("slides")["result"][0]["id"]
+        seen["texts"] = [o["paragraph"]["text"] for o in person.request("slide", {"slide": slide})["result"]["objects"]]
+        seen["said"] = person.said()
+
+    asked("creates", "@ai add a textbox and write Hello in it", FakeModel(reply), then=check)
+    assert seen == {"texts": ["Hello"], "said": ["Added."]}

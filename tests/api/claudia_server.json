@@ -1,5 +1,5 @@
 {
- "version": "0.43.0",
+ "version": "0.44.0",
  "AI_USER": {
   "value": "'ai'"
  },
@@ -496,7 +496,7 @@
   "class": [
    "object"
   ],
-  "init": "(runner: 'Answerer', tools: 'tuple[ToolSpec, ...]', lens: 'Lens', *, memory: 'ConversationMemory | None' = None, budget: 'Budget' = Budget(rounds=8, calls=30, result_chars=3000, round_chars=9000))",
+  "init": "(runner: 'Answerer', tools: 'tuple[ToolSpec, ...]', lens: 'Lens', *, memory: 'ConversationMemory | None' = None, budget: 'Budget' = Budget(rounds=8, calls=30, result_chars=3000, round_chars=9000), guidance: 'Guidance' = Guidance(persona='', recipes=()))",
   "methods": {
    "plan_async": "(self, task: 'Task') -> 'list[AiTurn]'"
   },
