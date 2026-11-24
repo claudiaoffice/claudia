@@ -36,6 +36,7 @@ from claudia_odf_io import (
     held_frame,
     insert_elements,
     name_of,
+    odf_properties,
     offset_of,
     xml_safe,
 )
@@ -48,7 +49,6 @@ from ._wrap import (
     odf_name,
     odf_offset_of,
     odf_place,
-    odf_properties,
     odf_wrap_of,
 )
 

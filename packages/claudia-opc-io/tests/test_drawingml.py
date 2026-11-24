@@ -6,7 +6,21 @@ from __future__ import annotations
 import pytest
 from lxml import etree
 
-from claudia_opc_io import DECORATIVE_URI, DRAWINGML, SVG_URI, cropped, is_decorative, shown_part, turn_of
+from claudia_opc_io import (
+    DECORATIVE_URI,
+    DRAWINGML,
+    PRESET,
+    SHAPE_OF,
+    SVG_URI,
+    UNKNOWN,
+    cropped,
+    is_decorative,
+    look_in,
+    outline,
+    shown_part,
+    solid,
+    turn_of,
+)
 
 A, R = DRAWINGML["a"], DRAWINGML["r"]
 
@@ -53,3 +67,23 @@ def test_a_drawing_says_it_is_decorative_by_office_s_mark():
     assert is_decorative(element(f'<cNvPr descr="">{mark}</cNvPr>'))
     assert not is_decorative(element('<cNvPr descr="A logo"/>'))
     assert not is_decorative(None)
+
+
+# -- the look of a shape (D465, D1479) ---------------------------------------------------------------------------------
+def test_a_shape_is_drawn_filled_and_outlined_as_its_look_says_and_read_back_so():
+    xml = f'<spPr xmlns:a="{A}">{solid((255, 0, 16))}{outline((0, 0, 0), 12700)}</spPr>'
+    assert look_in(etree.fromstring(xml), styled=False) == ((255, 0, 16), (0, 0, 0), 12700)
+    bare = f'<spPr xmlns:a="{A}">{solid(None)}{outline(None, 0)}</spPr>'
+    assert look_in(etree.fromstring(bare), styled=False) == (None, None, 0)
+
+
+def test_a_colour_that_is_no_plain_colour_is_unknown_and_what_a_style_gives_too():
+    theme = f'<spPr xmlns:a="{A}"><a:solidFill><a:schemeClr val="accent1"/></a:solidFill></spPr>'
+    assert look_in(etree.fromstring(theme), styled=False)[0] == UNKNOWN
+    assert look_in(etree.fromstring(f'<spPr xmlns:a="{A}"/>'), styled=True) == (UNKNOWN, UNKNOWN, 0)
+    assert look_in(None, styled=False) == (None, None, 0)
+
+
+def test_the_outlines_of_the_model_have_their_names_in_drawingml():
+    assert PRESET == {"circle": "ellipse", "rectangle": "rect", "triangle": "triangle"}
+    assert {SHAPE_OF[name] for name in PRESET.values()} == set(PRESET)

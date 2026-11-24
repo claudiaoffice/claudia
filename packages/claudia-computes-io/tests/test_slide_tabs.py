@@ -19,17 +19,18 @@ from claudia_computes_io import (
     workbook_to_ods,
     workbook_to_xlsx,
     xlsx_export_losses,
+    xlsx_import_losses,
     xlsx_to_workbook,
 )
 from lxml import etree
 from test_ods_charts import a_range, a_workbook
 from test_pictures import a_png, an_import
 
-from claudia_computes import ChartSpec, ObjectBody, VisualObject, WorkbookModel
+from claudia_computes import CellAnchor, ChartSpec, ObjectBody, VisualObject, WorkbookModel
 from claudia_computes.model import Sheet
-from claudia_core import Slide, SlideAnchor
+from claudia_core import Slide, SlideAnchor, paragraph_for, primitive
 from claudia_odf_io import NS as ODF
-from claudia_odf_io import problems, user_defined
+from claudia_odf_io import Loss, problems, user_defined
 from claudia_opc_io import read_parts, write_parts
 
 FORMATS = {
@@ -41,14 +42,17 @@ EMU = 9525  # in a pixel
 
 
 def with_a_slide(name: str = "Sales chart", *, at: int = 1) -> WorkbookModel:
-    """Sheet "Data" with three regions, a slide ``name`` after it with the chart "Sales" at 100, 50, 800 by 450 and
-    the picture "Logo" at 1200, 700, 200 by 100, and a sheet "Costs" last."""
+    """Sheet "Data" with three regions, a slide ``name`` after it with the chart "Sales" at 100, 50, 800 by 450, the
+    text box "East leads" at 1000, 100, 400 by 100 and the picture "Logo" at 1200, 700, 200 by 100, and a sheet
+    "Costs" last."""
     model = a_workbook()
     model.add_slide(Slide("p1", name), at)
     model.add_sheet(Sheet("s2", "Costs"), None)
     model.charts.define(ChartSpec(id="c1", kind="bar", range=a_range()))
     chart = ObjectBody("o1", "chart", 800, 450, "plain-image", ref="c1", name="Sales")
     model.insert_object(VisualObject(chart, SlideAnchor("p1", 100, 50)))
+    words = ObjectBody("t1", "text", 400, 100, "plain-box", paragraph_for("t1", "body-text", "East leads"), name="Note")
+    model.insert_object(VisualObject(words, SlideAnchor("p1", 1000, 100)))
     asset = a_png()
     model.images.define(asset)
     picture = ObjectBody(
@@ -106,7 +110,7 @@ def test_a_slide_is_a_tab_of_its_own_in_its_place_without_cells(fmt):
         content = etree.fromstring(read_parts(data)["content.xml"])
         tables = content.findall(f".//{{{ODF['table']}}}table")
         assert [t.get(f"{{{ODF['table']}}}name") for t in tables] == ["Data", "Sales chart", "Costs"]
-        assert not list(tables[1].iter(f"{{{ODF['text']}}}p"))
+        assert not [cell for cell in tables[1].iter(f"{{{ODF['table']}}}table-cell") if len(cell)]
     else:
         book = openpyxl.load_workbook(BytesIO(data))
         assert book.sheetnames == ["Data", "Sales chart", "Costs"]
@@ -116,12 +120,16 @@ def test_a_slide_is_a_tab_of_its_own_in_its_place_without_cells(fmt):
 def test_the_objects_of_a_slide_are_where_they_were_in_xlsx():
     # a column is 96 pixels and a row 26 (the model's own sizes, which the file says): 100, 50 is 4, 24 into B2
     anchors = xlsx_anchors(workbook_to_xlsx(with_a_slide()))
-    assert anchors == [(1, 4, 1, 24, 800, 450), (12, 48, 26, 24, 200, 100)]
+    assert anchors == [(1, 4, 1, 24, 800, 450), (10, 40, 3, 22, 400, 100), (12, 48, 26, 24, 200, 100)]
 
 
 def test_the_objects_of_a_slide_are_where_they_were_in_ods():
     frames = ods_frames(workbook_to_ods(with_a_slide()), "Sales chart")
-    assert frames == [(cm(100), cm(50), cm(800), cm(450)), (cm(1200), cm(700), cm(200), cm(100))]
+    assert frames == [
+        (cm(100), cm(50), cm(800), cm(450)),
+        (cm(1000), cm(100), cm(400), cm(100)),
+        (cm(1200), cm(700), cm(200), cm(100)),
+    ]
 
 
 @pytest.mark.parametrize("fmt", sorted(FORMATS))
@@ -133,7 +141,7 @@ def test_writing_a_slide_as_a_tab_is_not_reported(fmt):
 def test_how_big_a_slide_is_on_its_tab_is_a_setting_of_the_export():
     half = SlideSize(px_per_unit=0.5)
     anchors = xlsx_anchors(workbook_to_xlsx(with_a_slide(), slide_size=half))
-    assert anchors == [(0, 50, 0, 25, 400, 225), (6, 24, 13, 12, 100, 50)]
+    assert anchors == [(0, 50, 0, 25, 400, 225), (5, 20, 1, 24, 200, 50), (6, 24, 13, 12, 100, 50)]
     frames = ods_frames(workbook_to_ods(with_a_slide(), slide_size=half), "Sales chart")
     assert frames[0] == (cm(50), cm(25), cm(400), cm(225))
 
@@ -164,17 +172,27 @@ def test_a_slide_comes_back_as_a_slide_with_its_objects_where_they_were(fmt, siz
     again = read(write(with_a_slide(), slide_size=SlideSize(size)))
     assert tab_names(again) == [("sheet", "Data"), ("slide", "Sales chart"), ("sheet", "Costs")]
     slide = again.tabs[1].id
-    assert placements(again, slide) == [("chart", 100, 50, 800, 450), ("image", 1200, 700, 200, 100)]
-    chart, picture = again.objects_on(slide)
-    assert (chart.body.name, picture.body.name) == ("Sales", "Logo")
+    assert placements(again, slide) == [
+        ("chart", 100, 50, 800, 450),
+        ("text", 1000, 100, 400, 100),
+        ("image", 1200, 700, 200, 100),
+    ]
+    chart, words, picture = again.objects_on(slide)
+    assert (chart.body.name, words.body.name, picture.body.name) == ("Sales", "Note", "Logo")
+    assert (words.body.style, words.body.paragraph.style, words.body.paragraph.text) == (
+        "plain-box",
+        "body-text",
+        "East leads",
+    )
 
 
 def test_the_file_says_which_tabs_are_slides_in_its_custom_properties():
     xlsx = openpyxl.load_workbook(BytesIO(workbook_to_xlsx(with_a_slide())))
     (mark,) = [prop for prop in xlsx.custom_doc_props if prop.name == "Claudia slides"]
-    assert json.loads(mark.value) == {"slides": ["Sales chart"], "px_per_unit": 1.0}
+    said = {"slides": ["Sales chart"], "px_per_unit": 1.0, "styles": {"Note": ["plain-box", "body-text"]}}
+    assert json.loads(mark.value) == said
     meta = read_parts(workbook_to_ods(with_a_slide()))["meta.xml"]
-    assert json.loads(user_defined(meta)["Claudia slides"]) == {"slides": ["Sales chart"], "px_per_unit": 1.0}
+    assert json.loads(user_defined(meta)["Claudia slides"]) == said
     assert "Claudia slides" not in user_defined(read_parts(workbook_to_ods(a_workbook()))["meta.xml"])
 
 
@@ -185,6 +203,7 @@ def test_a_tab_renamed_in_another_program_is_a_sheet_with_the_objects_at_their_c
     assert tab_names(again) == [("sheet", "Data"), ("sheet", "Chart tab"), ("sheet", "Costs")]
     chart, picture = again.objects_on(again.tabs[1].id)
     assert [(o.body.kind, o.anchor.row, o.anchor.col) for o in (chart, picture)] == [("chart", 1, 1), ("image", 26, 12)]
+    assert Loss("shape", "", 1) in xlsx_import_losses(write_parts(parts))  # (the text box, as on any sheet)
 
 
 def test_a_tab_someone_typed_into_is_a_sheet():
@@ -222,3 +241,76 @@ def test_a_kept_file_is_not_patched_with_a_slide_it_cannot_hold(fmt):
     current.add_slide(Slide("p1", "Sales chart"), None)
     with pytest.raises(UnsupportedEdit, match="slide"):
         patch(original, baseline, current)
+
+
+# -- text boxes and shapes (D1479) -------------------------------------------------------------------------------------
+XLSX_A = "http://schemas.openxmlformats.org/drawingml/2006/main"
+
+
+def test_a_text_box_is_a_shape_with_its_words_in_the_look_of_their_style_in_xlsx():
+    root = etree.fromstring(read_parts(workbook_to_xlsx(with_a_slide()))["xl/drawings/drawing1.xml"])
+    (box,) = root.iter(f"{{{XDR}}}sp")
+    assert box.find(f"{{{XDR}}}nvSpPr/{{{XDR}}}cNvSpPr").get("txBox") == "1"
+    assert box.find(f"{{{XDR}}}nvSpPr/{{{XDR}}}cNvPr").get("name") == "Note"
+    assert box.find(f".//{{{XLSX_A}}}prstGeom").get("prst") == "rect"
+    assert [t.text for t in box.iter(f"{{{XLSX_A}}}t")] == ["East leads"]
+    run = box.find(f".//{{{XLSX_A}}}rPr")
+    assert run.get("sz") == "975"  # Body text is 13 pixels: 9.75 points
+    assert box.find(f".//{{{XLSX_A}}}pPr").get("algn") == "l"
+
+
+def test_a_text_box_is_a_frame_with_a_text_box_and_its_words_in_a_named_style_in_ods():
+    data = workbook_to_ods(with_a_slide())
+    assert problems(data) == []
+    content = etree.fromstring(read_parts(data)["content.xml"])
+    (box,) = content.iter(f"{{{ODF['draw']}}}text-box")
+    paragraph = box.find(f"{{{ODF['text']}}}p")
+    assert paragraph.text == "East leads"
+    style = paragraph.get(f"{{{ODF['text']}}}style-name")
+    styles = etree.fromstring(read_parts(data)["styles.xml"])
+    named = styles.find(f".//{{{ODF['style']}}}style[@{{{ODF['style']}}}name='{style}']")
+    assert named.get(f"{{{ODF['style']}}}display-name") == "Body text"
+    assert named.find(f"{{{ODF['style']}}}text-properties").get(f"{{{ODF['fo']}}}font-size") == "9.75pt"
+
+
+@pytest.mark.parametrize("fmt", sorted(FORMATS))
+def test_a_shape_on_a_slide_comes_back_with_its_outline_and_words(fmt):
+    write, read, _ = FORMATS[fmt]
+    model = with_a_slide()
+    words = paragraph_for("s9", "shape-label", "Go")
+    shape = ObjectBody("s9", "shape", 150, 120, "plain-shape", words, ref="triangle", name="Arrow", rotation=30)
+    model.shapes.define(primitive("triangle"))
+    model.insert_object(VisualObject(shape, SlideAnchor("p1", 300, 600)))
+    again = read(write(model))
+    (back,) = [obj for obj in again.objects.values() if obj.body.kind == "shape"]
+    assert (back.anchor.x, back.anchor.y, back.body.w, back.body.h, back.body.rotation) == (300, 600, 150, 120, 30)
+    assert (back.body.shape, back.body.style, back.body.paragraph.style, back.body.paragraph.text) == (
+        "triangle",
+        "plain-shape",
+        "shape-label",
+        "Go",
+    )
+
+
+@pytest.mark.parametrize("fmt", sorted(FORMATS))
+def test_a_box_on_a_slide_is_written_and_one_on_a_sheet_is_still_reported(fmt):
+    _, _, losses = FORMATS[fmt]
+    assert not [loss for loss in losses(with_a_slide()) if loss.kind == "object"]
+    model = a_workbook()
+    words = ObjectBody("t1", "text", 400, 100, "plain-box", paragraph_for("t1", "body-text", "x"))
+    model.insert_object(VisualObject(words, CellAnchor("s1", 0, 0)))
+    assert Loss("object", "", 1) in losses(model)
+
+
+def test_a_box_restyled_in_another_program_has_the_plain_style_and_says_its_look_is_lost():
+    parts = read_parts(workbook_to_xlsx(with_a_slide()))
+    drawing = parts["xl/drawings/drawing1.xml"]
+    parts["xl/drawings/drawing1.xml"] = drawing.replace(
+        b'<a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:noFill/>',
+        b'<a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:solidFill><a:srgbClr val="FF0000"/></a:solidFill>',
+    )
+    data = write_parts(parts)
+    again = xlsx_to_workbook(data)
+    (words,) = [obj for obj in again.objects.values() if obj.body.kind == "text"]
+    assert words.body.style == "plain-box"
+    assert Loss("look", "", 1) in xlsx_import_losses(data)

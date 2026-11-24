@@ -24,8 +24,8 @@ from lxml import etree
 from claudia_composes import TextModel
 from claudia_core import PageSetup, TableDef
 from claudia_odf_io import NS, hidden_content, inches
+from claudia_opc_io import EMU_PER_POINT
 
-from ._boxes import EMU_PER_POINT
 from ._layout import sides_of
 from ._odt_references import read_words
 from ._tables import CellLook, FileCell, FileTable, WriteCell, cell_look, column_shares, read_table, write_grid

@@ -56,3 +56,63 @@ def is_decorative(properties: etree._Element | None) -> bool:
     if properties is None:
         return False
     return "1" in _DECORATIVE(properties)  # type: ignore[operator]
+
+
+# -- the look of a shape (D465, D1479) ---------------------------------------------------------------------------------
+#: The colour a file gives a fill or a line that is not a plain colour (a theme's, a gradient): it is not any colour.
+UNKNOWN: tuple[int, int, int] = (-1, -1, -1)
+#: A line is this many EMU wide to the point.
+EMU_PER_POINT = 12700
+#: The name DrawingML gives the outline of each shape of the model, and back.
+PRESET = {"circle": "ellipse", "rectangle": "rect", "triangle": "triangle"}
+SHAPE_OF = {preset: shape for shape, preset in PRESET.items()}
+_A = f"{{{DRAWINGML['a']}}}"
+
+Colour = tuple[int, int, int] | None
+
+
+def solid(colour: Colour) -> str:
+    """The fill of a shape for ``colour`` (``None``: none)."""
+    if colour is None:
+        return "<a:noFill/>"
+    return f'<a:solidFill><a:srgbClr val="{colour[0]:02X}{colour[1]:02X}{colour[2]:02X}"/></a:solidFill>'
+
+
+def outline(colour: Colour, width: int) -> str:
+    """The line round a shape: ``colour`` (``None``: none), ``width`` EMU wide."""
+    return f'<a:ln w="{width}">{solid(colour)}</a:ln>' if colour else "<a:ln><a:noFill/></a:ln>"
+
+
+def _colour_in(properties: etree._Element | None) -> Colour:
+    """The colour of the ``a:solidFill`` of ``properties``: ``None`` for none or ``a:noFill``, :data:`UNKNOWN` for one
+    that is not plain."""
+    if properties is None or properties.find(f"{_A}noFill") is not None:
+        return None
+    fill = properties.find(f"{_A}solidFill")
+    if fill is None:
+        return None
+    plain = fill.find(f"{_A}srgbClr")
+    value = "" if plain is None else plain.get("val", "")
+    try:
+        return int(value[0:2], 16), int(value[2:4], 16), int(value[4:6], 16)
+    except ValueError:
+        return UNKNOWN
+
+
+def look_in(properties: etree._Element | None, *, styled: bool) -> tuple[Colour, Colour, int]:
+    """``(fill, line, line width in EMU)`` a shape's properties (its ``spPr``) say it has. A shape ``styled`` (it has a
+    style of the theme) whose properties do not say is given what the style says: :data:`UNKNOWN`."""
+    fill = _colour_in(properties)
+    if styled and (properties is None or all(properties.find(f"{_A}{tag}") is None for tag in ("solidFill", "noFill"))):
+        fill = UNKNOWN
+    line_element = None if properties is None else properties.find(f"{_A}ln")
+    line = _colour_in(line_element)
+    if styled and line_element is None:
+        line = UNKNOWN
+    width = 0
+    if line is not None and line_element is not None:
+        try:
+            width = int(line_element.get("w", "0"))
+        except ValueError:
+            width = 0
+    return fill, line, width

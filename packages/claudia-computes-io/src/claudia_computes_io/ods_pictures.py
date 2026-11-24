@@ -80,7 +80,10 @@ def file_pictures(
             rotation=rotation,
         )
         name = (drawn.frame.get(qname("draw:name")) or "").strip()
-        found.append(FileObject(drawn.sheet, drawn.row, drawn.col, drawn.corner, replace(body, name=name), image=asset))
+        body = replace(body, name=name)
+        found.append(
+            FileObject(drawn.sheet, drawn.row, drawn.col, drawn.corner, body, "picture", drawn.order, image=asset)
+        )
     return found
 
 

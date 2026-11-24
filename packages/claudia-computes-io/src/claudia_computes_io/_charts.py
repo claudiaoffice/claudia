@@ -68,6 +68,7 @@ class FileChart:
     row: int
     col: int
     corner: Callable[[], tuple[float, float]] = lambda: (0.0, 0.0)
+    order: int = 0
     name: str = ""
     held: ReadChart | None = None
     width: int = 0
@@ -96,4 +97,4 @@ class FileChart:
             name=self.name,
             description=self.description,
         )
-        return FileObject(self.sheet, self.row, self.col, self.corner, body, chart=self.spec)
+        return FileObject(self.sheet, self.row, self.col, self.corner, body, "chart", self.order, chart=self.spec)

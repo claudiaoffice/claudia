@@ -199,7 +199,8 @@ both apps: the parity the definition of done asks for.
 **A8 · Printing.** A computes slide is printed by the layout library's `layoutSlides`, as creates' slides are, with the
 charts as the Plotly pictures `print/chart-picture.ts` makes already.
 
-**A9 · Files.** `claudia_computes_io/slide_plan.py`: a slide becomes an empty worksheet named as the slide with its
+**A9 · Files.** *(Replaced in step 5 by D1477 to D1479: a slide is a tab of its own with its objects where they were,
+marked in the file's custom properties; `slide_plan` is gone.)* `claudia_computes_io/slide_plan.py`: a slide becomes an empty worksheet named as the slide with its
 objects on it, scaled from 1600 × 900 to today's `TAB_SIZE`; the charts are written by `ods_charts`/`xlsx_charts`; the
 loss `slide` replaces `tab`. Import is unchanged: what was a slide comes back as a sheet (Q15).
 

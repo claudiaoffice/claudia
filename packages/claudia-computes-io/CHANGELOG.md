@@ -16,6 +16,10 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
   writer and the patches write and keep no chart sheet, and the loss `chart`/`tab` is gone.
 
 ### Changed
+- A slide's text boxes and shapes are written to xlsx (`xdr:sp`, words formatted directly) and ods (frames and shapes,
+  words in a named paragraph style) in the look of their styles, and read back with the styles the mark keeps for them
+  (E6.31 step 5c, D1479); a box restyled elsewhere has the plain style and the import says `look`. A box on a sheet is
+  still `object`. New export losses: `authorship`, and in ods `decorative` for a box.
 - A file written from a workbook with slides says which tabs are slides and at what size, in the custom property
   "Claudia slides" (E6.31 step 5b, D1478); read back, such a tab is a slide while it has kept its name and has no cells,
   else a sheet. Charts and pictures are written and read with their names.

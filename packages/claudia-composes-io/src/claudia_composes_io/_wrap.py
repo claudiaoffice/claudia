@@ -260,24 +260,6 @@ def odf_offset_of(element: etree._Element, properties: Mapping[str, str]) -> tup
     return (round(x) if from_char else 0), (-round(y) if from_line else 0)
 
 
-def odf_properties(element: etree._Element, graphics: Mapping[str, etree._Element]) -> dict[str, str]:
-    """What the graphic style of ``element`` (and the styles it is based on) says, by ``prefix:name``; what the
-    element's own style says wins over what its parents say."""
-    found: dict[str, str] = {}
-    name: str | None = element.get(f"{{{NS['draw']}}}style-name")
-    seen: set[str] = set()
-    while name and name in graphics and name not in seen:
-        seen.add(name)
-        style = graphics[name]
-        for properties in style.findall("style:graphic-properties", NS):
-            for key, value in properties.attrib.items():
-                uri, local = etree.QName(key).namespace, etree.QName(key).localname
-                short = next((each for each, known in NS.items() if known == uri), "")
-                found.setdefault(f"{short}:{local}", str(value))
-        name = style.get(f"{{{NS['style']}}}parent-style-name")
-    return found
-
-
 def odf_wrap_style_xml(
     name: str, anchor: ParagraphAnchor, parent: str | None = None, *, wrap: bool = True, position: bool = False
 ) -> str:
@@ -330,7 +312,6 @@ __all__ = [
     "odf_name",
     "odf_offset_of",
     "odf_place",
-    "odf_properties",
     "odf_wrap_of",
     "odf_wrap_style_xml",
 ]

@@ -57,6 +57,8 @@ from claudia_odf_io import (
     graphic_styles,
     hidden_content,
     insert_elements,
+    is_written,
+    look_of,
     new_meta,
     new_package,
     set_text,
@@ -67,7 +69,7 @@ from claudia_odf_io import (
 from claudia_opc_io import parse_xml, read_parts, write_parts
 
 from ._annotations import Annotations, name_paragraphs
-from ._boxes import box_losses, boxes_of, is_written, look_of
+from ._boxes import box_losses, boxes_of
 from ._boxes import has_references as has_box_references
 from ._fonts import take_fonts
 from ._odt_annotations import annotate, bookmarks_around

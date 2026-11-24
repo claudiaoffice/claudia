@@ -97,7 +97,10 @@ def _held(drawn: DrawnAnchor, package: Package, object_id: str) -> FileObject | 
         decorative=is_decorative(properties),
         rotation=rotation,
     )
-    return FileObject(drawn.sheet.sheet_id, drawn.row, drawn.col, drawn.corner, replace(body, name=name), image=asset)
+    body = replace(body, name=name)
+    return FileObject(
+        drawn.sheet.sheet_id, drawn.row, drawn.col, drawn.corner, body, "picture", drawn.order, image=asset
+    )
 
 
 def file_pictures(package: Package, first: int) -> list[FileObject]:

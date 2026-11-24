@@ -106,10 +106,14 @@ class Drawings:
         self.patch.parts[part] = xml
         self.patch.declare(part, CHART_TYPE)
         rid = self.patch.add_relationship(drawing, "chart", part)
+        self._append(drawing, lambda number: anchor_element(rid, number, f"Chart {number - 1}", placed))
+
+    def _append(self, drawing: str, make: Callable[[int], etree._Element]) -> None:
+        """The anchor ``make(number)`` gives, at the end of ``drawing`` (in front of what it has), its shape the next
+        number the drawing has not used."""
         root = self.roots[drawing]
         used = [int(p.get("id", "0")) for p in root.iter(f"{{{NS['xdr']}}}cNvPr") if (p.get("id") or "").isdigit()]
-        number = max(used, default=0) + 1
-        root.append(anchor_element(rid, number, f"Chart {number - 1}", placed))
+        root.append(make(max(used, default=0) + 1))
         self.changed.add(drawing)
 
     def _media_part(self, key: tuple[str, str], extension: str, data: bytes, media_type: str) -> str:
@@ -130,10 +134,11 @@ class Drawings:
         if picture.svg is not None:
             svg_part = self._media_part((picture.asset, "svg"), "svg", picture.svg, MEDIA_TYPES["svg"])
             svg_rid = self.patch.add_relationship(drawing, "image", svg_part)
-        root = self.roots[drawing]
-        used = [int(p.get("id", "0")) for p in root.iter(f"{{{NS['xdr']}}}cNvPr") if (p.get("id") or "").isdigit()]
-        root.append(picture_anchor(picture, max(used, default=0) + 1, rid, svg_rid))
-        self.changed.add(drawing)
+        self._append(drawing, lambda number: picture_anchor(picture, number, rid, svg_rid))
+
+    def add_box(self, sheet_part: str, make: Callable[[int], etree._Element]) -> None:
+        """A text box or a shape on the sheet in ``sheet_part``: the anchor ``make(number)`` gives (D1479)."""
+        self._append(self._drawing_of(sheet_part), make)
 
     def remove(self, chart: FileChart) -> None:
         """A chart's anchor taken out of its drawing, and its part (with what only it uses) out of the package."""

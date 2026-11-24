@@ -6,6 +6,9 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 ## [Unreleased]
 
 ### Added
+- `claudia_odf_io.boxes` (D1479, from composes): `BoxLook`, `look_of`, `is_written`, `authored`, `points_of`,
+  `POINTS_PER_PIXEL`, and a box's OpenDocument elements: `box_element`, `graphic_properties`, `held_box` (with
+  `plain_words`, the words style of a text box without a paragraph), `box_look`, `odf_properties`.
 - `new_meta(info, properties)` writes text properties as `meta:user-defined`; `user_defined(meta_xml)` reads them
   (E6.31, D1478).
 - `held_frame`, `graphic_styles` (from composes' odt reader) and `pixels`: a picture frame as the model holds it, shared

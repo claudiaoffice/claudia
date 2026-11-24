@@ -274,3 +274,35 @@ The server's changelog had entries on both sides under Unreleased; the compiled 
 - **Tests.** `test_slide_tabs.py` (a slide comes back as a slide at both sizes; the mark in both formats; a renamed tab
   and one typed into are sheets), `test_pictures.py` (CODE-67 for both formats, and a kept file edited keeps its
   picture), `claudia-opc-io/tests/test_custom_properties.py`, `test_drawingml.py`, `claudia-odf-io/tests/test_meta.py`.
+
+## Step 5c · Text boxes and shapes on a slide's tab (D1479), 2026-11-24
+
+- **Shared with composes.** `claudia_odf_io.boxes` holds what composes-io's `_boxes.py` and `_odt_boxes.py` had that
+  is not about a text: `BoxLook`, `look_of` (any model with `styles` and `palette`, the `Styled` protocol),
+  `is_written`, `authored`, `points_of`, and the ODF elements (`box_element` without the anchoring, which each app
+  does its way; `graphic_properties` without the wrapping; `held_box` with `plain_words`, since composes' plain words
+  are `body` and computes' `body-text`; `box_look`; `odf_properties`, which was in composes' `_wrap`).
+  `claudia_opc_io.drawingml` holds DrawingML's `solid`, `outline`, `look_in` (composes' `_colour` and `_look_of_file`),
+  `PRESET`/`SHAPE_OF`, `UNKNOWN` and `EMU_PER_POINT` (`_docx_tables` had a copy of its own). The architecture of step 5
+  put the look into `claudia_core.boxes`; it is beside the ODF layer instead, because `BoxLook` counts in EMU and the
+  core depends on no package (said in D1479).
+- **computes-io.** `_boxes.py`: `written_boxes` (a slide's boxes), `box_styles` (for the mark), `authorship_lost`,
+  `words_css`, `styled` (the mark's styles where the model has them and the look is theirs, else plain and `look`).
+  `xlsx_boxes.py`: `box_anchor` (placed by `pinned_at`, as charts and pictures) and `file_boxes`; `ods_boxes.py`:
+  `box_frame` (placed by `place_of`) and `file_boxes`; `OdsLookWriter.words_style` and `box_style` make the named
+  paragraph style of the words and the automatic graphic style of the box. `Drawings._append` is the one place an
+  anchor gets its number (charts, pictures and boxes). `ods_chart_files.drawn_frames` walks rectangles, ellipses and
+  custom shapes too.
+- **Reading.** `FileObject` says the loss it is when not held (`kind`: `chart`, `picture`, `shape`, or `object` for an
+  ods text box), its place among the drawings of the file (`order`: objects are put into the model in that order, so
+  the stack is the file's whatever kind they are) and, for a box, its look. `held_of` holds a box only on a slide;
+  `lost_looks` counts the boxes whose look the import reports.
+- **Facets.** `_unwritten.facets` has `boxes` (a slide's boxes with the outlines they use), written only by a fresh
+  export (`FRESH_ONLY`); `objects` keeps the rest (a box on a sheet).
+- **Checked by eye.** An xlsx and an ods with a chart, a text box, a picture and a triangle turned by 30° on a slide,
+  printed to PDF by LibreOffice 7: everything where it is on the slide, the triangle turned clockwise, the words in
+  their place. Excel could not be run here.
+- **Assumptions** (the spec does not say): a box without a name is written as "Text box n" / "Shape n" and comes back
+  with that name; a workbook's own (not built-in) style of a box is not in the file, so a box read into a new workbook
+  that has no such style has the plain style (and `look` when it looked otherwise); the words of a box are written as
+  one run, so references in them (which computes does not make) would be written as their mark character.

@@ -31,6 +31,7 @@ if TYPE_CHECKING:
 _DRAWN = ("frame", "custom-shape", "g", "line", "rect", "ellipse", "circle", "path", "polygon", "polyline", "connector")
 _DRAWN_TAGS = tuple(f"{{{NS['draw']}}}{name}" for name in _DRAWN)
 _CELLS = ("table-cell", "covered-table-cell")
+_FRAMES = tuple(f"{{{NS['draw']}}}{name}" for name in ("frame", "rect", "ellipse", "custom-shape"))
 _CM_PER_INCH = 2.54
 
 
@@ -72,23 +73,29 @@ def frame_corner(frame: etree._Element) -> tuple[float, float]:
 
 @dataclass(frozen=True)
 class DrawnFrame:
-    """A frame alone on a sheet of a file (not in a group or a text box): the sheet, the frame, the cell it is pinned
-    to (the cell it is in, or the one at its corner when it is on the sheet itself) and where its corner is."""
+    """A frame (or a shape) alone on a sheet of a file (not in a group or a text box): the sheet, the element, the cell
+    it is pinned to (the cell it is in, or the one at its corner when it is on the sheet itself) and where its corner
+    is."""
 
     sheet: SheetId
     frame: etree._Element
     row: int
     col: int
     corner: Callable[[], tuple[float, float]]
+    #: Its place among the drawings of the file (on a sheet, the later is in front).
+    order: int
 
 
 def drawn_frames(tables: Sequence[_Table]) -> Iterator[DrawnFrame]:
-    """Every frame alone on a sheet of a file, sheet by sheet, in the order of the file."""
+    """Every frame alone on a sheet of a file, and every rectangle, ellipse and custom shape (what may be a box of the
+    model, D1479), sheet by sheet, in the order of the file."""
+    order = 0
     for table in tables:
         cells = _cells_of(table)
-        for frame in table.element.iter(f"{{{NS['draw']}}}frame"):
+        for frame in table.element.iter(*_FRAMES):
             if not _is_alone(frame, table.element):
                 continue
+            order += 1
             parent = frame.getparent()
             corner = partial(frame_corner, frame)
             if parent is not None and isinstance(parent.tag, str) and local_name(parent.tag) in _CELLS:
@@ -96,7 +103,7 @@ def drawn_frames(tables: Sequence[_Table]) -> Iterator[DrawnFrame]:
             else:
                 pin = cell_at(table.col_widths, table.row_heights, *corner())
                 row, col = pin.row, pin.col
-            yield DrawnFrame(SheetId(table.id), frame, row, col, corner)
+            yield DrawnFrame(SheetId(table.id), frame, row, col, corner, order)
 
 
 def file_charts(tables: Sequence[_Table], parts: Mapping[str, bytes]) -> list[FileChart]:
@@ -120,6 +127,7 @@ def file_charts(tables: Sequence[_Table], parts: Mapping[str, bytes]) -> list[Fi
             row=drawn.row,
             col=drawn.col,
             corner=drawn.corner,
+            order=drawn.order,
             name=(frame.get(qname("draw:name")) or "").strip(),
             frame=frame,
             folder=folder,

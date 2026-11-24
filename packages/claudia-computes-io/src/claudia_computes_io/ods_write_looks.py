@@ -17,7 +17,7 @@ from lxml import etree
 from claudia_computes import WorkbookModel
 from claudia_computes.cellstyles import DEFAULT_CELL_STYLE
 from claudia_core.stand_ins import file_font
-from claudia_odf_io import NS
+from claudia_odf_io import NS, BoxLook, graphic_properties
 
 from .cell_looks import GENERAL, CellLook, LookExport, points, solid
 from .odf_numbers import number_style
@@ -115,6 +115,8 @@ class OdsLookWriter:
         self._style_elements: list[etree._Element] = []
         self._columns: dict[float, str] = {}
         self._rows: dict[float, str] = {}
+        self._words: dict[str, etree._Element] = {}
+        self._boxes: dict[tuple[str, BoxLook], str] = {}
 
     def column_style(self, pixels: float) -> str:
         """The name of the automatic style for a column of this width, made the first time (D458)."""
@@ -177,15 +179,46 @@ class OdsLookWriter:
         _with(element, "text-properties", _text_properties(css))
         return element
 
+    def words_style(self, style_id: str) -> str:
+        """The name of the paragraph style of the words of a box in the style ``style_id`` (D1479), made the first
+        time: a named style, called as the style is, with what the style says of words and paragraphs."""
+        if style_id not in self._words:
+            css = self.model.styles.resolved(style_id, self.model.palette.colours())
+            element = etree.Element(_q("style", "style"), nsmap=_DECLARED)
+            element.set(_q("style", "name"), style_id)
+            element.set(_q("style", "display-name"), self.model.styles.get(style_id).name)
+            element.set(_q("style", "family"), "paragraph")
+            _with(element, "paragraph-properties", _paragraph_properties(css))
+            _with(element, "text-properties", _text_properties(css))
+            self._words[style_id] = element
+        return style_id
+
+    def box_style(self, kind: str, look: BoxLook) -> str:
+        """The name of the automatic graphic style of a box of ``kind`` (``"text"``, ``"shape"``) that looks like
+        ``look``, made the first time (D1479)."""
+        if (kind, look) not in self._boxes:
+            name = f"{self.prefix}gr{len(self._boxes) + 1}"
+            declared = " ".join(f'xmlns:{prefix}="{NS[prefix]}"' for prefix in ("style", "draw", "svg", "fo"))
+            self._style_elements.append(
+                etree.fromstring(
+                    f'<style:style {declared} style:name="{name}" style:family="graphic">'
+                    f"<style:graphic-properties {graphic_properties(kind, look)}/></style:style>"
+                )
+            )
+            self._boxes[(kind, look)] = name
+        return self._boxes[(kind, look)]
+
     def automatic_styles(self) -> list[etree._Element]:
-        """The number styles and cell styles that go into ``content.xml``'s automatic styles."""
+        """The number styles, cell styles and the graphic styles of boxes that go into ``content.xml``'s automatic
+        styles."""
         return [*self._number_elements[False], *self._style_elements]
 
     def office_styles(self) -> list[etree._Element]:
-        """The named cell styles (Default first) and their number styles, for ``styles.xml``."""
+        """The named cell styles (Default first) and their number styles, and the styles of the words of boxes, for
+        ``styles.xml``."""
         named = [self._style(_DEFAULT, self.looks.named_look(DEFAULT_CELL_STYLE), None, named=True)]
         named.extend(self._style(i, self.looks.named_look(i), _DEFAULT, named=True) for i in self._named)
-        return [*self._number_elements[True], *named]
+        return [*self._number_elements[True], *named, *self._words.values()]
 
 
 class OdsRestyler(OdsLookWriter):

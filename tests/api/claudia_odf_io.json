@@ -1,5 +1,15 @@
 {
  "version": "0.10.1",
+ "BoxLook": {
+  "class": [
+   "object"
+  ],
+  "init": "(fill: 'tuple[int, int, int] | None', line: 'tuple[int, int, int] | None', width: 'int') -> None",
+  "methods": {
+   "matches": "(self, other: 'BoxLook') -> 'bool'"
+  },
+  "properties": []
+ },
  "DocumentInfo": {
   "class": [
    "object"
@@ -59,11 +69,22 @@
   "methods": {},
   "properties": []
  },
+ "POINTS_PER_PIXEL": {
+  "value": "0.75"
+ },
  "Span": {
   "class": [
    "object"
   ],
   "init": "(start: 'int', end: 'int', open_end: 'int', close: 'int') -> None",
+  "methods": {},
+  "properties": []
+ },
+ "Styled": {
+  "class": [
+   "Protocol"
+  ],
+  "init": "(*args, **kwargs)",
   "methods": {},
   "properties": []
  },
@@ -92,6 +113,15 @@
  "angle_of": {
   "function": "(transform: 'str') -> 'float | None'"
  },
+ "authored": {
+  "function": "(boxes: 'Iterable[VisualObject]') -> 'int'"
+ },
+ "box_element": {
+  "function": "(body: 'ObjectBody', style: 'str', name: 'str', words: 'etree._Element | None') -> 'etree._Element'"
+ },
+ "box_look": {
+  "function": "(element: 'etree._Element', graphics: 'Mapping[str, etree._Element]') -> 'BoxLook'"
+ },
  "decode_style_name": {
   "function": "(name: 'str') -> 'str'"
  },
@@ -119,8 +149,14 @@
  "frames_of": {
   "function": "(paragraph: 'etree._Element') -> 'list[etree._Element]'"
  },
+ "graphic_properties": {
+  "function": "(kind: 'str', look: 'BoxLook') -> 'str'"
+ },
  "graphic_styles": {
   "function": "(*roots: 'etree._Element | None') -> 'dict[str, etree._Element]'"
+ },
+ "held_box": {
+  "function": "(element: 'etree._Element', graphics: 'Mapping[str, etree._Element]', words_style: 'Callable[[etree._Element, str | None], str]', *, plain_words: 'str') -> 'tuple[ObjectBody, BoxLook] | None'"
  },
  "held_frame": {
   "function": "(frame: 'etree._Element', graphics: 'Mapping[str, etree._Element]', parts: 'Mapping[str, bytes]') -> 'tuple[ImageAsset, tuple[int, int], int] | None'"
@@ -134,6 +170,9 @@
  "insert_elements": {
   "function": "(paragraph: 'etree._Element', placements: 'Sequence[tuple[int, etree._Element]]') -> 'None'"
  },
+ "is_written": {
+  "function": "(obj: 'VisualObject') -> 'bool'"
+ },
  "language_from_parts": {
   "function": "(language: 'str | None', script: 'str | None', country: 'str | None') -> 'str | None'"
  },
@@ -146,6 +185,9 @@
  "local_name": {
   "function": "(tag: 'str') -> 'str'"
  },
+ "look_of": {
+  "function": "(model: 'Styled', body: 'ObjectBody') -> 'BoxLook'"
+ },
  "name_of": {
   "function": "(frame: 'etree._Element') -> 'str'"
  },
@@ -157,6 +199,9 @@
  },
  "odf_date": {
   "function": "(moment: 'str') -> 'str'"
+ },
+ "odf_properties": {
+  "function": "(element: 'etree._Element', graphics: 'Mapping[str, etree._Element]') -> 'dict[str, str]'"
  },
  "offset_of": {
   "function": "(paragraph: 'etree._Element', element: 'etree._Element') -> 'int | None'"
@@ -172,6 +217,9 @@
  },
  "pixels": {
   "function": "(value: 'str | None') -> 'float | None'"
+ },
+ "points_of": {
+  "function": "(value: 'str | None') -> 'float'"
  },
  "problems": {
   "function": "(data: 'bytes') -> 'list[str]'"

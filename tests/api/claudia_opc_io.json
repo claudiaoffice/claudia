@@ -24,8 +24,14 @@
  "EMU_PER_PIXEL": {
   "value": "9525"
  },
+ "EMU_PER_POINT": {
+  "value": "12700"
+ },
  "OwnedTest": {
   "function": "(*args, **kwargs)"
+ },
+ "PRESET": {
+  "value": "{'circle': 'ellipse', 'rectangle': 'rect', 'triangle': 'triangle'}"
  },
  "PackageLimits": {
   "class": [
@@ -43,6 +49,9 @@
   "methods": {},
   "properties": []
  },
+ "SHAPE_OF": {
+  "value": "{'ellipse': 'circle', 'rect': 'rectangle', 'triangle': 'triangle'}"
+ },
  "SVG_URI": {
   "value": "'{96DAC541-7B7A-43D3-8B79-37D633B846F1}'"
  },
@@ -57,6 +66,9 @@
   },
   "properties": []
  },
+ "UNKNOWN": {
+  "value": "(-1, -1, -1)"
+ },
  "check_package": {
   "function": "(zip_bytes: 'bytes', limits: 'PackageLimits' = PackageLimits(max_members=10000, max_part_bytes=268435456, max_total_bytes=536870912, max_ratio=250, ratio_from_bytes=33554432)) -> 'None'"
  },
@@ -68,6 +80,12 @@
  },
  "is_decorative": {
   "function": "(properties: 'etree._Element | None') -> 'bool'"
+ },
+ "look_in": {
+  "function": "(properties: 'etree._Element | None', *, styled: 'bool') -> 'tuple[Colour, Colour, int]'"
+ },
+ "outline": {
+  "function": "(colour: 'Colour', width: 'int') -> 'str'"
  },
  "owns": {
   "function": "(part_names: 'Iterable[str]') -> 'OwnedTest'"
@@ -86,6 +104,9 @@
  },
  "shown_part": {
   "function": "(blip: 'etree._Element') -> 'str'"
+ },
+ "solid": {
+  "function": "(colour: 'Colour') -> 'str'"
  },
  "stamp_core_properties": {
   "function": "(parts: 'dict[str, bytes]', *, created: 'str | None' = None, creator: 'str | None' = None, modified: 'str | None' = None, modifier: 'str | None' = None) -> 'None'"

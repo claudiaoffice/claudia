@@ -1,10 +1,12 @@
-"""A file's tabs and drawings put into a workbook, the same for xlsx and ods (D462, D463, D1478).
+"""A file's tabs and drawings put into a workbook, the same for xlsx and ods (D462, D463, D1478, D1479).
 
-Each format finds the drawings the model can hold (its charts and, since CODE-67, its pictures) and says of each where
-it is: the cell its corner is pinned to and its distance from the corner of the tab, in pixels (:class:`FileObject`).
-What is done with them is the same for both: a tab the file's mark names (:mod:`.slide_mark`) is a slide and its
-drawings are where they are on it, at the size the mark says; on a sheet a drawing hangs at its cell. A sheet or a slide
-holds at most so many objects; what is beyond that stays in the file and is reported.
+Each format finds the drawings the model can hold (its charts, its pictures since CODE-67, and its text boxes and
+shapes) and says of each where it is: the cell its corner is pinned to and its distance from the corner of the tab, in
+pixels (:class:`FileObject`). What is done with them is the same for both: a tab the file's mark names
+(:mod:`.slide_mark`) is a slide and its drawings are where they are on it, at the size the mark says, a box with the
+styles the mark keeps for it (:func:`._boxes.styled`); on a sheet a chart or a picture hangs at its cell, and a box is
+not held (a sheet has none, D1232). A sheet or a slide holds at most so many objects; what is beyond that stays in the
+file and is reported.
 """
 
 from __future__ import annotations
@@ -15,8 +17,10 @@ from dataclasses import dataclass, replace
 
 from claudia_computes import CellAnchor, ChartSpec, ObjectBody, SheetId, VisualObject, WorkbookModel
 from claudia_computes.model import MAX_OBJECTS_PER_SHEET, Sheet
-from claudia_core import SLIDE_HEIGHT, SLIDE_WIDTH, ImageAsset, Slide, SlideAnchor, nudge_into
+from claudia_core import SLIDE_HEIGHT, SLIDE_WIDTH, ImageAsset, Slide, SlideAnchor, nudge_into, primitive
+from claudia_odf_io import BoxLook
 
+from ._boxes import styled
 from ._placed import ONE_TO_ONE
 from .slide_mark import SlideMark
 
@@ -32,13 +36,14 @@ class FileObject:
     col: int
     corner: Callable[[], tuple[float, float]]
     body: ObjectBody
+    #: What the file's losses call it where the model does not hold it: ``chart``, ``picture``, ``shape``, ``object``.
+    kind: str
+    #: Its place among the drawings of the file: on a tab, the later is in front.
+    order: int
     chart: ChartSpec | None = None
     image: ImageAsset | None = None
-
-    @property
-    def kind(self) -> str:
-        """What the file's losses call it: ``chart`` or ``picture``."""
-        return "chart" if self.chart is not None else "picture"
+    #: For a text box or a shape: the look the file gives it.
+    look: BoxLook | None = None
 
 
 def within_limit(found: Iterable[FileObject]) -> list[FileObject]:
@@ -53,7 +58,8 @@ def within_limit(found: Iterable[FileObject]) -> list[FileObject]:
 
 
 def held_on(held: Iterable[FileObject], tab: SheetId, kind: str) -> int:
-    """How many of ``held`` are on ``tab`` and of ``kind`` (``chart``, ``picture``): what is not lost of it."""
+    """How many of ``held`` are on ``tab`` and of ``kind`` (``chart``, ``picture``, ``shape``, ``object``): what is not
+    lost of it."""
     return sum(1 for one in held if one.tab == tab and one.kind == kind)
 
 
@@ -68,44 +74,67 @@ def _on_a_slide(one: FileObject, scale: float) -> tuple[ObjectBody, int, int] | 
 
 @dataclass(frozen=True)
 class FileTabs:
-    """What the tabs of a file are in the model: which are slides (by the tab, the slide's id) and at what size."""
+    """What the tabs of a file are in the model: which are slides (by the tab, the slide's id), at what size, and
+    what the mark of the slides says."""
 
     slides: dict[SheetId, str]
     scale: float
+    mark: SlideMark | None
 
 
-def file_tabs_of(sheets: Sequence[Sheet], held: Sequence[FileObject], mark: SlideMark | None) -> FileTabs:
+def file_tabs_of(sheets: Sequence[Sheet], found: Sequence[FileObject], mark: SlideMark | None) -> FileTabs:
     """Which of ``sheets`` (the tabs of a file, in order) are slides: those ``mark`` names that have no cells and
-    whose drawings can all be on a slide. The slides are ``p1``, ``p2``... in their order."""
+    whose drawings (``found``) can all be on a slide. The slides are ``p1``, ``p2``... in their order."""
     scale = (ONE_TO_ONE if mark is None else mark.size).px_per_unit
     named = set() if mark is None else set(mark.slide_tabs((s.id, s.name, bool(s.cells)) for s in sheets))
     fitting = [
         sheet.id
         for sheet in sheets
-        if sheet.id in named and all(_on_a_slide(one, scale) is not None for one in held if one.tab == sheet.id)
+        if sheet.id in named and all(_on_a_slide(one, scale) is not None for one in found if one.tab == sheet.id)
     ]
-    return FileTabs({tab: f"p{number}" for number, tab in enumerate(fitting, start=1)}, scale)
+    return FileTabs({tab: f"p{number}" for number, tab in enumerate(fitting, start=1)}, scale, mark)
+
+
+def held_of(found: Iterable[FileObject], tabs: FileTabs) -> list[FileObject]:
+    """What of ``found`` the model holds: a box only on a slide, and no more on a tab than it can hold."""
+    return within_limit(one for one in found if one.look is None or one.tab in tabs.slides)
+
+
+def _named(model: WorkbookModel, body: ObjectBody) -> ObjectBody:
+    """``body`` with its name, unless another thing of ``model`` has it."""
+    try:
+        model.check_thing_name(body.id, body.name)
+    except ValueError:
+        return replace(body, name="")
+    return body
+
+
+def lost_looks(held: Iterable[FileObject], tabs: FileTabs) -> int:
+    """How many boxes of ``held`` look otherwise in the file than their style says (``look``)."""
+    model = WorkbookModel()
+    return sum(styled(model, one.body, one.look, tabs.mark)[1] for one in held if one.look is not None)
 
 
 def hold(model: WorkbookModel, sheets: Sequence[Sheet], held: Sequence[FileObject], tabs: FileTabs) -> None:
     """The tabs of a file put into ``model`` in their order, each a sheet or a slide as ``tabs`` says, and ``held`` on
-    them: each chart's definition and each picture's image, and the object, on a slide where it is (in units of the
-    slide) or else hanging at its cell. A name the model cannot give it (another thing has it) is left out."""
+    them: each chart's definition, each picture's image and each shape's outline, and the object, on a slide where it
+    is (in units of the slide) or else hanging at its cell. A name the model cannot give it (another thing has it) is
+    left out."""
     for sheet in sheets:
         if sheet.id in tabs.slides:
             model.add_slide(Slide(tabs.slides[sheet.id], sheet.name), None)
         else:
             model.add_sheet(sheet, None)
-    for one in held:
+    for one in sorted(held, key=lambda each: each.order):
         if one.chart is not None:
             model.charts.define(one.chart)
         if one.image is not None and one.image.id not in model.images:
             model.images.define(one.image)
-        body = one.body
-        try:
-            model.check_thing_name(body.id, body.name)
-        except ValueError:
-            body = replace(body, name="")
+        body = _named(model, one.body)
+        if one.look is not None:
+            body = styled(model, body, one.look, tabs.mark)[0]
+            if body.shape is not None and body.shape not in model.shapes:
+                model.shapes.define(primitive(body.shape))
         slide = tabs.slides.get(one.tab)
         if slide is None:
             model.insert_object(VisualObject(body, CellAnchor(one.tab, one.row, one.col)))

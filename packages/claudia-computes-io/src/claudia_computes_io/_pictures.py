@@ -1,9 +1,9 @@
 """The pictures floating on a sheet or a slide, as a file format needs them (D1233, D1477): where each is
 (:mod:`._placed`), how it is turned, what it is called and says, and the bytes that are embedded for it.
 
-A *picture* is an image object, or a container (its picture is the one last made of its text, D390). Computes
-has no text boxes and no shapes (D1232), so these are the floating objects that are not charts. Both converters take
-their pictures from here and differ only in how a file holds them (:mod:`.xlsx_pictures`, :mod:`.ods_pictures`).
+A *picture* is an image object, or a container (its picture is the one last made of its text, D390): of the floating
+objects, those that are neither charts (:mod:`._charts`) nor text boxes and shapes (:mod:`._boxes`). Both converters
+take their pictures from here and differ only in how a file holds them (:mod:`.xlsx_pictures`, :mod:`.ods_pictures`).
 """
 
 from __future__ import annotations

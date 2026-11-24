@@ -35,13 +35,14 @@ from claudia_computes import Content, Sheet, WorkbookModel
 from claudia_computes.cellstyles import DEFAULT_CELL_STYLE
 from claudia_computes.values import ErrorValue, Value
 from claudia_core import Rasterise
-from claudia_odf_io import DocumentInfo, Loss, LossLog, stamp_office_meta
+from claudia_odf_io import DocumentInfo, Loss, LossLog, look_of, stamp_office_meta
 from claudia_opc_io import custom_properties, read_parts, set_custom_properties, write_parts
 
+from ._boxes import authorship_lost, box_styles, words_css, written_boxes
 from ._charts import WrittenChart, written_charts
 from ._pictures import WrittenPicture, picture_losses, written_pictures
 from ._placed import ONE_TO_ONE, Placed, SlideSize, file_tabs, placed_objects
-from ._read_back import FileObject, file_tabs_of, held_on, hold, within_limit
+from ._read_back import FileObject, file_tabs_of, held_of, held_on, hold, lost_looks
 from ._unwritten import FRESH_ONLY, XLSX_WRITTEN, in_order, workbook_unwritten_changes
 from .cell_looks import (
     Dressing,
@@ -62,6 +63,7 @@ from .layout_sizes import changed_sizes
 from .openformula import Untranslatable
 from .pivot_exchange import adopt_pivots, pivot_positions, sheet_cells
 from .slide_mark import MARK, SlideMark, properties_of
+from .xlsx_boxes import box_anchor, file_boxes
 from .xlsx_chart_patch import Drawings, patch_charts
 from .xlsx_charts import chart_xml, file_charts
 from .xlsx_layout import layout_losses
@@ -151,8 +153,9 @@ def xlsx_export_losses(model: WorkbookModel, *, rasterised: bool = False) -> tup
     written), ``"svg-fallback"`` (a picture drawn as SVG, which only
     Excel 2016 and later show; other programs show it empty unless there was something to draw it with,
     ``rasterised``), ``"rendering-pending"`` (a container nothing has been drawn for: left out) and what
-    :func:`xlsx_unwritten_changes` says of a fresh file: ``"layout"``, ``"name"``, ``"chart"`` and ``"object"``. A
-    slide written as a tab of its own is not reported (``_placed``, D1477)."""
+    :func:`xlsx_unwritten_changes` says of a fresh file: ``"layout"``, ``"name"``, ``"chart"`` and ``"object"`` (a
+    text box or a shape on a sheet), and ``"authorship"`` (who wrote the words of a box on a slide). A slide written
+    as a tab of its own is not reported (``_placed``, D1477)."""
     losses = LossLog()
     dropped = sum(sheet_styling(sheet).dropped for sheet in model.sheets.values())
     if dropped:
@@ -161,6 +164,8 @@ def xlsx_export_losses(model: WorkbookModel, *, rasterised: bool = False) -> tup
         losses.add("chart", detail)
     for loss in picture_losses(model, rasterised=rasterised):
         losses.add(loss.kind, loss.detail, loss.count)
+    if authored := authorship_lost(placed_objects(model)):
+        losses.add("authorship", count=authored)
     for sheet in model.sheets.values():
         for content, value in sheet_cells(model, sheet).values():
             _, note, lost = _written(content, value)
@@ -217,14 +222,15 @@ def workbook_to_xlsx(
     placed = placed_objects(model, slide_size)
     charts = written_charts(model, placed)
     pictures = written_pictures(model, placed, rasterise=rasterise, svg_beside_png=True)
+    boxes = written_boxes(placed)
     if not wb.sheetnames:
         wb.create_sheet(title="Sheet1")
     write_names(wb, model)
     out = BytesIO()
     wb.save(out)
     data = add_pivots(out.getvalue(), model, written_pivots_of(model).pivots)
-    data = _with_drawings(data, model, charts, pictures) if charts or pictures else data
-    marks = properties_of((tab.name for tab in tabs if tab.is_slide), slide_size)
+    data = _with_drawings(data, model, (charts, pictures, boxes)) if charts or pictures or boxes else data
+    marks = properties_of((tab.name for tab in tabs if tab.is_slide), slide_size, box_styles(placed))
     return stamp_office_meta(_with_properties(data, marks) if marks else data, info)
 
 
@@ -236,10 +242,13 @@ def _with_properties(data: bytes, properties: dict[str, str]) -> bytes:
 
 
 def _with_drawings(
-    data: bytes, model: WorkbookModel, charts: tuple[WrittenChart, ...], pictures: tuple[WrittenPicture, ...]
+    data: bytes,
+    model: WorkbookModel,
+    drawn: tuple[tuple[WrittenChart, ...], tuple[WrittenPicture, ...], tuple[Placed, ...]],
 ) -> bytes:
-    """``data`` with ``charts`` and ``pictures`` on its tabs, in the order of their layers: what is stacked later is in
-    front. A chart that reads nothing is left out (``chart``, ``empty``)."""
+    """``data`` with the charts, pictures and boxes ``drawn`` on its tabs, in the order of their layers: what is
+    stacked later is in front. A chart that reads nothing is left out (``chart``, ``empty``)."""
+    charts, pictures, boxes = drawn
     package = open_package(data)
     patch = PackagePatch(package.parts)
     drawings = Drawings(patch)
@@ -250,6 +259,10 @@ def _with_drawings(
         if xml is not None:
             things.append((chart.placed, partial(drawings.add, xml=xml, placed=chart.placed)))
     things += [(picture.placed, partial(drawings.add_picture, picture=picture)) for picture in pictures]
+    for box in boxes:
+        body = box.obj.body
+        make = partial(box_anchor, box, look=look_of(model, body), words=words_css(model, body))
+        things.append((box, partial(drawings.add_box, make=make)))
     for placed, write in sorted(things, key=lambda each: (str(each[0].tab.id), each[0].layer)):
         write(by_name[placed.tab.name.casefold()])
     drawings.finish()
@@ -280,10 +293,9 @@ def _model_of(package: Package) -> tuple[WorkbookModel, tuple[Loss, ...]]:
         sheet.cells.update(read.cells)
         _dress(dressing, sheet, read)
         sheets.append(sheet)
-    held = _held_objects(package)
-    hold(
-        model, sheets, held, file_tabs_of(sheets, held, SlideMark.from_text(custom_properties(package.parts).get(MARK)))
-    )
+    found = _found_objects(package)
+    tabs = file_tabs_of(sheets, found, SlideMark.from_text(custom_properties(package.parts).get(MARK)))
+    hold(model, sheets, held_of(found, tabs), tabs)
     for named in names:
         model.names.put(named)
     model._calculate_loaded()  # noqa: SLF001 (the restore()-mirroring construction idiom; see model.py's own)
@@ -291,10 +303,12 @@ def _model_of(package: Package) -> tuple[WorkbookModel, tuple[Loss, ...]]:
     return model, (*pivots.losses.result(), *adopt_pivots(model, pivots.found).losses)
 
 
-def _held_objects(package: Package) -> list[FileObject]:
-    """The charts and pictures of a file the model holds, charts first (their ids come first)."""
+def _found_objects(package: Package) -> list[FileObject]:
+    """The charts, pictures, text boxes and shapes of a file the model may hold, in that order (the charts' ids come
+    first, for the patch)."""
     charts = [found for chart in file_charts(package)[0] if (found := chart.file_object()) is not None]
-    return within_limit([*charts, *file_pictures(package, len(charts) + 1)])
+    pictures = file_pictures(package, len(charts) + 1)
+    return [*charts, *pictures, *file_boxes(package, len(charts) + len(pictures) + 1)]
 
 
 def xlsx_import_losses(xlsx_bytes: bytes) -> tuple[Loss, ...]:
@@ -312,7 +326,15 @@ def xlsx_import_losses(xlsx_bytes: bytes) -> tuple[Loss, ...]:
         read = read_sheet(package, part, known)
         _dress(dressing, Sheet(part.sheet_id, part.name), read)
         reads.append((part, read))
-    held = _held_objects(package)
+    found = _found_objects(package)
+    sheets = []
+    for part, read in reads:
+        sheets.append(Sheet(part.sheet_id, part.name))
+        sheets[-1].cells.update(read.cells)
+    tabs = file_tabs_of(sheets, found, SlideMark.from_text(custom_properties(package.parts).get(MARK)))
+    held = held_of(found, tabs)
+    if looks := lost_looks(held, tabs):
+        losses.add("look", count=looks)
     for part, read in reads:
         for loss in read.lost.result():
             count = loss.count - held_on(held, part.sheet_id, loss.kind)

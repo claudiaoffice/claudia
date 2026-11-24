@@ -6,7 +6,8 @@ xml         parse_xml -- the one way the XML of a package is read: entities neve
 reconcile   owns/reconcile -- restore whatever a format library's save() was not asked to touch
 properties  stamp_core_properties/stamp_package -- who made a fresh file and when (D466)
 custom      custom_properties/set_custom_properties -- the custom properties of a file (D1478)
-drawingml   turn_of/cropped/shown_part/is_decorative -- what a DrawingML drawing says of itself (D1478)
+drawingml   turn_of/cropped/shown_part/is_decorative/look_in, solid/outline -- what a DrawingML drawing says of itself
+            and how a shape is filled and outlined (D1478, D1479)
 theme       ThemeFonts -- the heading and body fonts of the Office theme docx and pptx share (E3.13)
 
 Deliberately knows nothing about any one format: no cell, no paragraph, no shape. openpyxl/python-docx/
@@ -21,10 +22,17 @@ from .drawingml import (
     DECORATIVE_URI,
     DRAWINGML,
     EMU_PER_PIXEL,
+    EMU_PER_POINT,
+    PRESET,
+    SHAPE_OF,
     SVG_URI,
+    UNKNOWN,
     cropped,
     is_decorative,
+    look_in,
+    outline,
     shown_part,
+    solid,
     turn_of,
 )
 from .limits import DEFAULT_LIMITS, PackageLimits, PackageRefused, check_package
@@ -36,32 +44,39 @@ from .xml import parse_xml
 
 __all__ = [
     "ANGLE",
-    "DECORATIVE_URI",
-    "DRAWINGML",
-    "EMU_PER_PIXEL",
-    "SVG_URI",
-    "cropped",
-    "is_decorative",
-    "shown_part",
-    "turn_of",
     "APPLICATION",
     "CORE_PART",
     "CUSTOM_PART",
+    "DECORATIVE_URI",
     "DEFAULT_LIMITS",
+    "DRAWINGML",
+    "EMU_PER_PIXEL",
+    "EMU_PER_POINT",
     "OwnedTest",
+    "PRESET",
     "PackageLimits",
     "PackageRefused",
+    "SHAPE_OF",
+    "SVG_URI",
     "ThemeFonts",
+    "UNKNOWN",
     "__version__",
     "check_package",
+    "cropped",
     "custom_properties",
+    "is_decorative",
+    "look_in",
+    "outline",
     "owns",
     "parse_xml",
     "read_parts",
     "reconcile",
     "set_custom_properties",
+    "shown_part",
+    "solid",
     "stamp_core_properties",
     "stamp_package",
+    "turn_of",
     "utc_second",
     "write_parts",
 ]

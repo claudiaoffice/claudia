@@ -6,6 +6,8 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 ## [Unreleased]
 
 ### Added
+- `claudia_opc_io.drawingml`: `solid`, `outline`, `look_in`, `PRESET`, `SHAPE_OF`, `UNKNOWN`, `EMU_PER_POINT`: how a
+  DrawingML shape is filled and outlined, and what its properties say of that (D1479; composes' docx had them).
 - `claudia_opc_io.custom`: `custom_properties(parts)` and `set_custom_properties(parts, values)`, the text properties of
   `docProps/custom.xml` (the part declared and related once), `CUSTOM_PART` (E6.31, D1478).
 - `claudia_opc_io.drawingml`: what a DrawingML drawing says of itself in a docx, xlsx or pptx alike: `turn_of`,

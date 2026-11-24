@@ -452,6 +452,8 @@ class DrawnAnchor:
     across: int
     size: tuple[int, int] | None
     geometry: Callable[[], Geometry]
+    #: Its place among the anchors of the file (in a drawing, the later is in front).
+    order: int
 
     def corner(self) -> tuple[float, float]:
         """Where its corner is, in pixels from the corner of the sheet."""
@@ -464,6 +466,7 @@ def drawn_anchors(package: Package, roots: dict[str, etree._Element]) -> Iterato
     """Every anchor of the drawings of the sheets of a file, sheet by sheet, in the order of the file. A
     ``twoCellAnchor`` is as big as the cells it reaches, by the widths and heights the file gives them. The drawings
     are parsed into ``roots`` (by their part) unless they are there already."""
+    order = 0
     for sheet in package.sheets:
         geometry = cache(lambda sheet=sheet: geometry_of(package.parts[sheet.part]))
         for part in related(package.parts, sheet.part, "drawing"):
@@ -479,7 +482,9 @@ def drawn_anchors(package: Package, roots: dict[str, etree._Element]) -> Iterato
                 if start is None:
                     continue
                 row, col, down, across = start
-                yield DrawnAnchor(sheet, part, anchor, row, col, down, across, _size_of(anchor, geometry), geometry)
+                order += 1
+                size = _size_of(anchor, geometry)
+                yield DrawnAnchor(sheet, part, anchor, row, col, down, across, size, geometry, order)
 
 
 def file_charts(
@@ -509,6 +514,7 @@ def file_charts(
             row=drawn.row,
             col=drawn.col,
             corner=drawn.corner,
+            order=drawn.order,
             name="" if properties is None else (properties.get("name") or "").strip(),
             drawing=drawn.drawing,
             anchor=drawn.anchor,

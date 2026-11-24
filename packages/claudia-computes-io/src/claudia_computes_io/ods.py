@@ -75,15 +75,17 @@ from claudia_odf_io import (
 )
 from claudia_opc_io import parse_xml, read_parts, write_parts
 
+from ._boxes import authorship_lost, box_styles, written_boxes
 from ._charts import written_charts
 from ._pictures import MEDIA_TYPES, picture_losses, written_pictures
 from ._placed import ONE_TO_ONE, Placed, SlideSize, file_tabs, placed_objects
-from ._read_back import FileObject, file_tabs_of, held_on, hold, within_limit
+from ._read_back import FileObject, FileTabs, file_tabs_of, held_of, held_on, hold, lost_looks
 from ._unwritten import FRESH_ONLY, ODS_WRITTEN, workbook_unwritten_changes
 from .cell_looks import Dressing, Lines, LookExport, SheetLooks, changed_styles, restyling, sheet_styling
 from .chart_plan import chart_losses
 from .extensions import INVERSE_NAMES, NOTE_MARKER, from_excel, restore_alternatives, to_excel, with_note
 from .layout_sizes import MAX_SIZED_COLUMNS, MAX_SIZED_ROWS, changed_sizes
+from .ods_boxes import box_frame, file_boxes
 from .ods_chart_files import FileChart, file_charts
 from .ods_chart_patch import ChartPatch
 from .ods_charts import Parts, a_chart, new_shapes
@@ -534,15 +536,24 @@ def _document(data: bytes) -> tuple[dict[str, bytes], etree._Element, list[_Tabl
 
 
 def _held_objects(
-    parts: dict[str, bytes], content: etree._Element, tables: list[_Table]
-) -> tuple[list[FileChart], list[FileObject]]:
-    """Every chart of a file (what a patch matches the model's charts with) and the charts and pictures of it the
-    model holds, charts first (D462, CODE-67)."""
+    parts: dict[str, bytes], content: etree._Element, tables: list[_Table], sheets: list[Sheet] | None = None
+) -> tuple[list[FileChart], FileTabs, list[FileObject]]:
+    """Every chart of a file (what a patch matches the model's charts with), which of its tables are slides (of
+    ``sheets``, the tables as the model has them, by default as they are), and the charts, pictures, text boxes and
+    shapes of it the model holds, charts first (D462, CODE-67, D1478, D1479)."""
     charts = file_charts(tables, parts)
     styles = parts.get("styles.xml")
     graphics = graphic_styles(content, None if styles is None else parse_xml(styles))
     held_charts = [found for chart in charts if (found := chart.file_object()) is not None]
-    return charts, within_limit([*held_charts, *file_pictures(tables, parts, graphics, len(held_charts) + 1)])
+    pictures = file_pictures(tables, parts, graphics, len(held_charts) + 1)
+    found = [*held_charts, *pictures, *file_boxes(tables, graphics, len(held_charts) + len(pictures) + 1)]
+    mark = SlideMark.from_text(user_defined(parts["meta.xml"]).get(MARK) if "meta.xml" in parts else None)
+    if sheets is None:
+        sheets = [Sheet(SheetId(table.id), table.name) for table in tables]
+        for sheet, table in zip(sheets, tables, strict=True):
+            sheet.cells = dict(table.cells)
+    tabs = file_tabs_of(sheets, found, mark)
+    return charts, tabs, held_of(found, tabs)
 
 
 def _left_out(table: _Table, held: list[FileObject]) -> list[tuple[str, str, int]]:
@@ -632,9 +643,8 @@ def _model_of(
         sheet.cells = dict(table.cells)
         _dress(dressing, sheet, table)
         sheets.append(sheet)
-    held = _held_objects(parts, content, tables)[1]
-    mark = SlideMark.from_text(user_defined(parts["meta.xml"]).get(MARK) if "meta.xml" in parts else None)
-    hold(model, sheets, held, file_tabs_of(sheets, held, mark))
+    _, tabs, held = _held_objects(parts, content, tables, sheets)
+    hold(model, sheets, held, tabs)
     places = _places(_spreadsheet(content))
     for named in read_names(_spreadsheet(content), places).names:
         model.names.put(named)
@@ -652,8 +662,10 @@ def ods_import_losses(ods_bytes: bytes) -> tuple[Loss, ...]:
     ``"named-range"``...) with how many there are. None of it is lost from the *file*: an edit exported with
     :func:`apply_edits_to_ods` keeps all of it."""
     parts, content, tables, looks = _document(ods_bytes)
-    held = _held_objects(parts, content, tables)[1]
+    _, tabs, held = _held_objects(parts, content, tables)
     losses = LossLog()
+    if box_looks := lost_looks(held, tabs):
+        losses.add("look", count=box_looks)
     dressing = Dressing(WorkbookModel(), looks.normal, looks.named.items(), looks.look)  # type: ignore[arg-type]
     for table in tables:
         for kind, detail, count in _left_out(table, held):
@@ -917,7 +929,8 @@ def workbook_to_ods(
         etree.SubElement(root, _q("office", name))
     spreadsheet = etree.SubElement(etree.SubElement(root, _q("office", "body")), _q("office", "spreadsheet"))
     writer = OdsLookWriter(model)
-    shapes, parts = _drawings(model, placed_objects(model, slide_size), rasterise)
+    placed = placed_objects(model, slide_size)
+    shapes, parts = _drawings(model, placed, rasterise, writer)
     tabs = file_tabs(model)
     for tab in tabs:
         sheet = tab.sheet(model)
@@ -945,16 +958,19 @@ def workbook_to_ods(
         "spreadsheet",
         content.encode(),
         styles,
-        meta=new_meta(info or DocumentInfo(), properties_of((tab.name for tab in tabs if tab.is_slide), slide_size)),
+        meta=new_meta(
+            info or DocumentInfo(),
+            properties_of((tab.name for tab in tabs if tab.is_slide), slide_size, box_styles(placed)),
+        ),
         extra=parts or None,
     )
 
 
 def _drawings(
-    model: WorkbookModel, placed: tuple[Placed, ...], rasterise: Rasterise | None
+    model: WorkbookModel, placed: tuple[Placed, ...], rasterise: Rasterise | None, styles: OdsLookWriter
 ) -> tuple[dict[SheetId, etree._Element], Parts]:
-    """The ``table:shapes`` of each tab that has drawings, in the order they are stacked, and the parts they need. A
-    chart that reads nothing is left out (``chart``, ``empty``)."""
+    """The ``table:shapes`` of each tab that has drawings, in the order they are stacked, and the parts they need; the
+    styles of boxes go to ``styles``. A chart that reads nothing is left out (``chart``, ``empty``)."""
     frames: list[tuple[Placed, etree._Element]] = []
     parts: Parts = {}
     number = 1
@@ -967,6 +983,7 @@ def _drawings(
     for count, picture in enumerate(written_pictures(model, placed, rasterise=rasterise, svg_beside_png=False), 1):
         frames.append((picture.placed, picture_frame(picture, count)))
         parts[part_name(picture)] = (picture.data, MEDIA_TYPES[picture.format])
+    frames += [(box, box_frame(model, box, styles, count)) for count, box in enumerate(written_boxes(placed), 1)]
     shapes: dict[SheetId, etree._Element] = {}
     for where, frame in sorted(frames, key=lambda each: each[0].layer):
         shapes.setdefault(where.tab.id, new_shapes()).append(frame)
@@ -980,16 +997,21 @@ def ods_export_losses(model: WorkbookModel, *, rasterised: bool = False) -> tupl
     it reads nothing and is not written), ``"svg-fallback"`` (a picture drawn as SVG, which other programs may show
     without what its style sheet gives unless there was something to draw it as a PNG with, ``rasterised``),
     ``"rendering-pending"`` (a container nothing has been drawn for: left out), ``"decorative"`` (a picture
-    marked as having nothing to say: ODF has no way to say so), ``"object"`` (a text box or shape floating on a sheet,
-    which computes does not have, is not written) and ``"look"`` (``too-many-cells``: cells of style ranges too large
+    marked as having nothing to say, or a text box or shape on a slide that is: ODF has no way to say so), ``"object"``
+    (a text box or shape floating on a sheet, which computes does not have, is not written), ``"authorship"`` (who
+    wrote the words of a box on a slide) and ``"look"`` (``too-many-cells``: cells of style ranges too large
     to write one by one). A slide written as a table of its own is not reported (``_placed``, D1477)."""
     losses = LossLog()
     for detail in chart_losses(model):
         losses.add("chart", detail)
     for loss in picture_losses(model, rasterised=rasterised):
         losses.add(loss.kind, loss.detail, loss.count)
-    if decorative := decorative_count(written_pictures(model, placed_objects(model), svg_beside_png=False)):
+    placed = placed_objects(model)
+    pictures = written_pictures(model, placed, svg_beside_png=False)
+    if decorative := decorative_count(pictures) + sum(1 for box in written_boxes(placed) if box.obj.body.decorative):
         losses.add("decorative", count=decorative)
+    if authored := authorship_lost(placed):
+        losses.add("authorship", count=authored)
     dropped = sum(sheet_styling(sheet).dropped for sheet in model.sheets.values())
     if dropped:
         losses.add("look", "too-many-cells", dropped)
@@ -1096,7 +1118,7 @@ class _Patch:
         self.by_id = {table.id: table for table in self.tables}
         self.new_tables: dict[SheetId, etree._Element] = {}  # the sheets this run adds, as the file will have them
         self.changed = False
-        self.charts, self.held = _held_objects(self.parts, self.part.root, self.tables)
+        self.charts, _, self.held = _held_objects(self.parts, self.part.root, self.tables)
         self._check_baseline()
         styles = self.parts.get("styles.xml")
         self.styles_root = None if styles is None else etree.fromstring(styles, etree.XMLParser(resolve_entities=False))
