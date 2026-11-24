@@ -35,6 +35,12 @@ def inches(value: str | None) -> float | None:
     return float(match.group(1)) * _INCHES[match.group(2)] if match else None
 
 
+def pixels(value: str | None) -> float | None:
+    """A length of the format in pixels (96 to the inch); ``None`` when it is none."""
+    found = inches(value)
+    return None if found is None else found * 96
+
+
 def _cm(length: str) -> float:
     in_inches = inches(length)
     assert in_inches is not None  # (the pattern only lets lengths through)

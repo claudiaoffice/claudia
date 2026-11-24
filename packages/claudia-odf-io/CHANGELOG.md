@@ -3,6 +3,14 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [Unreleased]
+
+### Added
+- `new_meta(info, properties)` writes text properties as `meta:user-defined`; `user_defined(meta_xml)` reads them
+  (E6.31, D1478).
+- `held_frame`, `graphic_styles` (from composes' odt reader) and `pixels`: a picture frame as the model holds it, shared
+  by texts and spreadsheets (D1478).
+
 ## [0.10.1] - 2026-11-17
 
 ### Fixed

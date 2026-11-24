@@ -1,15 +1,16 @@
 """The charts of a workbook as both formats need them (D462, D463, D1477): which are written and where, what changed
-of one since a file was read, and what a file's chart is in the model. Only how a file says it differs
-(:mod:`.xlsx_charts`, :mod:`.ods_charts`)."""
+of one since a file was read, and what a file's chart is in the model (:meth:`FileChart.file_object`). Only how a
+file says it differs (:mod:`.xlsx_charts`, :mod:`.ods_charts`)."""
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass, replace
 
-from claudia_computes import CellAnchor, ChartSpec, ObjectBody, SheetId, VisualObject, WorkbookModel
+from claudia_computes import ChartSpec, ObjectBody, SheetId, VisualObject, WorkbookModel
 
 from ._placed import Placed
+from ._read_back import FileObject
 from .chart_plan import ReadChart, with_id
 
 
@@ -59,12 +60,15 @@ def chart_change(baseline: WorkbookModel, current: WorkbookModel, was: VisualObj
 
 @dataclass(kw_only=True)
 class FileChart:
-    """One chart of a file, pinned to the cell ``row``, ``col`` of ``sheet``; what the model makes of it (``None``:
-    one the model does not hold) and the ids it has there. Each format adds where its chart is in the file."""
+    """One chart of a file, pinned to the cell ``row``, ``col`` of ``sheet`` (``corner``: how far from the corner of
+    the sheet, in pixels); what the model makes of it (``None``: one the model does not hold) and the ids it has
+    there. Each format adds where its chart is in the file."""
 
     sheet: SheetId
     row: int
     col: int
+    corner: Callable[[], tuple[float, float]] = lambda: (0.0, 0.0)
+    name: str = ""
     held: ReadChart | None = None
     width: int = 0
     height: int = 0
@@ -78,15 +82,18 @@ class FileChart:
         assert self.held is not None
         return with_id(self.held.spec, self.spec_id)
 
-
-def hold_charts(model: WorkbookModel, charts: Iterable[FileChart]) -> None:
-    """The charts of a file that the model holds, put into ``model``: each its definition and an object pinned to its
-    cell."""
-    for chart in charts:
-        if chart.held is None:
-            continue
-        model.charts.define(chart.spec)
-        body = ObjectBody(chart.object_id, "chart", chart.width, chart.height, "plain-image", ref=chart.spec_id)
-        if chart.description:
-            body = replace(body, description=chart.description)
-        model.insert_object(VisualObject(body, CellAnchor(chart.sheet, chart.row, chart.col)))
+    def file_object(self) -> FileObject | None:
+        """The chart as the model holds it (``None``: it does not)."""
+        if self.held is None:
+            return None
+        body = ObjectBody(
+            self.object_id,
+            "chart",
+            self.width,
+            self.height,
+            "plain-image",
+            ref=self.spec_id,
+            name=self.name,
+            description=self.description,
+        )
+        return FileObject(self.sheet, self.row, self.col, self.corner, body, chart=self.spec)

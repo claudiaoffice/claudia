@@ -36,11 +36,12 @@ from claudia_computes.cellstyles import DEFAULT_CELL_STYLE
 from claudia_computes.values import ErrorValue, Value
 from claudia_core import Rasterise
 from claudia_odf_io import DocumentInfo, Loss, LossLog, stamp_office_meta
-from claudia_opc_io import write_parts
+from claudia_opc_io import custom_properties, read_parts, set_custom_properties, write_parts
 
-from ._charts import WrittenChart, hold_charts, written_charts
+from ._charts import WrittenChart, written_charts
 from ._pictures import WrittenPicture, picture_losses, written_pictures
 from ._placed import ONE_TO_ONE, Placed, SlideSize, file_tabs, placed_objects
+from ._read_back import FileObject, file_tabs_of, held_on, hold, within_limit
 from ._unwritten import FRESH_ONLY, XLSX_WRITTEN, in_order, workbook_unwritten_changes
 from .cell_looks import (
     Dressing,
@@ -60,12 +61,14 @@ from .extensions import to_excel, with_note
 from .layout_sizes import changed_sizes
 from .openformula import Untranslatable
 from .pivot_exchange import adopt_pivots, pivot_positions, sheet_cells
+from .slide_mark import MARK, SlideMark, properties_of
 from .xlsx_chart_patch import Drawings, patch_charts
 from .xlsx_charts import chart_xml, file_charts
 from .xlsx_layout import layout_losses
 from .xlsx_looks import XlsxLooks, read_looks
 from .xlsx_names import XlsxNamesPatch, header_losses, write_names
 from .xlsx_patch import PackagePatch, SheetNotes, SheetPatch, UnsupportedEdit, written
+from .xlsx_pictures import file_pictures
 from .xlsx_pivots import add_pivots, ask_refresh, read_pivots, written_pivots_of
 from .xlsx_read import (
     Package,
@@ -198,12 +201,14 @@ def workbook_to_xlsx(
     they are stacked (``xlsx_pictures``, D1233; ``rasterise`` draws an SVG as a PNG). The file says in its properties
     who made the workbook and when and who changed it last, from ``info``; what ``info`` does not know it leaves out
     (D466). A slide is a tab of its own without cells, its objects where they are on it, ``slide_size`` pixels to one
-    unit of the slide (``_placed``, D1477)."""
+    unit of the slide (``_placed``, D1477); the custom property "Claudia slides" says which tabs are slides
+    (``slide_mark``, D1478)."""
     wb = openpyxl.Workbook()
     assert wb.active is not None  # a freshly constructed Workbook always starts with one
     wb.remove(wb.active)
     looks = XlsxLookWriter(model, wb)
-    for tab in file_tabs(model):
+    tabs = file_tabs(model)
+    for tab in tabs:
         sheet = tab.sheet(model)
         ws = wb.create_sheet(title=tab.name)
         for (row, col), (content, value) in sheet_cells(model, sheet).items():
@@ -219,7 +224,15 @@ def workbook_to_xlsx(
     wb.save(out)
     data = add_pivots(out.getvalue(), model, written_pivots_of(model).pivots)
     data = _with_drawings(data, model, charts, pictures) if charts or pictures else data
-    return stamp_office_meta(data, info)
+    marks = properties_of((tab.name for tab in tabs if tab.is_slide), slide_size)
+    return stamp_office_meta(_with_properties(data, marks) if marks else data, info)
+
+
+def _with_properties(data: bytes, properties: dict[str, str]) -> bytes:
+    """``data`` with the custom ``properties`` (the mark of its slides, D1478)."""
+    parts = read_parts(data)
+    set_custom_properties(parts, properties)
+    return write_parts(parts)
 
 
 def _with_drawings(
@@ -260,18 +273,28 @@ def _model_of(package: Package) -> tuple[WorkbookModel, tuple[Loss, ...]]:
     known = frozenset(named.name.casefold() for named in names)
     model = WorkbookModel()
     dressing = _dressing(model, read_looks(package.parts))
+    sheets = []
     for part in package.sheets:
         sheet = Sheet(part.sheet_id, part.name)
         read = read_sheet(package, part, known)
         sheet.cells.update(read.cells)
         _dress(dressing, sheet, read)
-        model.add_sheet(sheet, None)
+        sheets.append(sheet)
+    held = _held_objects(package)
+    hold(
+        model, sheets, held, file_tabs_of(sheets, held, SlideMark.from_text(custom_properties(package.parts).get(MARK)))
+    )
     for named in names:
         model.names.put(named)
-    hold_charts(model, file_charts(package)[0])
     model._calculate_loaded()  # noqa: SLF001 (the restore()-mirroring construction idiom; see model.py's own)
     pivots = read_pivots(package, model)
     return model, (*pivots.losses.result(), *adopt_pivots(model, pivots.found).losses)
+
+
+def _held_objects(package: Package) -> list[FileObject]:
+    """The charts and pictures of a file the model holds, charts first (their ids come first)."""
+    charts = [found for chart in file_charts(package)[0] if (found := chart.file_object()) is not None]
+    return within_limit([*charts, *file_pictures(package, len(charts) + 1)])
 
 
 def xlsx_import_losses(xlsx_bytes: bytes) -> tuple[Loss, ...]:
@@ -289,10 +312,10 @@ def xlsx_import_losses(xlsx_bytes: bytes) -> tuple[Loss, ...]:
         read = read_sheet(package, part, known)
         _dress(dressing, Sheet(part.sheet_id, part.name), read)
         reads.append((part, read))
-    held = [chart.sheet for chart in file_charts(package)[0] if chart.held is not None]
+    held = _held_objects(package)
     for part, read in reads:
         for loss in read.lost.result():
-            count = loss.count - held.count(part.sheet_id) if loss.kind == "chart" else loss.count
+            count = loss.count - held_on(held, part.sheet_id, loss.kind)
             if count:
                 losses.add(loss.kind, loss.detail, count)
     for what, count in dressing.lost.items():

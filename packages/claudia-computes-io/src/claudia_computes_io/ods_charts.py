@@ -395,7 +395,7 @@ def a_chart(model: WorkbookModel, spec: ChartSpec, number: int, placed: Placed) 
         return None
     folder = f"Object {number}"
     parts: Parts = {f"{folder}/": (None, CHART_MEDIA), f"{folder}/content.xml": (document, "text/xml")}
-    return ChartOut(frame_element(folder, f"Chart {number}", placed), parts)
+    return ChartOut(frame_element(folder, placed.obj.body.name or f"Chart {number}", placed), parts)
 
 
 def new_shapes() -> etree._Element:

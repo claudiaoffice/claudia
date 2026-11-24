@@ -16,7 +16,8 @@ the series of a chart are the columns or the rows of its range is told by the ce
 from __future__ import annotations
 
 import re
-from collections.abc import Callable, Mapping, Sequence
+from collections import Counter
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from functools import cache
 from io import BytesIO
@@ -36,7 +37,7 @@ from ._charts import FileChart as SharedFileChart
 from ._placed import Pin, Placed
 from .chart_plan import Area, ReadChart, number_text, plan_from, plan_of, spec_of
 from .xlsx_layout import PIXELS_PER_CHARACTER, POINTS_PER_PIXEL
-from .xlsx_read import Package, parse_xml, related, relationships
+from .xlsx_read import Package, WorksheetPart, parse_xml, related, relationships
 
 NS = {
     "c": "http://schemas.openxmlformats.org/drawingml/2006/chart",
@@ -315,7 +316,8 @@ def pinned_at(pin: Pin, width: float, height: float) -> str:
 
 
 def anchor_element(rid: str, number: int, name: str, placed: Placed) -> etree._Element:
-    """The ``oneCellAnchor`` of a chart where ``placed`` says, its chart the part ``rid`` points at."""
+    """The ``oneCellAnchor`` of a chart where ``placed`` says, its chart the part ``rid`` points at, called by its
+    name (or else ``name``)."""
     xml = (
         f'<xdr:oneCellAnchor xmlns:xdr="{NS["xdr"]}" xmlns:a="{NS["a"]}" xmlns:r="{NS["r"]}" xmlns:c="{NS["c"]}">'
         f"{pinned_at(placed.pin, placed.width, placed.height)}"
@@ -328,7 +330,7 @@ def anchor_element(rid: str, number: int, name: str, placed: Placed) -> etree._E
     properties = anchor.find("xdr:graphicFrame/xdr:nvGraphicFramePr/xdr:cNvPr", NS)
     assert properties is not None
     properties.set("id", str(number))
-    properties.set("name", xml_safe(name))
+    properties.set("name", xml_safe(placed.obj.body.name or name))
     if placed.obj.body.description:
         properties.set("descr", xml_safe(placed.obj.body.description))
     return anchor
@@ -435,19 +437,34 @@ def _size_of(anchor: etree._Element, geometry: Callable[[], Geometry]) -> tuple[
     return round(width), round(height)
 
 
-def file_charts(
-    package: Package, drawings: Mapping[str, etree._Element] | None = None
-) -> tuple[list[FileChart], dict[str, etree._Element]]:
-    """Every chart of the sheets of a file, with the ones the model holds numbered in the order of the file: the
-    ``n``-th is the object ``o{n}`` showing the definition ``c{n}``. A ``twoCellAnchor`` is as big as the cells it
-    reaches, by the widths and heights the file gives them. The drawings are returned, parsed, for a patch to change;
-    ``drawings`` can hand over ones that were parsed already."""
-    sheet_ids = {sheet.name.casefold(): sheet.sheet_id for sheet in package.sheets}
-    roots: dict[str, etree._Element] = dict(drawings or {})
-    found: list[FileChart] = []
-    held = 0
+@dataclass(frozen=True)
+class DrawnAnchor:
+    """An anchor of the drawing of a sheet: the sheet, the drawing's part and the anchor, the cell its corner is in
+    and how far into it (pixels), how big it is (``None``: an anchor that does not say) and the sizes of the cells of
+    the sheet, read when they are asked for."""
+
+    sheet: WorksheetPart
+    drawing: str
+    anchor: etree._Element
+    row: int
+    col: int
+    down: int
+    across: int
+    size: tuple[int, int] | None
+    geometry: Callable[[], Geometry]
+
+    def corner(self) -> tuple[float, float]:
+        """Where its corner is, in pixels from the corner of the sheet."""
+        layout = self.geometry()
+        x = _span(layout.widths, layout.width, 0, self.col) + self.across
+        return x, _span(layout.heights, layout.height, 0, self.row) + self.down
+
+
+def drawn_anchors(package: Package, roots: dict[str, etree._Element]) -> Iterator[DrawnAnchor]:
+    """Every anchor of the drawings of the sheets of a file, sheet by sheet, in the order of the file. A
+    ``twoCellAnchor`` is as big as the cells it reaches, by the widths and heights the file gives them. The drawings
+    are parsed into ``roots`` (by their part) unless they are there already."""
     for sheet in package.sheets:
-        counted = 0
         geometry = cache(lambda sheet=sheet: geometry_of(package.parts[sheet.part]))
         for part in related(package.parts, sheet.part, "drawing"):
             if part not in package.parts:
@@ -455,44 +472,62 @@ def file_charts(
             root = roots.get(part)
             if root is None:
                 root = roots[part] = parse_xml(package.parts[part])
-            targets = {
-                rid: target for rid, kind, target in relationships(package.parts, part) if kind.endswith("/chart")
-            }
             for anchor in root:
                 if not isinstance(anchor.tag, str) or etree.QName(anchor).localname not in _ANCHORS:
                     continue
-                frame = anchor.find("xdr:graphicFrame", NS)
-                reference = None if frame is None else frame.find(".//c:chart", NS)
-                target = None if reference is None else targets.get(reference.get(_q("r", "id"), ""))
                 start = _cell_of(anchor.find("xdr:from", NS))
-                if frame is None or target is None or start is None:
+                if start is None:
                     continue
-                chart = FileChart(
-                    sheet=sheet.sheet_id,
-                    row=start[0],
-                    col=start[1],
-                    drawing=part,
-                    anchor=anchor,
-                    frame=frame,
-                    part=target,
-                )
-                data = package.parts.get(target)
-                read = None if data is None else read_chart(data, sheet_ids)
-                size = _size_of(anchor, geometry)
-                properties = frame.find("xdr:nvGraphicFramePr/xdr:cNvPr", NS)
-                description = (
-                    "" if properties is None else (properties.get("descr") or properties.get("title") or "").strip()
-                )
-                if (
-                    read is not None
-                    and size is not None
-                    and min(size) >= MIN_OBJECT_SIZE
-                    and len(description) <= MAX_ALT_CHARS
-                    and counted < MAX_OBJECTS_PER_SHEET
-                ):
-                    held += 1
-                    counted += 1
-                    chart.held, (chart.width, chart.height), chart.description = read, size, description
-                    chart.object_id, chart.spec_id = f"o{held}", f"c{held}"
-                found.append(chart)
+                row, col, down, across = start
+                yield DrawnAnchor(sheet, part, anchor, row, col, down, across, _size_of(anchor, geometry), geometry)
+
+
+def file_charts(
+    package: Package, drawings: Mapping[str, etree._Element] | None = None
+) -> tuple[list[FileChart], dict[str, etree._Element]]:
+    """Every chart of the sheets of a file, with the ones the model holds numbered in the order of the file: the
+    ``n``-th is the object ``o{n}`` showing the definition ``c{n}``. The drawings are returned, parsed, for a patch to
+    change; ``drawings`` can hand over ones that were parsed already."""
+    sheet_ids = {sheet.name.casefold(): sheet.sheet_id for sheet in package.sheets}
+    roots: dict[str, etree._Element] = dict(drawings or {})
+    found: list[FileChart] = []
+    held = 0
+    counted: Counter[SheetId] = Counter()
+    for drawn in drawn_anchors(package, roots):
+        targets = {
+            rid: target for rid, kind, target in relationships(package.parts, drawn.drawing) if kind.endswith("/chart")
+        }
+        frame = drawn.anchor.find("xdr:graphicFrame", NS)
+        reference = None if frame is None else frame.find(".//c:chart", NS)
+        target = None if reference is None else targets.get(reference.get(_q("r", "id"), ""))
+        if frame is None or target is None:
+            continue
+        sheet = drawn.sheet.sheet_id
+        properties = frame.find("xdr:nvGraphicFramePr/xdr:cNvPr", NS)
+        chart = FileChart(
+            sheet=sheet,
+            row=drawn.row,
+            col=drawn.col,
+            corner=drawn.corner,
+            name="" if properties is None else (properties.get("name") or "").strip(),
+            drawing=drawn.drawing,
+            anchor=drawn.anchor,
+            frame=frame,
+            part=target,
+        )
+        data = package.parts.get(target)
+        read = None if data is None else read_chart(data, sheet_ids)
+        description = "" if properties is None else (properties.get("descr") or properties.get("title") or "").strip()
+        if (
+            read is not None
+            and drawn.size is not None
+            and min(drawn.size) >= MIN_OBJECT_SIZE
+            and len(description) <= MAX_ALT_CHARS
+            and counted[sheet] < MAX_OBJECTS_PER_SHEET
+        ):
+            held += 1
+            counted[sheet] += 1
+            chart.held, (chart.width, chart.height), chart.description = read, drawn.size, description
+            chart.object_id, chart.spec_id = f"o{held}", f"c{held}"
+        found.append(chart)
     return found, roots

@@ -5,6 +5,10 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+### Fixed
+- CODE-67: the pictures of an xlsx or ods file are read in as image objects, on sheets and slides (D1478), and no
+  longer reported as `picture`.
+
 ### Removed
 - `slide_plan` (D1477): a slide is no longer a copy of the workbook turned into a sheet, and writing one is not reported
   (the loss `slide` is gone).
@@ -12,6 +16,9 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
   writer and the patches write and keep no chart sheet, and the loss `chart`/`tab` is gone.
 
 ### Changed
+- A file written from a workbook with slides says which tabs are slides and at what size, in the custom property
+  "Claudia slides" (E6.31 step 5b, D1478); read back, such a tab is a slide while it has kept its name and has no cells,
+  else a sheet. Charts and pictures are written and read with their names.
 - A slide is a tab of its own in xlsx and ods, its objects where they are on it (E6.31 step 5, D1477): one unit of the
   slide is one pixel of the tab by default; `workbook_to_xlsx` and `workbook_to_ods` take `slide_size`
   (`SlideSize(px_per_unit)`). An object is pinned to the cell its corner is in and how far into it (xlsx

@@ -32,10 +32,10 @@ from claudia_core import (
     box_body,
 )
 from claudia_odf_io import LossLog, xml_safe
+from claudia_opc_io import ANGLE, DECORATIVE_URI, is_decorative, turn_of
 
 from ._boxes import UNKNOWN, BoxLook, all_boxes, look_of, shown_words
 from ._docx_pictures import (
-    _DECORATIVE_URI,
     _NS,
     EMU,
     PictureWriter,
@@ -67,7 +67,6 @@ _WORDS_STYLE = {
     **{style.name: style.id for style in BUILTIN_STYLES if style.kind == "paragraph"},
     **{word: ours for ours, word in WORD_NAMES.items()},
 }
-_ANGLE = 60000
 
 
 def _wps(name: str) -> str:
@@ -89,7 +88,6 @@ _SHAPES = _path(
     + "']/wps:wsp"
 )
 _DOC_PR = _path("./wp:docPr")
-_DECORATIVE = _path("./a:extLst/a:ext/adec:decorative/@val")
 _TRANSFORM = _path("./wps:spPr/a:xfrm")
 _GEOMETRY = _path("./wps:spPr/a:prstGeom/@prst")
 _CONTENT = _path("./wps:txbx/w:txbxContent")
@@ -116,18 +114,6 @@ class FileBox:
 
 def _first(found: list[Any]) -> Any:  # noqa: ANN401
     return found[0] if found else None
-
-
-def _turn_of(transform: Any) -> int | None:  # noqa: ANN401
-    """The whole degrees (clockwise, 0 to 359) a ``a:xfrm`` turns by; ``None`` when it flips the shape."""
-    if transform is None:
-        return 0
-    if transform.get("flipH") in ("1", "true") or transform.get("flipV") in ("1", "true"):
-        return None
-    try:
-        return round(int(transform.get("rot", "0")) / _ANGLE) % 360
-    except ValueError:
-        return 0
 
 
 def _words_of(content: Any) -> tuple[str, str | None] | None:  # noqa: ANN401
@@ -197,7 +183,7 @@ def held_box(drawing: Any) -> tuple[str | None, tuple[int, int], int, str, bool,
         return None
     shape = shapes[0]
     extent = frames[0].find(qn("wp:extent"))
-    rotation = _turn_of(_first(_TRANSFORM(shape)))
+    rotation = turn_of(_first(_TRANSFORM(shape)))
     preset = _first(_GEOMETRY(shape))
     content = _first(_CONTENT(shape))
     if extent is None or rotation is None or content is None or preset not in _SHAPE_OF:
@@ -217,7 +203,7 @@ def held_box(drawing: Any) -> tuple[str | None, tuple[int, int], int, str, bool,
         return None
     properties = _first(_DOC_PR(frames[0]))
     description = properties.get("descr", "") if properties is not None else ""
-    decorative = properties is not None and "1" in _DECORATIVE(properties)
+    decorative = is_decorative(properties)
     return ours, size, rotation, description, decorative, words[0], words[1], look
 
 
@@ -279,12 +265,12 @@ class BoxWriter:
         title = f"{'Text box' if body.kind == 'text' else 'Shape'} {number}"
         alt = "" if body.decorative else _escape(body.description)
         decorative = (
-            f'<a:extLst><a:ext uri="{_DECORATIVE_URI}"><adec:decorative xmlns:adec="{_NS["adec"]}" val="1"/></a:ext>'
+            f'<a:extLst><a:ext uri="{DECORATIVE_URI}"><adec:decorative xmlns:adec="{_NS["adec"]}" val="1"/></a:ext>'
             "</a:extLst>"
             if body.decorative
             else ""
         )
-        turn = f' rot="{body.rotation * _ANGLE}"' if body.rotation else ""
+        turn = f' rot="{body.rotation * ANGLE}"' if body.rotation else ""
         look = look_of(self.model, body)
         fill = _solid(look.fill)
         line = f'<a:ln w="{look.width}">{_solid(look.line)}</a:ln>' if look.line else "<a:ln><a:noFill/></a:ln>"
@@ -357,7 +343,7 @@ def restyle(box: FileBox, before: ObjectBody, after: ObjectBody, document: Any, 
             extent.set("cy", cy)
     if before.rotation != after.rotation and (transform := _first(_TRANSFORM(shape))) is not None:
         if after.rotation:
-            transform.set("rot", str(after.rotation * _ANGLE))
+            transform.set("rot", str(after.rotation * ANGLE))
         elif "rot" in transform.attrib:
             del transform.attrib["rot"]
     if before.paragraph != after.paragraph and after.paragraph is not None:

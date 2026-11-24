@@ -1,13 +1,28 @@
 {
  "version": "0.5.0",
+ "ANGLE": {
+  "value": "60000"
+ },
  "APPLICATION": {
   "value": "'Claudia'"
  },
  "CORE_PART": {
   "value": "'docProps/core.xml'"
  },
+ "CUSTOM_PART": {
+  "value": "'docProps/custom.xml'"
+ },
+ "DECORATIVE_URI": {
+  "value": "'{C183D7F6-B498-43B3-948B-1728B52AA6E4}'"
+ },
  "DEFAULT_LIMITS": {
   "value": "<PackageLimits>"
+ },
+ "DRAWINGML": {
+  "value": "{'a': 'http://schemas.openxmlformats.org/drawingml/2006/main', 'r': 'http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'asvg': 'http://schemas.microsoft.com/office/drawing/2016/SVG/main', 'adec': 'http://schemas.microsoft.com/office/drawing/2017/decorative'}"
+ },
+ "EMU_PER_PIXEL": {
+  "value": "9525"
  },
  "OwnedTest": {
   "function": "(*args, **kwargs)"
@@ -28,6 +43,9 @@
   "methods": {},
   "properties": []
  },
+ "SVG_URI": {
+  "value": "'{96DAC541-7B7A-43D3-8B79-37D633B846F1}'"
+ },
  "ThemeFonts": {
   "class": [
    "object"
@@ -42,6 +60,15 @@
  "check_package": {
   "function": "(zip_bytes: 'bytes', limits: 'PackageLimits' = PackageLimits(max_members=10000, max_part_bytes=268435456, max_total_bytes=536870912, max_ratio=250, ratio_from_bytes=33554432)) -> 'None'"
  },
+ "cropped": {
+  "function": "(source: 'etree._Element | None') -> 'bool'"
+ },
+ "custom_properties": {
+  "function": "(parts: 'Mapping[str, bytes]') -> 'dict[str, str]'"
+ },
+ "is_decorative": {
+  "function": "(properties: 'etree._Element | None') -> 'bool'"
+ },
  "owns": {
   "function": "(part_names: 'Iterable[str]') -> 'OwnedTest'"
  },
@@ -54,11 +81,20 @@
  "reconcile": {
   "function": "(original_bytes: 'bytes', regenerated_bytes: 'bytes', owned: 'OwnedTest') -> 'bytes'"
  },
+ "set_custom_properties": {
+  "function": "(parts: 'dict[str, bytes]', values: 'Mapping[str, str]') -> 'None'"
+ },
+ "shown_part": {
+  "function": "(blip: 'etree._Element') -> 'str'"
+ },
  "stamp_core_properties": {
   "function": "(parts: 'dict[str, bytes]', *, created: 'str | None' = None, creator: 'str | None' = None, modified: 'str | None' = None, modifier: 'str | None' = None) -> 'None'"
  },
  "stamp_package": {
   "function": "(data: 'bytes', *, created: 'str | None' = None, creator: 'str | None' = None, modified: 'str | None' = None, modifier: 'str | None' = None) -> 'bytes'"
+ },
+ "turn_of": {
+  "function": "(transform: 'etree._Element | None') -> 'int | None'"
  },
  "utc_second": {
   "function": "(moment: 'str | None') -> 'str | None'"

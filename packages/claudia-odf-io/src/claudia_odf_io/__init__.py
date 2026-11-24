@@ -4,12 +4,14 @@ names      NS, qname, local_name, encode_style_name/decode_style_name -- how ODF
 splice     XmlPart -- edit one XML part by splicing bytes, so everything outside the edit stays byte-identical
 paragraph  read_text/set_text/insert_elements/hidden_content/frames_of/shapes_of/offset_of -- the text of one
 paragraph, changing it in place, putting change marks between its characters, and what it shows that is not its text
-pictures   picture_of, name_of, description_of, description_element -- the picture a draw:frame holds and what it says
-meta       DocumentInfo, new_meta, stamp_office_meta, update_meta, update_package_meta -- title, dates, people
+pictures   graphic_styles, picture_of, held_frame, name_of, description_of, description_element -- the picture a
+           draw:frame holds, as the model holds it, and what it says
+meta       DocumentInfo, new_meta, stamp_office_meta, update_meta, update_package_meta, user_defined -- title, dates,
+           people, the user-defined properties
 package    new_package, update_manifest, problems -- a package from its parts, its manifest changed, and a check
 language   default_style_xml, read_language, patch_language -- the language of a file, in its default style
 report     Loss, LossLog, unwritten_changes -- what could not be kept, as a list, and what a writer left out
-transform  inches, transform_of, turned_box, angle_of -- lengths of the format and how a drawing object is turned
+transform  inches, pixels, transform_of, turned_box, angle_of -- lengths of the format, how a drawing object is turned
 lists      list_style, level_style, read_levels -- the levels of a numbering scheme as list styles say them (E9.22)
 fonts      font_faces, font_of -- the font faces of a file and the font a style's text properties name (E3.13)
 """
@@ -41,6 +43,7 @@ from .meta import (
     stamp_office_meta,
     update_meta,
     update_package_meta,
+    user_defined,
 )
 from .names import NS, decode_style_name, encode_style_name, local_name, qname
 from .package import MIME, VERSION, new_package, problems, read_manifest, update_manifest
@@ -55,10 +58,10 @@ from .paragraph import (
     shapes_of,
     xml_safe,
 )
-from .pictures import description_element, description_of, name_of, picture_of
+from .pictures import description_element, description_of, graphic_styles, held_frame, name_of, picture_of
 from .report import NOT_WRITTEN, Loss, LossLog, unwritten_changes
 from .splice import OdfError, Span, XmlPart
-from .transform import angle_of, inches, transform_of, turned_box
+from .transform import angle_of, inches, pixels, transform_of, turned_box
 
 __all__ = [
     "LEVEL_BULLET",
@@ -92,6 +95,8 @@ __all__ = [
     "frames_of",
     "shapes_of",
     "hidden_content",
+    "graphic_styles",
+    "held_frame",
     "inches",
     "insert_elements",
     "language_from_parts",
@@ -103,6 +108,7 @@ __all__ = [
     "odf_date",
     "parts_of_language",
     "picture_of",
+    "pixels",
     "patch_language",
     "problems",
     "qname",
@@ -116,6 +122,7 @@ __all__ = [
     "update_meta",
     "unwritten_changes",
     "update_package_meta",
+    "user_defined",
     "transform_of",
     "turned_box",
     "xml_safe",

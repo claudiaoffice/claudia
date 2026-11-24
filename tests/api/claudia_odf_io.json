@@ -119,6 +119,12 @@
  "frames_of": {
   "function": "(paragraph: 'etree._Element') -> 'list[etree._Element]'"
  },
+ "graphic_styles": {
+  "function": "(*roots: 'etree._Element | None') -> 'dict[str, etree._Element]'"
+ },
+ "held_frame": {
+  "function": "(frame: 'etree._Element', graphics: 'Mapping[str, etree._Element]', parts: 'Mapping[str, bytes]') -> 'tuple[ImageAsset, tuple[int, int], int] | None'"
+ },
  "hidden_content": {
   "function": "(paragraph: 'etree._Element') -> 'list[str]'"
  },
@@ -144,7 +150,7 @@
   "function": "(frame: 'etree._Element') -> 'str'"
  },
  "new_meta": {
-  "function": "(info: 'DocumentInfo') -> 'bytes'"
+  "function": "(info: 'DocumentInfo', properties: 'Mapping[str, str] | None' = None) -> 'bytes'"
  },
  "new_package": {
   "function": "(kind: 'str', content: 'bytes', styles: 'bytes', *, meta: 'bytes | None' = None, extra: 'Mapping[str, tuple[bytes | None, str]] | None' = None) -> 'bytes'"
@@ -163,6 +169,9 @@
  },
  "picture_of": {
   "function": "(frame: 'etree._Element', graphics: 'Mapping[str, etree._Element]', parts: 'Mapping[str, bytes]') -> 'ImageAsset | None'"
+ },
+ "pixels": {
+  "function": "(value: 'str | None') -> 'float | None'"
  },
  "problems": {
   "function": "(data: 'bytes') -> 'list[str]'"
@@ -211,6 +220,9 @@
  },
  "update_package_meta": {
   "function": "(parts: 'dict[str, bytes]', info: 'DocumentInfo') -> 'None'"
+ },
+ "user_defined": {
+  "function": "(meta_xml: 'bytes') -> 'dict[str, str]'"
  },
  "xml_safe": {
   "function": "(text: 'str') -> 'str'"

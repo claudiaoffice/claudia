@@ -54,6 +54,7 @@ from claudia_odf_io import (
     decode_style_name,
     default_style_xml,
     frames_of,
+    graphic_styles,
     hidden_content,
     insert_elements,
     new_meta,
@@ -92,7 +93,6 @@ from ._odt_pictures import (
     PictureWriter,
     file_pictures,
     frames_not_pictures,
-    graphic_styles,
     unheld_pictures,
 )
 from ._odt_references import bookmark_name, bookmarks_starting, mark_target, read_words, reference_item, swap_fields

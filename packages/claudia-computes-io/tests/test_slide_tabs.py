@@ -4,6 +4,7 @@ sheets, without cells, and its objects are where they were on the slide: one uni
 
 from __future__ import annotations
 
+import json
 from io import BytesIO
 
 import openpyxl
@@ -28,8 +29,8 @@ from claudia_computes import ChartSpec, ObjectBody, VisualObject, WorkbookModel
 from claudia_computes.model import Sheet
 from claudia_core import Slide, SlideAnchor
 from claudia_odf_io import NS as ODF
-from claudia_odf_io import problems
-from claudia_opc_io import read_parts
+from claudia_odf_io import problems, user_defined
+from claudia_opc_io import read_parts, write_parts
 
 FORMATS = {
     "xlsx": (workbook_to_xlsx, xlsx_to_workbook, xlsx_export_losses),
@@ -151,13 +152,55 @@ def _cell(row: int, col: int):
     return CellAnchor("s1", row, col)
 
 
+def placements(model: WorkbookModel, tab_id: str) -> list[tuple[str, int, int, int, int]]:
+    """``(kind, x, y, w, h)`` of the objects on the slide ``tab_id``, bottom first."""
+    return [(obj.body.kind, obj.anchor.x, obj.anchor.y, obj.body.w, obj.body.h) for obj in model.objects_on(tab_id)]
+
+
 @pytest.mark.parametrize("fmt", sorted(FORMATS))
-def test_read_back_a_slide_tab_is_a_sheet_with_its_chart(fmt):
+@pytest.mark.parametrize("size", [1.0, 0.5])
+def test_a_slide_comes_back_as_a_slide_with_its_objects_where_they_were(fmt, size):
     write, read, _ = FORMATS[fmt]
-    again = read(write(with_a_slide()))
-    assert tab_names(again) == [("sheet", "Data"), ("sheet", "Sales chart"), ("sheet", "Costs")]
-    (chart,) = again.objects_on(again.tabs[1].id)
-    assert (chart.body.kind, chart.anchor.row, chart.anchor.col) == ("chart", 1, 1)
+    again = read(write(with_a_slide(), slide_size=SlideSize(size)))
+    assert tab_names(again) == [("sheet", "Data"), ("slide", "Sales chart"), ("sheet", "Costs")]
+    slide = again.tabs[1].id
+    assert placements(again, slide) == [("chart", 100, 50, 800, 450), ("image", 1200, 700, 200, 100)]
+    chart, picture = again.objects_on(slide)
+    assert (chart.body.name, picture.body.name) == ("Sales", "Logo")
+
+
+def test_the_file_says_which_tabs_are_slides_in_its_custom_properties():
+    xlsx = openpyxl.load_workbook(BytesIO(workbook_to_xlsx(with_a_slide())))
+    (mark,) = [prop for prop in xlsx.custom_doc_props if prop.name == "Claudia slides"]
+    assert json.loads(mark.value) == {"slides": ["Sales chart"], "px_per_unit": 1.0}
+    meta = read_parts(workbook_to_ods(with_a_slide()))["meta.xml"]
+    assert json.loads(user_defined(meta)["Claudia slides"]) == {"slides": ["Sales chart"], "px_per_unit": 1.0}
+    assert "Claudia slides" not in user_defined(read_parts(workbook_to_ods(a_workbook()))["meta.xml"])
+
+
+def test_a_tab_renamed_in_another_program_is_a_sheet_with_the_objects_at_their_cells():
+    parts = read_parts(workbook_to_xlsx(with_a_slide()))
+    parts["xl/workbook.xml"] = parts["xl/workbook.xml"].replace(b'name="Sales chart"', b'name="Chart tab"')
+    again = xlsx_to_workbook(write_parts(parts))
+    assert tab_names(again) == [("sheet", "Data"), ("sheet", "Chart tab"), ("sheet", "Costs")]
+    chart, picture = again.objects_on(again.tabs[1].id)
+    assert [(o.body.kind, o.anchor.row, o.anchor.col) for o in (chart, picture)] == [("chart", 1, 1), ("image", 26, 12)]
+
+
+def test_a_tab_someone_typed_into_is_a_sheet():
+    data = workbook_to_ods(with_a_slide())
+    parts = read_parts(data)
+    content = etree.fromstring(parts["content.xml"])
+    table = content.find(f".//{{{ODF['table']}}}table[@{{{ODF['table']}}}name='Sales chart']")
+    cell = next(table.iter(f"{{{ODF['table']}}}table-cell"))
+    cell.set(f"{{{ODF['office']}}}value-type", "string")
+    etree.SubElement(cell, f"{{{ODF['text']}}}p").text = "note"
+    parts["content.xml"] = etree.tostring(content, xml_declaration=True, encoding="UTF-8")
+    again = ods_to_workbook(write_parts(parts))
+    assert tab_names(again)[1] == ("sheet", "Sales chart")
+    sheet = again.sheets[again.tabs[1].id]
+    assert sheet.cells[(0, 0)] == {"t": "text", "v": "note"}
+    assert [obj.body.kind for obj in again.objects_on(sheet.id)] == ["chart", "image"]
 
 
 def test_a_slide_name_a_sheet_cannot_have_is_written_the_way_a_sheet_can_be_called():

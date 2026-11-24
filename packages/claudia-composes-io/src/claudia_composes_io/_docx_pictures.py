@@ -37,6 +37,7 @@ from claudia_core import (
     picture_body,
 )
 from claudia_odf_io import LossLog
+from claudia_opc_io import ANGLE, DECORATIVE_URI, EMU_PER_PIXEL, SVG_URI, cropped, is_decorative, shown_part, turn_of
 
 from ._pictures import all_pictures
 from ._wrap import (
@@ -50,9 +51,7 @@ from ._wrap import (
 )
 
 #: English Metric Units in a pixel (the model's units are pixels at 96 to the inch).
-EMU = 9525
-#: A turn in the file is in sixtieths of a degree.
-_ANGLE = 60000
+EMU = EMU_PER_PIXEL
 _NS = {
     "w": "http://schemas.openxmlformats.org/wordprocessingml/2006/main",
     "wp": "http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing",
@@ -63,10 +62,6 @@ _NS = {
     "adec": "http://schemas.microsoft.com/office/drawing/2017/decorative",
 }
 _PICTURE_URI = "http://schemas.openxmlformats.org/drawingml/2006/picture"
-#: How a picture is drawn in Word 2016 and later: the SVG itself, next to an ordinary picture as its fallback.
-_SVG_BLIP_URI = "{96DAC541-7B7A-43D3-8B79-37D633B846F1}"
-#: The mark that says a picture is decorative (Word 2019 and later).
-_DECORATIVE_URI = "{C183D7F6-B498-43B3-948B-1728B52AA6E4}"
 
 
 def _xpath(expression: str) -> Callable[[Any], list[Any]]:
@@ -78,13 +73,10 @@ _DRAWINGS = _xpath(".//w:drawing")
 _GRAPHIC = _xpath("(./wp:inline | ./wp:anchor)/a:graphic/a:graphicData[@uri='" + _PICTURE_URI + "']/pic:pic")
 _FRAME = _xpath("./wp:inline | ./wp:anchor")
 _BLIP = _xpath("./pic:blipFill/a:blip")
-_SVG = _xpath("./a:extLst/a:ext/asvg:svgBlip/@r:embed")
 _CROP = _xpath("./pic:blipFill/a:srcRect")
 _TRANSFORM = _xpath("./pic:spPr/a:xfrm")
 _DOC_PR = _xpath("./wp:docPr")
-_DECORATIVE = _xpath("./a:extLst/a:ext/adec:decorative/@val")
 _ALL_DOC_PR = _xpath("//wp:docPr/@id")
-_SMALL_FRAME_ENTRIES = ("l", "t", "r", "b")
 
 
 @dataclass(frozen=True)
@@ -142,23 +134,10 @@ def _graphic_of(drawing: Any) -> Any:  # noqa: ANN401
 
 def _blob_of(part: Any, blip: Any) -> bytes | None:  # noqa: ANN401
     """What the picture draws: its SVG when it has one next to the ordinary picture, else the picture itself."""
-    related = _first(_SVG(blip)) or blip.get(qn("r:embed"))
     try:
-        return part.related_parts[related].blob
+        return part.related_parts[shown_part(blip)].blob
     except KeyError:
         return None
-
-
-def _turn_of(transform: Any) -> int | None:  # noqa: ANN401
-    """The whole degrees (clockwise, 0 to 359) a ``a:xfrm`` turns by; ``None`` when it flips the picture."""
-    if transform is None:
-        return 0
-    if transform.get("flipH") in ("1", "true") or transform.get("flipV") in ("1", "true"):
-        return None
-    try:
-        return round(int(transform.get("rot", "0")) / _ANGLE) % 360
-    except ValueError:
-        return 0
 
 
 def held_picture(part: Any, drawing: Any) -> tuple[ImageAsset, tuple[int, int], int, str, bool, str] | None:  # noqa: ANN401
@@ -173,16 +152,16 @@ def held_picture(part: Any, drawing: Any) -> tuple[ImageAsset, tuple[int, int], 
     crop = _first(_CROP(picture))
     if blip is None or extent is None:
         return None
-    if crop is not None and any(int(crop.get(side, "0") or 0) for side in _SMALL_FRAME_ENTRIES):
+    if cropped(crop):
         return None
-    rotation = _turn_of(_first(_TRANSFORM(picture)))
+    rotation = turn_of(_first(_TRANSFORM(picture)))
     asset = asset_of(_blob_of(part, blip))
     size = (pixels(extent.get("cx")), pixels(extent.get("cy")))
     if rotation is None or asset is None or min(size) < MIN_OBJECT_SIZE or not keeps_proportions(asset, *size):
         return None
     properties = _first(_DOC_PR(frame))
     description = properties.get("descr", "") if properties is not None else ""
-    decorative = properties is not None and "1" in _DECORATIVE(properties)
+    decorative = is_decorative(properties)
     name = properties.get("name", "") if properties is not None else ""
     return asset, size, rotation, description, decorative, name
 
@@ -268,18 +247,18 @@ class PictureWriter:
         title = name or f"Picture {number}"
         alt = "" if body.decorative else _escape(body.description)
         extensions = (
-            f'<a:extLst><a:ext uri="{_SVG_BLIP_URI}"><asvg:svgBlip xmlns:asvg="{_NS["asvg"]}" r:embed="{svg_id}"/>'
+            f'<a:extLst><a:ext uri="{SVG_URI}"><asvg:svgBlip xmlns:asvg="{_NS["asvg"]}" r:embed="{svg_id}"/>'
             "</a:ext></a:extLst>"
             if svg_id
             else ""
         )
         decorative = (
-            f'<a:extLst><a:ext uri="{_DECORATIVE_URI}"><adec:decorative xmlns:adec="{_NS["adec"]}" val="1"/></a:ext>'
+            f'<a:extLst><a:ext uri="{DECORATIVE_URI}"><adec:decorative xmlns:adec="{_NS["adec"]}" val="1"/></a:ext>'
             "</a:extLst>"
             if body.decorative
             else ""
         )
-        turn = f' rot="{body.rotation * _ANGLE}"' if body.rotation else ""
+        turn = f' rot="{body.rotation * ANGLE}"' if body.rotation else ""
         xml = (
             f'<w:r xmlns:w="{_NS["w"]}" xmlns:wp="{_NS["wp"]}" xmlns:a="{_NS["a"]}" xmlns:pic="{_NS["pic"]}" '
             f'xmlns:r="{_NS["r"]}"><w:drawing>'
@@ -396,7 +375,7 @@ def restyle(picture: FilePicture, before: ObjectBody, after: ObjectBody) -> None
         transform = _first(_TRANSFORM(shown))
         if transform is not None:
             if after.rotation:
-                transform.set("rot", str(after.rotation * _ANGLE))
+                transform.set("rot", str(after.rotation * ANGLE))
             elif "rot" in transform.attrib:
                 del transform.attrib["rot"]
 
@@ -405,14 +384,14 @@ def _mark_decorative(properties: Any, decorative: bool) -> None:  # noqa: ANN401
     """Say in the ``wp:docPr`` that its picture is decorative, or take the mark off."""
     for each in properties.findall(qn("a:extLst")):
         for ext in each.findall(qn("a:ext")):
-            if ext.get("uri") == _DECORATIVE_URI:
+            if ext.get("uri") == DECORATIVE_URI:
                 each.remove(ext)
         if not len(each):
             properties.remove(each)
     if decorative:
         properties.append(
             parse_xml(
-                f'<a:extLst xmlns:a="{_NS["a"]}"><a:ext uri="{_DECORATIVE_URI}">'
+                f'<a:extLst xmlns:a="{_NS["a"]}"><a:ext uri="{DECORATIVE_URI}">'
                 f'<adec:decorative xmlns:adec="{_NS["adec"]}" val="1"/></a:ext></a:extLst>'
             )
         )

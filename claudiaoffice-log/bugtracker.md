@@ -35,7 +35,7 @@ The index is the status of record; a section below keeps the status of the round
 re-checked. **Opened** and **Fixed** are filled from 2026-11-20 on: for older items only where the status already gave
 the date.
 
-### Open (91)
+### Open (90)
 
 
 By priority (P1, P2, P3, then items that wait for a decision without one), then by ID.
@@ -117,7 +117,6 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | CODE-62 | P3 | Code / Linux client | A window that revives the shared server while the old one still holds the port starts it on a random port, not the remembered one | **new, open** |  |  |
 | CODE-63 | P3 | UX / composes | The Format ▸ Styles menu lists composes' built-in `contents-title` and `contents-1` to `contents-9` as "custom" styles | **new, open** (read) |  |  |
 | CODE-66 | P3 | computes I/O | A picture added to an imported XLSX or ODS is not written into it: the patch of a kept file does not add pictures (reported as `object`) | **new, open** (D1233) |  |  |
-| CODE-67 | P3 | computes I/O | Pictures of an XLSX or ODS are not read into the model: they stay in the file, are counted as `picture`, and survive an edit, but cannot be moved or described in computes | **new, open** (D1233) |  |  |
 | CODE-68 | P3 | computes | Computes cannot make a text box or a shape, though a model can hold one (a file from another app) and an export reports it as `object` | **new, open** |  |  |
 | CODE-69 | P3 | Code / shared objects | A shape's text is a plain `str`, not the shared paragraph entity: no styles, no authorship runs, no per-host overflow policy | **new, open** (implementation note, shared object layer) |  |  |
 | CODE-70 | P3 | computes I/O | The patch of a kept XLSX or ODS does not add pivot tables either (reported), as it does not add pictures (CODE-66) | **new, open** (D1233) |  |  |
@@ -134,7 +133,7 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |  |  |
 | UX-06 | — | UX | Web menu differs from decisions D4/D5 | needs decision |  |  |
 
-### Fixed (157)
+### Fixed (158)
 
 
 By ID. Items closed without a fix (superseded, wontfix) are here too.
@@ -249,6 +248,7 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | CODE-79 | P2 | Code / AI | The decision which provider answers was made once, when the question was started; a switch of the administrator or of the document's consent while a question ran changed nothing until it ended | **fixed** 2026-11-22 on `e7-11-claude-provider` (D1497) | 2026-11-22 | 2026-11-22 |
 | CODE-77 | P2 | Code / computes | Undoing a chart leaves it in the workbook (the server does not forget it), and the page reports a Plotly error | **fixed** 2026-11-23 on `e6-31-slides-in-computes` (D1475) | 2026-11-22 | 2026-11-23 |
 | CODE-83 | P2 | Code / computes | Writing in a text box on a workbook's slide is an internal server error | **fixed** 2026-11-23 on `e6-31-slides-in-computes` | 2026-11-23 | 2026-11-23 |
+| CODE-67 | P3 | computes I/O | Pictures of an XLSX or ODS are not read into the model: they stay in the file, are counted as `picture`, and survive an edit, but cannot be moved or described in computes | **fixed** 2026-11-24 on `e6-31-slides-in-computes` (D1478) | 2026-11-19 | 2026-11-24 |
 | PROC-01 | P1 | Process | No CI workflow in the repository | fixed (verified at `54d1245`) |  |  |
 | PROC-02 | P2 | Process | The quality gate prints "everything is clean" when half of it was skipped | fixed |  |  |
 | PROC-03 | P2 | Process | Work described as delivered is not in the repository | fixed |  |  |
@@ -2146,12 +2146,15 @@ or anchor; removing one takes it and its part out. **Acceptance.** Import a work
 export: the file has what the model has and `xlsx_unwritten_changes` is empty (`test_pictures.py`, a patch case for each).
 Found while building D1233.
 
-### CODE-67 · The pictures of an XLSX or ODS are not read into the model · P3 · new, open
+### CODE-67 · The pictures of an XLSX or ODS are not read into the model · P3 · fixed 2026-11-24 (D1478)
 A picture in an imported workbook stays in the file untouched and is counted as `picture` on import, but computes does not
 show or select it. **Fix.** Read `xdr:pic` / `draw:image` frames (size from the anchor and the widths and heights the sheet
 has, as for charts; `rot`, `descr`, `name`) as image objects with the asset decoded from the media part, as `file_charts`
 does for charts. **Acceptance.** An imported picture is on the sheet, has the file's size and turn, and writes back to the
-same place (`test_pictures.py`, a round trip for each format). Found while building D1233.
+same place (`test_pictures.py`, a round trip for each format). Found while building D1233. **Fixed** on
+`e6-31-slides-in-computes` (E6.31 step 5b, D1478): `xlsx_pictures.file_pictures` and `ods_pictures.file_pictures`, on
+sheets and on slide tabs; an edit of a kept file keeps them where they are (a picture moved or changed in computes is
+still reported as `object` until the patch learns pictures, CODE-66).
 
 ### Second list of 2026-11-19: every open point of `object-interaction`
 

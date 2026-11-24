@@ -63,19 +63,22 @@ from claudia_odf_io import (
     LossLog,
     OdfError,
     XmlPart,
+    graphic_styles,
     local_name,
     new_meta,
     new_package,
     read_text,
     set_text,
     update_package_meta,
+    user_defined,
     xml_safe,
 )
-from claudia_opc_io import read_parts, write_parts
+from claudia_opc_io import parse_xml, read_parts, write_parts
 
-from ._charts import hold_charts, written_charts
+from ._charts import written_charts
 from ._pictures import MEDIA_TYPES, picture_losses, written_pictures
 from ._placed import ONE_TO_ONE, Placed, SlideSize, file_tabs, placed_objects
+from ._read_back import FileObject, file_tabs_of, held_on, hold, within_limit
 from ._unwritten import FRESH_ONLY, ODS_WRITTEN, workbook_unwritten_changes
 from .cell_looks import Dressing, Lines, LookExport, SheetLooks, changed_styles, restyling, sheet_styling
 from .chart_plan import chart_losses
@@ -87,11 +90,12 @@ from .ods_charts import Parts, a_chart, new_shapes
 from .ods_layout import OdsSizes, read_sizes
 from .ods_looks import OdsLooks, column_styles, read_looks
 from .ods_names import NamesPatch, SheetPlace, global_elements, local_expressions, read_names, sheet_names
-from .ods_pictures import decorative_count, part_name, picture_frame
+from .ods_pictures import decorative_count, file_pictures, part_name, picture_frame
 from .ods_pivots import data_pilot_tables, read_pivots
 from .ods_write_looks import OdsLookWriter, OdsRestyler
 from .openformula import Untranslatable, from_openformula, to_openformula
 from .pivot_exchange import adopt_pivots, outside_pivots, sheet_cells, written_pivots
+from .slide_mark import MARK, SlideMark, properties_of
 from .xlsx import UnsupportedEdit
 
 _DECLARATION = '<?xml version="1.0" encoding="UTF-8"?>\n'
@@ -529,18 +533,25 @@ def _document(data: bytes) -> tuple[dict[str, bytes], etree._Element, list[_Tabl
     return parts, content, _tables(content, looks), looks
 
 
-def _held_charts(tables: list[_Table], parts: dict[str, bytes]) -> list[FileChart]:
-    """The charts of the file the model holds, each counted off what the sheet leaves out (D462)."""
-    found = file_charts(tables, parts)
-    for table in tables:
-        held = sum(1 for chart in found if chart.held is not None and chart.sheet == SheetId(table.id))
-        if held:
-            table.left_out = [
-                (kind, detail, count - held if (kind, detail) == ("chart", "") else count)
-                for kind, detail, count in table.left_out
-            ]
-            table.left_out = [entry for entry in table.left_out if entry[2] > 0]
-    return found
+def _held_objects(
+    parts: dict[str, bytes], content: etree._Element, tables: list[_Table]
+) -> tuple[list[FileChart], list[FileObject]]:
+    """Every chart of a file (what a patch matches the model's charts with) and the charts and pictures of it the
+    model holds, charts first (D462, CODE-67)."""
+    charts = file_charts(tables, parts)
+    styles = parts.get("styles.xml")
+    graphics = graphic_styles(content, None if styles is None else parse_xml(styles))
+    held_charts = [found for chart in charts if (found := chart.file_object()) is not None]
+    return charts, within_limit([*held_charts, *file_pictures(tables, parts, graphics, len(held_charts) + 1)])
+
+
+def _left_out(table: _Table, held: list[FileObject]) -> list[tuple[str, str, int]]:
+    """What ``table`` has that the model does not show, but for the charts and pictures it holds of it."""
+    found = [
+        (kind, detail, count - held_on(held, SheetId(table.id), kind) if not detail else count)
+        for kind, detail, count in table.left_out
+    ]
+    return [entry for entry in found if entry[2] > 0]
 
 
 def _tables(content: etree._Element, looks: OdsLooks) -> list[_Table]:
@@ -615,15 +626,18 @@ def _model_of(
     """The model of a file's parts, and the losses of its pivot tables (the ones that are not live pivots in it)."""
     model = WorkbookModel()
     dressing = Dressing(model, looks.normal, looks.named.items(), looks.look)  # type: ignore[arg-type]
+    sheets = []
     for table in tables:
         sheet = Sheet(SheetId(table.id), table.name)
         sheet.cells = dict(table.cells)
         _dress(dressing, sheet, table)
-        model.add_sheet(sheet, None)
+        sheets.append(sheet)
+    held = _held_objects(parts, content, tables)[1]
+    mark = SlideMark.from_text(user_defined(parts["meta.xml"]).get(MARK) if "meta.xml" in parts else None)
+    hold(model, sheets, held, file_tabs_of(sheets, held, mark))
     places = _places(_spreadsheet(content))
     for named in read_names(_spreadsheet(content), places).names:
         model.names.put(named)
-    hold_charts(model, _held_charts(tables, parts))
     model._calculate_loaded()  # noqa: SLF001 (the restore()-mirroring construction idiom; see xlsx_to_workbook)
     read = read_pivots(_spreadsheet(content), places)
     adoption = adopt_pivots(model, read.found)
@@ -638,11 +652,11 @@ def ods_import_losses(ods_bytes: bytes) -> tuple[Loss, ...]:
     ``"named-range"``...) with how many there are. None of it is lost from the *file*: an edit exported with
     :func:`apply_edits_to_ods` keeps all of it."""
     parts, content, tables, looks = _document(ods_bytes)
-    _held_charts(tables, parts)
+    held = _held_objects(parts, content, tables)[1]
     losses = LossLog()
     dressing = Dressing(WorkbookModel(), looks.normal, looks.named.items(), looks.look)  # type: ignore[arg-type]
     for table in tables:
-        for kind, detail, count in table.left_out:
+        for kind, detail, count in _left_out(table, held):
             losses.add(kind, detail, count)
         _dress(dressing, Sheet(SheetId(table.id), table.name), table)
     for what, count in dressing.lost.items():
@@ -896,14 +910,16 @@ def workbook_to_ods(
     The charts and pictures floating on a sheet are in its ``table:shapes``, stacked as they are (D462, D1233;
     ``rasterise`` draws an SVG as a PNG). ``info`` is the metadata (D411). Anything the file cannot hold is in
     :func:`ods_export_losses`. A slide is a table of its own without cells, its objects where they are on it,
-    ``slide_size`` pixels to one unit of the slide (``_placed``, D1477)."""
+    ``slide_size`` pixels to one unit of the slide (``_placed``, D1477); the user-defined property "Claudia slides"
+    says which tables are slides (``slide_mark``, D1478)."""
     root = _el("office", "document-content", {"office:version": "1.3"})
     for name in ("scripts", "font-face-decls", "automatic-styles"):
         etree.SubElement(root, _q("office", name))
     spreadsheet = etree.SubElement(etree.SubElement(root, _q("office", "body")), _q("office", "spreadsheet"))
     writer = OdsLookWriter(model)
     shapes, parts = _drawings(model, placed_objects(model, slide_size), rasterise)
-    for tab in file_tabs(model):
+    tabs = file_tabs(model)
+    for tab in tabs:
         sheet = tab.sheet(model)
         spreadsheet.append(
             _new_table(
@@ -929,7 +945,7 @@ def workbook_to_ods(
         "spreadsheet",
         content.encode(),
         styles,
-        meta=new_meta(info or DocumentInfo()),
+        meta=new_meta(info or DocumentInfo(), properties_of((tab.name for tab in tabs if tab.is_slide), slide_size)),
         extra=parts or None,
     )
 
@@ -1080,7 +1096,7 @@ class _Patch:
         self.by_id = {table.id: table for table in self.tables}
         self.new_tables: dict[SheetId, etree._Element] = {}  # the sheets this run adds, as the file will have them
         self.changed = False
-        self.charts = _held_charts(self.tables, self.parts)
+        self.charts, self.held = _held_objects(self.parts, self.part.root, self.tables)
         self._check_baseline()
         styles = self.parts.get("styles.xml")
         self.styles_root = None if styles is None else etree.fromstring(styles, etree.XMLParser(resolve_entities=False))
@@ -1181,7 +1197,7 @@ class _Patch:
 
     # -- sheets ----------------------------------------------------------------------------------------------------
     def _remove(self, table: _Table) -> None:
-        for kind, detail, count in table.left_out:
+        for kind, detail, count in _left_out(table, self.held):
             self._lose(f"removed-{kind}", detail, count)
         self._stale("removed")
         self.part.remove(table.element)

@@ -1,0 +1,55 @@
+"""What a DrawingML drawing says of itself, in a docx, an xlsx or a pptx alike: how it is turned, whether it is cropped,
+which part it draws and whether it is decorative (D464, D1478)."""
+
+from __future__ import annotations
+
+import pytest
+from lxml import etree
+
+from claudia_opc_io import DECORATIVE_URI, DRAWINGML, SVG_URI, cropped, is_decorative, shown_part, turn_of
+
+A, R = DRAWINGML["a"], DRAWINGML["r"]
+
+
+def element(xml: str) -> etree._Element:
+    return etree.fromstring(f'<root xmlns:a="{A}" xmlns:r="{R}">{xml}</root>')[0]
+
+
+@pytest.mark.parametrize(
+    ("xml", "turn"),
+    [
+        ('<a:xfrm rot="5400000"/>', 90),
+        ('<a:xfrm rot="-1800000"/>', 330),
+        ("<a:xfrm/>", 0),
+        ('<a:xfrm rot="x"/>', 0),
+        ('<a:xfrm flipH="1"/>', None),
+        ('<a:xfrm flipV="true" rot="60000"/>', None),
+    ],
+)
+def test_the_turn_of_a_drawing_is_in_whole_degrees_clockwise_and_a_flipped_one_has_none(xml, turn):
+    assert turn_of(element(xml)) == turn
+
+
+def test_a_drawing_without_a_transform_is_not_turned():
+    assert turn_of(None) == 0
+
+
+def test_a_picture_is_cropped_when_its_source_rectangle_cuts_something_off():
+    assert cropped(element('<a:srcRect l="1000"/>'))
+    assert not cropped(element('<a:srcRect l="0" t="0"/>'))
+    assert not cropped(None)
+
+
+def test_a_picture_draws_its_svg_when_it_has_one_beside_the_ordinary_picture():
+    blip = f'<asvg:svgBlip xmlns:asvg="{DRAWINGML["asvg"]}" r:embed="rId3"/>'
+    svg = f'<a:extLst><a:ext uri="{SVG_URI}">{blip}</a:ext></a:extLst>'
+    assert shown_part(element(f'<a:blip r:embed="rId2">{svg}</a:blip>')) == "rId3"
+    assert shown_part(element('<a:blip r:embed="rId2"/>')) == "rId2"
+
+
+def test_a_drawing_says_it_is_decorative_by_office_s_mark():
+    flag = f'<adec:decorative xmlns:adec="{DRAWINGML["adec"]}" val="1"/>'
+    mark = f'<a:extLst><a:ext uri="{DECORATIVE_URI}">{flag}</a:ext></a:extLst>'
+    assert is_decorative(element(f'<cNvPr descr="">{mark}</cNvPr>'))
+    assert not is_decorative(element('<cNvPr descr="A logo"/>'))
+    assert not is_decorative(None)

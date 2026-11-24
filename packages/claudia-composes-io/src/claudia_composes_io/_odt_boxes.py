@@ -37,6 +37,7 @@ from claudia_odf_io import (
     inches,
     insert_elements,
     offset_of,
+    pixels,
     read_text,
     shapes_of,
     turned_box,
@@ -44,7 +45,7 @@ from claudia_odf_io import (
 )
 
 from ._boxes import EMU_PER_POINT, UNKNOWN, BoxLook, all_boxes, boxes_of, look_of, shown_words
-from ._odt_pictures import _pixels, _q
+from ._odt_pictures import _q
 from ._wrap import ODF_POSITION, WrapStyles, odf_attributes, odf_offset_of, odf_place, odf_properties, odf_wrap_of
 
 #: The name an odt gives the outline of each shape of the model (an ellipse and a rectangle are elements of their own).
@@ -197,7 +198,7 @@ def held_box(
     holder = element.find("draw:text-box", NS) if is_box else element
     assert holder is not None
     words = _words_in(holder)
-    width, height = _pixels(element.get(_q("svg", "width"))), _pixels(element.get(_q("svg", "height")))
+    width, height = pixels(element.get(_q("svg", "width"))), pixels(element.get(_q("svg", "height")))
     if words is None or width is None or height is None:
         return None
     size = (round(width), round(height))

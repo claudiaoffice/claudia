@@ -241,3 +241,36 @@ The server's changelog had entries on both sides under Unreleased; the compiled 
   either, and the step-2 copy only carried it to a sheet that was not written with it.
 - **Tests.** `tests/test_slide_tabs.py` replaces `test_slide_plan.py`; the two tests of `Drawings` in
   `test_xlsx_charts.py` give it a placed chart.
+
+## Step 5b · The mark of the slides, and the pictures of a file (D1478, CODE-67), 2026-11-24
+
+- **The mark** (`claudia_computes_io/slide_mark.py`). `SlideMark(slides, size)` with `to_text`/`from_text` (JSON;
+  a value somebody changed into something else is no mark) and `slide_tabs`; `properties_of(names, size)` is what a
+  file is written with (nothing without slides). xlsx: `claudia_opc_io.set_custom_properties` after the drawings;
+  ods: `new_meta(info, properties)`.
+- **Reading back** (`claudia_computes_io/_read_back.py`). Both readers now collect their tabs as sheets first and their
+  drawings as `FileObject`s (charts first, so that their ids stay `o1`… for the patches, then pictures), and hand them
+  to `file_tabs_of` (which tabs are slides: named by the mark, no cells, every drawing fits a slide, nudged onto it
+  as a slide's objects are) and `hold` (adds the tabs in order and the objects: on a sheet at their cell, on a slide in
+  its units). `within_limit` keeps a tab's objects to `MAX_OBJECTS_PER_SHEET`; `held_on` counts what a sheet's
+  `chart` and `picture` losses no longer include. `hold_charts` of step 5a went into `hold`.
+- **Where a drawing is, read once.** xlsx: `drawn_anchors` (every anchor of the drawings, with its cell, offsets, size
+  and the sheet's geometry, read lazily); ods: `drawn_frames` (every frame alone on a sheet, with its cell and
+  `frame_corner`: `svg:x`/`svg:y`, or the corner of a turned frame's box, to a hundredth of a pixel). Charts and
+  pictures are read from them. The corner is worked out only for a tab that may be a slide: the sheet's geometry is
+  parsed only then (and for a two-cell anchor, as before).
+- **Pictures** (`xlsx_pictures.file_pictures`, `ods_pictures.file_pictures`) use what composes' docx and odt readers
+  had, now shared: `claudia_opc_io.drawingml` (`turn_of`, `cropped`, `shown_part`, `is_decorative`) and
+  `claudia_odf_io` (`held_frame`, `graphic_styles`, `pixels`). `ods_layout.pixels_of` is `pixels`, rounded.
+- **Names** are written (`cNvPr name`, `draw:name`: the object's name, else "Chart n" / "Picture n") and read back,
+  unless the model refuses the name (another thing has it): then the object has none.
+- **The ods reader no longer changes** `_Table.left_out` for the charts it holds: `_left_out(table, held)` subtracts
+  them where losses are said (the import losses and the patch's removed sheet), so reading a file twice (an import
+  with pivot tables did) cannot subtract twice.
+- **Assumptions** (the spec does not say): a tab is a slide only if every drawing on it fits a slide (a drawing moved
+  far off it in another program makes the tab a sheet); a name of the file (a named range) that points at a slide tab
+  is not looked at (we never write one); a picture imported into a kept file and then moved is reported as `object`
+  until the patch learns pictures (CODE-66).
+- **Tests.** `test_slide_tabs.py` (a slide comes back as a slide at both sizes; the mark in both formats; a renamed tab
+  and one typed into are sheets), `test_pictures.py` (CODE-67 for both formats, and a kept file edited keeps its
+  picture), `claudia-opc-io/tests/test_custom_properties.py`, `test_drawingml.py`, `claudia-odf-io/tests/test_meta.py`.
