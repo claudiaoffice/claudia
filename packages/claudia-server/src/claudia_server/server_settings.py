@@ -59,6 +59,7 @@ class ClaudeSettings:
     model: str = DEFAULT_CLAUDE_MODEL
     key: str | None = field(default=None, repr=False)  # a repr is in logs and test output: never the key
     confirmed: Changed | None = None
+    max_tokens: int = 4096  # the longest answer Claude may give; the local model's is ``AiSettings.max_tokens``
 
 
 @dataclass
@@ -66,10 +67,10 @@ class AiSettings:
     """Who answers ``@ai`` (``provider``: the scripted stand-in, a local model, or Claude), and how.
 
     ``model_dir`` is a folder converted for OpenVINO and ``device`` where to run it; ``max_tokens`` is the longest
-    answer and ``timeout`` the longest an answer may take, for every provider. The settings of a provider that is not
-    chosen are kept, so choosing it again needs no typing. Settings saved before there were providers (no
-    ``provider``) mean the local model when there is a ``model_dir``, else the stand-in; the document gets no assistant
-    at all only with ``--no-assistant``."""
+    answer of the local model (Claude's is ``claude.max_tokens``) and ``timeout`` the longest an answer may take. The
+    settings of a provider that is not chosen are kept, so choosing it again needs no typing. Settings saved before
+    there were providers (no ``provider``) mean the local model when there is a ``model_dir``, else the stand-in; the
+    document gets no assistant at all only with ``--no-assistant``."""
 
     provider: str = STAND_IN
     model_dir: str | None = None

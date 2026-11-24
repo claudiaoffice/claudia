@@ -133,7 +133,7 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |  |  |
 | UX-06 | — | UX | Web menu differs from decisions D4/D5 | needs decision |  |  |
 
-### Fixed (156)
+### Fixed (158)
 
 By ID. Items closed without a fix (superseded, wontfix) are here too.
 
@@ -246,6 +246,8 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | CODE-78 | P2 | Code / i18n | A refusal of a model (a `ValueError` of core, computes, composes or creates) reaches a German user in English | **fixed** 2026-11-23 on `code-78-translated-refusals` (D1510) | 2026-11-22 | 2026-11-23 |
 | CODE-79 | P2 | Code / AI | The decision which provider answers was made once, when the question was started; a switch of the administrator or of the document's consent while a question ran changed nothing until it ended | **fixed** 2026-11-22 on `e7-11-claude-provider` (D1497) | 2026-11-22 | 2026-11-22 |
 | CODE-80 | P2 | Code / AI / privacy | A question to Claude sends, before Claude asks for anything, the sheet list and the top left of the first three sheets (`workbook_lens.orient`; likewise the other two lenses' first look), so a sheet the question has nothing to do with can leave the server; the @core scenario "Claude is sent what the dialog says and nothing else" says it must not | **fixed** 2026-11-23 on `e7-2-skills-and-persona` (D1568) | 2026-11-22 | 2026-11-23 |
+| CODE-81 | P2 | Code / AI | The model was shown doubled braces where a request is explained (`HOW_TO_ASK`, the computes and creates examples), so it did not learn the form of a request: in composes it answered with nothing, in creates it pasted its list into the chat | **fixed** 2026-11-24 on `e7-2-skills-and-persona` (D1566) | 2026-11-23 | 2026-11-24 |
+| CODE-82 | P2 | Code / AI | An empty final answer read "I have nothing to add.", and Claude's answers were cut at the local model's 512 tokens, so a 300-word text failed and a one-sentence text worked | **fixed** 2026-11-24 on `e7-2-skills-and-persona` (D1564, D1565) | 2026-11-23 | 2026-11-24 |
 | PROC-01 | P1 | Process | No CI workflow in the repository | fixed (verified at `54d1245`) |  |  |
 | PROC-02 | P2 | Process | The quality gate prints "everything is clean" when half of it was skipped | fixed |  |  |
 | PROC-03 | P2 | Process | Work described as delivered is not in the repository | fixed |  |  |
@@ -2732,10 +2734,25 @@ remote provider send names and sizes only and let Claude `look` for cells (the s
 at"); the lens needs to know the answer goes out (`Via.remote`). **Test:** the @core scenario above, with a "Salaries"
 sheet and the fake Anthropic's recorded requests.
 
-**Fixed 2026-11-23** on `e7-2-skills-and-persona` (D1568), test first: `tests/test_server_remote_orientation.py`. `orient` takes
-`remote`; the router passes `Via.remote`; for a remote provider each lens gives counts and ids and no word a person wrote
+**Fixed 2026-11-23** on `e7-2-skills-and-persona` (D1568), test first: `tests/test_server_remote_orientation.py`. Each lens has
+`orient` (the start, for the local model) and `outline`; `ModelEngine` wraps the lens in `OutlineLens` for a remote runner, so
+there is no flag; for a remote provider each lens gives counts and ids and no word a person wrote
 (sheet names, cells, headings, style names, paragraph and slide text), and says to look. The local model's first message is
 unchanged (a test keeps that). The @core scenario "Claude is sent what the dialog says and nothing else" is the acceptance.
+
+### CODE-81 · The model is shown doubled braces · P2 · size 2 · fixed 2026-11-24
+**Measured** 2026-11-23 (printing the system message): `HOW_TO_ASK` goes out with `{{"method": ...}}`, and the computes and
+creates lens examples are inserted into a formatted template with their `{{ }}` doubled; composes' example was right. This fits
+the owner's real-key test: composes answered with nothing, creates pasted a JSON list into the chat. **Fix** (D1566): single
+braces. **Test first:** `tests/test_server_ai_prompt.py` reads every request the system message shows, in each app, as JSON; it failed
+for all three apps before the change.
+
+### CODE-82 · An empty answer, and Claude's answer length · P2 · size 2 · fixed 2026-11-24
+**Read** (and confirmed by the owner's real-key test): `ModelEngine._converse` returned `turn.say or "I have nothing to add."`;
+`AiSettings.max_tokens` (512) was also Claude's limit. **Fix** (D1564, D1565): an empty final answer is "I could not comply." (nothing
+changed) or "I made these changes: set_cells x2."; Claude has `claude.max_tokens` (4096). **Tests first:**
+`test_server_ai_loop.py` (empty answer, empty after a change, a short answer unchanged) and `test_server_ai_provider_settings.py`
+(default 4096, set to 8192, 0 refused, old settings read as 4096). The AI page field comes with E7.2.
 
 ### UX-74 · An owner cannot withdraw consent while Claude is off · P3 · size 3 · new, open
 `consentDialog` answers `no-remote` when `offered` is false and shows no choice. The consent is only a permission (D1491),

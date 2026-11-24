@@ -5,6 +5,16 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+### Added
+- `ClaudeSettings.max_tokens` (default 4096): Claude's own answer length (CODE-82, D1564). `AiRuntime.claude_runner` uses
+  it; `AiSettings.max_tokens` (512) is the local model's. `PUT /api/admin/settings/ai` takes `claude.max_tokens` (at
+  least 1); settings saved without it read as 4096.
+
+### Fixed
+- The examples of a request in the computes and creates lenses showed doubled braces to the model (CODE-81).
+- A final answer of the model with no text was shown as "I have nothing to add."; it is "I could not comply." when nothing
+  was changed and "I made these changes: set_cells x2." when something was (CODE-82, D1565).
+
 ### Changed
 - **One owner per document in the consent texts** (D1499). The words about Claude's consent say "the owner" where they
   said "the owners": the note under an answer ("Claude is not allowed in this document. The owner can change that in

@@ -3,6 +3,12 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [Unreleased]
+
+### Fixed
+- The text that explains the form of a request (`HOW_TO_ASK`) showed doubled braces to the model, which copied them
+  (CODE-81).
+
 ## [0.4.0] - 2026-11-23
 
 ### Added

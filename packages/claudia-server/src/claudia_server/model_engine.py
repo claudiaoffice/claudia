@@ -127,7 +127,7 @@ class ModelEngine:
         for number in range(1, budget.rounds + 1):
             turn = await self._runner.answer(replace(request, exchange=tuple(exchange)))
             if not turn.calls and not turn.problems:
-                return turn.say or "I have nothing to add."
+                return turn.say or self._nothing_said(done)
             if number == budget.rounds or used >= budget.calls:
                 break  # no round left to look at what these would do, or none was allowed: do not make them
             results, used = self._make(task, turn, used, done)
@@ -166,12 +166,21 @@ class ModelEngine:
         except RequestError as error:
             return f"failed: {error.message}"
 
+    @staticmethod
+    def _nothing_said(done: Counter[str]) -> str:
+        """What the asker reads when the model's last answer was empty: not a sentence that sounds like an answer."""
+        return f"I made these changes: {_made(done)}." if done else "I could not comply."
+
     def _stopped(self, turn: Turn, done: Counter[str], rounds: int) -> str:
         """What the asker is told when the model did not finish within its budget."""
-        made = ", ".join(f"{method} x{count}" for method, count in done.items())
         text = f"I stopped after {rounds} steps: that is my limit for one question. "
-        text += f"I made these changes before stopping: {made}." if made else "I changed nothing."
+        text += f"I made these changes before stopping: {_made(done)}." if done else "I changed nothing."
         return f"{text}\n\nWhere I was: {turn.say}" if turn.say else text
+
+
+def _made(done: Counter[str]) -> str:
+    """The changes a question made, as "set_cells x2, add_sheet x1"."""
+    return ", ".join(f"{method} x{count}" for method, count in done.items())
 
 
 def _short(params: dict) -> str:

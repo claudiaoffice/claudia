@@ -72,6 +72,7 @@ def test_a_server_that_never_chose_a_provider_answers_with_the_stand_in_and_hold
         "key_tail": None,
         "key_from_operator": False,
         "confirmed": None,
+        "max_tokens": 4096,
     }
 
 
@@ -200,6 +201,48 @@ def test_any_model_id_may_be_typed(tmp_path, anthropic):
     with TestClient(app) as client:
         apply_claude(client, signed_in(client), model="claude-opus-5-5")
     assert anthropic.requests[0].model == "claude-opus-5-5"
+
+
+# -- Claude's own answer length (CODE-82): 4096 by default, the local model keeps 512
+def test_claude_may_answer_at_length_by_default_and_the_local_model_keeps_its_short_limit(tmp_path, anthropic):
+    app, _, admin = serve(tmp_path, anthropic)
+    with TestClient(app) as client:
+        headers = signed_in(client)
+        assert apply_claude(client, headers).status_code == 200
+        ai = client.get("/api/admin/settings", headers=headers).json()["ai"]
+    assert admin.ai.desk.claude.max_new_tokens == 4096
+    assert ai["claude"]["max_tokens"] == 4096 and ai["max_tokens"] == 512
+
+
+def test_the_administrator_sets_claudes_answer_length_and_the_local_one_is_not_touched(tmp_path, anthropic):
+    app, _, admin = serve(tmp_path, anthropic)
+    with TestClient(app) as client:
+        headers = signed_in(client)
+        body = {"provider": "claude", "claude": {"key": KEY, "confirm": True, "max_tokens": 8192}}
+        assert client.put("/api/admin/settings/ai", headers=headers, json=body).status_code == 200
+        ai = client.get("/api/admin/settings", headers=headers).json()["ai"]
+    assert admin.ai.desk.claude.max_new_tokens == 8192
+    assert ai["claude"]["max_tokens"] == 8192 and ai["max_tokens"] == 512
+
+
+def test_an_answer_length_of_nothing_is_refused_and_nothing_changes(tmp_path, anthropic):
+    app, _, admin = serve(tmp_path, anthropic)
+    with TestClient(app) as client:
+        headers = signed_in(client)
+        assert apply_claude(client, headers).status_code == 200
+        body = {"provider": "claude", "claude": {"max_tokens": 0}}
+        response = client.put("/api/admin/settings/ai", headers=headers, json=body)
+    assert response.status_code == 400 and "at least 1" in response.json()["detail"]
+    assert admin.settings.ai.claude.max_tokens == 4096 and admin.ai.desk.claude.max_new_tokens == 4096
+
+
+def test_settings_saved_before_claude_had_its_own_answer_length_read_as_4096(tmp_path):
+    old = {
+        "max_documents": 5,
+        "ai": {"provider": "claude", "max_tokens": 256, "claude": {"model": "claude-sonnet-5-5"}},
+    }
+    settings = ServerSettings.load(old)
+    assert settings.ai.claude.max_tokens == 4096 and settings.ai.max_tokens == 256
 
 
 # -- the operator's key and removing the key
