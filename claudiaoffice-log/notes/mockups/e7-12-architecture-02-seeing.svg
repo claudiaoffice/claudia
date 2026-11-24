@@ -1,0 +1,71 @@
+<svg viewBox="0 0 1500 640" xmlns="http://www.w3.org/2000/svg" font-family="Inter, 'Segoe UI', system-ui, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">claudia - E7.12 architecture 2: how &#x27;can the ai see it&#x27; is checked for one property</title><desc id="d">Flow diagram: fields of the model class, catalog lines, a rich sample document, the look request, the lens text, a changed value, and the comparison.</desc>
+<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#6e6880"/></marker></defs>
+<rect width="1500" height="640" fill="#f3f1ea"/>
+<text x="40" y="44" font-size="22" font-weight="600" fill="#1f1a33" text-anchor="start" font-family="Fraunces, Georgia, serif">E7.12 architecture 2 — a property is &#x27;seen&#x27; when changing it changes what the model is told</text>
+<text x="40" y="66" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">No model is involved: the check changes one value in the answer of a look request and asks whether the lens&#x27;s text changes. Example: object.rotation in creates.</text>
+<rect x="40" y="110" width="250" height="106" rx="6" fill="#fff" stroke="#5b4bc4" stroke-width="1.6"/>
+<path d="M40 116 a6 6 0 0 1 6 -6 h238 a6 6 0 0 1 6 6 v20 h-250 z" fill="#5b4bc4"/>
+<text x="165.0" y="128" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">1  the model class</text>
+<text x="50" y="154" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">ObjectBody + SlideAnchor:</text>
+<text x="50" y="172" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">id kind ref style rotation</text>
+<text x="50" y="190" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">w h name tags locked ...</text>
+<text x="50" y="208" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">= every property that exists</text>
+<rect x="330" y="110" width="250" height="106" rx="6" fill="#fff" stroke="#d6477a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<path d="M330 116 a6 6 0 0 1 6 -6 h238 a6 6 0 0 1 6 6 v20 h-250 z" fill="#d6477a"/>
+<text x="455.0" y="128" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">2  the catalog&#x27;s Seen lines</text>
+<text x="340" y="154" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">object.rotation   ai: yes</text>
+<text x="340" y="172" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">object.name       ai: not yet</text>
+<text x="340" y="190" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">object.locked     ai: reserved</text>
+<text x="340" y="208" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">(a field with no line fails)</text>
+<rect x="620" y="110" width="250" height="106" rx="6" fill="#fff" stroke="#d6477a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<path d="M620 116 a6 6 0 0 1 6 -6 h238 a6 6 0 0 1 6 6 v20 h-250 z" fill="#d6477a"/>
+<text x="745.0" y="128" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">3  a rich sample</text>
+<text x="630" y="154" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">ai_samples.slides():</text>
+<text x="630" y="172" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">a text box, a shape, a picture,</text>
+<text x="630" y="190" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">every property set to a value</text>
+<text x="630" y="208" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">that is not its default</text>
+<rect x="910" y="110" width="250" height="88" rx="6" fill="#fff" stroke="#5b4bc4" stroke-width="1.6"/>
+<path d="M910 116 a6 6 0 0 1 6 -6 h238 a6 6 0 0 1 6 6 v20 h-250 z" fill="#5b4bc4"/>
+<text x="1035.0" y="128" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">4  the look request</text>
+<text x="920" y="154" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">slide  -&gt;  {objects: [{id, kind,</text>
+<text x="920" y="172" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">ref, anchor, w, h, rotation: 270,</text>
+<text x="920" y="190" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">style, paragraph ...}]}</text>
+<rect x="1200" y="110" width="260" height="88" rx="6" fill="#fff" stroke="#5b4bc4" stroke-width="1.6"/>
+<path d="M1200 116 a6 6 0 0 1 6 -6 h248 a6 6 0 0 1 6 6 v20 h-260 z" fill="#5b4bc4"/>
+<text x="1330.0" y="128" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">5  the lens&#x27;s words</text>
+<text x="1210" y="154" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">SlideLens.show(...):</text>
+<text x="1210" y="172" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">o1a2b shape (triangle) at</text>
+<text x="1210" y="190" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">(400, 300) 200x400, turned 270</text>
+<line x1="290" y1="200" x2="330" y2="200" stroke="#6e6880" stroke-width="1.4" marker-end="url(#ar)"/>
+<line x1="580" y1="200" x2="620" y2="200" stroke="#6e6880" stroke-width="1.4" marker-end="url(#ar)"/>
+<line x1="870" y1="200" x2="910" y2="200" stroke="#6e6880" stroke-width="1.4" marker-end="url(#ar)"/>
+<line x1="1160" y1="200" x2="1200" y2="200" stroke="#6e6880" stroke-width="1.4" marker-end="url(#ar)"/>
+<rect x="620" y="330" width="340" height="88" rx="6" fill="#fff" stroke="#d6477a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<path d="M620 336 a6 6 0 0 1 6 -6 h328 a6 6 0 0 1 6 6 v20 h-340 z" fill="#d6477a"/>
+<text x="790.0" y="348" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">6  change one value</text>
+<text x="630" y="374" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">result[&#x27;objects&#x27;][1][&#x27;rotation&#x27;]</text>
+<text x="630" y="392" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">  270  -&gt;  271</text>
+<text x="630" y="410" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">show() again; compare the text</text>
+<line x1="745" y1="250" x2="745" y2="330" stroke="#6e6880" stroke-width="1.4" marker-end="url(#ar)"/>
+<rect x="1000" y="330" width="460" height="124" rx="6" fill="#fff" stroke="#d6477a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<path d="M1000 336 a6 6 0 0 1 6 -6 h448 a6 6 0 0 1 6 6 v20 h-460 z" fill="#d6477a"/>
+<text x="1230.0" y="348" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">7  the verdict, per Seen line</text>
+<text x="1010" y="374" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">yes + the text changed        passes</text>
+<text x="1010" y="392" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">yes + the text is the same     fails: &#x27;rotation is not shown&#x27;</text>
+<text x="1010" y="410" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">yes + not in the sample        fails: &#x27;sample too poor&#x27;</text>
+<text x="1010" y="428" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">not yet                        counted in the ceiling</text>
+<text x="1010" y="446" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">reserved                       needs a reason id</text>
+<line x1="960" y1="400" x2="1000" y2="400" stroke="#6e6880" stroke-width="1.4" marker-end="url(#ar)"/>
+<rect x="40" y="330" width="540" height="124" rx="6" fill="#fff" stroke="#d6477a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<path d="M40 336 a6 6 0 0 1 6 -6 h528 a6 6 0 0 1 6 6 v20 h-540 z" fill="#d6477a"/>
+<text x="310.0" y="348" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">What this proves, and what it does not</text>
+<text x="50" y="374" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">proves: a new property cannot appear without a decision, and a &#x27;yes&#x27;</text>
+<text x="50" y="392" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">        is backed by the lens&#x27;s own output, not by a claim in a file</text>
+<text x="50" y="410" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">does not prove: that the words are useful. At 0 degrees a rotation was not</text>
+<text x="50" y="428" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">        printed at all; the sample&#x27;s 270 would pass. That one is a slice&#x27;s</text>
+<text x="50" y="446" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">        own test (always print the turn), and a shape&#x27;s look-unturned line.</text>
+<rect x="40" y="520" width="1420" height="54" rx="6" fill="#fdf3e6" stroke="#f2a057" stroke-width="1"/>
+<text x="52" y="542" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">The same seam serves the three apps: creates (slide, object), composes (paragraph, table, floating object, page), computes (cell, sheet, chart).</text>
+<text x="52" y="560" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">The list of things and their field sources is a small table in tests/ai_samples.py; adding a thing is one line there plus its Seen lines in that app&#x27;s catalog.</text>
+</svg>
