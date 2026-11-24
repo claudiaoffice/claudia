@@ -525,7 +525,7 @@ msgstr "Über Claudia"
 msgid "About searching and patterns"
 msgstr "Über das Suchen und Muster"
 
-#: web/app/components/AdminAi.vue:195
+#: web/app/components/AdminAi.vue:196
 msgid "About {words} words"
 msgstr "Etwa {words} Wörter"
 
@@ -813,27 +813,27 @@ msgstr "Antwortet jetzt:"
 msgid "Answers to what people often want to do"
 msgstr "Antworten auf das, was man oft tun möchte"
 
-#: web/app/lib/admin-ai.ts:58
+#: web/app/lib/admin-ai.ts:64
 msgid "Anthropic cannot be reached from this server."
 msgstr "Anthropic ist von diesem Server aus nicht erreichbar."
 
-#: web/app/lib/admin-ai.ts:62
+#: web/app/lib/admin-ai.ts:68
 msgid "Anthropic did not answer within {seconds} seconds."
 msgstr "Anthropic hat nicht innerhalb von {seconds} Sekunden geantwortet."
 
-#: web/app/lib/admin-ai.ts:60
+#: web/app/lib/admin-ai.ts:66
 msgid "Anthropic does not know the model “{model}”."
 msgstr "Anthropic kennt das Modell „{model}“ nicht."
 
-#: web/app/lib/admin-ai.ts:56
+#: web/app/lib/admin-ai.ts:62
 msgid "Anthropic is overloaded at the moment."
 msgstr "Anthropic ist im Moment überlastet."
 
-#: web/app/lib/admin-ai.ts:50
+#: web/app/lib/admin-ai.ts:56
 msgid "Anthropic refused the key."
 msgstr "Anthropic hat den Schlüssel abgelehnt."
 
-#: web/app/lib/admin-ai.ts:54
+#: web/app/lib/admin-ai.ts:60
 msgid "Anthropic's rate limit was reached."
 msgstr "Das Anfragelimit bei Anthropic wurde erreicht."
 
@@ -873,11 +873,11 @@ msgstr "Format anwenden"
 msgid "Apply Style…"
 msgstr "Format anwenden…"
 
-#: web/app/components/AdminAi.vue:211
+#: web/app/components/AdminAi.vue:212
 msgid "Apply asks Claude one test question first."
 msgstr "Beim Anwenden wird Claude zuerst eine Testfrage gestellt."
 
-#: web/app/components/AdminAi.vue:212
+#: web/app/components/AdminAi.vue:213
 msgid "Apply needs a key and the confirmed sentence."
 msgstr "Zum Anwenden braucht es einen Schlüssel und den bestätigten Satz."
 
@@ -1497,7 +1497,7 @@ msgstr "Bedingung"
 msgid "Confirm password"
 msgstr "Passwort bestätigen"
 
-#: web/app/components/AdminAi.vue:209
+#: web/app/components/AdminAi.vue:210
 msgid "Confirmed by {by}, {when}"
 msgstr "Bestätigt von {by}, {when}"
 
@@ -1913,7 +1913,7 @@ msgstr "Dokumente"
 msgid "Documents are encrypted on this server. Claude reads what it is shown in plain text."
 msgstr "Dokumente sind auf diesem Server verschlüsselt. Claude liest im Klartext, was ihm gezeigt wird."
 
-#: web/app/components/AdminAi.vue:208
+#: web/app/components/AdminAi.vue:209
 msgid "Documents are encrypted on this server; Claude reads what it is shown in plain text."
 msgstr "Dokumente sind auf diesem Server verschlüsselt; Claude liest im Klartext, was ihm gezeigt wird."
 
@@ -3789,7 +3789,7 @@ msgstr "Nichts zu wiederholen"
 msgid "Nothing to undo"
 msgstr "Nichts rückgängig zu machen"
 
-#: web/app/components/AdminAi.vue:219
+#: web/app/components/AdminAi.vue:220
 msgid "Nothing was changed: @ai still answers with {who}."
 msgstr "Es wurde nichts geändert: @ai antwortet weiterhin mit {who}."
 
@@ -4501,11 +4501,11 @@ msgstr "Stellt Bereiche nebeneinander; die kürzeren werden mit #N/A aufgefüllt
 msgid "Query in {target}"
 msgstr "Abfrage in {target}"
 
-#: web/app/lib/admin-ai.ts:71
+#: web/app/lib/admin-ai.ts:77
 msgid "Questions to Claude fail until credit is added or another provider is chosen."
 msgstr "Fragen an Claude scheitern, bis Guthaben aufgeladen oder ein anderer Anbieter gewählt wird."
 
-#: web/app/lib/admin-ai.ts:72
+#: web/app/lib/admin-ai.ts:78
 msgid "Questions to Claude fail until this is solved or another provider is chosen."
 msgstr "Fragen an Claude scheitern, bis dies behoben oder ein anderer Anbieter gewählt wird."
 
@@ -5777,7 +5777,7 @@ msgstr "Petrol"
 msgid "Tell them in the chat:"
 msgstr "Im Chat Bescheid geben:"
 
-#: web/app/components/AdminAi.vue:215
+#: web/app/components/AdminAi.vue:216
 msgid "Test answered"
 msgstr "Test beantwortet"
 
@@ -5917,6 +5917,10 @@ msgstr "Der Winkel im Bogenmaß von der x-Achse zum Punkt (x, y): x kommt zuerst
 msgid "The angle in radians, from 0 to pi, whose cotangent is the number."
 msgstr "Der Winkel im Bogenmaß, von 0 bis pi, dessen Kotangens die Zahl ist."
 
+#: web/app/components/AdminAi.vue:195
+msgid "The answer length must be a whole number of at least 1."
+msgstr "Die Antwortlänge muss eine ganze Zahl von mindestens 1 sein."
+
 #: packages/claudia-core/src/claudia_core/styles.py:1028
 msgid "The app cannot move what has the style “{name}” to another style"
 msgstr "Die App kann das, was das Format „{name}“ hat, nicht auf ein anderes Format umstellen"
@@ -6017,7 +6021,7 @@ msgstr "Die Kovarianz zweier Bereiche für eine Grundgesamtheit (der alte Name v
 msgid "The covariance of two ranges for a whole population."
 msgstr "Die Kovarianz zweier Bereiche für eine Grundgesamtheit."
 
-#: web/app/lib/admin-ai.ts:52
+#: web/app/lib/admin-ai.ts:58
 msgid "The credit balance at Anthropic is used up."
 msgstr "Das Guthaben bei Anthropic ist aufgebraucht."
 
@@ -7221,7 +7225,7 @@ msgstr "Das ist ein Text. Öffnen Sie ihn mit Claudia Composes."
 msgid "This is not a file Claudia can open."
 msgstr "Das ist keine Datei, die Claudia öffnen kann."
 
-#: web/app/components/AdminAi.vue:210
+#: web/app/components/AdminAi.vue:211
 msgid "This is not enough on its own: the owner of each document must also allow Claude (Preferences ▸ AI…, off by default). Until it is allowed, @ai in that document uses the local model or the stand-in, and says so."
 msgstr "Das allein genügt nicht: Die Eigentümerin oder der Eigentümer jedes Dokuments muss Claude dort ebenfalls erlauben (Einstellungen ▸ KI…, standardmäßig aus). Bis das geschehen ist, antwortet @ai in diesem Dokument mit dem lokalen Modell oder dem Platzhalter und sagt das auch."
 
@@ -7385,7 +7389,7 @@ msgstr "Uhrzeit"
 msgid "Time to check one password, in seconds"
 msgstr "Zeit für die Prüfung eines Passworts, in Sekunden"
 
-#: web/app/components/AdminAi.vue:198
+#: web/app/components/AdminAi.vue:199
 msgid "Timeout (seconds)"
 msgstr "Zeitlimit (Sekunden)"
 

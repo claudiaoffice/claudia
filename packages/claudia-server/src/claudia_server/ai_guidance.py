@@ -1,14 +1,13 @@
-"""How the AI is taught to work in an app: its persona and its recipes (E7.2, D1560–D1563).
+"""How the AI is taught to work in an app: its persona and its skills (E7.2, D1560–D1563).
 
-Each app ships two Markdown files in its own package, next to its help: ``ai/persona.md`` (who the AI is there, a short
-list) and ``ai/skills.md`` (recipes: how to do one kind of task with the app's requests). The server knows no recipe.
-It finds the files of the app of a document, and gives a model only the recipes whose requests it may use, so that it is
-never told how to do what it may not do.
+Each app ships two Markdown files in its own package, next to its help: ``ai/persona.md`` (who the AI is there) and
+``ai/skills.md`` (skills: how to do one kind of task with the app's requests). The server knows no skill. It finds the
+files of the app of a document, and gives a model only the skills whose requests it may use, so that it is never told
+how to do what it may not do.
 
-The files are English and read by the model only; they are not in the catalogues. A recipe is a ``## title``, a
-``Uses: request, request`` line and its words with one worked example. What stands before the first ``## `` is for the
-people who write the file and is not shown to a model. The two files together may hold ``MAX_CHARACTERS``: a test, not a
-cut at run time, so nobody wonders later why the end of a recipe is missing.
+A skill is a ``## title``, a ``Uses: request, request`` line and its words with one worked example. What stands before
+the first ``## `` is for the people who write the file and is not shown to a model. The size of both files is held down
+by a test (D1562), not by a cut at run time, so nobody wonders later why the end of a skill is missing.
 """
 
 from __future__ import annotations
@@ -20,16 +19,15 @@ from importlib import resources
 
 from claudia_core import DocumentModel
 
-MAX_CHARACTERS = 6000  # persona and recipes of one app together (D1562)
 FOLDER, PERSONA, SKILLS = "ai", "persona.md", "skills.md"
-RECIPES_HEADING = "How to do common tasks (adapt the examples: do not copy their values):"
+SKILLS_HEADING = "How to do common tasks (adapt the examples: do not copy their values):"
 
 _USES = re.compile(r"Uses:[ \t]*(.*)")
 
 
 @dataclass(frozen=True)
-class Recipe:
-    """One kind of task: its title, the requests it needs, and the words that teach it."""
+class Skill:
+    """One kind of task (a skill of the glossary): its title, the requests it needs, and the words that teach it."""
 
     title: str
     uses: tuple[str, ...]
@@ -41,25 +39,21 @@ class Guidance:
     """What one app teaches the AI: who it is there, and how to do the app's usual tasks."""
 
     persona: str = ""
-    recipes: tuple[Recipe, ...] = ()
+    skills: tuple[Skill, ...] = ()
 
     def skills_for(self, offered: Collection[str]) -> str:
-        """The recipes whose requests are all in ``offered``, in the order of the file, under one heading; empty when
+        """The skills whose requests are all in ``offered``, in the order of the file, under one heading; empty when
         there is none. A request that is not offered to this asker (a viewer, a person who chose *suggest*) takes its
-        recipe away: telling a model how to use it only invites a refused request."""
-        usable = [recipe for recipe in self.recipes if set(recipe.uses) <= set(offered)]
+        skill away: telling a model how to use it only invites a refused request."""
+        usable = [skill for skill in self.skills if set(skill.uses) <= set(offered)]
         if not usable:
             return ""
-        return "\n\n".join([RECIPES_HEADING, *(f"{recipe.title}: {recipe.text}" for recipe in usable)])
-
-    def size(self) -> int:
-        """Characters of the persona and all recipes: the number the size cap holds down."""
-        return len(self.persona) + sum(len(recipe.title) + len(recipe.text) for recipe in self.recipes)
+        return "\n\n".join([SKILLS_HEADING, *(f"{skill.title}: {skill.text}" for skill in usable)])
 
 
-def parse_recipes(text: str) -> tuple[Recipe, ...]:
-    """The recipes of a ``skills.md``. ``ValueError`` naming a recipe that has no ``Uses:`` line with a request."""
-    recipes = []
+def parse_skills(text: str) -> tuple[Skill, ...]:
+    """The skills of a ``skills.md``. ``ValueError`` naming a skill that has no ``Uses:`` line with a request."""
+    skills = []
     for block in re.split(r"^## +", text.replace("\r\n", "\n"), flags=re.MULTILINE)[1:]:
         title, _, body = block.partition("\n")
         title = title.strip()
@@ -67,9 +61,9 @@ def parse_recipes(text: str) -> tuple[Recipe, ...]:
         found = _USES.fullmatch(first.strip())
         uses = tuple(name.strip() for name in found.group(1).split(",") if name.strip()) if found else ()
         if not uses:
-            raise ValueError(f"the recipe {title!r} has no 'Uses:' line naming the requests it needs")
-        recipes.append(Recipe(title, uses, rest.strip()))
-    return tuple(recipes)
+            raise ValueError(f"the skill {title!r} has no 'Uses:' line naming the requests it needs")
+        skills.append(Skill(title, uses, rest.strip()))
+    return tuple(skills)
 
 
 def load_guidance(model_cls: type[DocumentModel]) -> Guidance:
@@ -80,7 +74,7 @@ def load_guidance(model_cls: type[DocumentModel]) -> Guidance:
         persona, skills = folder / PERSONA, folder / SKILLS
         return Guidance(
             persona.read_text(encoding="utf-8").strip() if persona.is_file() else "",
-            parse_recipes(skills.read_text(encoding="utf-8")) if skills.is_file() else (),
+            parse_skills(skills.read_text(encoding="utf-8")) if skills.is_file() else (),
         )
     except (ModuleNotFoundError, NotADirectoryError):
         return Guidance()

@@ -129,9 +129,9 @@ app's view of its documents for the model, and what the app teaches the AI about
 .. autoclass:: claudia_server.lens.Lens
 .. autoclass:: claudia_server.lens.Recorder
 .. autoclass:: claudia_server.ai_guidance.Guidance
-.. autoclass:: claudia_server.ai_guidance.Recipe
+.. autoclass:: claudia_server.ai_guidance.Skill
 .. autofunction:: claudia_server.ai_guidance.load_guidance
-.. autofunction:: claudia_server.ai_guidance.parse_recipes
+.. autofunction:: claudia_server.ai_guidance.parse_skills
 
 Printing
 --------

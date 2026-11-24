@@ -133,8 +133,9 @@ topic. It is **not fenced as data**: the help is the product's own text, shipped
 is a fixed list of our own packages), unlike a cell or a paragraph, which is somebody's text and may steer the model. If help
 ever comes from a place a person can write to, this must be fenced; a comment on `show_help` says so.
 
-The help is in the language of the connection (`ctx.locale`), as for a person, so a German asker's model reads the German
-topic and answers in German.
+**Changed while building (2026-11-24):** the help is read in English. The assistant's connection has the default language and
+the chat message does not carry the asker's, so a German topic would need a change of the protocol. The persona has the model
+answer in the asker's language. Passing the language along is a follow-up (listed in the implementation note).
 
 ### 3.6 Claude's answer length (diagram 3, left)
 

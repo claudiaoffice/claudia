@@ -25,9 +25,6 @@ LOOK_FIRST = "Nothing a person wrote is shown here: look at what the question is
 #: The requests that read the product's own help, the same in every app (E7.2).
 HELP_METHODS = ("help_search", "help_topic")
 
-#: How much of one help topic the model is shown at a time.
-MAX_HELP_CHARACTERS = 4000
-
 _FENCES = re.compile(r"`{3,}")
 
 
@@ -43,10 +40,11 @@ def look_first(start: str) -> str:
 
 def show_help(method: str, result: Any) -> str:
     """The answer of ``help_search`` or ``help_topic`` as text for the model. Help is written by the product, not by
-    the people who wrote the document, so unlike what comes out of a document it is not fenced as data."""
+    the people who wrote the document, so unlike what comes out of a document it is not fenced as data (D1563). The
+    loop cuts a long topic like any result."""
     if method == "help_search":
         return "\n".join(f"- {topic['id']} — {topic['title']}" for topic in result) or "No help topic matches that."
-    return cut(f"{result['title']}\n\n{result['body']}", MAX_HELP_CHARACTERS)
+    return f"{result['title']}\n\n{result['body']}"
 
 
 def count(number: int, one: str, many: str) -> str:

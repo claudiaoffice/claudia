@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { answerLength, applyState, approxWords, claudePayload, failureHint, failureSentence, lengthIsValid, setAnswerLength, type AiForm } from '~/lib/admin-ai'
+import { answerLength, applyState, approxWords, claudePayload, failureHint, failureSentence, lengthIsValid, lengthToSend, setAnswerLength, type AiForm } from '~/lib/admin-ai'
 
 const form = (over: Partial<AiForm> = {}): AiForm => ({
   provider: 'claude',
@@ -15,6 +15,7 @@ const form = (over: Partial<AiForm> = {}): AiForm => ({
   ...over,
 })
 const saved = { provider: 'local', key_set: false }
+const savedLength = { max_tokens: 4096 }
 
 describe('the words of a failure, for the administrator', () => {
   it('has a sentence for every cause, with the model and the time where they belong', () => {
@@ -58,9 +59,9 @@ describe('when Apply is possible', () => {
 
 describe('what is sent', () => {
   it('sends the key only when one was typed, and the confirmation only when it was given', () => {
-    expect(claudePayload(form({ key: 'sk-ant-x', confirmed: true }))).toEqual({ model: 'claude-sonnet-5-5', max_tokens: 4096, key: 'sk-ant-x', confirm: true })
-    expect(claudePayload(form())).toEqual({ model: 'claude-sonnet-5-5', max_tokens: 4096 })
-    expect(claudePayload(form({ removeKey: true }))).toEqual({ model: 'claude-sonnet-5-5', max_tokens: 4096, remove_key: true })
+    expect(claudePayload(form({ key: 'sk-ant-x', confirmed: true }), savedLength)).toEqual({ model: 'claude-sonnet-5-5', max_tokens: 4096, key: 'sk-ant-x', confirm: true })
+    expect(claudePayload(form(), savedLength)).toEqual({ model: 'claude-sonnet-5-5', max_tokens: 4096 })
+    expect(claudePayload(form({ removeKey: true }), savedLength)).toEqual({ model: 'claude-sonnet-5-5', max_tokens: 4096, remove_key: true })
   })
 })
 
@@ -93,6 +94,12 @@ describe('the answer length (E7.2: Claude has its own)', () => {
   })
 
   it('is sent as Claude’s own, apart from the local model’s', () => {
-    expect(claudePayload(form({ claudeMaxTokens: 8192 }))).toEqual({ model: 'claude-sonnet-5-5', max_tokens: 8192 })
+    expect(claudePayload(form({ claudeMaxTokens: 8192 }), savedLength)).toEqual({ model: 'claude-sonnet-5-5', max_tokens: 8192 })
+  })
+
+  it('keeps what the server has saved when the field was emptied, so Apply does not turn into an error', () => {
+    expect(lengthToSend(8192, 4096)).toBe(8192)
+    expect([lengthToSend(0, 4096), lengthToSend('', 4096), lengthToSend(Number.NaN, 512)]).toEqual([4096, 4096, 512])
+    expect(claudePayload(form({ claudeMaxTokens: 0 }), savedLength).max_tokens).toBe(4096)
   })
 })

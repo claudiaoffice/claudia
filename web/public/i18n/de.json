@@ -1477,6 +1477,7 @@
   "The angle in radians (from 0 to pi) whose cosine is the number, which must be from -1 to 1.": "Der Winkel im Bogenmaß (von 0 bis pi), dessen Kosinus die Zahl ist; sie muss von -1 bis 1 liegen.",
   "The angle in radians from the x axis to the point (x, y): x comes first, as in Excel.": "Der Winkel im Bogenmaß von der x-Achse zum Punkt (x, y): x kommt zuerst, wie in Excel.",
   "The angle in radians, from 0 to pi, whose cotangent is the number.": "Der Winkel im Bogenmaß, von 0 bis pi, dessen Kotangens die Zahl ist.",
+  "The answer length must be a whole number of at least 1.": "Die Antwortlänge muss eine ganze Zahl von mindestens 1 sein.",
   "The app cannot move what has the style “{name}” to another style": "Die App kann das, was das Format „{name}“ hat, nicht auf ein anderes Format umstellen",
   "The average of the distances of the numbers from their mean.": "Der Durchschnitt der Abstände der Zahlen von ihrem Mittelwert.",
   "The base 10 logarithm of a positive number.": "Der Logarithmus einer positiven Zahl zur Basis 10.",

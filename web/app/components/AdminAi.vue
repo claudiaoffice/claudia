@@ -4,7 +4,7 @@
 // the last error and since when, and never shows the provider key again: only its last four characters.
 import { computed, onMounted, ref } from 'vue'
 import { adminApi, AdminApiError, type ServerSettingsView } from '~/lib/admin-api'
-import { answerLength, applyState, approxWords, claudePayload, failureHint, failureSentence, PROVIDERS, setAnswerLength, type AiForm, type Provider } from '~/lib/admin-ai'
+import { answerLength, applyState, approxWords, claudePayload, failureHint, failureSentence, lengthIsValid, lengthToSend, PROVIDERS, setAnswerLength, type AiForm, type Provider } from '~/lib/admin-ai'
 import { ago, clock } from '~/lib/people'
 import { useI18n } from '~/lib/i18n'
 
@@ -89,9 +89,9 @@ async function apply() {
         provider: f.provider,
         model_dir: f.modelDir.trim() || null,
         device: f.device,
-        max_tokens: f.maxTokens,
+        max_tokens: lengthToSend(f.maxTokens, ai.value?.max_tokens ?? 512),
         timeout: f.timeout,
-        claude: claudePayload(f),
+        claude: claudePayload(f, ai.value?.claude ?? { max_tokens: 4096 }),
       }),
     )
     tested.value = f.provider === 'claude'
@@ -191,8 +191,9 @@ const lastError = computed(() => {
     <div class="pair">
       <div class="field">
         <label for="answer-length">{{ t('Max answer length (tokens)') }}</label>
-        <input id="answer-length" v-model.number="length" type="number" min="1" class="mono narrow" aria-describedby="answer-words" data-testid="ai-max-tokens" >
-        <span id="answer-words" class="hint" data-testid="ai-max-words">{{ t('About {words} words', { words: approxWords(length) }) }}</span>
+        <input id="answer-length" v-model.number="length" type="number" min="1" class="mono narrow" aria-describedby="answer-words" :aria-invalid="!lengthIsValid(length)" data-testid="ai-max-tokens" >
+        <span v-if="!lengthIsValid(length)" id="answer-words" class="hint" role="alert" data-testid="ai-max-words">{{ t('The answer length must be a whole number of at least 1.') }}</span>
+        <span v-else-if="approxWords(length) > 0" id="answer-words" class="hint" data-testid="ai-max-words">{{ t('About {words} words', { words: approxWords(length) }) }}</span>
       </div>
       <label class="field">
         {{ t('Timeout (seconds)') }}

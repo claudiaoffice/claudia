@@ -11,11 +11,11 @@ superseded-by: []
 
 # D1563 · The help is a way to look, in every app, and is shown as the product's own words
 
-**Decided 2026-11-23** (Q7).
+**Decided 2026-11-23** (Q7); the English reading below is my assumption while building, for the owner's veto.
 
 `help_search` and `help_topic` are in the `look_methods` of all three lenses, so a model, and a person who may only look, can ask
 them. The persona tells the model to use them first for any question about how to use Claudia, and to say so if the help has
-nothing. `help_search` shows `- id — title` lines; `help_topic` shows the title and the body, cut at 4,000 characters.
+nothing. `help_search` shows `- id — title` lines; `help_topic` shows the title and the body; the loop cuts a long one like any result (`Budget.result_chars`).
 
 **Their answers are not fenced as data.** Everything that comes out of a document is somebody's text and is fenced; help is the
 product's own text, written by us. Fencing it would tell the model to distrust the very thing it was sent to read.

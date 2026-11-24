@@ -116,7 +116,7 @@ class ModelEngine:
         can_write = any(t.kind != "look" for t in tools)
         offered = frozenset(t.name for t in tools if t.kind != "look")
         context = self._lens.orient(task.document, can_write=can_write, asker=task.sender, writes=offered)
-        skills = self._guidance.skills_for({tool.name for tool in tools})
+        skills = self._guidance.skills_for(offered)
         persona = self._guidance.persona
         request = Request(task.sender, task.text, context, tools, history, persona=persona, skills=skills)
         say = await self._converse(task, request)

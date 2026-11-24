@@ -1,7 +1,7 @@
 """What the model is told in each app (CODE-81, E7.2).
 
 The seam is the system message a model receives when somebody writes ``@ai ...`` in a document of each app, built from
-the real parts of the server (the app's lens, its requests, its persona and recipes), with a scripted model recording
+the real parts of the server (the app's lens, its requests, its persona and skills), with a scripted model recording
 what it was sent. These tests say what reaches the model, not whether a model obeys it.
 """
 
@@ -81,10 +81,10 @@ def test_the_requests_shown_to_the_model_are_written_as_json_in_every_app(app):
     assert requests_shown(text), "the form of a request is shown"
 
 
-# -- the persona and the recipes (E7.2)
+# -- the persona and the skills (E7.2)
 # A viewer cannot write in the chat at all (it needs the editor role), so the person who "may only look" is an editor in
 # suggest mode in an app where nothing can be proposed yet (computes, creates).
-TITLES = {app: [recipe.title for recipe in load_guidance(model).recipes] for app, (model, _) in APPS.items()}
+TITLES = {app: [skill.title for skill in load_guidance(model).skills] for app, (model, _) in APPS.items()}
 
 
 @pytest.mark.parametrize("app", APPS)
@@ -94,13 +94,13 @@ def test_the_model_is_given_the_persona_of_the_app_it_works_in(app):
 
 
 @pytest.mark.parametrize("app", APPS)
-def test_an_owner_who_may_change_things_is_given_every_recipe_of_the_app(app):
+def test_an_owner_who_may_change_things_is_given_every_skill_of_the_app(app):
     text = system_message(app)
-    assert [title for title in TITLES[app] if title not in text] == []
+    assert [title for title in TITLES[app] if f"{title}:" not in text] == []
 
 
 @pytest.mark.parametrize("app", ["computes", "creates"])
-def test_a_person_who_may_only_look_is_taught_no_recipe_for_changing_but_still_who_the_ai_is(app):
+def test_a_person_who_may_only_look_is_taught_no_skill_for_changing_but_still_who_the_ai_is(app):
     text = system_message(app, BEN, "suggest")
     assert "can only look" in text and "Requests that change" not in text
     assert [title for title in TITLES[app] if f"{title}:" in text] == []
@@ -108,7 +108,7 @@ def test_a_person_who_may_only_look_is_taught_no_recipe_for_changing_but_still_w
 
 
 @pytest.mark.parametrize("app", APPS)
-def test_an_app_is_not_taught_the_recipes_of_another(app):
+def test_an_app_is_not_taught_the_skills_of_another(app):
     text = system_message(app)
     assert [t for other, titles in TITLES.items() if other != app for t in titles if f"\n{t}:" in text] == []
 
@@ -142,7 +142,16 @@ def test_the_help_is_read_from_the_topic_and_is_not_fenced_as_data():
             return commands_block("help_topic", id=found.removeprefix("- ").split(" — ")[0])
         return "Insert it from the menu."
 
-    model = asked("composes", "@ai how do I change how a heading looks?", FakeModel(answer), BEN, "suggest")
+    seen_after: dict = {}
+
+    def check(hosted, person):
+        seen_after["said"] = person.said()
+        seen_after["text"] = [p["text"] for p in person.request("read_paragraphs")["result"]["paragraphs"]]
+
+    model = asked("composes", "@ai how do I change how a heading looks?", FakeModel(answer), BEN, "suggest", then=check)
+    assert seen_after == {"said": ["Insert it from the menu."], "text": [""]}, (
+        "the answer came, the text did not change"
+    )
     assert len(model.calls) == 3
     assert "```data" not in seen[1] and "```data" not in seen[2], "the help is the product's own text"
     assert "composes.editing-a-style" in seen[1] and "how a style looks" in seen[2].lower()

@@ -43,6 +43,12 @@ export function lengthIsValid(tokens: unknown): boolean {
   return typeof tokens === 'number' && Number.isInteger(tokens) && tokens >= 1
 }
 
+/** What is sent for a length: what was typed when it is a valid one, else what the server has saved (a field that was
+ * emptied and left must not turn Apply into an error). */
+export function lengthToSend(typed: unknown, saved: number): number {
+  return lengthIsValid(typed) ? (typed as number) : saved
+}
+
 /** One cause of a failure, in the administrator's words. `detail` is what the server said, used where no sentence is known. */
 export function failureSentence(reason: string, context: { model: string; seconds: number }, detail: string): string {
   switch (reason) {
@@ -83,10 +89,10 @@ export function applyState(form: AiForm, saved: { provider: string; key_set: boo
 }
 
 /** The `claude` part of what `PUT /settings/ai` takes: the key is sent only when one was typed. */
-export function claudePayload(form: AiForm) {
+export function claudePayload(form: AiForm, saved: { max_tokens: number }) {
   return {
     model: form.model.trim(),
-    max_tokens: form.claudeMaxTokens,
+    max_tokens: lengthToSend(form.claudeMaxTokens, saved.max_tokens),
     ...(form.key.trim() ? { key: form.key.trim() } : {}),
     ...(form.removeKey && !form.key.trim() ? { remove_key: true } : {}),
     ...(form.confirmed ? { confirm: true } : {}),

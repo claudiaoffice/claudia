@@ -10,12 +10,12 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 Skills and persona per app (E7.2, D1560–D1563), and what came with it.
 
 ### Added
-- **`ai_guidance`** (D1560–D1562): `Guidance`, `Recipe`, `load_guidance` and `parse_recipes`. Each app ships `ai/persona.md`
+- **`ai_guidance`** (D1560–D1562): `Guidance`, `Skill`, `load_guidance` and `parse_skills`. Each app ships `ai/persona.md`
   and `ai/skills.md` in its package; `load_guidance(model_cls)` reads them, and `Guidance.skills_for(offered)` gives the
-  recipes whose requests are all offered to the asker. A persona and its recipes may have at most `MAX_CHARACTERS` (6,000).
-- `ModelParts.guidance` and the `guidance` parameter of `ModelEngine`: the persona and recipes the model is given.
+  skills whose requests are all offered to the asker. A test holds persona and skills of an app to 6,000 characters.
+- `ModelParts.guidance` and the `guidance` parameter of `ModelEngine`: the persona and skills the model is given.
 - **`help_search` and `help_topic` as requests that look** in the workbook, text and slide lenses (D1563), shown as plain
-  text, not fenced as data. `HELP_METHODS`, `show_help` and `MAX_HELP_CHARACTERS` in `claudia_server.lens`.
+  text, not fenced as data. `HELP_METHODS` and `show_help` in `claudia_server.lens`.
 - The AI page edits the answer length of the provider that is chosen: Claude's `claude.max_tokens` has a field of its own.
 - `ClaudeSettings.max_tokens` (default 4096): Claude's own answer length (CODE-82, D1564). `AiRuntime.claude_runner` uses
   it; `AiSettings.max_tokens` (512) is the local model's. `PUT /api/admin/settings/ai` takes `claude.max_tokens` (at

@@ -496,7 +496,7 @@
   "class": [
    "object"
   ],
-  "init": "(runner: 'Answerer', tools: 'tuple[ToolSpec, ...]', lens: 'Lens', *, memory: 'ConversationMemory | None' = None, budget: 'Budget' = Budget(rounds=8, calls=30, result_chars=3000, round_chars=9000), guidance: 'Guidance' = Guidance(persona='', recipes=()))",
+  "init": "(runner: 'Answerer', tools: 'tuple[ToolSpec, ...]', lens: 'Lens', *, memory: 'ConversationMemory | None' = None, budget: 'Budget' = Budget(rounds=8, calls=30, result_chars=3000, round_chars=9000), guidance: 'Guidance' = Guidance(persona='', skills=()))",
   "methods": {
    "plan_async": "(self, task: 'Task') -> 'list[AiTurn]'"
   },

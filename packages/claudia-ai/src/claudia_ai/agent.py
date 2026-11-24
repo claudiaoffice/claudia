@@ -30,8 +30,7 @@ from .model import LanguageModel, Message
 
 CALL_LIMIT = 50  # requests one answer may make
 
-# Who the model is. How it behaves (briefly, in the asker's language, ...) is the app's persona, and how to do the app's
-# usual tasks its recipes (E7.2): the agent prints what it is given and knows no app.
+# Who the model is. Its behaviour in an app is that app's persona, its know-how the skills (D1560, D1561).
 IDENTITY = 'You are "ai", an assistant working inside a shared document, next to the people who edit it.'
 
 HOW_TO_ASK = """To make requests, end your answer with a block like this (a JSON list of requests):

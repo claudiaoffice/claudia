@@ -10,9 +10,9 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 The AI is given who it is, how it behaves in an app and how to do the app's usual tasks (E7.2).
 
 ### Added
-- `Request.persona` and `Request.skills`: how the AI behaves in the app and the recipes for what it may do there
+- `Request.persona` and `Request.skills`: how the AI behaves in the app and the skills for what it may do there
   (D1560, D1561). `Agent.messages` puts them in the system message: identity, persona, context, how to ask, the requests,
-  the recipes. Both default to empty, so a caller that gives none is unchanged.
+  the skills. Both default to empty, so a caller that gives none is unchanged.
 
 ### Changed
 - "Answer briefly and in the language you are spoken to" is no longer in the identity line: it is the persona's. A caller that
