@@ -518,7 +518,7 @@ class HostedDocument:
         return via.to_data() if via is not None else None
 
     def offers_claude(self) -> bool:
-        """Whether the owners have anything to allow: the server has Claude set up and its assistant routes to it."""
+        """Whether the owner has anything to allow: the server has Claude set up and its assistant routes to it."""
         return self.assistant is not None and self.assistant.offers_claude()
 
     def touch(self) -> None:

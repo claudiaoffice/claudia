@@ -6,11 +6,11 @@
 # Anthropic: "the fake Anthropic" is a small server on this computer that speaks the same API and can be told to refuse, to
 # be out of credit, to be slow and so on; the server under test is started with its address (never settable from the page).
 # One real-key check by the owner is the only run against the real API ("real API not run" is said in every patch).
-# Words in the glossary: AI provider, Remote provider, Provider key, Owners' consent.
+# Words in the glossary: AI provider, Remote provider, Provider key, Owner's consent.
 Feature: An administrator can make Claude the AI that answers @ai, and the page tells the truth about where content goes
 
   As the administrator of a server, I want to connect Claude in the server settings, so that @ai answers with Claude the
-  way it answers with a local model, without anybody's content leaving the server unless the document's owners also agree.
+  way it answers with a local model, without anybody's content leaving the server unless the document's owner also agrees.
 
   Background:
     Given a server with the administrator "anna" and a fake Anthropic that accepts the provider key "sk-ant-test-a7Q2"
@@ -48,7 +48,7 @@ Feature: An administrator can make Claude the AI that answers @ai, and the page 
     And the model is "claude-sonnet-5-5"
     And I read "Document content is sent to Anthropic when someone asks @ai."
     And I read "Documents are encrypted on this server; Claude reads what it is shown in plain text."
-    And I read that the owners of each document must also allow Claude there
+    And I read that the owner of each document must also allow Claude there
     And "Apply" is not available
 
   @core
@@ -120,7 +120,7 @@ Feature: An administrator can make Claude the AI that answers @ai, and the page 
     Given a document "budget" in which "jonas" is an owner
     When I apply Claude with the right key and the confirmed sentence
     Then the settings page has no switch for the document "budget"
-    And in "budget" Claude is not allowed until its owners allow it
+    And in "budget" Claude is not allowed until its owner allows it
 
   @extended
   Scenario: The sentence is recorded with who confirmed it and when
@@ -158,7 +158,7 @@ Feature: An administrator can make Claude the AI that answers @ai, and the page 
   @extended
   Scenario: The key is not in the server's log
     Given Claude is the server's AI provider with the key "sk-ant-test-a7Q2"
-    When someone asks @ai in a document whose owners allowed Claude
+    When someone asks @ai in a document whose owner allowed Claude
     Then the server's log does not contain "sk-ant-test-a7Q2"
 
   @extended
@@ -183,7 +183,7 @@ Feature: An administrator can make Claude the AI that answers @ai, and the page 
   Scenario: When a question to Claude fails, the page says why and since when
     Given Claude is the server's AI provider with the key "sk-ant-test-a7Q2"
     And the fake Anthropic says the credit balance is used up
-    When someone asks @ai in a document whose owners allowed Claude
+    When someone asks @ai in a document whose owner allowed Claude
     And I open the AI page
     Then I read "Last error" and today's time
     And I read "The credit balance at Anthropic is used up."
@@ -193,7 +193,7 @@ Feature: An administrator can make Claude the AI that answers @ai, and the page 
   Scenario Outline: Every cause has its sentence for the administrator
     Given Claude is the server's AI provider with the key "sk-ant-test-a7Q2"
     And the fake Anthropic <fails>
-    When someone asks @ai in a document whose owners allowed Claude
+    When someone asks @ai in a document whose owner allowed Claude
     And I open the AI page
     Then I read "<reason>"
 
@@ -210,7 +210,7 @@ Feature: An administrator can make Claude the AI that answers @ai, and the page 
   Scenario: The last error stays until Claude has answered a question again
     Given Claude is the server's AI provider with the key "sk-ant-test-a7Q2"
     And the fake Anthropic says the credit balance is used up
-    And someone asked @ai in a document whose owners allowed Claude
+    And someone asked @ai in a document whose owner allowed Claude
     When the fake Anthropic is topped up
     And I open the AI page
     Then I still read "Last error"
@@ -222,7 +222,7 @@ Feature: An administrator can make Claude the AI that answers @ai, and the page 
   Scenario: The page does not switch to another provider by itself
     Given Claude is the server's AI provider with the key "sk-ant-test-a7Q2"
     And the fake Anthropic says the credit balance is used up
-    When someone asks @ai in a document whose owners allowed Claude
+    When someone asks @ai in a document whose owner allowed Claude
     And I open the AI page
     Then it still says "Answering now:" and "Claude · claude-sonnet-5-5"
     And I read that the administrator decides: add credit, or choose another provider
@@ -230,7 +230,7 @@ Feature: An administrator can make Claude the AI that answers @ai, and the page 
   @extended
   Scenario: Changing the provider while a question is running is allowed and takes effect for the next one
     Given Claude is the server's AI provider with the key "sk-ant-test-a7Q2"
-    And a question to Claude is running in a document whose owners allowed Claude
+    And a question to Claude is running in a document whose owner allowed Claude
     When I choose "Local model" and press Apply
     Then the page says "Answering now:" and the local model
     And the question that was running ends as described in "claude-answers.feature"

@@ -126,6 +126,9 @@ def test_where_the_owners_did_not_allow_it_the_servers_own_provider_answers_and_
         text, via = await ask(hosted, ann)
         assert text.endswith("the local model")
         assert via == {"provider": "local", "label": "Qwen2.5-7B", "remote": False, "note": NOTE_NOT_ALLOWED}
+        assert (
+            NOTE_NOT_ALLOWED == "Claude is not allowed in this document. The owner can change that in Preferences ▸ AI…"
+        )  # noqa: E501
         assert anthropic.requests == []
 
     served(test, claude_desk(anthropic, local=runner_of("the local model")))

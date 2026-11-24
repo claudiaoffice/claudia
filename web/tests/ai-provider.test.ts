@@ -21,7 +21,7 @@ describe('who answers, in words (E7.11): never by colour alone', () => {
   })
 
   it('keeps a sentence about why this provider answered apart from the line', () => {
-    const why = 'Claude is not allowed in this document. The owners can change that in Preferences ▸ AI…'
+    const why = 'Claude is not allowed in this document. The owner can change that in Preferences ▸ AI…'
     expect(answeredBy({ ...local, note: why })).toBe('answered by Qwen2.5-7B · this server')
     expect(noteOf({ ...local, note: why })).toBe(why)
     expect(noteOf(claude)).toBe('')
@@ -42,7 +42,7 @@ describe('the dialog "AI in this document"', () => {
     allowed: false,
     by: null,
     at: null,
-    owners: ['anna', 'jonas'],
+    owners: ['anna'],
     history: [],
     answering: local,
     offered: true,
@@ -53,7 +53,7 @@ describe('the dialog "AI in this document"', () => {
   })
 
   it('shows an editor or a viewer the state, and who may change it', () => {
-    expect(consentDialog(view, 'editor')).toMatchObject({ mode: 'read-only', ownersLine: 'Only the owners can change this: anna and jonas.' })
+    expect(consentDialog(view, 'editor')).toMatchObject({ mode: 'read-only', ownerLine: 'Only the owner can change this: anna.' })
     expect(consentDialog(view, 'viewer').mode).toBe('read-only')
   })
 

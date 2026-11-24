@@ -27,6 +27,7 @@ from claudia_core import Via
 
 from .ai_consent import AiConsent
 from .ai_desk import CLAUDE_VIA, Failure, ProviderDesk
+from .ai_guidance import Guidance
 from .assistant import AiTurn, Engine, Say, Task
 from .lens import Lens
 from .model_engine import Budget, ConversationMemory, ModelEngine
@@ -41,7 +42,7 @@ NOTE_STOPPED = "stopped at its next step"
 
 
 class Withdrawn(ModelError):
-    """Claude may not be asked any more: the owners withdrew their consent or the administrator switched it off."""
+    """Claude may not be asked any more: the owner withdrew the consent or the administrator switched it off."""
 
 
 class GatedRunner:
@@ -51,6 +52,11 @@ class GatedRunner:
     def __init__(self, runner: ModelRunner, may: Callable[[], bool]):
         self._runner = runner
         self.may = may
+
+    @property
+    def remote(self) -> bool:
+        """As the runner it gates: does what is asked leave this computer?"""
+        return self._runner.remote
 
     async def answer(self, request: Request) -> Turn:
         """The runner's answer; ``Withdrawn`` instead of asking when it may not any more."""
@@ -62,11 +68,12 @@ class GatedRunner:
 @dataclass(frozen=True)
 class ModelParts:
     """What a language model needs to work in one app: the lens through which it sees a document, the requests it may
-    make, and what one question may cost."""
+    make, what one question may cost, and what the app teaches the AI about working in it (E7.2)."""
 
     lens: Lens
     tools: tuple[ToolSpec, ...]
     budget: Budget = Budget()  # noqa: B008  (frozen)
+    guidance: Guidance = Guidance()  # noqa: B008  (frozen)
 
 
 class AiRouter:
@@ -85,7 +92,7 @@ class AiRouter:
         return replace(decision.via, note=note)
 
     def offers_claude(self) -> bool:
-        """Can the owners of a document allow Claude here at all?"""
+        """Can the owner of a document allow Claude here at all?"""
         return self._desk.offers_claude
 
     async def plan_async(self, task: Task) -> list[AiTurn]:
@@ -106,7 +113,9 @@ class AiRouter:
     def _engine(self, runner: Answerer) -> ModelEngine:
         assert self._parts is not None
         parts = self._parts
-        return ModelEngine(runner, parts.tools, parts.lens, memory=self._memory, budget=parts.budget)
+        return ModelEngine(
+            runner, parts.tools, parts.lens, memory=self._memory, budget=parts.budget, guidance=parts.guidance
+        )
 
     async def _ask_claude(self, task: Task, runner: ModelRunner, via: Via) -> list[AiTurn]:
         def may() -> bool:

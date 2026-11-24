@@ -9,7 +9,10 @@ export interface AiForm {
   provider: Provider
   modelDir: string
   device: string
+  /** The longest answer of the local model, in tokens. */
   maxTokens: number
+  /** The longest answer of Claude, in tokens (E7.2: it has its own). */
+  claudeMaxTokens: number
   timeout: number
   model: string
   /** A key typed or pasted just now; empty keeps the saved one. */
@@ -17,6 +20,33 @@ export interface AiForm {
   removeKey: boolean
   /** The administrator confirmed that document content is sent to Anthropic. */
   confirmed: boolean
+}
+
+/** The answer length the page edits: that of the provider that is chosen (the local model's for the stand-in too). */
+export function answerLength(form: AiForm): number {
+  return form.provider === 'claude' ? form.claudeMaxTokens : form.maxTokens
+}
+
+/** Sets the answer length of the provider that is chosen. */
+export function setAnswerLength(form: AiForm, tokens: number): void {
+  if (form.provider === 'claude') form.claudeMaxTokens = tokens
+  else form.maxTokens = tokens
+}
+
+/** About how many words a number of tokens is, to the nearest ten (a token is about three quarters of an English word). */
+export function approxWords(tokens: number): number {
+  return Math.max(0, Math.round((tokens * 0.75) / 10) * 10)
+}
+
+/** A length is a whole number of at least one token (the field is empty while somebody retypes it). */
+export function lengthIsValid(tokens: unknown): boolean {
+  return typeof tokens === 'number' && Number.isInteger(tokens) && tokens >= 1
+}
+
+/** What is sent for a length: what was typed when it is a valid one, else what the server has saved (a field that was
+ * emptied and left must not turn Apply into an error). */
+export function lengthToSend(typed: unknown, saved: number): number {
+  return lengthIsValid(typed) ? (typed as number) : saved
 }
 
 /** One cause of a failure, in the administrator's words. `detail` is what the server said, used where no sentence is known. */
@@ -50,17 +80,19 @@ export function failureHint(reason: string): string {
 
 /** What Apply needs, given what the server has saved: Claude needs a key, and the sentence when it was not Claude before. */
 export function applyState(form: AiForm, saved: { provider: string; key_set: boolean }) {
-  if (form.provider === 'local') return { needsKey: false, needsConfirm: false, canApply: form.modelDir.trim() !== '' }
-  if (form.provider !== 'claude') return { needsKey: false, needsConfirm: false, canApply: true }
+  const lengthOk = lengthIsValid(answerLength(form))
+  if (form.provider === 'local') return { needsKey: false, needsConfirm: false, canApply: lengthOk && form.modelDir.trim() !== '' }
+  if (form.provider !== 'claude') return { needsKey: false, needsConfirm: false, canApply: lengthOk }
   const needsKey = form.key.trim() === '' && (form.removeKey || !saved.key_set)
   const needsConfirm = saved.provider !== 'claude'
-  return { needsKey, needsConfirm, canApply: !needsKey && (!needsConfirm || form.confirmed) }
+  return { needsKey, needsConfirm, canApply: lengthOk && !needsKey && (!needsConfirm || form.confirmed) }
 }
 
 /** The `claude` part of what `PUT /settings/ai` takes: the key is sent only when one was typed. */
-export function claudePayload(form: AiForm) {
+export function claudePayload(form: AiForm, saved: { max_tokens: number }) {
   return {
     model: form.model.trim(),
+    max_tokens: lengthToSend(form.claudeMaxTokens, saved.max_tokens),
     ...(form.key.trim() ? { key: form.key.trim() } : {}),
     ...(form.removeKey && !form.key.trim() ? { remove_key: true } : {}),
     ...(form.confirmed ? { confirm: true } : {}),

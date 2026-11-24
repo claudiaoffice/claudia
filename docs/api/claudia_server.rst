@@ -121,13 +121,17 @@ Assistant
 .. autoclass:: claudia_server.ModelEngine
 .. autofunction:: claudia_server.model_assistant_for
 
-What ``ModelEngine`` is given (not in ``__all__``; documented so its signature resolves): one question's limits, and the
-app's view of its documents for the model.
+What ``ModelEngine`` is given (not in ``__all__``; documented so its signature resolves): one question's limits, the
+app's view of its documents for the model, and what the app teaches the AI about working in it (E7.2).
 
 .. autoclass:: claudia_server.model_engine.Budget
 .. autoclass:: claudia_server.model_engine.ConversationMemory
 .. autoclass:: claudia_server.lens.Lens
 .. autoclass:: claudia_server.lens.Recorder
+.. autoclass:: claudia_server.ai_guidance.Guidance
+.. autoclass:: claudia_server.ai_guidance.Skill
+.. autofunction:: claudia_server.ai_guidance.load_guidance
+.. autofunction:: claudia_server.ai_guidance.parse_skills
 
 Printing
 --------

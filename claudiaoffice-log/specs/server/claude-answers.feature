@@ -7,9 +7,9 @@
 #
 # Decided on 2026-11-22: a failure of Claude is one sentence for the person ("<AI type> is not available at the moment. The
 # administrator can see why.") and the reason is on the AI page; there is no automatic switch to another provider; the stop
-# message is "Stopped: Claude was switched off."; the owners' consent only permits, so where Claude is not the server's
+# message is "Stopped: Claude was switched off."; the owner's consent only permits, so where Claude is not the server's
 # provider the provider that is answers, and the chat says so (not an error).
-Feature: @ai answers with Claude only where both the administrator and the owners agreed, and always says who answered
+Feature: @ai answers with Claude only where both the administrator and the owner agreed, and always says who answered
 
   Background:
     Given a server whose AI provider is Claude, applied by the administrator with the sentence confirmed
@@ -35,6 +35,21 @@ Feature: @ai answers with Claude only where both the administrator and the owner
     And it received what the ai looked at in the sheet "Budget"
     And it received nothing of the sheet "Salaries"
     And it received no password, no key and no list of the document's people
+
+  # CODE-80, D1568: the first message holds counts and ids; what Claude looks at is what goes out.
+  @core @unit:packages/claudia-server/tests/test_server_remote_orientation.py
+  Scenario: Claude is first told how much there is, and nothing a person wrote
+    Given the sheet "Salaries" has names and numbers that the question has nothing to do with
+    When I write "@ai why is B7 an error?" in the chat
+    Then the first thing the fake Anthropic received says that the document has 2 sheets
+    And it names none of the sheets and shows no cell
+
+  @extended @unit:packages/claudia-server/tests/test_server_remote_orientation.py
+  Scenario: The local model is still shown the start of the document
+    Given Anna did not allow Claude in "budget" yet
+    And the server's own provider is the local model
+    When I write "@ai why is B7 an error?" in the chat
+    Then the local model was shown the sheet names and the top left of the sheets
 
   @core
   Scenario: Claude looks and changes the document the way the local model does
@@ -102,11 +117,11 @@ Feature: @ai answers with Claude only where both the administrator and the owner
     When I write "@ai why is B7 an error?" in the chat
     Then the ai is answered by the server's local provider, not by Claude
     And under the answer I read "answered by" and the local provider's name
-    And I read "Claude is not allowed in this document. The owners can change that in Preferences ▸ AI…"
+    And I read "Claude is not allowed in this document. The owner can change that in Preferences ▸ AI…"
     And the fake Anthropic was not asked anything
 
   @core
-  Scenario: The owners' consent alone is not enough, and it is not an error
+  Scenario: The owner's consent alone is not enough, and it is not an error
     Given the administrator chose the local model and pressed Apply
     When I write "@ai why is B7 an error?" in the chat
     Then the ai is answered by the local model
@@ -189,28 +204,28 @@ Feature: @ai answers with Claude only where both the administrator and the owner
   # --- switching off while it works ---------------------------------------------------------------------------------
 
   @core @two-users
-  Scenario: The owners switch Claude off while a question is running
-    Given Jonas is an owner of "budget"
+  Scenario: The owner switches Claude off while a question is running
+    Given Anna is the owner of "budget" and I am an editor of it
     And the fake Anthropic is slow and asks to look at "Budget!A1:F8" before it answers
     When I write "@ai why is B7 an error?" in the chat
-    And Jonas withdraws the consent for Claude in "budget" while Claude is working
-    Then the History & Chat panel says "Jonas switched Claude off for this document."
+    And Anna withdraws the consent for Claude in "budget" while Claude is working
+    Then the History & Chat panel says "Anna switched Claude off for this document."
     And the ai says "Stopped: Claude was switched off."
     And under it I read "Claude · remote · stopped at its next step"
     And the fake Anthropic is asked nothing more for this question
 
   @core @two-users
   Scenario: After the stop the next question goes to the server's own provider
-    Given a question to Claude was stopped because Jonas switched Claude off
+    Given a question to Claude was stopped because Anna switched Claude off
     When I write "@ai and now?" in the chat
     Then the answer is the local provider's, with its name under it
 
   @extended @two-users
   Scenario: What was done before the stop stays, and is not undone
     Given the fake Anthropic asks to put "52" in C7, and then to look at the sheet again
-    And Jonas is an owner of "budget"
+    And Anna is the owner of "budget" and I am an editor of it
     When I write "@ai fix B7" in the chat
-    And Jonas withdraws the consent for Claude in "budget" after the change was made
+    And Anna withdraws the consent for Claude in "budget" after the change was made
     Then the ai says "Stopped: Claude was switched off."
     And C7 holds 52
 

@@ -28,7 +28,7 @@ async function save() {
 
 <template>
   <Modal :title="t('AI in this document')" :width="480" @close="emit('close')">
-    <p v-if="!view || !dialog" class="lead">{{ t('This server does not keep the owners’ choice about Claude.') }}</p>
+    <p v-if="!view || !dialog" class="lead">{{ t('This server does not keep the owner’s choice about Claude.') }}</p>
     <form v-else class="form" @submit.prevent="save">
       <p v-if="view.answering" class="now" data-testid="ai-answering">
         {{ t('Answering @ai in this document now') }}
@@ -36,7 +36,7 @@ async function save() {
       </p>
 
       <p v-if="dialog.mode === 'no-remote'" class="lead" data-testid="ai-no-remote">
-        {{ t('This server has no remote AI, so nothing in this document leaves it. An administrator can add Claude in the server settings. Then the owners can allow it here.') }}
+        {{ t('This server has no remote AI, so nothing in this document leaves it. An administrator can add Claude in the server settings. Then the owner can allow it here.') }}
       </p>
 
       <template v-else>
@@ -44,7 +44,7 @@ async function save() {
           <input v-model="allowed" type="checkbox" :disabled="dialog.mode !== 'owner'">
           <span>{{ t('Allow Claude to answer @ai in this document') }}</span>
         </label>
-        <p class="lead">{{ dialog.mode === 'owner' ? t('Off by default. Only the owners can change it.') : dialog.ownersLine }}</p>
+        <p class="lead">{{ dialog.mode === 'owner' ? t('Off by default. Only the owner can change it.') : dialog.ownerLine }}</p>
 
         <div class="sent">
           <p>{{ t('If you allow it, Anthropic is sent:') }}</p>

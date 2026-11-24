@@ -22,6 +22,11 @@ class Answerer(Protocol):
     """Whatever answers one ``Request`` with a ``Turn``: a ``ModelRunner``, or something that checks first whether it
     still may (E7.11)."""
 
+    @property
+    def remote(self) -> bool:
+        """Does what is asked leave this computer? (A remote provider is shown less of a document, CODE-80.)"""
+        ...
+
     async def answer(self, request: Request) -> Turn:
         """The answer to ``request``. Raises ``ModelError``."""
 
@@ -61,6 +66,11 @@ class ModelRunner:
     def name(self) -> str:
         """What model this is, for the operator."""
         return self.model.name
+
+    @property
+    def remote(self) -> bool:
+        """Does what is asked leave this computer?"""
+        return self.model.remote
 
     async def answer(self, request: Request) -> Turn:
         """The model's answer to ``request``. Raises ``ModelError``; stops the generation if the caller is cancelled."""

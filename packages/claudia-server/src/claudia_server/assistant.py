@@ -102,13 +102,13 @@ class AsyncEngine(Protocol):
 
 @runtime_checkable
 class Answering(Protocol):
-    """An engine that can say who would answer the next question, given what the owners allowed."""
+    """An engine that can say who would answer the next question, given what the owner allowed."""
 
     def answering(self, consent: AiConsent) -> Via:
         """Who answers, with the sentence for the chat that goes with it."""
 
     def offers_claude(self) -> bool:
-        """Is there a remote provider the owners could allow?"""
+        """Is there a remote provider the owner could allow?"""
 
 
 class Assistant:
@@ -146,7 +146,7 @@ class Assistant:
         return self.engine.answering(consent) if isinstance(self.engine, Answering) else None
 
     def offers_claude(self) -> bool:
-        """Could the owners allow a remote provider here? Only an engine that routes between providers can say."""
+        """Could the owner allow a remote provider here? Only an engine that routes between providers can say."""
         return isinstance(self.engine, Answering) and self.engine.offers_claude()
 
     # -- joining ---------------------------------------------------------------------------
