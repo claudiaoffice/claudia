@@ -17,6 +17,7 @@ import { useI18n } from '~/lib/i18n'
 import { goToThis, thisOnly } from '~/lib/noun-phrases'
 import { headingChoices, headingSetting, settingValue } from '~/lib/heading-level'
 import { numberingChoices, numberingValue } from '~/lib/numbering'
+import { remember, remembered } from '~/lib/storage'
 
 const { t } = useI18n()
 
@@ -106,21 +107,8 @@ async function setNumbering(value: string) {
 }
 
 const KEY = 'claudia.style-view'
-function remembered(): 'controls' | 'css' {
-  try {
-    return localStorage.getItem(KEY) === 'css' ? 'css' : 'controls'
-  } catch {
-    return 'controls'
-  }
-}
-const view = ref<'controls' | 'css'>(remembered())
-watch(view, (v) => {
-  try {
-    localStorage.setItem(KEY, v)
-  } catch {
-    /* nothing to remember in a private window */
-  }
-})
+const view = ref<'controls' | 'css'>(remembered(KEY, ['controls', 'css'], 'controls'))
+watch(view, (v) => remember(KEY, v))
 
 async function run(job: Promise<boolean>) {
   if (await job) emit('edited')

@@ -3,6 +3,8 @@
 // this browser, next to the person, and goes to the server with every chat message (`ai_mode`, protocol v-chat).
 // Anybody who never chose gets *suggest*: a person has to opt in to an AI that edits for them.
 
+import { safeStorage } from './storage'
+
 export type AiMode = 'act' | 'suggest'
 export const DEFAULT_AI_MODE: AiMode = 'suggest'
 
@@ -28,15 +30,5 @@ export function storeAiMode(host: string, doc: string, mode: AiMode, storage: Mo
     storage.setItem(aiModeKey(host, doc), mode)
   } catch {
     /* private window: the choice still holds for this visit */
-  }
-}
-
-/** The browser's storage, or one that forgets when the page closes, where the browser has none. */
-export function safeStorage(): ModeStorage {
-  try {
-    return localStorage
-  } catch {
-    const memory = new Map<string, string>()
-    return { getItem: (k) => memory.get(k) ?? null, setItem: (k, v) => void memory.set(k, v) }
   }
 }

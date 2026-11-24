@@ -13,6 +13,7 @@ import { createShellBridge, detectHandler, detectParentSink, isApp, type ShellBr
 import { LANGUAGES, useI18n } from '~/lib/i18n'
 import { useLoginWait } from '~/lib/login-wait'
 import { useTheme } from '~/lib/theme'
+import { remember, safeStorage } from '~/lib/storage'
 import Modal from './Modal.vue'
 
 const { t, locale, choose: chooseLanguage } = useI18n()
@@ -216,21 +217,6 @@ watchEffect(() => {
   document.documentElement.dataset.app = app.value
 })
 
-function remembered(key: string): string {
-  try {
-    return localStorage.getItem(key) ?? ''
-  } catch {
-    return ''
-  }
-}
-function remember(key: string, value: string) {
-  try {
-    localStorage.setItem(key, value)
-  } catch {
-    /* private window: nothing to remember */
-  }
-}
-
 /**
  * What a server says about itself, on landing here or on a fresh mount at a different one (E3.11): its document
  * list, as before, plus the earliest administrator's name if it has one — enough to bookmark it with a sensible
@@ -373,8 +359,8 @@ onBeforeUnmount(() => releasePresence?.())
 
 onMounted(async () => {
   if (props.pickFile) chooseFile()
-  user.value = remembered('claudia.user')
-  if (!doc.value && !props.startFresh) doc.value = remembered('claudia.doc')
+  user.value = safeStorage().getItem('claudia.user') ?? ''
+  if (!doc.value && !props.startFresh) doc.value = safeStorage().getItem('claudia.doc') ?? ''
   if (props.startFresh) docField.value?.focus()
   listed = loadServer()
   await listed

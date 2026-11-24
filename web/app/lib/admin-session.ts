@@ -8,9 +8,10 @@ import { ref } from 'vue' // only the Vue wiring at the end uses these
 import { AdminApiError, adminApi, type AdminApi } from './admin-api'
 
 import { translate as t } from './i18n'
+import { safeSessionStorage } from './storage'
 const KEY = 'claudia.admin.token'
 
-export function readToken(storage: Pick<Storage, 'getItem'> = safeStorage()): string | null {
+export function readToken(storage: Pick<Storage, 'getItem'> = safeSessionStorage()): string | null {
   try {
     return storage.getItem(KEY)
   } catch {
@@ -18,7 +19,7 @@ export function readToken(storage: Pick<Storage, 'getItem'> = safeStorage()): st
   }
 }
 
-export function storeToken(token: string, storage: Pick<Storage, 'setItem'> = safeStorage()): void {
+export function storeToken(token: string, storage: Pick<Storage, 'setItem'> = safeSessionStorage()): void {
   try {
     storage.setItem(KEY, token)
   } catch {
@@ -26,24 +27,11 @@ export function storeToken(token: string, storage: Pick<Storage, 'setItem'> = sa
   }
 }
 
-export function clearToken(storage: Pick<Storage, 'removeItem'> = safeStorage()): void {
+export function clearToken(storage: Pick<Storage, 'removeItem'> = safeSessionStorage()): void {
   try {
     storage.removeItem(KEY)
   } catch {
     /* nothing to clear */
-  }
-}
-
-function safeStorage(): Pick<Storage, 'getItem' | 'setItem' | 'removeItem'> {
-  try {
-    return sessionStorage
-  } catch {
-    const memory = new Map<string, string>()
-    return {
-      getItem: (k) => memory.get(k) ?? null,
-      setItem: (k, v) => void memory.set(k, v),
-      removeItem: (k) => void memory.delete(k),
-    }
   }
 }
 

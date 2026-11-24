@@ -2,6 +2,7 @@
 // `:root[data-theme='dark']` without waiting on `prefers-color-scheme` alone (a person can still ask for dark on a
 // light system, or the reverse — the View menu item D120 asks for needs a tri-state: Light, Dark, or Match system).
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue' // only the Vue wiring at the end uses these
+import { safeStorage } from './storage'
 
 export type ThemeChoice = 'light' | 'dark' | 'system'
 const KEY = 'claudia.theme'
@@ -34,15 +35,6 @@ export function resolvedTheme(choice: ThemeChoice, systemPrefersDark: boolean): 
 export function applyTheme(root: { setAttribute(name: string, value: string): void; removeAttribute(name: string): void }, resolved: 'light' | 'dark'): void {
   if (resolved === 'dark') root.setAttribute('data-theme', 'dark')
   else root.removeAttribute('data-theme')
-}
-
-function safeStorage(): Pick<Storage, 'getItem' | 'setItem'> {
-  try {
-    return localStorage
-  } catch {
-    const memory = new Map<string, string>()
-    return { getItem: (k) => memory.get(k) ?? null, setItem: (k, v) => void memory.set(k, v) }
-  }
 }
 
 // ------------------------------------------------------------------------------------------------------- Vue wiring

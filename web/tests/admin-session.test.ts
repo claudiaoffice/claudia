@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 import { clearToken, readToken, storeToken, useAdminSession } from '~/lib/admin-session'
 import { AdminApiError, type AdminApi } from '~/lib/admin-api'
 
@@ -66,6 +66,9 @@ describe('token storage', () => {
 })
 
 describe('useAdminSession', () => {
+  // The tab's storage outlives one session, as in a browser: each test starts signed out.
+  afterEach(() => clearToken())
+
   it('starts signed out, with no name until refresh or sign-in', () => {
     const session = useAdminSession(fakeApi())
     expect(session.token.value).toBeNull()

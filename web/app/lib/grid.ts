@@ -4,6 +4,7 @@
 // (`SlideObject.snap`, set with `set_snap`); an object keeps snapping even while this preference hides the lines,
 // unless it has itself been released (object-menu.ts).
 import { ref } from 'vue' // only the Vue wiring at the end uses these
+import { safeStorage } from './storage'
 
 const KEY = 'claudia.grid'
 
@@ -21,15 +22,6 @@ export function storeGrid(shown: boolean, storage: Pick<Storage, 'setItem'> = sa
     storage.setItem(KEY, shown ? 'on' : 'off')
   } catch {
     /* private window: nothing to remember, the choice still applies for this visit */
-  }
-}
-
-function safeStorage(): Pick<Storage, 'getItem' | 'setItem'> {
-  try {
-    return localStorage
-  } catch {
-    const memory = new Map<string, string>()
-    return { getItem: (k) => memory.get(k) ?? null, setItem: (k, v) => void memory.set(k, v) }
   }
 }
 

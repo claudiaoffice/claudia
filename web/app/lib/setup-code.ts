@@ -8,6 +8,8 @@
 //
 // The server compares codes the same way (`claudia_server.setup_code.normalize`).
 
+import { safeSessionStorage, type Store } from './storage'
+
 export type CodeSource = 'link' | 'app'
 export interface GivenCode {
   code: string
@@ -48,21 +50,13 @@ export function takeCodeFromAddress(
 let inMemory: GivenCode | null = null
 const listeners = new Set<(given: GivenCode) => void>()
 
-function storage(): Storage | null {
-  try {
-    return sessionStorage
-  } catch {
-    return null
-  }
-}
-
 function isGiven(value: unknown): value is GivenCode {
   const v = value as GivenCode | null
   return !!v && typeof v.code === 'string' && (v.from === 'link' || v.from === 'app')
 }
 
 /** Keep `code` for this tab, and tell a page that waits for one (`onSetupCode`). */
-export function rememberSetupCode(code: string, from: CodeSource, store: Storage | null = storage()): void {
+export function rememberSetupCode(code: string, from: CodeSource, store: Store | null = safeSessionStorage()): void {
   const given = { code, from }
   inMemory = given
   try {
@@ -74,7 +68,7 @@ export function rememberSetupCode(code: string, from: CodeSource, store: Storage
 }
 
 /** The code this tab was given, or `null`. */
-export function rememberedSetupCode(store: Storage | null = storage()): GivenCode | null {
+export function rememberedSetupCode(store: Store | null = safeSessionStorage()): GivenCode | null {
   try {
     const raw = store?.getItem(KEY)
     if (raw == null) return store ? null : inMemory
@@ -86,7 +80,7 @@ export function rememberedSetupCode(store: Storage | null = storage()): GivenCod
 }
 
 /** Drop the code (an administrator exists now, or the person chose to type another). */
-export function forgetSetupCode(store: Storage | null = storage()): void {
+export function forgetSetupCode(store: Store | null = safeSessionStorage()): void {
   inMemory = null
   try {
     store?.removeItem(KEY)

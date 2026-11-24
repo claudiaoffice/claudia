@@ -15,11 +15,13 @@ export default defineConfig({
     // reached 88 / 91 / 81 / 88 (statements, branches, functions, lines) under vitest 3 measure 85.3 / 82.4 / 78.3 /
     // 86.9 under vitest 5, which also counts fewer statements (2369 instead of 3506): the two versions measure
     // differently, so the figures are not comparable. These are the new ones, rounded down.
+    //
+    // 2026-11-24 (CODE-36): raised to what the tests reach now, rounded down (90.2 / 87.1 / 86.2 / 91.5).
     coverage: {
       provider: 'v8',
       include: ['app/lib/**'],
       reporter: ['text-summary'],
-      thresholds: { statements: 85, branches: 82, functions: 78, lines: 86 },
+      thresholds: { statements: 90, branches: 87, functions: 86, lines: 91 },
     },
   },
 })

@@ -4,8 +4,10 @@
 // for the (also still-empty) catalog loader this feeds.
 //
 // None of this assumes a browser: `currentLocale` and friends are also called from plain unit tests and (through
-// `people.ts`'s default parameters) from any code that formats a date, so they read `navigator`/`localStorage`
-// only behind a `typeof` guard and fall back to the default locale where neither exists, rather than throwing.
+// `people.ts`'s default parameters) from any code that formats a date, so they read `navigator` only behind a `typeof`
+// guard and the storage only through `safeStorage`, and fall back to the default locale where neither exists.
+
+import { safeStorage } from './storage'
 
 const STORAGE_KEY = 'claudia:locale'
 const DEFAULT_LOCALE = 'en'
@@ -23,18 +25,11 @@ export function detectLocale(nav?: Pick<Navigator, 'language'>): string {
   return typeof tag === 'string' && isLocaleTag(tag) ? tag : DEFAULT_LOCALE
 }
 
-// Generic so each caller can ask for only the one or two Storage methods it actually uses (real `localStorage`
-// satisfies any such subset, so the fallback below fits every call site).
-function storage<T>(given: T | undefined): T | Storage | undefined {
-  return given ?? (typeof localStorage !== 'undefined' ? localStorage : undefined)
-}
-
 /** The override the person picked for themselves, if any and still well-formed; `null` otherwise. No storage to
  *  read from (no browser, or reading it throws — private browsing, a blocked origin) is "no override", not an
  *  error here. */
 export function storedLocale(given?: Pick<Storage, 'getItem'>): string | null {
-  const s = storage(given)
-  if (!s) return null
+  const s = given ?? safeStorage()
   try {
     const value = s.getItem(STORAGE_KEY)
     return value !== null && isLocaleTag(value) ? value : null
@@ -47,9 +42,9 @@ export function storedLocale(given?: Pick<Storage, 'getItem'>): string | null {
  *  write that fails, is swallowed (the same as `storedLocale` finding nothing). */
 export function setLocale(locale: string, given?: Pick<Storage, 'setItem'>): void {
   if (!isLocaleTag(locale)) throw new Error(`not a locale tag: ${locale}`)
-  const s = storage(given)
+  const s = given ?? safeStorage()
   try {
-    s?.setItem(STORAGE_KEY, locale)
+    s.setItem(STORAGE_KEY, locale)
   } catch {
     // ignored: see above
   }
@@ -57,9 +52,9 @@ export function setLocale(locale: string, given?: Pick<Storage, 'setItem'>): voi
 
 /** Forget the override, back to following the OS/browser locale. */
 export function clearLocale(given?: Pick<Storage, 'removeItem'>): void {
-  const s = storage(given)
+  const s = given ?? safeStorage()
   try {
-    s?.removeItem(STORAGE_KEY)
+    s.removeItem(STORAGE_KEY)
   } catch {
     // ignored, as in setLocale
   }

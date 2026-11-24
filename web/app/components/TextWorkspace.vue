@@ -41,6 +41,7 @@ import { marksFor, textSearchHost } from '~/lib/text-search-host'
 import { useSearch } from '~/lib/use-search'
 import { useI18n } from '~/lib/i18n'
 import { useTheme } from '~/lib/theme'
+import { remember, remembered } from '~/lib/storage'
 import DocumentFrame from './DocumentFrame.vue'
 import SearchPanel from './SearchPanel.vue'
 import PrintPreview from './PrintPreview.vue'
@@ -76,21 +77,6 @@ const editor = ref<{
 } | null>(null)
 
 // How I look at the text is mine alone (and is remembered in this browser).
-function remembered<T extends string>(key: string, allowed: readonly T[], fallback: T): T {
-  try {
-    const value = localStorage.getItem(key) as T | null
-    return value && allowed.includes(value) ? value : fallback
-  } catch {
-    return fallback
-  }
-}
-function remember(key: string, value: string) {
-  try {
-    localStorage.setItem(key, value)
-  } catch {
-    /* private window: nothing to remember */
-  }
-}
 const view = ref<'flow' | 'page'>(remembered('claudia.composes.view', ['flow', 'page'], 'flow'))
 const authors = ref(remembered('claudia.composes.authors', ['on', 'off'], 'off') === 'on')
 watch(view, (v) => remember('claudia.composes.view', v))

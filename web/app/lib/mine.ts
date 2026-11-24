@@ -3,6 +3,8 @@
 // sees them. An entry names a document by its place (an origin), its app and its id, which together are what
 // opens it (D431); a collection holds such names, so one document can be in several collections.
 
+import { safeStorage } from './storage'
+
 const MINE_KEY = 'claudia.mine'
 const COLLECTIONS_KEY = 'claudia.collections'
 /** How many documents Mine remembers; the oldest go first. */
@@ -23,14 +25,6 @@ export interface Collection {
 }
 
 type Store = Pick<Storage, 'getItem' | 'setItem'>
-
-function storage(): Store | null {
-  try {
-    return localStorage
-  } catch {
-    return null // a sandboxed frame or a private window that refuses: nothing is remembered
-  }
-}
 
 function read<T>(key: string, check: (value: unknown) => value is T, store: Store | null): T[] {
   try {
@@ -65,12 +59,12 @@ export function keyOf(entry: { origin: string; app: string; id: string }): strin
 }
 
 /** Mine, the most recently opened first. */
-export function listMine(store: Store | null = storage()): MineEntry[] {
+export function listMine(store: Store | null = safeStorage()): MineEntry[] {
   return read(MINE_KEY, isEntry, store).sort((a, b) => b.opened.localeCompare(a.opened))
 }
 
 /** Remember that this document was just opened (it moves to the top). */
-export function rememberOpened(entry: Omit<MineEntry, 'opened'>, when = new Date().toISOString(), store: Store | null = storage()): MineEntry[] {
+export function rememberOpened(entry: Omit<MineEntry, 'opened'>, when = new Date().toISOString(), store: Store | null = safeStorage()): MineEntry[] {
   const key = keyOf(entry)
   const kept = listMine(store).filter((e) => keyOf(e) !== key)
   const next = [{ ...entry, opened: when }, ...kept].slice(0, MOST_MINE)
@@ -79,7 +73,7 @@ export function rememberOpened(entry: Omit<MineEntry, 'opened'>, when = new Date
 }
 
 /** Take a document off Mine (it stays on its place, and in no collection any more). */
-export function forgetMine(key: string, store: Store | null = storage()): MineEntry[] {
+export function forgetMine(key: string, store: Store | null = safeStorage()): MineEntry[] {
   const next = listMine(store).filter((e) => keyOf(e) !== key)
   write(MINE_KEY, next, store)
   write(COLLECTIONS_KEY, listCollections(store).map((c) => ({ ...c, entries: c.entries.filter((k) => k !== key) })), store)
@@ -87,12 +81,12 @@ export function forgetMine(key: string, store: Store | null = storage()): MineEn
 }
 
 /** The collections, in the order they were made. */
-export function listCollections(store: Store | null = storage()): Collection[] {
+export function listCollections(store: Store | null = safeStorage()): Collection[] {
   return read(COLLECTIONS_KEY, isCollection, store)
 }
 
 /** Make a collection; a name that is empty or taken (case ignored) makes none. */
-export function createCollection(name: string, store: Store | null = storage()): Collection[] {
+export function createCollection(name: string, store: Store | null = safeStorage()): Collection[] {
   const trimmed = name.trim()
   const all = listCollections(store)
   if (!trimmed || all.some((c) => c.name.toLowerCase() === trimmed.toLowerCase())) return all
@@ -102,7 +96,7 @@ export function createCollection(name: string, store: Store | null = storage()):
 }
 
 /** Put a document into a collection (once) or take it out. */
-export function setInCollection(name: string, key: string, inside: boolean, store: Store | null = storage()): Collection[] {
+export function setInCollection(name: string, key: string, inside: boolean, store: Store | null = safeStorage()): Collection[] {
   const next = listCollections(store).map((c) => {
     if (c.name !== name) return c
     const rest = c.entries.filter((k) => k !== key)
@@ -113,7 +107,7 @@ export function setInCollection(name: string, key: string, inside: boolean, stor
 }
 
 /** Remove a collection: only the grouping goes, never a document. */
-export function deleteCollection(name: string, store: Store | null = storage()): Collection[] {
+export function deleteCollection(name: string, store: Store | null = safeStorage()): Collection[] {
   const next = listCollections(store).filter((c) => c.name !== name)
   write(COLLECTIONS_KEY, next, store)
   return next
