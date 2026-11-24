@@ -80,6 +80,20 @@ def test_a_new_sheet_never_gets_the_id_of_a_removed_one(book):
     assert [s["id"] for s in call(book, "sheets")] == ["s1", hers, his]  # hers back in its place
 
 
+def test_a_sheet_added_after_a_removal_does_not_take_the_removed_ones_id(book):
+    """CODE-56 as the tracker states it: three sheets, the last removed, one added, the removal undone. (There is no
+    `remove_sheet` method on the wire yet, UX-68, so the removal goes through the document.)"""
+    from claudia_computes import RemoveSheet
+
+    for name in ("One", "Two", "Three"):
+        call(book, "add_sheet", {"name": name})
+    book.execute(RemoveSheet("s3"), author="ann")
+    added = call(book, "add_sheet", {"name": "Four"}, account=BEN)["sheet"]
+    book.undo("ann")
+    assert added != "s3"
+    assert sorted(s["id"] for s in call(book, "sheets")) == sorted(["s1", "s2", "s3", added])
+
+
 def test_sheet_names_must_be_new_and_nonempty(book):
     call(book, "add_sheet", {"name": "Budget"})
     for bad in ("budget", "", "   "):
