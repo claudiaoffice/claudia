@@ -112,9 +112,11 @@ def test_a_client_that_trusts_exactly_our_certificate_connects(certificate):
 
         thread = threading.Thread(target=serve)
         thread.start()
-        with socket.create_connection(listener.getsockname()) as raw:
-            with client_side.wrap_socket(raw, server_hostname="localhost") as tls:
-                assert tls.recv(2) == b"ok"
+        with (
+            socket.create_connection(listener.getsockname()) as raw,
+            client_side.wrap_socket(raw, server_hostname="localhost") as tls,
+        ):
+            assert tls.recv(2) == b"ok"
         thread.join(5)
 
 
