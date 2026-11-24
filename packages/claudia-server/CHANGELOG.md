@@ -26,6 +26,19 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
   chart's definition is answered as `chart` (by `define_chart` and `insert_chart`), the event of a definition is
   `chart`, and the kind of a chart object is `chart` everywhere, `free_name("chart")` included.
 
+## [0.45.0] - 2026-11-24
+
+### Added
+- `create_app(..., api_docs=False)` and the command-line switch `--api-docs`: the interactive API description at
+  `/api/swagger` is served only when asked for, because FastAPI's page loads its script from a CDN; the landing page
+  links it only then (SEC-14).
+
+### Changed
+- The server's own certificate is no longer an authority (`ca=False`, no certificate signing); one made before is
+  replaced at the next start, so a pinned fingerprint changes once (SEC-06, D2001).
+- `PUT /api/admin/settings/typeset` keeps a program only when it names itself as XeTeX or pdftocairo, run once in the
+  typesetter's sandbox; otherwise 400 with a sentence (SEC-16, D2002).
+
 ## [0.44.0] - 2026-11-24
 
 Skills and persona per app (E7.2, D1560–D1563), and what came with it.
