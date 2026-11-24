@@ -76,6 +76,7 @@ from .printing import LAYOUTS, PrintSetup, PrintSetupError
 from .shapes import BUILTIN_DIRECTORY, ShapeLibrary
 from .styles import ALLOWED_CSS, BUILTIN_STYLES, DEFAULT_STYLE, builtin_styles
 from .template import (
+    ChangePreview,
     SetTemplate,
     Template,
     TemplateRefused,
@@ -83,6 +84,7 @@ from .template import (
     check_template,
     plan_change_template,
     plan_change_theme,
+    preview_change,
     start_from_template,
     template_state,
 )
@@ -128,6 +130,7 @@ __all__ = [
     "basic_template",
     "plan_change_template",
     "plan_change_theme",
+    "preview_change",
     "check_template",
     "start_from_template",
     "template_state",
@@ -138,6 +141,7 @@ __all__ = [
     "SetParagraphStyle",
     "SetPrintSetup",
     "SetSlideLayout",
+    "ChangePreview",
     "SetTemplate",
     "Template",
     "TemplateInfo",

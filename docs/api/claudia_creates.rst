@@ -97,6 +97,8 @@ A template is a presentation without slides, with a note of what it is (E10.4, E
 .. autofunction:: claudia_creates.template.start_from_template
 .. autofunction:: claudia_creates.template.plan_change_theme
 .. autofunction:: claudia_creates.template.plan_change_template
+.. autoclass:: claudia_creates.ChangePreview
+.. autofunction:: claudia_creates.template.preview_change
 
 Printing
 --------

@@ -123,7 +123,7 @@ server API, plus core's `Theme`.
    hundred kilobytes; at most 16 MB). The list of the admin page says the built-in name in English with `builtin: true`;
    the page translates it.
 7. A template file is stored under the slug of its name, so renaming is "remove and add again".
-8. Change template replaces the objects of a matched layout with the template's (D1539, **to confirm**), and a matched
+8. Change template replaces the objects of a matched layout with the template's (D1539, confirmed by the owner 2026-11-24), and a matched
    layout keeps its own `hidden` flag and `purpose`.
 9. The name and the purpose of a template are plain text in one line: no control characters, no bidirectional controls
    (they end up in the upload name, the history and the lists). A file in the templates folder that is no template, has
@@ -143,3 +143,87 @@ server API, plus core's `Theme`.
 
 No UI in this patch, nothing diverges. The admin page and the cards of File ▸ New (patch 3) will need text labels,
 focus order and a keyboard path for Add template…, Remove and the card choice.
+
+
+# Patch 3 — templates in the web app, the menus and the E2E (D1540)
+
+Patches 1, 1b and 2 are assumed applied. Test seams, confirmed by the owner: lib modules (pure functions, vitest), the
+menu manifest, and the E2E scenarios of `templates.feature`.
+
+## What was built
+
+* **Server** — `template_change_preview(template)`, a read method (D1540): ten counts, from the same plan the change
+  uses, changing nothing (`claudia_creates.preview_change`). The list of a template's layouts names only those a person
+  can choose (CODE-90).
+* **Web libs** — `templates.ts` (cards, labels, `startFromTemplate`), `admin-templates.ts`, `template-change.ts`
+  (summary lines, the note's checks, the languages), `template-menu.ts` (the Format ▸ Template submenu), and the
+  admin API calls and the session methods `changeTheme`, `changeTemplate`, `templateChangePreview`, `saveAsTemplate`.
+* **Web UI** — `AdminTemplates.vue` (Server settings ▸ Templates: list, Add template… with a check before anything is
+  added, Remove), `NewPresentationDialog.vue` (the cards of a new presentation), `ChangeTemplateDialog.vue` (Theme
+  only / Theme and layouts, the template, the counts, Change, Cancel), `SaveTemplateDialog.vue` (name, language, what
+  it is for, Save file…).
+* **Menus** — Format ▸ Template ▸ Change Theme…, Change Template…, Save as Template… in the manifest of the three
+  apps' shells (web, Linux, Windows/macOS), `claudia-menus.xlsx` rows 97–99, `keyboard-shortcuts.md`.
+* **i18n** — 55 German strings; pot, po, pseudo-locale, both `.mo`, the web catalog.
+* **E2E** — `tests/e2e/specs/test_templates.py` binds `templates.feature` (no longer `@draft`): 6 of the 8 `@core`
+  scenarios run in a real browser against a real server; the 11 `@extended` ones skip with "not automated yet".
+
+## Assumptions
+
+1. A new presentation asks which template only when the server has one besides Basic; with only Basic it is made at
+   once, as before.
+2. A template's language is shown in its own language ("Deutsch"), as the mock and the App Language menu do; the
+   scenario "A template says in which language it is written" says "German". **Owner to decide** which is right. Basic
+   is named in the language of the page.
+3. **Keys, provisional:** Change Theme… Ctrl+Alt+Shift+U, Change Template… Ctrl+Alt+Shift+V, Save as Template…
+   Ctrl+Shift+F12. The keys the owner chose (Ctrl+Alt+E, Ctrl+Alt+M, Ctrl+Alt+Shift+M) are types of AltGr on German
+   keyboards, which the manifest test forbids. The owner is asked to confirm or choose others.
+4. Change Theme… and Change Template… are disabled for a reader; Save as Template… is always enabled (it is an export,
+   which a reader may make).
+5. Change Theme… opens on "Theme only", Change Template… on "Theme and layouts"; the person can switch in the dialog.
+6. The template file is saved by the browser's download, named by the server (`<slug>.claudia-export.zip`).
+7. The dialog's counts are sentences ("1 style replaced · 1 style added"), and a scope that does nothing says "stay as
+   they are" instead of "0".
+8. A presentation made from a template does not announce a file ("… is here. The file was not kept") (CODE-91).
+
+## Review (two reviewers, standards and spec) and what was done
+
+Fixed: strings the extractor missed (`tr(` → `t(`; 9 new German strings), plural wording ("1 are unchanged"), the Add
+template dialog now names the file's language and layouts (the @extended scenario "A template is a file anybody can
+check…"), `Change theme`/`Change template` summaries are two functions instead of one with a mode argument, the
+admin and the dialogs share `MAX_NAME`/`MAX_PURPOSE`, native browser validation texts are off (`novalidate`; our
+own sentences are shown), the scope toggle of Change template answers the arrow keys, a sleep in the E2E is gone,
+`_matched_layouts` is typed, the orphan sample script is removed.
+
+Left, as judgement calls: the CSS of `.hint`, `.error` and `.buttons` is repeated in three dialogs as in 25 other
+components (no shared class exists); `OpenDialog` has `enter(session, announce)` as a flag (CODE-91); `currentLocale()`
+(front page) and `languageNow()` (inside a document) both give the locale of a request, as elsewhere in the app;
+"twelve slides with text" are twelve slides with speaker notes in the E2E (no menu makes text boxes on a slide from the
+outside yet), so the text and picture claims of "Saving a presentation as a template…" are checked only through the
+file's parts and the notes.
+
+## Mock M and the mocks: what is not built
+
+* Format ▸ Template does not say which template the presentation came from (@extended "A presentation says which
+  template it came from"; the `template` method answers it, no view shows it).
+* "Show the slides…" in the Change template dialog (the preview counts slides, it names none; D1540).
+* Thumbnails of the layouts on the cards and in the dialog.
+* The step "What would you like to achieve?" in front of the choice between Change theme and Change template.
+
+## What could not be run
+
+* The GTK client with real GI (no PyGObject here): its manifest and the generated GMenu XML are tested without it; the
+  menu was not seen in a running Linux or Windows/macOS window.
+* Two `@core` scenarios: "A presentation keeps no link to its template" and "Change template… also takes the layouts,
+  matched by name". The product has no menu that changes a layout of a presentation or puts a slide on another layout
+  (the layout editor is a later story), so their steps cannot be driven from outside. The 11 `@extended` scenarios have
+  no step code yet.
+* Firefox (the scenarios are not tagged `@firefox`).
+* The `layout/` package needed `npm ci` in this workspace before its gate steps could run; they then passed.
+
+## BITV
+
+The cards are native radio buttons in a fieldset with a legend; the dialogs are the app's `Modal`; every control has a
+text label; the preview is plain text. Not measured: contrast of the selected card, a screen reader's reading of the
+card meta ("4 layouts · English"), focus order in the dialogs. These are checked in the BITV round, not here.
+

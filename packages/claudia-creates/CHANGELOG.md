@@ -6,6 +6,9 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 ## [Unreleased]
 
 ### Added
+- `ChangePreview` and `preview_change(model, template)` (E10.4, D1540): the ten counts Change template would make
+  (styles and colours replaced and added, styles kept, layouts matched, added and kept, slides reframed and unchanged),
+  counted from the same plan as the change and changing nothing.
 - Templates (E10.4, E10.22, D1537, D1539): `TemplateInfo` (name, what it is for, language), kept in the state as
   `template` (state schema 20; absent: none) and set by `SetTemplate` (event `TemplateChanged`); `Template`,
   `template_state` (a presentation as a template: no slides, notes, times or pictures of slides), `check_template`,

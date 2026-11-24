@@ -1,13 +1,15 @@
 """What a presentation can do about templates (E10.4, E10.22, D1537, D1539): ``template`` says where it came from,
 ``save_as_template`` makes a template file of it, ``change_theme`` and ``change_template`` give it the look of a
-template of the server, or the whole template (D1531)."""
+template of the server, or the whole template (D1531); ``template_change_preview`` counts what the latter would do
+(D1540)."""
 
 from __future__ import annotations
 
 import base64
+from dataclasses import asdict
 
 from claudia_core.clock import utc_now
-from claudia_creates.template import Template, TemplateInfo, plan_change_template, plan_change_theme
+from claudia_creates.template import Template, TemplateInfo, plan_change_template, plan_change_theme, preview_change
 
 from .i18n import message_of, msg
 from .protocol import Context, MethodTable, RequestError
@@ -50,6 +52,15 @@ def add_template_methods(table: MethodTable, *, model_of) -> None:  # noqa: ANN0
             "data": base64.b64encode(data).decode("ascii"),
             "parts": ["content"],
         }
+
+    @table.method("template_change_preview", "template:str")
+    def _template_change_preview(ctx: Context, *, template):
+        """What Change template would do with the template `template` (an id from `GET /api/templates`), counted and
+        not done: `styles_changed`, `styles_added`, `styles_kept` (the presentation's own, which the template has no
+        match for), `colours_changed`, `colours_added`, `layouts_matched` (by name), `layouts_added`, `layouts_kept`,
+        `slides_reframed` (those on a matched layout, which take what is on it) and `slides_unchanged`. Change theme
+        does the first five only. `command_error` for an unknown template."""
+        return asdict(preview_change(model_of(ctx), _found(ctx, template)))
 
     @table.method("change_theme", "template:str base:revision?", write=True)
     def _change_theme(ctx: Context, *, template, base):

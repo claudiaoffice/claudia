@@ -5,7 +5,13 @@ from conftest import add, frame, image_asset, put_image, reopen, text_box
 
 from claudia_core import ChangeStyle, CreateStyle, Document, MemoryStore, SetRole, StyleDef
 from claudia_creates import AddSlide, DefineLayout, SetSlideLayout, SlideModel, TemplateInfo, check_template
-from claudia_creates.template import plan_change_template, plan_change_theme, template_state
+from claudia_creates.template import (
+    ChangePreview,
+    plan_change_template,
+    plan_change_theme,
+    preview_change,
+    template_state,
+)
 
 TALK = TemplateInfo("Conference talk", "Talks of twenty minutes", "en")
 
@@ -148,3 +154,43 @@ def test_a_layout_added_by_a_template_does_not_take_an_id_that_is_in_use(doc, ot
     ids = [layout.id for layout in doc.model.layouts]
     assert len(ids) == len(set(ids)) == 4
     assert doc.model.get("t-title").holder == "l-two", "the deck's object is where it was"
+
+
+# -- What the change would do, said before it is done ------------------------------------------------------------------
+def test_the_preview_counts_what_the_change_would_replace_add_and_leave(doc, other):
+    template = a_talk_template(other)
+    a_finished_deck(doc)
+    assert preview_change(doc.model, template) == ChangePreview(
+        styles_changed=1,  # body-text
+        styles_added=1,  # big-number
+        styles_kept=1,  # quote has no match
+        colours_changed=1,  # accent
+        colours_added=0,
+        layouts_matched=3,  # Basic, "two lists" (as "Two lists") and Title only
+        layouts_added=0,
+        layouts_kept=1,  # Wide list
+        slides_reframed=2,  # s1 and s2 follow a matched layout
+        slides_unchanged=1,  # s3 follows Wide list
+    )
+
+
+def test_the_preview_counts_a_layout_the_presentation_lacks_as_added(doc, other):
+    template = a_talk_template(other)
+    preview = preview_change(doc.model, template)
+    assert (preview.layouts_matched, preview.layouts_added, preview.layouts_kept) == (1, 2, 0)
+    assert (preview.slides_reframed, preview.slides_unchanged) == (1, 0), "the one slide is on Basic"
+
+
+def test_the_preview_of_the_theme_a_deck_has_already_is_all_zero_and_changes_nothing(doc, other):
+    template = a_talk_template(other)
+    doc.execute(plan_change_template(doc.model, template), author="ana")
+    before = doc.model.serialize()
+    preview = preview_change(doc.model, template)
+    assert (preview.styles_changed, preview.styles_added, preview.colours_changed, preview.colours_added) == (
+        0,
+        0,
+        0,
+        0,
+    )
+    assert preview.layouts_added == 0
+    assert doc.model.serialize() == before, "looking does not change the document"

@@ -23,7 +23,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from claudia_creates.template import TemplateRefused
 from claudia_document_file import ExportRefused
 
-from .template_library import MAX_TEMPLATE_BYTES, TemplateLibrary, describe
+from .template_library import MAX_TEMPLATE_BYTES, TemplateLibrary, describe, offered_layouts
 from .uploads import read_body
 
 ADMIN_TEMPLATES_FORMAT = 1
@@ -52,7 +52,7 @@ def template_admin_routes(router: APIRouter, library: TemplateLibrary, require_a
             template = await asyncio.to_thread(library.check, data)
         except (ExportRefused, TemplateRefused) as exc:
             raise HTTPException(400, str(exc)) from exc
-        return {**template.info.to_data(), "layouts": [layout.name for layout in template.model.layouts]}
+        return {**template.info.to_data(), "layouts": offered_layouts(template)}
 
     @router.post("/templates", status_code=201)
     async def add(request: Request, admin: Signedin):

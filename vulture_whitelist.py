@@ -25,6 +25,8 @@ used.templates_page  # FastAPI route GET /api/admin/templates (admin_templates, 
 used._save_as_template  # protocol method save_as_template of presentations (template_methods, D1537)
 used._change_theme  # protocol method change_theme (template_methods, D1539)
 used._change_template  # protocol method change_template (template_methods, D1539)
+used._template_change_preview  # protocol method template_change_preview (template_methods, D1540)
+used.styles_kept  # a field of ChangePreview, which the method sends whole with asdict (D1540)
 used.hold_file  # FastAPI route POST /api/admin/fonts/files (admin_fonts)
 used.let_go  # FastAPI route DELETE /api/admin/fonts/files (admin_fonts, CODE-49)
 used.app_live  # FastAPI WebSocket route /api/{app}/docs/{id}/ws (D431)

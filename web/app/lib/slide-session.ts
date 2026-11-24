@@ -12,6 +12,7 @@ import type { ObjectsEvent, PaletteEvent, StyleDef, StyleModel, StyleTarget } fr
 import type { CssEdit } from './style-css'
 import type { PrintSetupData } from '@claudia/layout'
 import { pointOf, type Label } from './paragraphs'
+import type { ChangePreview, TemplateFile, TemplateNote } from './template-change'
 import type { ListInfo, SchemeInfo } from './numbering'
 import type { ContentsEntry } from './contents'
 import type { ReferenceTarget, RefField, Show, Shown } from './references'
@@ -296,6 +297,36 @@ export class SlideSession extends BaseSession<SlideState> implements SlideHost {
   /** Print the presentation another way (D917): layout and page, one step for everybody. */
   async setPrintSetup(setup: PrintSetupData): Promise<boolean> {
     return (await this.write('set_print_setup', { setup })) !== false
+  }
+
+  // -- templates (E10.4, E10.22, D1539, D1540): Format ▸ Template, and File ▸ Save as template…
+  /** Give the presentation the styles and colours of a template of the server (an id of `GET /api/templates`); its
+   * layouts and slides stay. One step, one Undo. `changed` is false when it looked like that already; `false` after
+   * saying why not. */
+  async changeTheme(template: string): Promise<{ changed: boolean } | false> {
+    return await this.changing('change_theme', template)
+  }
+
+  /** Give it the theme and the layouts of the template, matched by name (D1539). One step, one Undo. */
+  async changeTemplate(template: string): Promise<{ changed: boolean } | false> {
+    return await this.changing('change_template', template)
+  }
+
+  /** What `changeTemplate` would do, counted and not done (D1540); `false` after saying why not. */
+  async templateChangePreview(template: string): Promise<ChangePreview | false> {
+    return (await this.attempt('template_change_preview', { template })) as ChangePreview | false
+  }
+
+  /** A template file of this presentation, without its slides: it is recorded as an export (D1271). `false` after
+   * saying why not (a note the server refuses, or an assistant). */
+  async saveAsTemplate(note: TemplateNote): Promise<TemplateFile | false> {
+    return await this.recorded((await this.attempt('save_as_template', { ...note })) as TemplateFile | false)
+  }
+
+  /** One of the two changes, sent as any change is (D1432); whether it changed anything, or `false`. */
+  private async changing(method: 'change_theme' | 'change_template', template: string): Promise<{ changed: boolean } | false> {
+    const answer = await this.write(method, { template })
+    return answer === false ? false : { changed: (answer as { changed: boolean }).changed }
   }
 
   // -- what a talk is prepared with: speaker notes and planned times (D342, D343)

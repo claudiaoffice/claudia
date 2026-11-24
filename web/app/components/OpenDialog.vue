@@ -8,6 +8,7 @@ import { holdPresence } from '~/lib/presence'
 import { chooseLocalFile } from '~/lib/local-files'
 import { ago } from '~/lib/people'
 import { currentLocale } from '~/lib/locale'
+import { fetchTemplates, needsChoice, startFromTemplate, type TemplateCard } from '~/lib/templates'
 import { adminUrl, defaultLabel, list as listBookmarks, normalizeServerInput, rename as renameBookmark, upsert as upsertBookmark, withBookmark, withRenamed, type Bookmark } from '~/lib/server-bookmarks'
 import { createShellBridge, detectHandler, detectParentSink, isApp, type ShellBridge } from '~/lib/shell-bridge'
 import { LANGUAGES, useI18n } from '~/lib/i18n'
@@ -66,7 +67,7 @@ const error = ref('')
 const wait = useLoginWait() // failed logins make the next one wait (D1266)
 const busy = ref(false)
 /** The recovery key of a document that was just made, shown before the person goes in (the session waits here). */
-const fresh = shallowRef<{ session: AnySession; key: string } | null>(null)
+const fresh = shallowRef<{ session: AnySession; key: string; announce: boolean } | null>(null)
 /** "I forgot my password": the form that comes in with the recovery key. */
 const recovering = ref(false)
 const recoveryKey = ref('')
@@ -452,11 +453,11 @@ function goToTyped() {
 
 /** Show the session at last. (What a new document starts with — a table's first sheet, a text's language — the server
  * made when it created it, as nobody's undo step: UX-33.) */
-async function enter(session: AnySession) {
+async function enter(session: AnySession, announce = true) {
   remember('claudia.user', user.value.trim())
   remember('claudia.doc', doc.value.trim())
   mine.value = rememberOpened({ origin: origin.value, app: session.state.app, id: session.state.doc || doc.value.trim() })
-  const imported = session.imported
+  const imported = announce ? session.imported : undefined // a presentation from a template is no file anyone gave
   if (imported) {
     const hidden = imported.losses.reduce((sum, loss) => sum + loss.count, 0)
     session.notice(
@@ -712,6 +713,41 @@ async function placeFile() {
   notice.value = t('{id} is here now. Open it with your name and password in it.', { id: answer.id })
 }
 
+/** The templates of New presentation while it is asked which one (E10.22, D1538); `null` while it is not. */
+const templateChoice = ref<TemplateCard[] | null>(null)
+const templateError = ref('')
+
+/** Create document. A new presentation on a server that has templates besides the built-in one asks which to start
+ * from; anything else, and a server that cannot list its templates, creates as it always did. The fields are checked
+ * first, so that nobody chooses a template and then learns that the name was missing. */
+async function create() {
+  await listed
+  if (newApp.value === 'creates' && doc.value.trim() && user.value.trim() && password.value) {
+    const found = await fetchTemplates(origin.value, currentLocale())
+    if ('templates' in found && needsChoice(found.templates)) {
+      templateError.value = ''
+      templateChoice.value = found.templates
+      return
+    }
+  }
+  await go('create')
+}
+
+/** The template was chosen: the server makes the presentation it starts, and the usual create picks it up. */
+async function createFromTemplate(id: string) {
+  templateError.value = ''
+  busy.value = true
+  const started = await startFromTemplate(origin.value, id, currentLocale())
+  busy.value = false
+  if ('error' in started) {
+    templateError.value = started.error
+    return
+  }
+  await go('create', { upload: started.upload, keep: false, template: true })
+  if (error.value) templateError.value = error.value
+  else templateChoice.value = null
+}
+
 function openExisting() {
   const file = incoming.value
   incoming.value = null
@@ -722,7 +758,7 @@ function openExisting() {
 function proceed() {
   const waiting = fresh.value
   fresh.value = null
-  if (waiting) void enter(waiting.session)
+  if (waiting) void enter(waiting.session, waiting.announce)
 }
 
 /**
@@ -730,7 +766,7 @@ function proceed() {
  * document, or comes in with the recovery key and the new password. Every later connection (the session's own, and its
  * reconnects) is an ordinary login with what the person typed, which by then is right.
  */
-async function go(how: 'open' | 'create' | 'recover', from?: { upload: string; keep: boolean; description?: string; tags?: string[] }, onAnswered?: () => void) {
+async function go(how: 'open' | 'create' | 'recover', from?: { upload: string; keep: boolean; description?: string; tags?: string[]; template?: boolean }, onAnswered?: () => void) {
   error.value = ''
   if (wait.waiting.value) return // the server would refuse it anyway, and a wait that is running is not to be restarted
   startingNew.value = false
@@ -770,8 +806,9 @@ async function go(how: 'open' | 'create' | 'recover', from?: { upload: string; k
     session = await openSession(factory, { host: server.value }, onAnswered)
     recoveryKey.value = ''
     const key = session.justCreated ? await session.newRecoveryKey({ quiet: true }) : null
-    if (key) fresh.value = { session, key }
-    else await enter(session)
+    const announce = !from?.template
+    if (key) fresh.value = { session, key, announce }
+    else await enter(session, announce)
   } catch (e) {
     const failure = e as { code?: string; message?: string; retryAfter?: number } | null // a ProtocolError, or whatever a link threw
     if (failure?.code === 'too_many_tries' && failure.retryAfter) wait.begin(failure.retryAfter)
@@ -1077,7 +1114,7 @@ async function go(how: 'open' | 'create' | 'recover', from?: { upload: string; k
                   <AppIcon :size="20" :app="a" /> {{ APP_WORDS[a]?.() ?? a }}
                 </button>
               </div>
-              <button ref="newStart" class="btn" type="button" :disabled="busy" @click="go('create')">{{ t('Create document') }}</button>
+              <button ref="newStart" class="btn" type="button" :disabled="busy" @click="create">{{ t('Create document') }}</button>
               <p class="hint">{{ t('A new document belongs to whoever creates it first. The password protects this document only (at least 8 characters, with a capital letter, a small letter and a digit).') }}</p>
             </div>
           </template>
@@ -1085,6 +1122,14 @@ async function go(how: 'open' | 'create' | 'recover', from?: { upload: string; k
         </div>
       </div>
     </section>
+    <NewPresentationDialog
+      v-if="templateChoice"
+      :templates="templateChoice"
+      :busy="busy"
+      :error="templateError"
+      @create="createFromTemplate"
+      @close="templateChoice = null"
+    />
     <RecoveryKeyDialog v-if="fresh" :recovery-key="fresh.key" :doc="doc.trim()" @done="proceed" />
     <DetailsDialog
       v-if="editing"

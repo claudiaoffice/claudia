@@ -6,6 +6,9 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 ## [Unreleased]
 
 ### Added
+- `template_change_preview(template)`, a read method of a presentation (E10.4, D1540): what Change template would do,
+  counted and not done. `describe` and the admin check name only the layouts a person can choose, the hidden ones
+  (Basic in a template of its own layouts) are left out (CODE-90).
 - Templates (E10.4, E10.22, D1537–D1539). `claudia_server.template_library`: `template_file`, `read_template_file`,
   `TemplateLibrary` (the built-in Basic template and the files under `STATE_DIR/templates`), `describe`.
   `GET /api/templates?locale=` lists them and `POST /api/templates/{id}/upload?locale=` makes the new presentation a

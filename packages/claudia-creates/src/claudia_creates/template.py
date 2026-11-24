@@ -10,6 +10,7 @@ of what it is. It is no class of its own in a document; :class:`Template` is onl
   The two share nothing and keep no link; the new one only keeps a note of the name.
 * :func:`plan_change_theme` and :func:`plan_change_template` give a finished presentation the look of a template, or
   the whole template: the command (one step, one Undo) with final values, as every plan does (D1531).
+* :func:`preview_change` says in numbers what :func:`plan_change_template` would do, before it is done (D1540).
 """
 
 from __future__ import annotations
@@ -22,11 +23,15 @@ from claudia_core import (
     N_,
     AddObject,
     Batch,
+    ChangeStyle,
     Command,
     Context,
+    CreateStyle,
     DefineAsset,
+    Layout,
     Refusal,
     RemoveObject,
+    ReplacePalette,
     Theme,
     theme_commands,
 )
@@ -151,14 +156,57 @@ def plan_change_template(model: SlideModel, template: Template) -> Command:
     lacks is added. Everything the template does not have stays (D1531, D1539)."""
     plan = _Plan(model, template)
     steps: list[Command] = list(theme_commands(model.styles, model.palette, template.theme))
-    mine = {_name(layout.name): layout for layout in model.layouts}
-    for given in template.model.layouts:
-        if (layout := mine.get(_name(given.name))) is None:
-            steps += plan.added(given)
-        else:
-            steps += plan.replaced_by(given.id, layout.id)
+    for given, layout in _matched_layouts(model, template):
+        steps += plan.added(given) if layout is None else plan.replaced_by(given.id, layout.id)
     steps.append(SetTemplate(template.info))
     return Batch(tuple(steps))
+
+
+@dataclass(frozen=True)
+class ChangePreview:
+    """What ``plan_change_template`` would do to a presentation, in numbers (D1540): the styles and colours it
+    replaces (a matched one that looks otherwise), adds, and leaves because the template has no match; the layouts it
+    matches by name, adds, and leaves; the slides that follow a matched layout, and so take what is on it, and those
+    that do not."""
+
+    styles_changed: int
+    styles_added: int
+    styles_kept: int
+    colours_changed: int
+    colours_added: int
+    layouts_matched: int
+    layouts_added: int
+    layouts_kept: int
+    slides_reframed: int
+    slides_unchanged: int
+
+
+def preview_change(model: SlideModel, template: Template) -> ChangePreview:
+    """What changing ``model`` to ``template`` would do, counted from the same matching the change uses. ``model`` is
+    not changed."""
+    steps = theme_commands(model.styles, model.palette, template.theme)
+    added = sum(isinstance(step, CreateStyle) for step in steps)
+    roles = next((step.roles for step in steps if isinstance(step, ReplacePalette)), tuple(model.palette))
+    matched = [(given, layout) for given, layout in _matched_layouts(model, template) if layout is not None]
+    reframed = {slide for _, layout in matched for slide in model.slides_following(layout.id)}
+    return ChangePreview(
+        styles_changed=sum(isinstance(step, ChangeStyle) for step in steps),
+        styles_added=added,
+        styles_kept=len(model.styles) - (len(template.model.styles) - added),
+        colours_changed=sum(new != old for new, old in zip(roles, model.palette, strict=False)),
+        colours_added=len(roles) - len(model.palette),
+        layouts_matched=len(matched),
+        layouts_added=len(template.model.layouts) - len(matched),
+        layouts_kept=len(model.layouts) - len(matched),
+        slides_reframed=len(reframed),
+        slides_unchanged=len(model.order) - len(reframed),
+    )
+
+
+def _matched_layouts(model: SlideModel, template: Template) -> list[tuple[Layout, Layout | None]]:
+    """Each layout of the template with the layout of ``model`` that has its name (in any letters), or ``None``."""
+    mine = {_name(layout.name): layout for layout in model.layouts}
+    return [(given, mine.get(_name(given.name))) for given in template.model.layouts]
 
 
 class _Plan:
@@ -170,7 +218,7 @@ class _Plan:
         self.chosen: set[str] = set()  # the ids this plan gives
         self.defined: set[tuple[str, str]] = set()  # the assets this plan defines
 
-    def added(self, given) -> list[Command]:  # noqa: ANN001 - a layout of the template
+    def added(self, given: Layout) -> list[Command]:
         """A layout the presentation lacks: defined as a layout of the template, then what is on it."""
         layout_id = free_id(self.model, given.id, self.chosen)
         self.chosen.add(layout_id)

@@ -33,7 +33,7 @@ const notice = ref('')
 // write localStorage, which gives Vue nothing to react to on its own.
 const label = ref(friendlyLabel(origin, host))
 // `/admin/#fonts` opens on the fonts page: where the banner of a document that lacks a font sends an administrator.
-const active = ref<'ai' | 'typeset' | 'fonts' | 'security' | 'access'>(location.hash === '#fonts' ? 'fonts' : 'ai')
+const active = ref<'ai' | 'typeset' | 'fonts' | 'templates' | 'security' | 'access'>(location.hash === '#fonts' ? 'fonts' : 'ai')
 const session = useAdminSession()
 const screen = computed(() => adminScreen(noAdministrator.value, session.name.value))
 // Once somebody is signed in, the server has an administrator: signing out later asks who signs in, rather than
@@ -89,6 +89,7 @@ function close() {
         <AdminAi v-if="active === 'ai'" :token="session.token.value!" />
         <AdminTypesetting v-else-if="active === 'typeset'" :token="session.token.value!" />
         <AdminFonts v-else-if="active === 'fonts'" :token="session.token.value!" :server="label" />
+        <AdminTemplates v-else-if="active === 'templates'" :token="session.token.value!" :server="label" />
         <AdminSecurity v-else-if="active === 'security'" :token="session.token.value!" />
         <AdminAccessDocuments v-else :token="session.token.value!" />
       </AdminShell>

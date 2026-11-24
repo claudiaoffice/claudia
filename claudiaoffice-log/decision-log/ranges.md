@@ -72,7 +72,7 @@ Unused numbers in a closed block stay unused.
 | D1470–D1489 | E6.31 Slides in computes: the slide in the core, two collections and one tab order in computes, a chart as a slide, Move to Slide, the chart names of E1.18 (branch `e6-31-slides-in-computes`) | 2026-11-22 | open |
 | D1490–D1509 | E7.11 Claude as an AI provider: the provider choice and key in the server settings, the owners' consent kept in the document file, what the chat says about who answered, the Preferences menu (branch `e7-11-claude-provider`) | 2026-11-22 | open |
 | D1510–D1529 | CODE-78: a refusal of the models reaches a person in her language, typed refusals in the core and the apps (branch `code-78-translated-refusals`) | 2026-11-23 | open |
-| D1530–D1559 | E10.4 Templates, layouts and placeholders, with E10.5, E10.22 and E10.23: the layout model, the offer, the template as an export, the server's templates (branch `e10-4-templates-and-layouts`, D1530–D1539 used; the design is in notes/creates-templates-architecture.md) | 2026-11-23 | open |
+| D1530–D1559 | E10.4 Templates, layouts and placeholders, with E10.5, E10.22 and E10.23: the layout model, the offer, the template as an export, the server's templates (branch `e10-4-templates-and-layouts`, D1530–D1540 used; the design is in notes/creates-templates-architecture.md) | 2026-11-23 | open |
 | D1560–D1579 | E7.2 Skills and persona per app, with CODE-80 (what a remote provider is first sent), CODE-81 (doubled braces in the prompts) and CODE-82 (an empty answer, Claude's answer length) (branch `e7-2-skills-and-persona`; the design is in notes/e7-2-architecture.md) | 2026-11-23 | open |
 
 ## Never to be used

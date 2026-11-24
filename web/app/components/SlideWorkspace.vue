@@ -27,6 +27,7 @@ import { galleryFor } from '~/lib/style-host'
 import { describeShortcut } from '~/lib/descriptions'
 import { chordLabel, searchShortcuts } from '~/lib/shortcuts'
 import { rotateItem } from '~/lib/rotate-menu'
+import { templateItem } from '~/lib/template-menu'
 import { formatItems, type ListMenu } from '~/lib/format-menu'
 import { looksOf, type ContentsHost } from '~/lib/contents'
 import type { Show } from '~/lib/references'
@@ -63,7 +64,7 @@ const frame = ref<InstanceType<typeof DocumentFrame> | null>(null)
 const canvas = ref<InstanceType<typeof SlideCanvas> | null>(null)
 const showImageDialog = ref(false)
 /** The modal layer: creates had only the image dialog before the styles arrived. */
-const dialog = ref<null | 'styles' | 'colours' | 'rename' | 'list-start' | 'numbering' | 'agenda'>(null)
+const dialog = ref<null | 'styles' | 'colours' | 'rename' | 'list-start' | 'numbering' | 'agenda' | 'change-theme' | 'change-template' | 'save-template'>(null)
 const EXPORT_FORMATS = [
   { value: 'pptx', get label() { return t('PowerPoint presentation (.pptx)') } },
   { value: 'odp', get label() { return t('OpenDocument presentation (.odp)') } },
@@ -132,6 +133,16 @@ function rotateMenu(): MenuItem {
     readonly: () => readonly.value,
     quarter: (direction) => void canvas.value?.quarter(direction),
     by: () => canvas.value?.openRotateBy(),
+  })
+}
+
+/** Format ▸ Template ▸ (E10.4, D1539): the same submenu wherever a document has layouts (`lib/template-menu.ts`). */
+function templateMenu(): MenuItem {
+  return templateItem(t, {
+    readonly: () => readonly.value,
+    changeTheme: () => (dialog.value = 'change-theme'),
+    changeTemplate: () => (dialog.value = 'change-template'),
+    saveAs: () => (dialog.value = 'save-template'),
   })
 }
 
@@ -401,6 +412,8 @@ const menus = computed<Menu[]>(() => {
       items: [
         ...styleItems(),
         { label: '', separator: true },
+        templateMenu(),
+        { label: '', separator: true },
         { id: 'format.describe', label: t('Name & describe…'), hint: chordLabel(describeSelected.chord), action: () => canvas.value?.openDescribe(), disabled: readonly.value || !state.selected },
         { label: '', separator: true },
         rotateMenu(),
@@ -523,6 +536,8 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
         :places-note="t('after each title')"
         @close="dialog = null"
       />
+      <ChangeTemplateDialog v-if="dialog === 'change-theme' || dialog === 'change-template'" :session="session" :initial="dialog === 'change-theme' ? 'theme' : 'layouts'" @close="dialog = null" />
+      <SaveTemplateDialog v-if="dialog === 'save-template'" :session="session" @close="dialog = null" />
       <NumberingDialog v-if="dialog === 'numbering'" :host="numberingHost" :initial="session.selectedScheme() ?? undefined" @close="dialog = null" />
       <PromptDialog v-if="dialog === 'list-start'" :title="t('Start numbering at')" :label="t('First number')" :ok="t('Start')" required :initial="listStart()" @ok="startListAt" @close="dialog = null" />
       <PaletteDialog v-if="dialog === 'colours'" :host="styleHost" :builtin="state.palette?.builtin ?? []" @close="dialog = null" @reset="resetPalette" />

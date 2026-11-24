@@ -6,7 +6,7 @@ from io import BytesIO
 import pytest
 
 from claudia_core import CreateStyle, Document, MemoryStore, StyleDef
-from claudia_creates import AddSlide, DefineLayout, SetSlideNotes, SlideModel
+from claudia_creates import AddSlide, DefineLayout, HideLayout, SetSlideNotes, SlideModel
 from claudia_creates.template import TemplateInfo, TemplateRefused, template_state
 from claudia_document_file import ExportRefused, read_export, write_export
 from claudia_server.template_library import (
@@ -152,6 +152,17 @@ def test_the_basic_template_is_described_in_the_language_asked(tmp_path):
     assert (english["id"], english["name"], english["builtin"]) == (BASIC_ID, "Basic", True)
     assert german["name"] != english["name"] and german["purpose"] != english["purpose"]
     assert english["layouts"] and english["language"] == "en"
+
+
+def test_a_template_names_the_layouts_a_person_can_choose_and_not_the_ones_it_hides(tmp_path):
+    doc = Document(SlideModel.empty(), store=MemoryStore())
+    doc.execute(HideLayout("basic", True), author="ana")
+    doc.execute(DefineLayout("title", "Title"), author="ana")
+    library = TemplateLibrary(tmp_path)
+    library.add(a_file(doc.model), added_by="anna")
+    listed = {entry.id: describe(entry, "en") for entry in library.entries()}
+    assert listed["conference-talk"]["layouts"] == ["Title"]
+    assert listed["basic"]["layouts"] == ["Basic"]
 
 
 def test_a_file_that_is_no_export_at_all_does_not_stop_the_library_from_starting(tmp_path, deck):

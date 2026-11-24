@@ -672,6 +672,49 @@
         ],
         [
           {
+            "items": [
+              {
+                "accelerators": [
+                  "<Primary><Alt><Shift>u"
+                ],
+                "checkable": false,
+                "id": "format.change-theme",
+                "key_owner": "page",
+                "kind": "page",
+                "label": "Change Theme\u2026",
+                "role": null,
+                "start": false
+              },
+              {
+                "accelerators": [
+                  "<Primary><Alt><Shift>v"
+                ],
+                "checkable": false,
+                "id": "format.change-template",
+                "key_owner": "page",
+                "kind": "page",
+                "label": "Change Template\u2026",
+                "role": null,
+                "start": false
+              },
+              {
+                "accelerators": [
+                  "<Primary><Shift>F12"
+                ],
+                "checkable": false,
+                "id": "format.save-as-template",
+                "key_owner": "page",
+                "kind": "page",
+                "label": "Save as Template\u2026",
+                "role": null,
+                "start": false
+              }
+            ],
+            "label": "Template"
+          }
+        ],
+        [
+          {
             "accelerators": [
               "<Primary><Alt>d"
             ],

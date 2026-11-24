@@ -233,6 +233,9 @@ On a Mac, Ctrl is Cmd and Alt is Option.
 | Format | List ▸ Number All Slide Titles | Ctrl+Shift+Alt+B |  |
 | Format | List ▸ All Numbering… | Ctrl+Shift+Alt+J |  |
 | Format | Colours… | Ctrl+Alt+K |  |
+| Format | Template ▸ Change Theme… | Ctrl+Shift+Alt+U |  |
+| Format | Template ▸ Change Template… | Ctrl+Shift+Alt+V |  |
+| Format | Template ▸ Save as Template… | Ctrl+Shift+F12 |  |
 | Format | Name & describe… | Ctrl+Alt+D |  |
 | Format | Rotate ▸ Rotate Right 90° | Ctrl+Alt+. |  |
 | Format | Rotate ▸ Rotate Left 90° | Ctrl+Alt+, |  |

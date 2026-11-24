@@ -77,6 +77,11 @@ def read_template_file(data: bytes) -> Template:
     return check_template(exported.state)
 
 
+def offered_layouts(template: Template) -> list[str]:
+    """The names of the layouts of ``template`` that a person can choose for a slide: the hidden ones are left out."""
+    return [layout.name for layout in template.model.layouts if not layout.hidden]
+
+
 def describe(entry: Listed, locale: str) -> dict:
     """What a list of templates says of one: its id, name, what it is for, its language, whether it is the built-in
     one, and the names of its layouts. The built-in one is said in ``locale``."""
@@ -90,7 +95,7 @@ def describe(entry: Listed, locale: str) -> dict:
         "purpose": purpose,
         "language": info.language,
         "builtin": entry.builtin,
-        "layouts": [layout.name for layout in entry.template.model.layouts],
+        "layouts": offered_layouts(entry.template),
     }
 
 

@@ -105,6 +105,23 @@ def test_change_theme_changes_the_colours_and_not_the_layouts(call, deck):
     assert "Title" not in [layout.name for layout in deck.model.layouts]
 
 
+def test_the_preview_counts_what_changing_the_template_would_do_and_does_nothing(call, deck):
+    before = deck.model.serialize()
+    answer = call("template_change_preview", {"template": "conference-talk"})
+    assert answer["layouts_added"] == 1 and answer["colours_changed"] == 1 and answer["slides_reframed"] == 2
+    assert set(answer) == {
+        "styles_changed", "styles_added", "styles_kept", "colours_changed", "colours_added",
+        "layouts_matched", "layouts_added", "layouts_kept", "slides_reframed", "slides_unchanged",
+    }  # fmt: skip
+    assert deck.model.serialize() == before
+
+
+def test_the_preview_of_a_template_nobody_has_is_a_command_error(call):
+    with pytest.raises(RequestError) as refused:
+        call("template_change_preview", {"template": "nothing"})
+    assert refused.value.code == "command_error"
+
+
 def test_a_template_nobody_has_is_a_command_error(call):
     with pytest.raises(RequestError) as refused:
         call("change_template", {"template": "nothing"})

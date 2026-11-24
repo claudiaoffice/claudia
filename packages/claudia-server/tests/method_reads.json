@@ -193,6 +193,7 @@
  "style_uses": "content",
  "styles": "content",
  "template": "content",
+ "template_change_preview": "content",
  "suggest": "content",
  "suggest_words": "content",
  "suggestions": "content",

@@ -5,6 +5,10 @@ two systems had a package each, `clients/macos` and `clients/windows`; their his
 
 ## [0.3.0] - unreleased
 
+### Added (E10.4, D1539): the template entries of creates
+- The generated menu of Claudia Creates has Format ▸ Template ▸ Change Theme…, Change Template… and Save as Template…,
+  from the same manifest as the web app and the Linux client.
+
 ### Added (SEC-12, D1373): the setup code of the desktop's own server
 - The core sends its own server's setup code with `show` (`setupCode`, read in the state folder whenever it shows that
   server); the shell page hands it to the page in `welcome` (`setup_code`), never for another server.

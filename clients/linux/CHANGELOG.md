@@ -4,6 +4,11 @@ Newest first. The shell contract has its own version (`clients/contract/`); this
 
 ## [0.1.0] - unreleased
 
+### Added (E10.4, D1539): the template entries of creates
+- Format ▸ Template ▸ Change Theme… (Ctrl+Alt+Shift+U), Change Template… (Ctrl+Alt+Shift+V) and Save as Template…
+  (Ctrl+Shift+F12) in creates, the same entries as in the web app. The keys are provisional until the owner confirms
+  them (`claudia-menus.xlsx`, rows 97–99).
+
 ### Added (SEC-12, D1373): the setup code of the desktop's own server
 - The shell contract's `welcome` may carry `setup_code` (optional, so version 1 stays): the setup code of the shell's
   own server while it has no administrator, read in its state folder at every `hello`, and only for a page of that

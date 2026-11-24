@@ -7,6 +7,7 @@
 // document socket: one less mapping layer, and the tests can compare directly against what the server returns.
 
 import type { CheckAnswer, FontsPage, MayGo } from './admin-fonts'
+import type { TemplateCheck, TemplatesPage } from './admin-templates'
 
 export class AdminApiError extends Error {
   constructor(
@@ -217,6 +218,15 @@ export function createAdminApi(fetchImpl: typeof fetch = fetch) {
     renameFontCollection: (token: string, id: string, name: string): Promise<FontsPage> =>
       call('PATCH', `/fonts/collections/${encodeURIComponent(id)}`, { name }, token),
     removeFontCollection: (token: string, id: string): Promise<FontsPage> => call('DELETE', `/fonts/collections/${encodeURIComponent(id)}`, undefined, token),
+
+    // Server settings ▸ Templates (E10.22, D1537): the file is the body, sent to check it and sent again to add it.
+    templatesPage: (token: string): Promise<TemplatesPage> => call('GET', '/templates', undefined, token),
+    checkTemplate: (token: string, data: Blob, name: string): Promise<TemplateCheck> =>
+      call('POST', '/templates/check', undefined, token, { data, name }),
+    addTemplate: (token: string, data: Blob, name: string): Promise<TemplatesPage> =>
+      call('POST', '/templates', undefined, token, { data, name }),
+    removeTemplate: (token: string, id: string): Promise<TemplatesPage> =>
+      call('DELETE', `/templates/${encodeURIComponent(id)}`, undefined, token),
   }
 }
 

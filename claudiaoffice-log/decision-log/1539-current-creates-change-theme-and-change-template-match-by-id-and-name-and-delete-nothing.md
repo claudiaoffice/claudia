@@ -13,7 +13,8 @@ superseded-by: []
 
 The owner agreed the rules on 2026-11-23. Both are one step with one undo (D1531: the plan carries final values).
 
-**Change theme** (`change_theme`, `claudia_core.theme_commands`): the styles and the colours of a template, nothing else.
+**Change theme** (`change_theme`, `claudia_core.theme_commands`): the styles and the colours of a template, and
+nothing else.
 
 * A built-in style is matched by its id, any other style by its name ignoring case. A matched style takes the CSS of the
   theme; its parent, headings, numbering and name stay. A style the presentation lacks is created.
@@ -27,10 +28,10 @@ The owner agreed the rules on 2026-11-23. Both are one step with one undo (D1531
 * A layout is matched by name ignoring case. A matched layout keeps its id, its name and its slides and gets what is on
   the template's layout; a box of a slide that was bound to one of its placeholders follows the placeholder with the
   same purpose, and where there is none it stays a free box where it stands. A layout the presentation lacks is added.
-* Nothing the presentation has of its own is deleted: not a layout, not a style, not a colour. **Open for the owner:**
-  the objects on a *matched* layout (the presentation's own logo or footer on "Title only") are replaced by those of the
-  template's layout, as "gets what is on the template's layout" says; one Undo brings them back. A matched layout keeps
-  its own `hidden` flag and `purpose`.
+* Nothing the presentation has of its own is deleted: not a layout, not a style, not a colour. The objects on a
+  *matched* layout (the presentation's own logo or footer on "Title only") are replaced by those of the template's
+  layout, as "gets what is on the template's layout" says; one Undo brings them back (confirmed by the owner on
+  2026-11-24). A matched layout keeps its own `hidden` flag and `purpose`.
 * The presentation keeps a note of the template (`SetTemplate`), the same note a new presentation has. Nothing follows
   it afterwards.
 

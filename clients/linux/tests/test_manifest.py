@@ -37,6 +37,7 @@ WEB_FORMAT_MENU = REPO / "web" / "app" / "lib" / "format-menu.ts"
 # Composes' table entries (E9.32), Edit ▸ Row ▸ … Table Options… and Insert ▸ Table…, are built in one place.
 WEB_TABLE_MENU = REPO / "web" / "app" / "lib" / "table-menu.ts"
 WEB_ROTATE_MENU = REPO / "web" / "app" / "lib" / "rotate-menu.ts"
+WEB_TEMPLATE_MENU = REPO / "web" / "app" / "lib" / "template-menu.ts"
 # Preferences ▸ App Language's ids are built from this list (`config.language.${tag}`), not written out one by one.
 WEB_LANGUAGES = REPO / "web" / "app" / "lib" / "i18n.ts"
 BUILDERS = {"composes": manifest.composes, "computes": manifest.computes, "creates": manifest.creates}
@@ -378,6 +379,7 @@ def test_every_app_offers_the_same_three_format_actions(app_name: str, request: 
     m = request.getfixturevalue(app_name)
     styles = ["format.apply-style"] + (["format.clear-cell-style"] if app_name == "computes" else [])
     turning = ["format.rotate-right", "format.rotate-left", "format.rotate-by"]
+    templates = ["format.change-theme", "format.change-template", "format.save-as-template"]
     assert [
         a.id
         for a in m.menu("Format").all_actions()
@@ -387,6 +389,7 @@ def test_every_app_offers_the_same_three_format_actions(app_name: str, request: 
         "format.look",
         "format.all-styles",
         "format.colours",
+        *(templates if app_name == "creates" else []),
         "format.describe",
         *turning,
     ]
@@ -414,6 +417,24 @@ def test_rotate_is_a_flyout_of_three_page_actions_with_keys_of_their_own(creates
     ]
     assert all(a.kind is Kind.PAGE for a in flyout.items)
     assert creates.action("view.replay").accelerators == ("<Primary><Alt>z",)
+
+
+def test_template_is_a_flyout_of_three_page_actions_with_keys_of_their_own_and_only_creates_has_it(
+    creates: manifest.Manifest, composes: manifest.Manifest, computes: manifest.Manifest
+) -> None:
+    """E10.4, D1539: Format ▸ Template ▸ Change Theme…, Change Template…, Save as Template… — Ctrl+Alt+Shift+U,
+    Ctrl+Alt+Shift+V and Ctrl+Shift+F12 (provisional, until the owner chooses). Ctrl+Alt+E, M and T are not usable:
+    the first two are AltGr keys on a German keyboard, the third opens a terminal on GNOME. Only creates has
+    templates."""
+    (flyout,) = [e for e in entries(creates.menu("Format")) if isinstance(e, Submenu) and e.label == "Template"]
+    assert [(a.id, a.label, a.accelerators) for a in flyout.items] == [
+        ("format.change-theme", "Change Theme…", ("<Primary><Alt><Shift>u",)),
+        ("format.change-template", "Change Template…", ("<Primary><Alt><Shift>v",)),
+        ("format.save-as-template", "Save as Template…", ("<Primary><Shift>F12",)),
+    ]
+    assert all(a.kind is Kind.PAGE for a in flyout.items)
+    for other in (composes, computes):
+        assert not [e for e in entries(other.menu("Format")) if isinstance(e, Submenu) and e.label == "Template"]
 
 
 @pytest.mark.parametrize("app_name", ["composes", "computes", "creates"])
@@ -692,14 +713,23 @@ def test_every_page_and_editing_action_id_is_in_the_matching_web_source(app_name
     """The guard against drift (see this module's docstring): if the web app renames or drops an id this shell
     still dispatches, this fails and says which. ``Kind.SHELL`` actions (Quit, About) have no web equivalent by
     design — the shell intercepts them before they would ever reach the page — so they are not checked here."""
-    sources = (WEB_SOURCES[app_name], WEB_SHARED_MENUS, WEB_FORMAT_MENU, WEB_LANGUAGES, WEB_TABLE_MENU, WEB_ROTATE_MENU)
+    sources = (
+        WEB_SOURCES[app_name],
+        WEB_SHARED_MENUS,
+        WEB_FORMAT_MENU,
+        WEB_LANGUAGES,
+        WEB_TABLE_MENU,
+        WEB_ROTATE_MENU,
+        WEB_TEMPLATE_MENU,
+    )
     if not all(path.exists() for path in sources):
         pytest.skip("the web sources are not next to the client")
-    app_source, shared_menus, format_menu, languages_source, table_menu, rotate_menu = (
+    app_source, shared_menus, format_menu, languages_source, table_menu, rotate_menu, template_menu = (
         path.read_text(encoding="utf-8") for path in sources
     )
     assert "formatItems(" in app_source, "every app builds its Format menu with lib/format-menu.ts"
-    shared_source = shared_menus + format_menu + rotate_menu  # Format ▸ Rotate ▸ is one module (D1232)
+    # Rotate ▸ and Template ▸ are modules of their own
+    shared_source = shared_menus + format_menu + rotate_menu + template_menu
     # composes' table entries: the actions are named in one table (`TABLE_ACTION_IDS`), the menus and keys built from it
     table_source = table_menu if app_name == "composes" else ""
 

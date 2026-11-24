@@ -538,11 +538,13 @@ def _format_menu(
     describe: bool = False,
     rotate: bool = False,
     wrap: bool = False,
+    templates: bool = False,
     headings: tuple[str, str] = ("Number Headings", "Number every heading style: 1, 1.1, 1.2, 2 …"),
 ) -> Menu:
     """The Format menu, one shape in every app (D300): Apply Style…, Edit This Style…, All Styles…, List ▸ · Colours… ·
     and Name & describe… (D1317, BITV 1.1.1) and, where they can be turned, Rotate ▸ (D1024) and,
-    where text flows round them, Wrap Text, one key that cycles the modes (D1064). List ▸
+    where text flows round them, Wrap Text, one key that cycles the modes (D1064), and, where a document has layouts,
+    Template ▸ (E10.4, D1539). List ▸
     is in every app as on the web; outside a text the page reports its entries disabled. Computes adds Clear Cell
     Style, which the web has in Apply Style's flyout. ``headings`` is what Number Headings is called and says in this
     app (creates: Number All Slide Titles, E9.22)."""
@@ -650,6 +652,8 @@ def _format_menu(
             ),
         ),
     )
+    if templates:
+        sections = (*sections, (_template_submenu(),))
     if describe:
         sections = (
             *sections,
@@ -677,6 +681,37 @@ def _format_menu(
             ),
         )
     return Menu("Format", sections)
+
+
+def _template_submenu() -> Submenu:
+    """Format ▸ Template ▸ (E10.4, D1539): give the presentation the look of a template of the server, or the whole
+    template; Save as Template… is the other way round. Provisional keys: the obvious Ctrl+Alt+E, M and T are
+    AltGr keys on a German keyboard (E, M) and a terminal on GNOME (T), so the two changes take the two free
+    Ctrl+Alt+Shift letters, and saving takes Ctrl+Shift+F12 (F12 is Save As in the Office programs)."""
+    return Submenu(
+        "Template",
+        (
+            _page(
+                "format.change-theme",
+                "Change Theme…",
+                "Give the presentation the styles and colours of a template, "
+                "and leave its layouts and slides as they are",
+                accelerators=("<Primary><Alt><Shift>u",),
+            ),
+            _page(
+                "format.change-template",
+                "Change Template…",
+                "Give the presentation the styles, colours and layouts of a template, matched by name",
+                accelerators=("<Primary><Alt><Shift>v",),
+            ),
+            _page(
+                "format.save-as-template",
+                "Save as Template…",
+                "Save the layouts, styles and colours of this presentation, without its slides, as a template file",
+                accelerators=("<Primary><Shift>F12",),
+            ),
+        ),
+    )
 
 
 def _rotate_submenu() -> Submenu:
@@ -1303,6 +1338,7 @@ def creates() -> Manifest:
             look="Change how the object you have selected looks",
             describe=True,
             rotate=True,
+            templates=True,
             headings=("Number All Slide Titles", "Number the title of every slide: 1, 2, 3 …"),
         ),
         view=view_menu,

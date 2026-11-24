@@ -1524,7 +1524,7 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
   /** `answer` of something that leaves the document, passed on: the server has recorded it, and the other windows are
    * told (D1271) but this one, whose own request it was, is not, so it reads the record again. Owners and editors only:
    * a viewer is never sent the record (D1261). */
-  private async recorded<T>(answer: T | false): Promise<T | false> {
+  protected async recorded<T>(answer: T | false): Promise<T | false> {
     if (answer !== false && this.state.me.role !== 'viewer') {
       const audit = await this.optional<AuditRow[]>('audit_log')
       if (audit) this.state.audit = audit

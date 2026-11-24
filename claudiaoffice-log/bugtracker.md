@@ -2794,3 +2794,22 @@ was kept. **Fix.** `DocumentFileError` is caught too; such files are left out an
 ### CODE-88 · Check and add disagreed about a taken name; the deck was made before the desk was asked · P3 · size 3 · fixed 2026-11-23
 **Fix.** `TemplateLibrary.check` is what both share (400 with the sentence); the start route asks `room_for` first.
 **Test:** `test_server_templates_api.py`.
+
+### CODE-89 · A new presentation never started from the template that was chosen · P2 · size 1 · fixed 2026-11-24
+**Found** by the E2E scenario "A new presentation starts as a copy of the template", in patch 3 before it was
+delivered. `startFromTemplate` read the token of the held upload from `token`; the server answers `upload`, so the
+document was created without it, as a plain presentation. The unit test had been written with the same wrong key, so it
+agreed with the code and not with the server. **Fix.** The client reads `upload`; the unit test uses the server's real
+answer. **Test:** `web/tests/templates.test.ts` and `tests/e2e/specs/test_templates.py`, "A new presentation starts as a
+copy of the template".
+
+### CODE-90 · A template's card counted the layouts it hides · P3 · size 3 · fixed 2026-11-24
+**Found** looking at the screenshot of the New presentation cards: a template of three layouts that hides Basic said
+"4 layouts"; the admin check listed Basic too. **Fix.** `offered_layouts` names only the layouts a person can choose,
+for the list and the check. **Test:** `test_server_template_library.py`, "a template names the layouts a person can
+choose…".
+
+### CODE-91 · Starting from a template said "… is here. The file was not kept" · P3 · size 3 · fixed 2026-11-24
+**Found** in the screenshot of Change theme: the notice for an imported file came up after a presentation was made from
+a template, though nobody gave a file. **Fix.** `OpenDialog` announces an import only when the person gave a file.
+**Test:** `test_templates.py`, "When I start a new presentation from it" fails when the page says anything about a file.

@@ -1,6 +1,5 @@
 # Templates: starting from one, saving one, the server's library, giving a finished deck another look
 # (E10.4, E10.22, E10.23; the design is in notes/creates-templates-architecture.md, questions in templates.review.md)
-@draft
 Feature: A template is a presentation without slides that a new presentation starts from, and keeps no link to
 
   # -- starting -------------------------------------------------------------------------------------------------
