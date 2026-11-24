@@ -370,8 +370,8 @@ _avoid_: autopilot, review mode, permission, suggest
 What answers when someone asks the ai: the scripted stand-in, a model on the server's own machine, or Claude. The administrator chooses it in the server's settings.
 _avoid_: engine, backend, connection, model
 
-**Owners' consent**
-A switch in a document that lets one named remote provider receive its content; it is off until the owners turn it on, and it records who did and when.
+**Owner's consent**
+A switch in a document that lets one named remote provider receive its content; it is off until the owner turns it on, and it records who did and when.
 _avoid_: opt-in, permission
 
 **Persona**

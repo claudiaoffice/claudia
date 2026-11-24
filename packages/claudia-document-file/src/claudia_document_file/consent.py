@@ -23,7 +23,7 @@ MAX_FIELD = 200
 
 @dataclass(frozen=True)
 class ConsentRecord:
-    """One decision of the owners about one remote provider."""
+    """One decision of the owner about one remote provider."""
 
     provider: str
     """Which provider the decision is about (``claude``)."""

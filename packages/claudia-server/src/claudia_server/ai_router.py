@@ -41,7 +41,7 @@ NOTE_STOPPED = "stopped at its next step"
 
 
 class Withdrawn(ModelError):
-    """Claude may not be asked any more: the owners withdrew their consent or the administrator switched it off."""
+    """Claude may not be asked any more: the owner withdrew the consent or the administrator switched it off."""
 
 
 class GatedRunner:
@@ -90,7 +90,7 @@ class AiRouter:
         return replace(decision.via, note=note)
 
     def offers_claude(self) -> bool:
-        """Can the owners of a document allow Claude here at all?"""
+        """Can the owner of a document allow Claude here at all?"""
         return self._desk.offers_claude
 
     async def plan_async(self, task: Task) -> list[AiTurn]:

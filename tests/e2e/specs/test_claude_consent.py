@@ -294,11 +294,6 @@ def _person(world, name):
     return world.people[name]
 
 
-# "Jonas is an owner" has no step: a document has one owner (add_user refuses the role), so "Anna and Jonas" cannot
-# happen. The scenario "An editor sees what is allowed and cannot change it" waits for the owner's decision on that
-# (see the report).
-
-
 @given(parsers.parse('Vera is a viewer of "budget"'))
 def _vera(claude_world):
     claude_world.ann.share(claude_world.join("Vera"), "viewer")

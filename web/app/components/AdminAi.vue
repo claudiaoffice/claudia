@@ -200,7 +200,7 @@ const lastError = computed(() => {
       </label>
       <p class="lead">{{ t('Documents are encrypted on this server; Claude reads what it is shown in plain text.') }}</p>
       <p v-if="ai.claude.confirmed" class="lead" data-testid="ai-confirmed">{{ t('Confirmed by {by}, {when}', { by: ai.claude.confirmed.by, when: ago(ai.claude.confirmed.at) }) }}</p>
-      <p class="lead">{{ t('This is not enough on its own: the owners of each document must also allow Claude (Preferences ▸ AI…, off by default). Until they do, @ai in that document uses the local model or the stand-in, and says so.') }}</p>
+      <p class="lead">{{ t('This is not enough on its own: the owner of each document must also allow Claude (Preferences ▸ AI…, off by default). Until it is allowed, @ai in that document uses the local model or the stand-in, and says so.') }}</p>
       <p class="lead">{{ t('Apply asks Claude one test question first.') }}</p>
       <p v-if="apply_.needsKey || (apply_.needsConfirm && !form.confirmed)" class="lead">{{ t('Apply needs a key and the confirmed sentence.') }}</p>
     </section>

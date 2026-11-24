@@ -26,7 +26,7 @@ there is a story for co-owners; the two scenarios that need Jonas then use Anna 
 
 (b): a document keeps one owner. Co-owners are not part of E7.11; they need their own story (roles, passwords, keys).
 
-## Consequences (not yet done; to be carried out as one small patch)
+## Consequences (done in the patch on branch `d1499-one-owner`)
 
 - The consent texts and their translations say "the owner" instead of "the owners" (the dialog, the refusal, the badge
   line "Only the owner can change it.", the English source strings and every catalogue).

@@ -24,7 +24,7 @@ from .server_settings import CLAUDE, LOCAL, STAND_IN
 SCRIPTED = Via(STAND_IN, "Scripted stand-in", False)
 CLAUDE_VIA = Via(CLAUDE, "Claude", True)
 
-NOTE_NOT_ALLOWED = "Claude is not allowed in this document. The owners can change that in Preferences ▸ AI…"
+NOTE_NOT_ALLOWED = "Claude is not allowed in this document. The owner can change that in Preferences ▸ AI…"
 
 
 def _now() -> str:
