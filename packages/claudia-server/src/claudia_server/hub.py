@@ -872,6 +872,11 @@ class Hub:
                 ) from exc
             self._known.add(doc_id)
 
+    def tell_open_documents(self, kind: str, data: dict) -> None:
+        """Publish an event of the server itself (no sender) to everybody in every document open now."""
+        for hosted in list(self._documents.values()):
+            hosted.document.publish(kind, None, data)
+
     def is_loaded(self, doc_id: str) -> bool:
         """Is the document open in memory now?"""
         return doc_id in self._documents

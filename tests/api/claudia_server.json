@@ -377,6 +377,7 @@
    "start": "(self) -> 'None'",
    "stop": "(self) -> 'None'",
    "sweep": "(self) -> 'None'",
+   "tell_open_documents": "(self, kind: 'str', data: 'dict') -> 'None'",
    "uid_of": "(self, doc_id: 'str') -> 'str | None'"
   },
   "properties": [

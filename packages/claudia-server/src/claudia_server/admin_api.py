@@ -166,6 +166,9 @@ class AiRuntime:
             module = suite.module(app)
             if module is not None:
                 module.hub.assistant = factory
+        for module in suite:
+            # who answers `@ai` changed: an open window asks again, as when the owners' consent changes (UX-75)
+            module.hub.tell_open_documents("ai_consent_changed", {"provider": settings.provider})
         for runner in replaced:
             await asyncio.to_thread(runner.close)
 

@@ -38,6 +38,8 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
   replaced at the next start, so a pinned fingerprint changes once (SEC-06, D2001).
 - `PUT /api/admin/settings/typeset` keeps a program only when it names itself as XeTeX or pdftocairo, run once in the
   typesetter's sandbox; otherwise 400 with a sentence (SEC-16, D2002).
+- When the administrator changes the AI provider, every open document hears `ai_consent_changed` (data `{provider}`,
+  no sender), so an open window asks again who answers `@ai` (UX-75). `Hub.tell_open_documents(kind, data)`.
 
 ## [0.44.0] - 2026-11-24
 
