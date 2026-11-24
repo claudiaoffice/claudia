@@ -40,13 +40,14 @@ import threading
 import time
 import unicodedata
 from collections.abc import Callable, Iterable, Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
 
 from claudia_core import ChatRecord, CommandLog, Document, DocumentModel, Import, Snapshot
 from claudia_document_file import (
     AuditRecord,
+    ConsentRecord,
     DocumentFileError,
     JournalError,
     JournalWriter,
@@ -70,11 +71,13 @@ from claudia_document_file import (
     pack_journal,
     parse_recovery_key,
     read_audit,
+    read_consent,
     read_manifest,
     read_original,
     read_people,
     read_state,
     record_audit,
+    record_consent,
     recover_access,
     remove_person,
     remove_user,
@@ -148,7 +151,7 @@ class SealedStore(JournalStore):
         self.unpacked = 0
 
     def _write(self, kind: str, data) -> None:
-        self.writer.append(Part.CHAT if kind == "chat" else Part.HISTORY, _payload(kind, data))
+        self.writer.append(Part.CHAT if kind == "chat" else Part.HISTORY, record_bytes(kind, data))
         self.unpacked += 1
 
     def rewrite(self, log: CommandLog, chat: Sequence[ChatRecord]) -> None:
@@ -156,8 +159,8 @@ class SealedStore(JournalStore):
         chat alone, without a snapshot, and the journal is replaced by an empty one, so no copy of the redacted
         content is left in either. The journal's records are part of what is written, so nothing waits to be packed.
         """
-        history = [_payload(kind, data) for kind, data in history_items(log)]
-        chat_payloads = [_payload(kind, data) for kind, data in chat_items(chat)]
+        history = [record_bytes(kind, data) for kind, data in history_items(log)]
+        chat_payloads = [record_bytes(kind, data) for kind, data in chat_items(chat)]
         try:
             self.writer = rewrite_journal(self.path, self.keys, self.writer, history=history, chat=chat_payloads)
         except BaseException:
@@ -175,7 +178,8 @@ class SealedStore(JournalStore):
         self.writer.close()
 
 
-def _payload(kind: str, data) -> bytes:
+def record_bytes(kind: str, data) -> bytes:
+    """A record of the history or the chat as the journal and the blocks hold it, before it is sealed."""
     return json.dumps({"t": kind, "d": data}, separators=(",", ":"), ensure_ascii=False).encode()
 
 
@@ -183,7 +187,7 @@ def _payload(kind: str, data) -> bytes:
 class _Held:
     """An open document: its keys, the store that writes its journal, and the document itself (for snapshots)."""
 
-    keys: dict[Part, bytes]
+    keys: dict[Part, bytes] = field(repr=False)  # secrets: never in a log line or a traceback (SEC-23)
     store: SealedStore
     document: Document | None = None
 
@@ -577,6 +581,19 @@ class SealedDocuments:
         keys = self._all_keys(doc_id)
         with self._lock:
             return read_audit(self._file(doc_id), keys)
+
+    # -- the owners' consent to a remote AI provider (E7.11, D264) ------------------------------
+    def consent_rows(self, doc_id: str) -> list[ConsentRecord]:
+        """Every decision of the owner about a remote AI provider, oldest first."""
+        keys = self._all_keys(doc_id)
+        with self._lock:
+            return read_consent(self._file(doc_id), keys)
+
+    def record_consent(self, doc_id: str, record: ConsentRecord) -> None:
+        """Add ``record`` to the document's consent, with the keys the open document holds."""
+        keys = self._all_keys(doc_id)
+        with self._lock:
+            record_consent(self._file(doc_id), keys, record)
 
     def describe(self, doc_id: str, description: str, tags: Sequence[str]) -> None:
         """Give a document its maker has just made (whose keys are still held) a description and tags: the one

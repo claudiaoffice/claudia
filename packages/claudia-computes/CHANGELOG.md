@@ -8,6 +8,20 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 Heavy functions in worker processes (E4.4, D37, D1314).
 
 ### Added
+- Slides in a workbook (E6.31 step 2, D1470, D1471): `WorkbookModel.slides` (the core's `Slides`) and `tabs`, the one
+  order of the sheets and slides (`Tab(kind, id)`); `AddSlide`/`RemoveSlide`; objects on a slide with the core's
+  `SlideAnchor` (the model is an `ObjectModel[CellAnchor | SlideAnchor]`). A slide is named and described like a
+  sheet. **Breaking:** the event `SheetsChanged` (`sheets`) is `TabsChanged` (`tabs`), sent when a sheet or a slide
+  comes, goes or is renamed; `AddSheet`'s `index` counts the slides too; the state (schema 17) stores `tabs` and
+  `slides`, and an older state is not read.
+- Search looks at the words of a workbook's slides (UX-72): `workbook_texts` gives, in tab order, a sheet's cells and
+  a slide's text boxes and shape labels (places `{slide, object, source}`, `object_at`, `place_of`), and
+  `replace_command(model, made, author)` makes one step of the cells and the words. **Breaking:** `scan_workbook`
+  and `plan_replacement` take `tabs=` instead of `sheets=`, and the function that tells who holds a place gets the
+  place, a cell or an object's words, instead of `(sheet, row, col)`. `tab_index` refuses with "there is no sheet or
+  slide".
+- The refusals a person can meet are `Refusal`s (CODE-78, D1510): `PivotError`, `ChartError` and `PrintSetupError`
+  are refusals; `WorkbookModel.name_taken` adds sheets, chart tabs and named ranges.
 - `requirements()` of a workbook: the fonts its styles ask for by name (`Requirements.fonts`), for the font report a
   server makes when it is opened (E1.9, D1306).
 - A sheet, a chart tab and a named range can be described (E1.13, D1317, D1318): `WorkbookModel.thing_descriptions`, `thing_description`, `set_thing_description`, and `rename_command`, which renames a named range with `RenameName`. State schema 16: `descriptions` is new (absent: none).
@@ -19,6 +33,8 @@ Heavy functions in worker processes (E4.4, D37, D1314).
   copy at that moment, and the cell keeps showing what it showed before.
 
 ### Changed
+- **Breaking** — `names.name_problem(text)` returns the `Refusal` (or `None`), not a string. A taken name is "a
+  named range" (was "a range"); a row or column size out of range says "a row is … high" or "a column is … wide".
 - **Breaking** — the glossary's holder (D1430, see `claudia-core`): `CellAnchor.holder` (was `container`),
   `WorkbookModel.holders()`, `max_objects_per_holder`; an anchor's data says `holder`.
 - **Breaking** — `DefineDiagram`, `UpdateDiagram`, `ForgetDiagram`, `DefineImage`, `ForgetImage`, `DefineShape`,

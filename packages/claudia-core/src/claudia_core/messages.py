@@ -19,10 +19,33 @@ import re
 from collections.abc import Iterable
 from dataclasses import dataclass, field, replace
 
+from .errors import Refusal
 from .revision import Revision
 
 CHAT_MAX = 2_000  # characters in one chat message
 EVERYBODY = ""  # the recipient of a message that is for everybody
+
+
+@dataclass(frozen=True)
+class Via:
+    """Who answered a message of the AI (E7.11): the provider's name, how the chat shows it (``label``), whether what
+    was asked left this computer (``remote``) and a sentence that goes with it (why a local model answered, say).
+
+    It says who answered, never what was sent, so it can stay with the message for as long as the message does."""
+
+    provider: str
+    label: str
+    remote: bool
+    note: str = ""
+
+    def to_data(self) -> dict:
+        """The plain-data form."""
+        return {"provider": self.provider, "label": self.label, "remote": self.remote, "note": self.note}
+
+    @classmethod
+    def from_data(cls, data: dict) -> Via:
+        """Inverse of ``to_data``."""
+        return cls(data["provider"], data["label"], bool(data["remote"]), data.get("note", ""))
 
 
 @dataclass(frozen=True)
@@ -34,6 +57,7 @@ class ChatRecord:
     time: str
     at: Revision | None  # the document revision when it was written, to place it in the history
     redacted: bool = False  # its words were taken away (D724); who, to whom, when and where stay
+    via: Via | None = None  # who answered, for a message of the AI (E7.11); absent for everybody else and for old chats
 
     def to_data(self) -> dict:
         """The plain-data form of the record."""
@@ -47,6 +71,8 @@ class ChatRecord:
         }
         if self.redacted:
             data["redacted"] = True
+        if self.via is not None:
+            data["via"] = self.via.to_data()
         return data
 
     @classmethod
@@ -61,6 +87,7 @@ class ChatRecord:
             data["time"],
             Revision.parse(at) if at else None,
             bool(data.get("redacted", False)),
+            Via.from_data(data["via"]) if data.get("via") else None,
         )
 
     def blanked(self) -> ChatRecord:
@@ -94,7 +121,7 @@ def parse_chat(raw: str, users: Iterable[str] = ()) -> tuple[str, str]:
     """
     text = raw.strip()
     if not text:
-        raise ValueError("write a message first")
+        raise Refusal("write a message first")
     if not text.startswith("@"):
         return EVERYBODY, _checked(text)
     body = text[1:]
@@ -106,20 +133,22 @@ def parse_chat(raw: str, users: Iterable[str] = ()) -> tuple[str, str]:
             return name, _checked(body[len(n) :].lstrip(":, \t\r\n"), name)
     word = _MENTION.match(text)
     if word is None:
-        raise ValueError("write the name of the person after the @ (@username message), or leave the @ out")
+        raise Refusal("write the name of the person after the @ (@username message), or leave the @ out")
     first = word.group(1).rstrip(":,")
     if first.casefold() in ("all", "everyone", "everybody"):
         return EVERYBODY, _checked(text[word.end() :].lstrip(":, \t\r\n"))
     if not names:
         return first, _checked(text[word.end() :].lstrip(":, \t\r\n"), first)
     who = ", ".join(sorted(names, key=str.casefold))
-    raise ValueError(f"{first} is not here. Connected: {who}")
+    raise Refusal("{first} is not here. Connected: {who}", first=first, who=who)
 
 
 def _checked(message: str, to: str | None = None) -> str:
     message = message.strip()
     if not message:
-        raise ValueError(f"write a message after @{to}" if to else "write a message first")
+        if to:
+            raise Refusal("write a message after @{to}", to=to)
+        raise Refusal("write a message first")
     if len(message) > CHAT_MAX:
-        raise ValueError(f"a message can have at most {CHAT_MAX} characters")
+        raise Refusal("a message can have at most {limit} characters", limit=CHAT_MAX)
     return message

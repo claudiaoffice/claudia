@@ -1,14 +1,15 @@
-# The owners' consent: a document's owners decide whether Claude may receive its content (E7.11, D264)
+# The owner's consent: a document's owner decides whether Claude may receive its content (E7.11, D264, D1499)
 # Mock-up: notes/mockups/ai-provider-3-owners-consent.svg (also a page of penpot/claudia.penpot).
 # Architecture: notes/e7-11-architecture.md §3.4. The consent is kept in the document, sealed with its keys, in a list of its
 # own beside the exit record; it is not part of the history, the chat or the exit record.
 #
-# "Allowed" always means: the owners' consent for the one remote provider the dialog names, "Claude (Anthropic)". Where the
+# "Allowed" always means: the owner's consent for the one remote provider the dialog names, "Claude (Anthropic)". Where the
 # fake Anthropic is mentioned it stands in for Anthropic (see server/claude-as-ai-provider.feature).
 # Decided on 2026-11-22: a copy of a document carries its consent to another server (no record of which server gave it);
 # where that server has no Claude, nothing is an error: the server's own AI provider answers and the chat says who did.
-@draft
-Feature: Only a document's owners can allow Claude to receive its content, and everybody can see whether they did
+# Provisional chord (2026-11-22): the owner asked for Ctrl+Shift+Alt+H, but that is Present from This Slide; E was free in all
+# three apps. The owner decides; see the decision log of E7.11.
+Feature: Only a document's owner can allow Claude to receive its content, and everybody can see whether they did
 
   As an owner of a document, I want Claude to see my document only if I say so, so that setting up Claude on the server
   does not send my content anywhere by itself.
@@ -24,13 +25,13 @@ Feature: Only a document's owners can allow Claude to receive its content, and e
   Scenario: The menu is called Preferences and has AI… with its key
     When I open the Preferences menu
     Then it has the entries "App language", "Shortcuts" and "AI…"
-    And "AI…" shows the key "Ctrl+Shift+Alt+H"
+    And "AI…" shows the key "Ctrl+Shift+Alt+E"
     And no menu is called "Config"
 
   @core
   Scenario Outline: The same entry and key in all three apps
     Given a new <document> "plan" in which I am Anna, an owner
-    When I press Ctrl+Shift+Alt+H
+    When I press Ctrl+Shift+Alt+E
     Then the dialog "AI in this document" opens
 
     Examples:
@@ -53,7 +54,7 @@ Feature: Only a document's owners can allow Claude to receive its content, and e
   Scenario: Claude is not allowed in a new document
     When I open the dialog "AI in this document"
     Then the box "Allow Claude to answer @ai in this document" is not ticked
-    And I read "Off by default. Only the owners can change it."
+    And I read "Off by default. Only the owner can change it."
     And I read what Anthropic is sent if I allow it
     And what answers @ai in this document now is the server's local provider, with no "remote" badge
 
@@ -114,11 +115,11 @@ Feature: Only a document's owners can allow Claude to receive its content, and e
 
   @core @two-users
   Scenario: An editor sees what is allowed and cannot change it
-    Given Jonas is an owner and Ben is an editor of "budget"
+    Given Ben is an editor of "budget"
     And Anna allowed Claude in "budget"
     When Ben opens the dialog "AI in this document"
     Then Ben reads "Allowed by Anna" and "for Claude (Anthropic)"
-    And Ben reads "Only the owners can change this: Anna and Jonas."
+    And Ben reads "Only the owner can change this: Anna."
     And the box is not available to Ben
     And Ben has no "Save" button, only "Close"
 
@@ -143,7 +144,7 @@ Feature: Only a document's owners can allow Claude to receive its content, and e
   Scenario: An editor who tries to change it anyway is refused and nothing changes
     Given Ben is an editor of "budget"
     When Ben's window sends the request to allow Claude
-    Then Ben is told that only owners can change this
+    Then Ben is told that only the owner can change this
     And Claude is not allowed in "budget"
 
   @extended @two-users
@@ -153,7 +154,7 @@ Feature: Only a document's owners can allow Claude to receive its content, and e
     Then Jonas can change the consent
     And Anna, now an editor, can only look at it
 
-  # --- the administrator is not the owners --------------------------------------------------------------------------
+  # --- the administrator is not the owner --------------------------------------------------------------------------
 
   @core
   Scenario: The administrator cannot allow Claude in a document
@@ -217,7 +218,7 @@ Feature: Only a document's owners can allow Claude to receive its content, and e
     And under it I read "answered by" and the local model
 
   @extended
-  Scenario: Removing Claude from the server and adding it again keeps the owners' consent
+  Scenario: Removing Claude from the server and adding it again keeps the owner's consent
     Given Anna allowed Claude in "budget"
     When the administrator removes the provider key and chooses the local model
     And later chooses Claude again with a key and the confirmed sentence
@@ -225,13 +226,13 @@ Feature: Only a document's owners can allow Claude to receive its content, and e
 
   @extended
   Scenario: A document made before this feature opens with Claude not allowed
-    Given a document file made before the owners' consent existed
+    Given a document file made before the owner's consent existed
     When I open it
     Then it opens and Claude is not allowed in it
     And allowing Claude then works as in any other document
 
   @extended
-  Scenario: A document that has an owners' consent is refused by a server that does not know it, in its usual words
+  Scenario: A document that has an owner's consent is refused by a server that does not know it, in its usual words
     Given a document file in which Claude is allowed
     When a server of the version before this feature opens it
     Then the server says that the file is from a newer version of claudia
@@ -241,7 +242,7 @@ Feature: Only a document's owners can allow Claude to receive its content, and e
 
   @extended
   Scenario: The dialog is usable with the keyboard and says its state in words
-    When I open the dialog "AI in this document" with Ctrl+Shift+Alt+H
+    When I open the dialog "AI in this document" with Ctrl+Shift+Alt+E
     Then the focus is in the dialog and Tab reaches every control in a sensible order
     And whether Claude is allowed is told in words, not by the tick alone
     And a screen reader reads the box with its label and whether it is ticked

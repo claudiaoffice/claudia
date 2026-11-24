@@ -52,7 +52,7 @@ from claudia_core import (
 )
 from claudia_core.tables import MAX_COLUMNS, MAX_ROWS
 
-from .i18n import msg
+from .i18n import message_of, msg
 from .object_methods import Placement
 from .protocol import Context, MethodTable, RequestError
 from .thing_names import default_name
@@ -101,8 +101,8 @@ def _table(model: ObjectModel, table_id: str) -> TableDef:
         raise RequestError("command_error", msg("this document has no table {id!r}", id=table_id)) from None
 
 
-def _refused(error: ValueError) -> RequestError:
-    return RequestError("command_error", str(error))
+def _refused(error: Exception) -> RequestError:
+    return RequestError("command_error", message_of(error))
 
 
 def _missing(noun: str, given: str) -> RequestError:
@@ -390,7 +390,7 @@ def _set_options(model_of: Callable[[Context], ObjectModel]):
             changed = definition.with_options(**options)
             model.check_table(changed)
         except (ValueError, TypeError) as error:
-            raise _refused(ValueError(str(error))) from None
+            raise _refused(error) from None
         return done(ctx, SetTableOptions(table, tuple(options.items())), base)
 
     return set_table_options

@@ -84,10 +84,12 @@ from .css import (
 )
 from .document import Applied, BranchInfo, Changes, CheckpointInfo, Document, Look, RedactionPlan, environment_of
 from .errors import (
+    N_,
     KernelError,
     MissingUpcaster,
     ProposalOutdated,
     RedactionError,
+    Refusal,
     RegionHeld,
     ReplayError,
     RevisionMismatch,
@@ -177,7 +179,7 @@ from .manifest import (
     Requirements,
     check,
 )
-from .messages import ChatRecord, Ephemeral, parse_chat
+from .messages import ChatRecord, Ephemeral, Via, parse_chat
 from .model import DocumentModel, Snapshot
 from .names import MAX_THING_NAME, clean_name, distinct_name, free_name, free_names, name_key, name_problem
 from .object_texts import ObjectText, edit_object_text, object_texts
@@ -263,6 +265,16 @@ from .schemes import (
 )
 from .shapes import BOX, FORMAT, PRIMITIVES, ShapeDefinition, ShapeError, parse_shape, primitive
 from .sizing import BASE_FONT_PX, font_size_px, new_object_size
+from .slides import (
+    SLIDE_HEIGHT,
+    SLIDE_WIDTH,
+    Slide,
+    SlideAnchor,
+    Slides,
+    check_on_slide,
+    room_on_slide,
+    turned_on_slide,
+)
 from .store import DocumentStore, MemoryStore
 from .structure import Emitter, LabelsChanged, ParagraphHost, Placed, TextStructure
 from .styles import (
@@ -326,6 +338,14 @@ from .what_if import Proposal, WhatIf
 from .writing import DeleteText, InsertText, Span, TextCommand, TypingHost, word_changes
 
 __all__ = [
+    "SLIDE_HEIGHT",
+    "SLIDE_WIDTH",
+    "Slide",
+    "SlideAnchor",
+    "Slides",
+    "check_on_slide",
+    "room_on_slide",
+    "turned_on_slide",
     "ASSET_KINDS",
     "AssetKind",
     "AssetStore",
@@ -410,6 +430,7 @@ __all__ = [
     "ChangeStyle",
     "ChatPosted",
     "ChatRecord",
+    "Via",
     "check",
     "check_kind",
     "Checkpoint",
@@ -494,6 +515,7 @@ __all__ = [
     "MIN_OBJECT_SIZE",
     "MissingUpcaster",
     "MoveObject",
+    "N_",
     "new_registry",
     "normalized",
     "assign_changes_look",
@@ -535,6 +557,7 @@ __all__ = [
     "RedactedEvent",
     "Redaction",
     "RedactionError",
+    "Refusal",
     "RedactionPlan",
     "Region",
     "RegionHeld",

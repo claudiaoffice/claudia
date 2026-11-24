@@ -14,6 +14,7 @@ export interface ActionKey {
 }
 
 export const KEYS: Readonly<Record<string, ActionKey>> = {
+  'config.ai': { chord: { key: 'e', code: 'KeyE', ctrl: true, shift: true, alt: true }, owner: 'page' },
   'config.shortcuts': { chord: { key: '?', ctrl: true, shift: true }, owner: 'page' },
   'edit.chart': { chord: { key: 'c', code: 'KeyC', ctrl: true, alt: true }, owner: 'page' },
   'edit.clear': { chord: { key: 'Delete' }, owner: 'view' },

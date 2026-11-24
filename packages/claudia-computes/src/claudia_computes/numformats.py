@@ -34,6 +34,8 @@ from dataclasses import dataclass, field, replace
 from decimal import ROUND_HALF_UP, Decimal
 from fractions import Fraction
 
+from claudia_core import Refusal
+
 #: Excel's built-in formats by their number in an xlsx file (ECMA-376 part 1, 18.8.30). 14 is "the reader's short
 #: date": its code here is ``m/d/yyyy``, which :func:`render` shows the reader's way.
 BUILTIN: dict[int, str] = {
@@ -116,7 +118,7 @@ class NumberFormatBook:
         if number_format.id in self.formats:
             raise ValueError(f"there is already a number format {number_format.id!r}")
         if any(f.name.casefold() == number_format.name.casefold() for f in self.formats.values()):
-            raise ValueError(f"there is already a number format called {number_format.name!r}")
+            raise Refusal("there is already a number format called “{name}”", name=number_format.name)
         check_code(number_format.code)
         self.formats[number_format.id] = number_format
 
@@ -149,9 +151,9 @@ class NumberFormatBook:
 def check_code(code: str) -> None:
     """``ValueError`` unless ``code`` is a format code this module reads (and no longer than Excel allows)."""
     if not code or len(code) > MAX_CODE:
-        raise ValueError(f"a number format code has 1 to {MAX_CODE} characters")
+        raise Refusal("a number format code has 1 to {limit} characters", limit=MAX_CODE)
     if len(split_sections(code)) > 4:
-        raise ValueError("a number format code has at most four sections")
+        raise Refusal("a number format code has at most four sections")
 
 
 # ------------------------------------------------------------------------------------------------ reading a code

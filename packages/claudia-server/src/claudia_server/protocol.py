@@ -52,6 +52,7 @@ from claudia_core import (
 )
 from claudia_document_file import AuditRecord, Part, clean_details, write_export
 
+from .ai_consent import AiConsent, ConsentBook, ConsentNotKept, consent_view
 from .ai_mode import parse_mode
 from .audience import may_read
 from .auth import (
@@ -70,9 +71,10 @@ from .auth import (
     UserDirectory,
 )
 from .help import default_library
-from .i18n import localized, msg
+from .i18n import localized, message_of, msg
 from .planned import keep_plan
 from .restore import POLICIES, RestoreCoordinator, RestoreError
+from .server_settings import CLAUDE
 from .throttle import Throttle
 
 if TYPE_CHECKING:
@@ -317,6 +319,12 @@ class Context:
     render_outcomes: Callable[[], dict[str, dict]] = field(default=lambda: {})
     # The fonts this server has, as a ``claudia_fonts.Catalogue`` (anything that ``resolve``s a family), or ``None``.
     font_catalogue: Callable[[], Any] = field(default=lambda: None)
+    # What the owners allowed a remote AI provider in this document (E7.11); ``None``: a context that keeps none.
+    consent: ConsentBook | None = None
+    # Who answers `@ai` in this document now, as `Via.to_data` says it; ``None`` when nobody does.
+    answering: Callable[[], dict | None] = field(default=lambda: None)
+    # Whether this server has a remote AI provider the owners could allow (E7.11).
+    offers_claude: Callable[[], bool] = field(default=lambda: False)
 
     @property
     def user(self) -> str:
@@ -460,7 +468,7 @@ class MethodTable:
             except ValueError as exc:
                 raise RequestError(
                     "bad_request",
-                    msg("{method}: {parameter} {reason}", method=entry.name, parameter=p.name, reason=exc),
+                    msg("{method}: {parameter} {reason}", method=entry.name, parameter=p.name, reason=message_of(exc)),
                 ) from None
         return args
 
@@ -495,17 +503,17 @@ class MethodTable:
         except RequestError:
             raise
         except StaleEdit as exc:
-            raise RequestError("stale", str(exc), detail=exc.code) from exc
+            raise RequestError("stale", message_of(exc), detail=exc.code) from exc
         except RegionHeld as exc:  # (and UndoRefused, which is one)
-            raise RequestError("locked", str(exc), detail=exc.code) from exc
+            raise RequestError("locked", message_of(exc), detail=exc.code) from exc
         except UndoConflict as exc:
-            raise RequestError("conflict", str(exc), detail=exc.code) from exc
+            raise RequestError("conflict", message_of(exc), detail=exc.code) from exc
         except (
             KernelError,
             ValueError,
             LookupError,
         ) as exc:  # a command refuses with ValueError / IndexError / KeyError; only KernelError has a `code`
-            raise RequestError("command_error", str(exc), detail=getattr(exc, "code", None)) from exc
+            raise RequestError("command_error", message_of(exc), detail=getattr(exc, "code", None)) from exc
 
     def describe(self, limits: Limits | None = None) -> dict:
         """A machine-readable description of the protocol (served at /api/protocol)."""
@@ -563,7 +571,7 @@ def _regions_of(ctx: Context, items: list[dict]) -> list[Region]:
         return [ctx.document.model.region_from_data(item) for item in items]
     except (KeyError, TypeError, ValueError, NotImplementedError) as exc:
         raise RequestError(
-            "bad_request", msg("not a region this document understands: {reason!r}", reason=exc)
+            "bad_request", msg("not a region this document understands: {reason!r}", reason=message_of(exc))
         ) from None
 
 
@@ -708,7 +716,7 @@ def _propose_restore(ctx, checkpoint):
             group=ctx.editors(),
         )
     except RestoreError as exc:
-        raise RequestError("command_error", str(exc)) from exc
+        raise RequestError("command_error", message_of(exc)) from exc
     if proposal is not None:
         ctx.broadcast({"event": "restore_proposed", "data": proposal.to_data()})
     return {"applied": applied, "proposal": None if proposal is None else proposal.to_data()}
@@ -736,7 +744,7 @@ def _propose_restore_step(ctx, revision):
             group=ctx.editors(),
         )
     except RestoreError as exc:
-        raise RequestError("command_error", str(exc)) from exc
+        raise RequestError("command_error", message_of(exc)) from exc
     if proposal is not None:
         ctx.broadcast({"event": "restore_proposed", "data": proposal.to_data()})
     return {"applied": applied, "proposal": None if proposal is None else proposal.to_data()}
@@ -756,7 +764,7 @@ def _propose_switch(ctx, branch):
             kind="switch", by=ctx.user, checkpoint=None, branch=branch, label=f"branch “{branch}”", group=ctx.editors()
         )
     except RestoreError as exc:
-        raise RequestError("command_error", str(exc)) from exc
+        raise RequestError("command_error", message_of(exc)) from exc
     if proposal is not None:
         ctx.broadcast({"event": "restore_proposed", "data": proposal.to_data()})
     return {"applied": applied, "proposal": None if proposal is None else proposal.to_data()}
@@ -771,7 +779,7 @@ def _answer_restore(ctx, agree):
     try:
         outcome = ctx.restore.answer(user=ctx.user, agree=agree)
     except RestoreError as exc:
-        raise RequestError("command_error", str(exc)) from exc
+        raise RequestError("command_error", message_of(exc)) from exc
     if outcome is None:
         ctx.broadcast({"event": "restore_proposed", "data": ctx.restore.open_proposal.to_data()})
     else:
@@ -826,7 +834,7 @@ def _planned(ctx, revisions, chat, parts):
     try:
         return ctx.document.plan_redaction(**_redaction_request(ctx, revisions, chat, parts))
     except KernelError as exc:
-        raise RequestError("command_error", str(exc)) from exc
+        raise RequestError("command_error", message_of(exc)) from exc
 
 
 def _others_reached(ctx, plan) -> list[str]:
@@ -897,7 +905,7 @@ def _redact(ctx, revisions, chat, parts, dependents):
     try:
         applied = ctx.document.redact(plan, author=ctx.user)
     except KernelError as exc:
-        raise RequestError("command_error", str(exc)) from exc
+        raise RequestError("command_error", message_of(exc)) from exc
     return {"revision": applied.revision.to_data()}
 
 
@@ -909,7 +917,7 @@ def _withdraw_restore(ctx):
     try:
         ctx.restore.withdraw(user=ctx.user, is_owner=ctx.account.role == "owner")
     except RestoreError as exc:
-        raise RequestError("command_error", str(exc)) from exc
+        raise RequestError("command_error", message_of(exc)) from exc
     ctx.broadcast({"event": "restore_resolved", "data": {"outcome": "withdrawn"}})
     return {}
 
@@ -964,7 +972,7 @@ def _peek_revision(ctx, revision, state):
     try:
         look = ctx.document.peek_revision(revision)
     except KernelError as exc:
-        raise RequestError("command_error", str(exc)) from exc
+        raise RequestError("command_error", message_of(exc)) from exc
     out = {
         "revision": revision.to_data(),
         "entry": _entry_view(look.entry),
@@ -1025,9 +1033,9 @@ def _apply(ctx, command, base):
     try:
         parsed = ctx.document.model.registry.decode(command)
     except (UnknownCommand, SchemaTooNew) as exc:
-        raise RequestError("bad_request", str(exc)) from exc
+        raise RequestError("bad_request", message_of(exc)) from exc
     except (KeyError, TypeError, ValueError, AttributeError) as exc:
-        raise RequestError("bad_request", msg("invalid command: {reason!r}", reason=exc)) from exc
+        raise RequestError("bad_request", msg("invalid command: {reason!r}", reason=message_of(exc))) from exc
     applied = ctx.document.execute(parsed, author=ctx.user, base=base)
     return {"revision": applied.revision.to_data()}
 
@@ -1136,7 +1144,7 @@ def _people_change(ctx, name, act, kind):
     except KeyError:
         raise RequestError("command_error", msg("there is nobody called {name} in this document", name=name)) from None
     except ValueError as error:
-        raise RequestError("command_error", str(error)) from error
+        raise RequestError("command_error", message_of(error)) from error
     data = {"user": account.user}
     if kind == "role_changed":
         data["role"] = account.role
@@ -1197,7 +1205,7 @@ def _change_password(ctx, old_password, new_password):
     try:
         changed = ctx.directory.change_password(ctx.doc_id, ctx.user, old_password, new_password)
     except ValueError as error:
-        raise RequestError("command_error", str(error)) from error
+        raise RequestError("command_error", message_of(error)) from error
     if not changed:
         raise RequestError("unauthorized", msg("that is not your current password"))
     return {"changed": True}
@@ -1268,7 +1276,7 @@ def _set_details(ctx, password, description, tags):
     try:
         changed = ctx.directory.set_details(ctx.doc_id, ctx.user, password, description, tags)
     except ValueError as error:
-        raise RequestError("command_error", str(error)) from error
+        raise RequestError("command_error", message_of(error)) from error
     if not changed:
         raise RequestError("unauthorized", msg("that is not your current password"))
     kept_description, kept_tags = clean_details(description, tags)
@@ -1382,6 +1390,56 @@ def _audit_log(ctx):
     return [audit_row(record) for record in ctx.directory.audit_rows(ctx.doc_id)]
 
 
+@core_methods.method("ai_consent")
+def _ai_consent(ctx):
+    """Whether the owners allowed Claude to be sent this document's content when somebody asks `@ai` here (D264): off
+    until an owner says so. Any role may read it, a viewer too. Returns `{provider, allowed, by, at, owners,
+    history, answering, offered}`: `by` and `at` are who decided last and when, `owners` the people who can change it,
+    `history` every decision (`{allowed, who, when}`) oldest first, `answering` who answers `@ai` here now (`{provider,
+    label, remote, note}`; `note` says why it is not Claude where it is not), `offered` whether this server has
+    Claude set up, so that there is something to allow."""
+    state = ctx.consent.state if ctx.consent is not None else AiConsent()
+    return _consent_answer(ctx, state)
+
+
+@core_methods.method("set_ai_consent", "allowed:bool", write=True)
+def _set_ai_consent(ctx, allowed):
+    """Owners only: allow (`allowed` true) or withdraw Claude being sent this document's content when somebody asks
+    `@ai` here. Recorded in the document file with who and when; it is not a change of the document and cannot be
+    undone like one. Switching it off stops a question that is running before its next step. Returns what
+    `ai_consent` returns. `forbidden` for anybody who is not an owner; `unavailable` on a server that keeps no
+    document files, where it is always off."""
+    if ctx.account.role != "owner" or ctx.account.system:
+        raise RequestError("forbidden", msg("only the owner of a document decides whether Claude may be asked here"))
+    if ctx.consent is None:
+        raise RequestError("unavailable", msg("this server cannot keep the owner's consent, so Claude is not allowed"))
+    try:
+        record = ctx.consent.decide(CLAUDE, allowed, ctx.user, _now_text())
+    except ConsentNotKept:
+        raise RequestError(
+            "unavailable", msg("this server cannot keep the owner's consent, so Claude is not allowed")
+        ) from None
+    view = _consent_answer(ctx, ctx.consent.state)
+    if record is not None:
+        ctx.document.publish("ai_consent_changed", ctx.user, {"allowed": allowed, "by": ctx.user, "at": record.when})
+    return view
+
+
+def _consent_answer(ctx, state: AiConsent) -> dict:
+    return {
+        **consent_view(state, CLAUDE, _owners(ctx)),
+        "answering": ctx.answering(),
+        "offered": ctx.offers_claude(),
+    }
+
+
+def _owners(ctx) -> list[str]:
+    """The people who can change the consent: the document's owners, as the directory names them."""
+    if not isinstance(ctx.directory, RosterDirectory):
+        return [ctx.user] if ctx.account.role == "owner" else []
+    return [account.user for account in ctx.directory.list_people(ctx.doc_id) if account.role == "owner"]
+
+
 @core_methods.method("download_claudia", "password:str", hashes=(("@user", "password"),))
 def _download_claudia(ctx, password):
     """File ▸ Download (D110, D1270): the document as Claudia's own sealed file, to keep on your computer. An owner
@@ -1396,7 +1454,7 @@ def _download_claudia(ctx, password):
     try:
         data = ctx.directory.sealed_copy(ctx.doc_id, ctx.user, password)
     except ValueError as error:
-        raise RequestError("command_error", str(error)) from error
+        raise RequestError("command_error", message_of(error)) from error
     if data is None:
         raise RequestError("unauthorized", msg("that is not your current password"))
     parts = ["content"] if ctx.account.role == "viewer" else ["content", "history", "chat"]
@@ -1419,7 +1477,7 @@ def _chat(ctx, text, ai_mode):
     try:
         mode = parse_mode(ai_mode)
     except ValueError as exc:
-        raise RequestError("bad_request", msg("chat: {reason}", reason=exc)) from None
+        raise RequestError("bad_request", msg("chat: {reason}", reason=message_of(exc))) from None
     ctx.note_ai_mode(ctx.user, mode)  # before the message: the AI hears it as it is posted
     try:
         return ctx.document.post_chat(ctx.user, text, users=ctx.users()).to_data()

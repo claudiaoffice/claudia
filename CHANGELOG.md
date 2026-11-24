@@ -6,7 +6,23 @@ While the major version is 0, a minor version may break the API; every break is 
 
 ## [Unreleased]
 
+## [0.37.0] - 2026-11-22
+
 ### Added
+- Who gave an answer (E7.11, D1493): `Via(provider, label, remote, note="")` with `to_data` and `from_data`, and
+  `ChatRecord.via`, kept in the chat of the document and written only when set. `Document.post_chat(..., via=None)`
+  takes it. An old chat reads back with `via=None`.
+
+
+### Added
+- The slide, shared by creates and computes (E6.31, D1470): `claudia_core.slides` with `SLIDE_WIDTH`, `SLIDE_HEIGHT`
+  and `SlideAnchor` (until now creates'), the rule that keeps an object on a slide (`check_on_slide`,
+  `turned_on_slide`, `room_on_slide`), `Slide` (id, name, description) and `Slides`, the slides of a document by id,
+  without an order of their own.
+- A refusal in the person's language (CODE-78, D1510): `Refusal(template, **params)`, a `ValueError` that reads as
+  the English sentence and keeps its template and parameters, so that the server can say it in the person's language;
+  `N_(template)` marks a template kept apart from its call. `ObjectModel.name_taken`: the sentence for a name another
+  thing has, by the kind of that thing. `ImageError` and `PageSetupError` are refusals.
 - Objects that may change holder (D1351): `ObjectModel.objects_change_holder` (false by default),
   `ObjectModel.rehang_object(obj, at=None)` (out of the old stack, into the new one, returns the old place) and
   `ObjectModel.place_regions(anchor)` (what a move into another holder also takes, for locks). `MoveObject.at`: the
@@ -47,6 +63,8 @@ While the major version is 0, a minor version may break the API; every break is 
   `"table"` is one of `OBJECT_KINDS`; the facet slots have a `table` thing.
 
 ### Changed
+- **Breaking** — `name_problem(text)` returns the `Refusal` (or `None`), not a string. The sentence for a taken name
+  names the thing as the interface does: "a text box", "a picture", "a chart" (was "a text", "an image", "a diagram").
 - **Breaking** — the glossary's Container (D1430, E1.18): the object kind `container` (was `rendered`),
   `ContainerDefinition` (was `RenderedDefinition`, module `claudia_core.containers`, was `renderings`),
   `MAX_CONTAINER_SOURCE` (was `MAX_RENDERING_SOURCE`), the asset kind `CONTAINER` named `container` (was `RENDERING`

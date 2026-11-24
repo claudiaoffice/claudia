@@ -39,11 +39,16 @@ AUDIT = "audit"
 """The name of the chain that records what leaves the document (D1271). It is sealed with the history key, so it is not
 a part of its own: nobody holds a key for it besides those who hold the history key."""
 
+CONSENT = "consent"
+"""The chain of the owners' consent to a remote AI provider (E7.11, D264). Sealed with the content key, with a head
+of its own like private notes, so that a viewer can read it; the main head, which a viewer cannot open, does not cover
+it."""
+
 PRIVATE = "private"
 """The folder of private notes, ``private/<id>/NNNNNN.blk`` (D1265). Each person's notes are a chain of their own,
 sealed with her key alone, with a head of their own."""
 
-_STREAM_BYTE = {"content": 1, "history": 2, "chat": 3, AUDIT: 4, PRIVATE: 5}
+_STREAM_BYTE = {"content": 1, "history": 2, "chat": 3, AUDIT: 4, PRIVATE: 5, CONSENT: 6}
 
 
 class BlockError(Exception):

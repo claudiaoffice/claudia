@@ -428,7 +428,7 @@ const replayClass = (id: string) => {
  * asked that an image never resizes on a structural edit and takes click priority over the cells beneath it. */
 const selectedObject = ref<string | null>(null)
 
-const objects = computed(() => props.session.objectsOn(props.sheet))
+const objects = computed(() => props.session.sheetObjects(props.sheet))
 
 /** The frame an object is drawn in: the preview of the gesture under way, else its own (sheet pixels from the first cell,
  * without the headers or the scroll), and the angle it is drawn at. */
@@ -501,11 +501,11 @@ const interaction = useObjectInteraction({
   },
   toUnits: toSheet,
   subject(id) {
-    const o = state.objects[id]
+    const o = props.session.sheetObject(id)
     return o ? { id, frame: frameOf(o), rotation: o.rotation, aspect: aspectOf(o), grid: null } : null
   },
   async commit(change) {
-    const o = state.objects[change.id]
+    const o = props.session.sheetObject(change.id)
     if (!o) return
     const start = { x: lineStart(colTable.value, W, o.anchor.col), y: lineStart(rowTable.value, H, o.anchor.row), w: o.w, h: o.h }
     const step = stepFor(change, { start, anchor: { row: o.anchor.row, col: o.anchor.col }, cellAt: cornerCell })
@@ -516,7 +516,7 @@ const interaction = useObjectInteraction({
   },
 })
 const { rotatePreview } = interaction
-const selected = computed(() => (selectedObject.value ? (state.objects[selectedObject.value] ?? null) : null))
+const selected = computed(() => (props.session.sheetObject(selectedObject.value) ?? null))
 const selectedBox = computed(() => (selected.value ? frameOf(selected.value) : null))
 const selectedTurn = computed(() => (selected.value ? (interaction.rotationOf(selected.value.id) ?? selected.value.rotation) : 0))
 const turnSaid = ref('')
@@ -567,7 +567,7 @@ async function onTurnKey(event: KeyboardEvent) {
   if (to === null) return
   event.preventDefault()
   event.stopPropagation()
-  if (to !== o.rotation && (await props.session.rotateObject(o.id, to))) turnSaid.value = t('Turned to {degrees}', { degrees: degreesText(state.objects[o.id]?.rotation ?? to) })
+  if (to !== o.rotation && (await props.session.rotateObject(o.id, to))) turnSaid.value = t('Turned to {degrees}', { degrees: degreesText(props.session.sheetObject(o.id)?.rotation ?? to) })
 }
 function onPointerMove(event: PointerEvent) {
   interaction.move(event)
@@ -580,17 +580,17 @@ async function onPointerUp() {
 
 /** Format ▸ Rotate ▸ Rotate Right 90° / Rotate Left 90° (D1024, D1232): a quarter turn of the selected object. */
 async function quarter(direction: 1 | -1, id: string | null = selectedObject.value) {
-  const o = id ? state.objects[id] : null
+  const o = props.session.sheetObject(id) ?? null
   if (!o || !canTurn(o.kind)) return
   if (readonlyHere()) return props.session.notice(t('You can only look at this document.'), 'warning')
   const to = quarterTurn(o.rotation, direction)
-  if (await props.session.rotateObject(o.id, to)) turnSaid.value = t('Turned to {degrees}', { degrees: degreesText(state.objects[o.id]?.rotation ?? to) })
+  if (await props.session.rotateObject(o.id, to)) turnSaid.value = t('Turned to {degrees}', { degrees: degreesText(props.session.sheetObject(o.id)?.rotation ?? to) })
 }
 
 /** Rotate by…: the popover, beside the object. Its angles are previews on the sheet until Done. */
 const rotating = ref<{ id: string; x: number; y: number } | null>(null)
 function openRotateBy(id: string | null = selectedObject.value, at?: { x: number; y: number }) {
-  const o = id ? state.objects[id] : null
+  const o = props.session.sheetObject(id) ?? null
   if (!o || !canTurn(o.kind)) return
   if (readonlyHere()) return props.session.notice(t('You can only look at this document.'), 'warning')
   const el = viewport.value?.querySelector(`[data-object="${CSS.escape(o.id)}"]`)
@@ -626,7 +626,7 @@ function openObjectMenu(event: MouseEvent, id: string) {
 }
 const objectItems = computed<MenuItem[]>(() => {
   const at = objectMenu.value
-  const o = at ? state.objects[at.id] : null
+  const o = at ? props.session.sheetObject(at.id) : null
   if (!at || !o) return []
   const close = () => (objectMenu.value = null)
   return contextMenuItems(
@@ -1008,9 +1008,9 @@ const ARROWS: Record<string, [number, number]> = { ArrowUp: [-1, 0], ArrowDown: 
 function onKey(event: KeyboardEvent) {
   if (props.edit || containerEditing.value) return
   if ((event.target as HTMLElement).closest('[role=dialog]')) return // a popover in the grid (Rotate by…) has its own keys: Enter there submits
-  if ((event.key === 'Enter' || event.key === 'F2') && selectedObject.value && state.objects[selectedObject.value]?.kind === 'container') {
+  if ((event.key === 'Enter' || event.key === 'F2') && selectedObject.value && props.session.sheetObject(selectedObject.value)?.kind === 'container') {
     event.preventDefault()
-    return beginContainerEdit(state.objects[selectedObject.value])
+    return beginContainerEdit(props.session.sheetObject(selectedObject.value))
   }
   const mod = event.ctrlKey || event.metaKey
   const arrow = ARROWS[event.key]
@@ -1133,7 +1133,7 @@ const styleHost = objectStyleHost({
   },
   get selected() {
     const id = selectedObject.value
-    return id ? props.session.state.objects[id] ?? null : null
+    return id ? props.session.sheetObject(id) ?? null : null
   },
   get model() {
     return props.session.state.styleModel
@@ -1194,7 +1194,7 @@ defineExpose({
   quarter,
   /** Paste a picture that was cut or copied (false: there is none, the cells are pasted instead). */
   paste: () => clip.paste(),
-  beginContainerEdit: () => beginContainerEdit(selectedObject.value ? state.objects[selectedObject.value] : undefined),
+  beginContainerEdit: () => beginContainerEdit(props.session.sheetObject(selectedObject.value)),
   stepObject,
   openStyleMenu,
   /** What the Format menu ticks and disables itself by. */

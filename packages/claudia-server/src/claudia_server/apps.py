@@ -8,9 +8,11 @@ from claudia_ai import ModelRunner
 from claudia_core import Document, DocumentModel
 from claudia_creates import ShapeLibrary
 
+from .ai_desk import ProviderDesk
+from .ai_router import AiRouter, ModelParts
 from .assistant import AiTurn, Assistant, Engine, Say, Task
 from .composes import composes_methods, composes_methods_with
-from .computes import computes_methods
+from .computes import computes_methods, computes_methods_with
 from .creates import creates_methods, creates_methods_with
 from .document_lens import DocumentLens
 from .lens import Lens
@@ -95,12 +97,14 @@ _LENSES: dict[str, Lens] = {"computes": WorkbookLens(), "composes": DocumentLens
 def methods_for(model_cls: type[DocumentModel], *, shapes: ShapeLibrary | None = None) -> MethodTable:
     """The method table for documents of this model: the app's own when there is one, else the core's.
 
-    ``shapes`` is the library of outlines a server offers for slides and texts; it matters to those two only, and by
-    default they get the built-in shapes."""
+    ``shapes`` is the library of outlines a server offers for slides and texts (a workbook's slides too); by default
+    they get the built-in shapes."""
     if shapes is not None and model_cls.app == "creates":
         return creates_methods_with(shapes)
     if shapes is not None and model_cls.app == "composes":
         return composes_methods_with(shapes)
+    if shapes is not None and model_cls.app == "computes":
+        return computes_methods_with(shapes)
     return _METHODS.get(model_cls.app, core_methods)
 
 
@@ -119,6 +123,24 @@ def stand_in_assistant_for(model_cls: type[DocumentModel]) -> Callable[[], Assis
     return lambda: Assistant(engine, allowed_methods=allowed, suggest_methods=proposes)
 
 
+def _model_parts(model_cls: type[DocumentModel], budget: Budget | None) -> tuple[ModelParts, tuple[str, ...]] | None:
+    """What a language model needs to work in ``model_cls``'s app, and the write methods it may use there; ``None`` for
+    the apps that have no lens (yet)."""
+    lens = _LENSES.get(model_cls.app)
+    names = MODEL_METHODS.get(model_cls.app)
+    if lens is None or names is None:
+        return None
+    table = methods_for(model_cls)
+    hidden = NOT_FOR_A_MODEL.get(model_cls.app, ())
+    tools = (*tools_of(table, lens.look_methods, kind="look"), *tools_of(table, [n for n in names if n not in hidden]))
+    return ModelParts(lens, tools, budget or Budget()), names
+
+
+def has_lens(model_cls: type[DocumentModel]) -> bool:
+    """Can a language model work in ``model_cls``'s app?"""
+    return model_cls.app in _LENSES and model_cls.app in MODEL_METHODS
+
+
 def model_assistant_for(
     model_cls: type[DocumentModel], runner: ModelRunner, *, max_waiting: int = 4, budget: Budget | None = None
 ) -> Callable[[], Assistant] | None:
@@ -127,16 +149,35 @@ def model_assistant_for(
 
     All assistants share the one ``runner``: one model for the server. ``max_waiting`` questions of a document may
     wait behind the one being answered; ``budget`` is what one question may cost (rounds, requests)."""
-    lens = _LENSES.get(model_cls.app)
-    names = MODEL_METHODS.get(model_cls.app)
-    if lens is None or names is None:
+    found = _model_parts(model_cls, budget)
+    if found is None:
         return None
-    table = methods_for(model_cls)
-    hidden = NOT_FOR_A_MODEL.get(model_cls.app, ())
-    tools = (*tools_of(table, lens.look_methods, kind="look"), *tools_of(table, [n for n in names if n not in hidden]))
+    parts, names = found
     proposes = SUGGEST_METHODS.get(model_cls.app, ())
     return lambda: Assistant(
-        ModelEngine(runner, tools, lens, budget=budget or Budget()),
+        ModelEngine(runner, parts.tools, parts.lens, budget=parts.budget),
+        max_waiting=max_waiting,
+        allowed_methods=names,
+        suggest_methods=proposes,
+    )
+
+
+def routed_assistant_for(
+    model_cls: type[DocumentModel], desk: ProviderDesk, *, max_waiting: int = 4, budget: Budget | None = None
+) -> Callable[[], Assistant] | None:
+    """Makes assistants whose answerer is chosen for each question by ``desk`` (E7.11): the scripted stand-in, the
+    local model or Claude, whichever the administrator set and the document's owners allow. ``None`` for an app that
+    has neither a stand-in nor a lens.
+
+    The same guarantee as the two factories above: whoever answers is bound by the app's allow-list (SEC-10)."""
+    engine_class = _ENGINES.get(model_cls.app)
+    found = _model_parts(model_cls, budget)
+    if engine_class is None and found is None:
+        return None
+    parts, names = found if found is not None else (None, MODEL_METHODS.get(model_cls.app, ()))
+    proposes = SUGGEST_METHODS.get(model_cls.app, ())
+    return lambda: Assistant(
+        AiRouter(desk, engine_class() if engine_class else None, parts),
         max_waiting=max_waiting,
         allowed_methods=names,
         suggest_methods=proposes,

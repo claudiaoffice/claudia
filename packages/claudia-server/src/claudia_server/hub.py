@@ -47,10 +47,11 @@ from claudia_core.clock import utc_now
 from claudia_document_file import Part
 from claudia_render import RenderFailed, ToolUnavailable
 
+from .ai_consent import ConsentBook
 from .audience import may_read, shape_for
 from .auth import AI_COLOR, ROLES, Account, UserDirectory
 from .heavy_dispatch import HeavyDispatcher
-from .i18n import localized, msg
+from .i18n import localized, message_of, msg
 from .protocol import (
     DEFAULT_LOCALE,
     PROTOCOL_VERSION,
@@ -346,6 +347,9 @@ class Connection:
                 hosted.original,
                 hosted.render_outcomes,
                 hosted.font_catalogue,
+                hosted.consent,
+                hosted.answering,
+                hosted.offers_claude,
             )
             hosted.acting_user = self.account.user
             result = hosted.methods.dispatch(context, name, params)
@@ -420,6 +424,7 @@ class HostedDocument:
         self.max_connections = max_connections
         self.edit_timeout = edit_timeout
         self.directory = directory
+        self.consent = ConsentBook(directory, doc_id)  # what the owners allowed a remote AI provider (E7.11)
         self._clock = clock
         self.connections: set[Connection] = set()
         self.assistant: Assistant | None = None  # the AI participant, if the hub gives documents one
@@ -501,6 +506,17 @@ class HostedDocument:
         for connection in list(self.connections):
             if connection is not skip:
                 connection.deliver(message)
+
+    def answering(self) -> dict | None:
+        """Who answers ``@ai`` here now (``Via.to_data``), for the windows' badge; ``None`` without an assistant."""
+        if self.assistant is None:
+            return None
+        via = self.assistant.answering(self.consent.state)
+        return via.to_data() if via is not None else None
+
+    def offers_claude(self) -> bool:
+        """Whether the owner has anything to allow: the server has Claude set up and its assistant routes to it."""
+        return self.assistant is not None and self.assistant.offers_claude()
 
     def touch(self) -> None:
         """Note that something happened (for unloading idle documents)."""
@@ -851,7 +867,9 @@ class Hub:
             except DuplicateDocument as exc:
                 raise HubError("bad_request", same_document_message(exc.existing)) from exc
             except ValueError as exc:
-                raise HubError("bad_request", msg("{id} cannot be taken in: {reason}", id=doc_id, reason=exc)) from exc
+                raise HubError(
+                    "bad_request", msg("{id} cannot be taken in: {reason}", id=doc_id, reason=message_of(exc))
+                ) from exc
             self._known.add(doc_id)
 
     def is_loaded(self, doc_id: str) -> bool:
@@ -900,10 +918,12 @@ class Hub:
                 try:
                     document = await asyncio.to_thread(self.provider.open, doc_id)
                 except DocumentSealed as exc:
-                    raise HubError("sealed", msg("{id} cannot be opened yet: {reason}", id=doc_id, reason=exc)) from exc
+                    raise HubError(
+                        "sealed", msg("{id} cannot be opened yet: {reason}", id=doc_id, reason=message_of(exc))
+                    ) from exc
                 except ValueError as exc:
                     raise HubError(
-                        "bad_request", msg("{id} cannot be opened: {reason}", id=doc_id, reason=exc)
+                        "bad_request", msg("{id} cannot be opened: {reason}", id=doc_id, reason=message_of(exc))
                     ) from exc
                 except OSError as exc:
                     log.exception("cannot read %s", doc_id)

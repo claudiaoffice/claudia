@@ -5,6 +5,44 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+### Changed
+- **One owner per document in the consent texts** (D1499). The words about Claude's consent say "the owner" where they
+  said "the owners": the note under an answer ("Claude is not allowed in this document. The owner can change that in
+  Preferences ▸ AI…", `ai_desk.NOTE_NOT_ALLOWED`) and the two refusals of `set_ai_consent`. German is updated with them.
+  The wire format is unchanged: `ai_consent` still lists `owners`.
+
+## [0.42.0] - 2026-11-22
+
+### Added
+- **Claude as a provider of the `@ai`** (E7.11, D1490–D1499). `AiSettings.provider` (`"stand-in"`, `"local"` or
+  `"claude"`) and `AiSettings.claude` (`ClaudeSettings`: model, confirmation, key), with `load` and `public` (the key is
+  never in `public`). `AiRuntime.desk` (a `ProviderDesk`: who answers a question, whether Claude is offered, the last
+  failure), `AiRuntime.anthropic_key` and `anthropic_url`, `claude_model()`, `claude_runner()` and `key_in_use()`.
+- Consent per document (D1490, D1491): `SealedDocuments.record_consent` and `consent_rows` keep the second sealed list
+  of the document file; `Assistant.answering(consent)` and `offers_claude` say who would answer now, and the same on
+  `HostedDocument`. The `ai_consent` view says `{provider, allowed, by, at, owners, history, answering, offered}`;
+  `set_ai_consent` (owner only) and the ephemeral `ai_consent_changed` tell the others.
+- The administrator's page (D1495): `PUT /api/admin/settings/ai` takes `{provider, model_dir, device, max_tokens,
+  timeout, claude: {model, key, remove_key, confirm}}` and refuses with 400 `{detail, reason}`; the settings say
+  `ai.answering`, `ai.last_error` and `ai.claude` (`key_set`, `key_tail`, never the key). Start option
+  `--anthropic-base-url` (hidden, for tests).
+- Every answer says who gave it (D1493): `Say.via`, kept as `ChatRecord.via`. A failure of Claude is said in words, with
+  no silent fallback (D1492); switching Claude off ends a running question before its next step (D1497).
+
+### Changed
+- **Breaking** — `ModelEngine(runner, tools, lens, *, memory=None, budget=…)`: `memory_turns` is gone; the earlier chat
+  is a shared `ConversationMemory`, and goes with the next question whoever answered (D1498). `runner` is any
+  `Answerer`.
+- **Breaking** — `AiRuntime` takes `desk`, `anthropic_key` and `anthropic_url` instead of `runner`; `runner` is a
+  property of the desk. `Task` takes `consent`, a function that says what the document allows.
+- The server settings page *Config* is *Preferences* (D1494) and the AI settings moved to the AI page.
+
+### Fixed
+- A refusal of a model reaches a person in her language (CODE-78, D1510): `i18n.message_of(error)` keeps the
+  template of a `claudia_core.Refusal`, every `command_error` and `bad_request` that passes on a model's refusal uses
+  it, and `localized` says a message that fills another message in the same language. The reasons of the style
+  deletion targets are said in the connection's language.
+
 ### Security (SEC-12)
 - **The first administrator needs the setup code** (D1370, D1371), on every server: `POST /api/admin/setup` takes
   `code` and answers 403 for a wrong one, 429 with `Retry-After` after too many tries (the sign-in's waits) and 409
@@ -14,6 +52,13 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 - A server behind a proxy counts as exposed whatever its `--host` (D1374, `hosts.is_exposed`).
 
 ### Added
+- A workbook's slides on the wire (E6.31 step 2, D1473): `tabs` (`{kind, id, name}` in their one order) and the event
+  `tabs`, which replaces `sheets`; `slide` (the objects of a slide); `add_object` (a text box or a shape, on a slide only)
+  and `shapes`; `add_image`, `add_container`, `move_object` and `resize_object` take a slide's `slide`, `x` and `y`
+  as creates does, beside a sheet's `sheet`, `row` and `col`. `computes_methods_with(library)` for a server's own shapes.
+- Computes' `search_find`, `search_preview` and `search_replace` look at the words on a workbook's slides too (UX-72):
+  a match there is at `{slide, object, source}`, a scope may be `{slide}`, and `leave` takes those places; a
+  replacement of cells and words is one step in the history.
 - `GET /api/admin/status` says `setup_code` (whether one is asked for); `POST /api/admin/setup-code` checks a code
   without naming anybody; `GET` and `DELETE /api/admin/reset-note` (signed in): the note of the last reset (D1375).
 - Start options `--reset-administrators` (D1375: the administrators only; `admins.json` is kept aside, settings, fonts

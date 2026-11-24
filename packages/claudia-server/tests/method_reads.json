@@ -193,6 +193,7 @@
  "suggest_words": "content",
  "suggestions": "content",
  "tables": "content",
+ "tabs": "content",
  "thing_details": "content",
  "thing_last_seen": "history",
  "trace": "content",
@@ -207,5 +208,7 @@
  "what_if_drop": "content",
  "what_if_start": "content",
  "withdraw_restore": "content",
- "write_words": "content"
+ "write_words": "content",
+ "ai_consent": "content",
+ "set_ai_consent": "content"
 }

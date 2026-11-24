@@ -1,0 +1,129 @@
+<svg viewBox="0 0 1700 730" xmlns="http://www.w3.org/2000/svg" font-family="Inter, 'Segoe UI', system-ui, sans-serif"><rect width="1700" height="730" fill="#f3f1ea"/><text x="40.0" y="44.0" font-family="Fraunces, Georgia, serif" font-size="22" font-weight="600" fill="#1f1a33" text-anchor="start">Templates and layouts — where each piece goes</text>
+<text x="40.0" y="66.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">Package map. Everything a template needs already exists as a part of the creates document; the new code is small and sits where its closest relative sits.</text>
+<rect x="1180.0" y="36.0" width="14.0" height="14.0" rx="3" fill="#ece9f8" stroke="#5b4bc4" stroke-width="1.6"/>
+<text x="1200.0" y="47.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">new</text>
+<rect x="1330.0" y="36.0" width="14.0" height="14.0" rx="3" fill="#fdebd9" stroke="#f2a057" stroke-width="1.6"/>
+<text x="1350.0" y="47.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">changed</text>
+<rect x="1480.0" y="36.0" width="14.0" height="14.0" rx="3" fill="#ffffff" stroke="#c9c4d6" stroke-width="1.6"/>
+<text x="1500.0" y="47.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">exists, unchanged</text>
+<rect x="40.0" y="96.0" width="400.0" height="600.0" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="56.0" y="124.0" font-family="Fraunces, Georgia, serif" font-size="15" font-weight="600" fill="#1f1a33" text-anchor="start">claudia-core</text>
+<rect x="450.0" y="96.0" width="400.0" height="600.0" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="466.0" y="124.0" font-family="Fraunces, Georgia, serif" font-size="15" font-weight="600" fill="#1f1a33" text-anchor="start">claudia-creates</text>
+<rect x="860.0" y="96.0" width="250.0" height="600.0" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="876.0" y="124.0" font-family="Fraunces, Georgia, serif" font-size="15" font-weight="600" fill="#1f1a33" text-anchor="start">claudia-document-file</text>
+<rect x="1120.0" y="96.0" width="280.0" height="600.0" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="1136.0" y="124.0" font-family="Fraunces, Georgia, serif" font-size="15" font-weight="600" fill="#1f1a33" text-anchor="start">claudia-server</text>
+<rect x="1410.0" y="96.0" width="250.0" height="600.0" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="1426.0" y="124.0" font-family="Fraunces, Georgia, serif" font-size="15" font-weight="600" fill="#1f1a33" text-anchor="start">web app · shells</text>
+<rect x="60.0" y="140.0" width="360.0" height="60.0" rx="8" fill="#ece9f8" stroke="#5b4bc4" stroke-width="1.5"/>
+<text x="70.0" y="159.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">layouts.py</text>
+<text x="70.0" y="176.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">Layout, Layouts: named, with</text>
+<text x="70.0" y="191.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">origin and hidden</text>
+<rect x="60.0" y="210.0" width="360.0" height="60.0" rx="8" fill="#ece9f8" stroke="#5b4bc4" stroke-width="1.5"/>
+<text x="70.0" y="229.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">theme.py</text>
+<text x="70.0" y="246.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">Theme = name + StyleBook + Palette</text>
+<text x="70.0" y="261.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">(a definition, not a Thing)</text>
+<rect x="60.0" y="280.0" width="360.0" height="45.0" rx="8" fill="#fdebd9" stroke="#f2a057" stroke-width="1.5"/>
+<text x="70.0" y="299.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">slides.py (from E6.31, unmerged)</text>
+<text x="70.0" y="316.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">SlideAnchor gets an optional purpose</text>
+<rect x="60.0" y="335.0" width="360.0" height="60.0" rx="8" fill="#fdebd9" stroke="#f2a057" stroke-width="1.5"/>
+<text x="70.0" y="354.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">objects.py · ObjectModel</text>
+<text x="70.0" y="371.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">layout_holders(), all_holders();</text>
+<text x="70.0" y="386.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">only one caller needs them</text>
+<rect x="60.0" y="405.0" width="360.0" height="60.0" rx="8" fill="#fdebd9" stroke="#f2a057" stroke-width="1.5"/>
+<text x="70.0" y="424.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">fields.py</text>
+<text x="70.0" y="441.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">SlideNumberField kind</text>
+<text x="70.0" y="456.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">(E10.21, generated.py)</text>
+<rect x="60.0" y="475.0" width="360.0" height="60.0" rx="8" fill="#ffffff" stroke="#c9c4d6" stroke-width="1.5"/>
+<text x="70.0" y="494.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">styles.py · palette.py</text>
+<text x="70.0" y="511.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">no change: origin builtin / template /</text>
+<text x="70.0" y="526.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">document (D780), ReplacePalette</text>
+<rect x="60.0" y="545.0" width="360.0" height="45.0" rx="8" fill="#ffffff" stroke="#c9c4d6" stroke-width="1.5"/>
+<text x="70.0" y="564.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">commands.py · Batch</text>
+<text x="70.0" y="581.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">no change: compound commands are Batches</text>
+<text x="60.0" y="614.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">Why core: layouts hold ordinary objects, so the</text>
+<text x="60.0" y="630.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">object machinery they need is core's. Composes and</text>
+<text x="60.0" y="646.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">computes could use Layouts one day (E9.14 page styles).</text>
+<rect x="470.0" y="140.0" width="360.0" height="45.0" rx="8" fill="#fdebd9" stroke="#f2a057" stroke-width="1.5"/>
+<text x="480.0" y="159.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">model.py · SlideModel</text>
+<text x="480.0" y="176.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">layouts, slide_layouts; schema 18</text>
+<rect x="470.0" y="195.0" width="360.0" height="60.0" rx="8" fill="#ece9f8" stroke="#5b4bc4" stroke-width="1.5"/>
+<text x="480.0" y="214.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">layout_commands.py</text>
+<text x="480.0" y="231.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">SetSlideLayout, DefineLayout, RemoveLayout,</text>
+<text x="480.0" y="246.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">RenameLayout, HideLayout, DeviateLayout</text>
+<rect x="470.0" y="265.0" width="360.0" height="75.0" rx="8" fill="#ece9f8" stroke="#5b4bc4" stroke-width="1.5"/>
+<text x="480.0" y="284.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">template.py</text>
+<text x="480.0" y="301.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">Template (read view), check_template,</text>
+<text x="480.0" y="316.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">start_from_template, plan_change_theme,</text>
+<text x="480.0" y="331.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">plan_change_template</text>
+<rect x="470.0" y="350.0" width="360.0" height="45.0" rx="8" fill="#ece9f8" stroke="#5b4bc4" stroke-width="1.5"/>
+<text x="480.0" y="369.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">builtin_layouts.py</text>
+<text x="480.0" y="386.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">the basic layout; one, without placeholders</text>
+<rect x="470.0" y="405.0" width="360.0" height="45.0" rx="8" fill="#fdebd9" stroke="#f2a057" stroke-width="1.5"/>
+<text x="480.0" y="424.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">events.py</text>
+<text x="480.0" y="441.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">LayoutsChanged, SlideLayoutChanged</text>
+<rect x="470.0" y="460.0" width="360.0" height="60.0" rx="8" fill="#fdebd9" stroke="#f2a057" stroke-width="1.5"/>
+<text x="480.0" y="479.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">commands.py · AddSlide</text>
+<text x="480.0" y="496.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">a new slide follows the layout</text>
+<text x="480.0" y="511.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">of the slide before it</text>
+<text x="470.0" y="544.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">Why creates: slides, layouts-as-slides and the offer flow</text>
+<text x="470.0" y="560.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">are presentation matters. A template is a presentation,</text>
+<text x="470.0" y="576.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">so what reads and changes one lives next to the model.</text>
+<rect x="880.0" y="140.0" width="210.0" height="60.0" rx="8" fill="#ffffff" stroke="#c9c4d6" stroke-width="1.5"/>
+<text x="890.0" y="159.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">export_file.py</text>
+<text x="890.0" y="176.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">no change: a template is an</text>
+<text x="890.0" y="191.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">export without slides</text>
+<text x="880.0" y="226.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">No new file type, no new</text>
+<text x="880.0" y="242.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">extension, no new reader.</text>
+<rect x="1140.0" y="140.0" width="240.0" height="60.0" rx="8" fill="#ece9f8" stroke="#5b4bc4" stroke-width="1.5"/>
+<text x="1150.0" y="159.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">template_library.py</text>
+<text x="1150.0" y="176.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">the templates of this server,</text>
+<text x="1150.0" y="191.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">kept as files</text>
+<rect x="1140.0" y="210.0" width="240.0" height="60.0" rx="8" fill="#ece9f8" stroke="#5b4bc4" stroke-width="1.5"/>
+<text x="1150.0" y="229.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">admin_templates.py</text>
+<text x="1150.0" y="246.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">Server settings ▸ Templates</text>
+<text x="1150.0" y="261.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">(like Fonts)</text>
+<rect x="1140.0" y="280.0" width="240.0" height="45.0" rx="8" fill="#ece9f8" stroke="#5b4bc4" stroke-width="1.5"/>
+<text x="1150.0" y="299.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">templates_api.py</text>
+<text x="1150.0" y="316.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">list for everybody; read one</text>
+<rect x="1140.0" y="335.0" width="240.0" height="60.0" rx="8" fill="#fdebd9" stroke="#f2a057" stroke-width="1.5"/>
+<text x="1150.0" y="354.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">creates.py</text>
+<text x="1150.0" y="371.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">new from a template,</text>
+<text x="1150.0" y="386.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">save as template</text>
+<rect x="1140.0" y="405.0" width="240.0" height="60.0" rx="8" fill="#ffffff" stroke="#c9c4d6" stroke-width="1.5"/>
+<text x="1150.0" y="424.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">hub.py · uploads.py</text>
+<text x="1150.0" y="441.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">unchanged: the existing</text>
+<text x="1150.0" y="456.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">import path is used</text>
+<text x="1140.0" y="489.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">The server keeps files only; it</text>
+<text x="1140.0" y="505.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">never sees a deck's layouts as a</text>
+<text x="1140.0" y="521.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">model except through check_template.</text>
+<rect x="1430.0" y="140.0" width="210.0" height="45.0" rx="8" fill="#ece9f8" stroke="#5b4bc4" stroke-width="1.5"/>
+<text x="1440.0" y="159.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">layout-host.ts</text>
+<text x="1440.0" y="176.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">like style-host.ts</text>
+<rect x="1430.0" y="195.0" width="210.0" height="45.0" rx="8" fill="#ece9f8" stroke="#5b4bc4" stroke-width="1.5"/>
+<text x="1440.0" y="214.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">LayoutStrip.vue</text>
+<text x="1440.0" y="231.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">the offer, option A</text>
+<rect x="1430.0" y="250.0" width="210.0" height="45.0" rx="8" fill="#ece9f8" stroke="#5b4bc4" stroke-width="1.5"/>
+<text x="1440.0" y="269.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">LayoutPreviewDialog.vue</text>
+<text x="1440.0" y="286.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">Before | After</text>
+<rect x="1430.0" y="305.0" width="210.0" height="45.0" rx="8" fill="#ece9f8" stroke="#5b4bc4" stroke-width="1.5"/>
+<text x="1440.0" y="324.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">AllLayoutsDialog.vue</text>
+<text x="1440.0" y="341.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">list, edit, hide, delete</text>
+<rect x="1430.0" y="360.0" width="210.0" height="45.0" rx="8" fill="#ece9f8" stroke="#5b4bc4" stroke-width="1.5"/>
+<text x="1440.0" y="379.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">TemplatePicker.vue</text>
+<text x="1440.0" y="396.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">File ▸ New purpose cards</text>
+<rect x="1430.0" y="415.0" width="210.0" height="45.0" rx="8" fill="#ece9f8" stroke="#5b4bc4" stroke-width="1.5"/>
+<text x="1440.0" y="434.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">AdminTemplates.vue</text>
+<text x="1440.0" y="451.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">Server settings</text>
+<rect x="1430.0" y="470.0" width="210.0" height="60.0" rx="8" fill="#fdebd9" stroke="#f2a057" stroke-width="1.5"/>
+<text x="1440.0" y="489.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">SlideWorkspace.vue</text>
+<text x="1440.0" y="506.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">layout rail when editing</text>
+<text x="1440.0" y="521.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">a layout</text>
+<rect x="1430.0" y="540.0" width="210.0" height="60.0" rx="8" fill="#fdebd9" stroke="#f2a057" stroke-width="1.5"/>
+<text x="1440.0" y="559.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">clients/contract</text>
+<text x="1440.0" y="576.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">new action ids only</text>
+<text x="1440.0" y="591.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">(format.layout.*)</text>
+<text x="1430.0" y="624.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">GTK and Neutralino draw menus only;</text>
+<text x="1430.0" y="640.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">the page is the same in all three, so</text>
+<text x="1430.0" y="656.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">no divergence between web and desktop.</text></svg>

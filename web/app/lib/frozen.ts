@@ -31,7 +31,7 @@ export interface FrozenDeck {
 
 /** Copy what the show draws from out of the session. A JSON round trip, because the session's state is reactive and a
  * reactive object is a view of the live one, not a copy. */
-export function freeze(session: Pick<SlideSession, 'state' | 'objectsOn' | 'notesOf' | 'secondsOf'> & Partial<Pick<SlideSession, 'markOf' | 'agendaOf'>>): FrozenDeck {
+export function freeze(session: Pick<SlideSession, 'state' | 'slideObjects' | 'notesOf' | 'secondsOf'> & Partial<Pick<SlideSession, 'markOf' | 'agendaOf'>>): FrozenDeck {
   const s: SlideState = session.state
   const copy = <T>(value: T): T => JSON.parse(JSON.stringify(value ?? null)) as T
   const objects: Record<string, SlideObject[]> = {}
@@ -40,7 +40,7 @@ export function freeze(session: Pick<SlideSession, 'state' | 'objectsOn' | 'note
   const marks: Record<string, { marker: string; indent: number }> = {}
   const agendas: Record<string, ContentsEntry[]> = {}
   for (const slide of s.slides) {
-    objects[slide.id] = copy(session.objectsOn(slide.id))
+    objects[slide.id] = copy(session.slideObjects(slide.id))
     for (const o of objects[slide.id]!) {
       const mark = session.markOf?.(o.id)
       if (mark) marks[o.id] = mark

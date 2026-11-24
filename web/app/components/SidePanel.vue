@@ -10,6 +10,7 @@ import { keyStep, WheelStepper, wheelDelta, type Filter } from '~/lib/replay'
 import { tintsOf } from '~/lib/replay-tint'
 import { ChatPick, POINTER_EVENTS, type PointerKind } from '~/lib/chat-pick'
 import { auditSentence, type AuditRow } from '~/lib/audit'
+import { answeredBy, badge, consentLine, noteOf, type ConsentDecision } from '~/lib/ai-provider'
 import { hashAt, insertTag, matches, splitTags, withCurrentNames, withTag, type Thing, type ThingKind } from '~/lib/tags'
 import {
   REDACTION_KIND,
@@ -32,7 +33,7 @@ const emit = defineEmits<{ redact: [picked: Picked] }>()
 const state = props.session.state
 // `t` stays this bare (never `i18n.t`): `scripts/extract_i18n.py`'s own regex only recognises an unqualified
 // `t(...)` call (`obj.t(...)` is deliberately excluded, the same way `format(...)` is) -- see its docstring. Only
-// the two static headers below need it; this panel has no Config ▸ App Language menu of its own.
+// the two static headers below need it; this panel has no Preferences ▸ App Language menu of its own.
 const { t } = useI18n()
 
 const history = ref<HTMLElement | null>(null)
@@ -78,16 +79,21 @@ const rows = computed(() => {
     | { kind: 'entry'; entry: (typeof state.entries)[number] }
     | { kind: 'mark'; label: string; author: string | null; number: number }
     | { kind: 'left'; row: AuditRow }
+    | { kind: 'consent'; decision: ConsentDecision }
   )[] = []
-  // What left the document has no revision (D1271): the time alone says where among the changes its line goes.
-  const left = [...state.audit].sort((a, b) => Date.parse(a.when) - Date.parse(b.when))
+  // What left the document, and what the owners decided about Claude, have no revision (D1271, E7.11): the time alone
+  // says where among the changes their lines go.
+  const left = [
+    ...state.audit.map((row) => ({ when: row.when, line: { kind: 'left' as const, row } })),
+    ...(state.consent?.history ?? []).map((decision) => ({ when: decision.when, line: { kind: 'consent' as const, decision } })),
+  ].sort((a, b) => Date.parse(a.when) - Date.parse(b.when))
   let next = 0
   for (const entry of state.entries) {
-    while (next < left.length && Date.parse(left[next]!.when) < Date.parse(entry.time)) out.push({ kind: 'left', row: left[next++]! })
+    while (next < left.length && Date.parse(left[next]!.when) < Date.parse(entry.time)) out.push(left[next++]!.line)
     out.push({ kind: 'entry', entry })
     for (const c of marks.get(entry.revision) ?? []) out.push({ kind: 'mark', label: c.label || `checkpoint ${c.number}`, author: c.author, number: c.number })
   }
-  while (next < left.length) out.push({ kind: 'left', row: left[next++]! })
+  while (next < left.length) out.push(left[next++]!.line)
   return out
 })
 
@@ -580,6 +586,11 @@ const isAi = (user: string) => user.toLowerCase() === 'ai'
             <span class="what">{{ auditSentence(row.row) }}</span>
             <time>{{ clock(row.row.when) }}</time>
           </li>
+          <li v-else-if="row.kind === 'consent'" class="left" data-testid="consent-row">
+            <span class="who">{{ row.decision.who }}</span>
+            <span class="what">{{ consentLine(row.decision) }}</span>
+            <time>{{ clock(row.decision.when) }}</time>
+          </li>
           <li v-else class="mark">
             <span>{{ t('◆ saved: {label}', { label: row.label }) }}<template v-if="row.author"> · {{ row.author }}</template></span>
             <button v-if="canWrite && !myProposal" type="button" class="suggest" :title="t('Suggest going back to this checkpoint')" @click="suggestRestore(row.number)">{{ t('↺ restore') }}</button>
@@ -610,7 +621,10 @@ const isAi = (user: string) => user.toLowerCase() === 'ai'
     </section>
 
     <section class="chat">
-      <h2>{{ t('Chat') }}</h2>
+      <h2>
+        {{ t('Chat') }}
+        <span v-if="state.consent?.answering" class="answering" data-testid="ai-badge" :title="t('Who answers @ai in this document now')">{{ badge(state.consent.answering) }}</span>
+      </h2>
       <ol ref="chatLog" class="messages" aria-live="polite">
         <li v-if="!state.chat.length" class="empty"><TransText :text="t('Write to everybody, or {ask} to ask the assistant. Say {help} to see what it can do.')"><template #ask><b>@ai</b></template><template #help><b>@ai help</b></template></TransText></li>
         <li
@@ -641,6 +655,8 @@ const isAi = (user: string) => user.toLowerCase() === 'ai'
           </header>
           <p v-if="m.redacted" class="gone">{{ t('Message redacted') }}</p>
           <p v-else><template v-for="(seg, k) in segmentsOf(m.text)" :key="k"><template v-if="seg.type === 'text'">{{ seg.text }}</template><button v-else type="button" class="tag" :class="{ gone: session.isGone(seg.id) }" :title="session.isGone(seg.id) ? t('Deleted. Show the last moment it was there.') : t('Go to this')" @click="goTo(seg.id)">#{{ tagName(seg.id, seg.name) }}</button></template></p>
+          <p v-if="m.via && !m.redacted" class="via" data-testid="answered-by">{{ answeredBy(m.via) }}</p>
+          <p v-if="m.via && noteOf(m.via)" class="viaNote" data-testid="answer-note">{{ noteOf(m.via) }}</p>
         </li>
         <li v-if="others.length" class="typing">
           <span class="author" :style="{ background: colorOf(state, others[0]!), color: inkOn(colorOf(state, others[0]!)) }">{{ others[0] }}</span>
@@ -921,6 +937,21 @@ button.entryRow:focus-visible,
 }
 time {
   color: rgb(230 224 245 / 62%); /* 45% was 3.7:1 on the panel; 62% is 6:1 (BITV 1.4.3) */
+  font-size: 11px;
+}
+.answering {
+  margin-left: 8px;
+  padding: 1px 8px;
+  border: 1px solid rgb(230 224 245 / 45%);
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 400;
+}
+/* who gave an answer (E7.11): the same muted small text as the time, in words, so it never rests on colour */
+.msg .via,
+.msg .viaNote {
+  margin: 2px 0 0;
+  color: rgb(230 224 245 / 62%);
   font-size: 11px;
 }
 /* what left the document (D1271): one muted line, not a change, so it has no dot and cannot be undone or redacted */

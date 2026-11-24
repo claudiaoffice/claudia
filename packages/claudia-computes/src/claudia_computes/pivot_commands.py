@@ -12,7 +12,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import ClassVar
 
-from claudia_core import Batch, Command, Context
+from claudia_core import Batch, Command, Context, Refusal
 
 from .commands import AddSheet, SetCells, register
 from .entry import parse_input
@@ -75,9 +75,9 @@ def create_pivot(
     the sheet is not there (or is, for a new one)."""
     problem = name_problem(name)
     if problem is not None:
-        raise ValueError(problem)
+        raise problem
     if model.names.get(key_of(None, name)) is not None or model.pivots.get(name) is not None:
-        raise ValueError(f"{name} is already a name")
+        raise Refusal("{name} is already a name", name=name)
     steps: list[Command] = []
     if new_sheet is None:
         if anchor[0] not in model.sheets:
@@ -125,11 +125,14 @@ def pivot_to_sql(model: WorkbookModel, name: str) -> Command:
     result = model.pivots.result(entry.name)
     named = model.names.get(key_of(None, entry.name))
     if result is None or not result.sql or named is None or named.anchor is None:
-        raise ValueError(f"the pivot table {entry.name} gave nothing: there is no SQL to turn it into")
+        raise Refusal("the pivot table {name} gave nothing: there is no SQL to turn it into", name=entry.name)
     formula = '=SQL("' + result.sql.replace('"', '""') + '")'
     if len(formula) > MAX_LENGTH:
-        raise ValueError(
-            f"the query of {entry.name} is too long for a formula: {len(formula):,} of {MAX_LENGTH:,} characters"
+        raise Refusal(
+            "the query of {name} is too long for a formula: {length} of {limit} characters",
+            name=entry.name,
+            length=len(formula),
+            limit=MAX_LENGTH,
         )
     sheet, row, col = named.anchor
     return Batch(
@@ -144,7 +147,7 @@ def pivot_to_sql(model: WorkbookModel, name: str) -> Command:
 def _entry(model: WorkbookModel, name: str) -> PivotEntry:
     entry = model.pivots.get(name)
     if entry is None:
-        raise ValueError(f"there is no pivot table called {name!r}")
+        raise Refusal("there is no pivot table called “{name}”", name=name)
     return entry
 
 

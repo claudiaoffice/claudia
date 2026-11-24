@@ -25,7 +25,7 @@ from weakref import WeakKeyDictionary
 from claudia_core import Command, Document, KernelError, ProposalOutdated, Revision, WhatIf
 
 from .audience import HISTORY, may_read
-from .i18n import msg
+from .i18n import message_of, msg
 from .protocol import Context, MethodTable, RequestError
 from .replay import VIEW_READS, PastDocument
 
@@ -91,7 +91,7 @@ class WhatIfDesk:
         try:
             idea = document.what_if(at, author=owner)
         except KernelError as exc:
-            raise RequestError("command_error", str(exc)) from exc
+            raise RequestError("command_error", message_of(exc)) from exc
         token = secrets.token_urlsafe(9)
         self._kept[token] = _Kept(owner, idea, now)
         return token, idea

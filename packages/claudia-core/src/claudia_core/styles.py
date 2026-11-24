@@ -22,6 +22,7 @@ from typing import TYPE_CHECKING, ClassVar, Literal
 from .commands import Batch, Command, CommandRegistry, core_commands
 from .css import INITIAL_CSS, resolve_css, validate_css
 from .css import _split_families as split_families
+from .errors import N_, Refusal
 from .facets import check_kind
 from .stand_ins import GENERIC_ALIASES
 
@@ -48,6 +49,11 @@ NO_NUMBERING = "none"
 #: Where a style can come from (:attr:`~claudia_core.StyleDef.origin`) and what to call it in a sentence. Only
 #: ``"document"`` styles can be deleted (D226).
 ORIGINS: Mapping[str, str] = {"document": "document", "builtin": "built-in", "template": "template"}
+#: Why a style that the document did not make is kept, by where it came from (CODE-78, D1510).
+_ONLY_HIDDEN: Mapping[str, str] = {
+    "builtin": N_("“{name}” is a built-in style and can only be hidden, not deleted"),
+    "template": N_("“{name}” is a template style and can only be hidden, not deleted"),
+}
 
 
 def _check_heading_level(style: StyleDef) -> None:
@@ -147,7 +153,7 @@ class StyleDef:
 def _clean_name(name: str) -> str:
     text = " ".join(name.split()) if "\n" not in name and "\r" not in name else ""
     if not text or len(text) > _MAX_NAME or not text.isprintable():
-        raise ValueError(f"A style name is one line of 1 to {_MAX_NAME} characters, got {name!r}")
+        raise Refusal("A style name is one line of 1 to {limit} characters, got {name!r}", limit=_MAX_NAME, name=name)
     return text
 
 
@@ -337,7 +343,7 @@ class StyleBook:
             raise ValueError(f"The style {style.id!r} exists already")
         name = _clean_name(style.name)
         if self.name_taken(name):
-            raise ValueError(f"There is already a style named “{name}”")
+            raise Refusal("There is already a style named “{name}”", name=name)
         if style.based_on is not None and style.based_on not in self._styles:
             raise ValueError(f"The style {style.id!r} is based on {style.based_on!r}: no style {style.based_on!r}")
         check_kind(style.kind, style.css)
@@ -422,7 +428,7 @@ class StyleBook:
         style = self.get(style_id)
         clean = _clean_name(name)
         if self.name_taken(clean, besides=style_id):
-            raise ValueError(f"There is already a style named “{clean}”")
+            raise Refusal("There is already a style named “{name}”", name=clean)
         self._styles[style_id] = replace(style, name=clean, to_name=to_name)
         self.version += 1
 
@@ -447,15 +453,17 @@ class StyleBook:
         if based_on is not None:
             parent = self.get(based_on)
             if any(link.id == style_id for link in self.chain(based_on)):
-                raise ValueError(
-                    f"“{style.name}” cannot be based on itself"
-                    if based_on == style_id
-                    else f"“{style.name}” cannot be based on “{parent.name}”, which is based on it"
+                if based_on == style_id:
+                    raise Refusal("“{name}” cannot be based on itself", name=style.name)
+                raise Refusal(
+                    "“{name}” cannot be based on “{other}”, which is based on it", name=style.name, other=parent.name
                 )
             if parent.kind != style.kind:
-                raise ValueError(
-                    f"The {style.kind} style “{style.name}” cannot be based on “{parent.name}”, a {parent.kind} "
-                    "style: a style and its parent are of the same kind"
+                raise Refusal(
+                    "“{name}” cannot be based on “{other}”, a style of another kind: a style and its parent are of the "
+                    "same kind",
+                    name=style.name,
+                    other=parent.name,
                 )
         check_kind(style.kind, css)
         changed = replace(
@@ -476,7 +484,7 @@ class StyleBook:
         """Take a style out of the book and return it; refused while other styles are based on it."""
         style = self.get(style_id)
         if self.children(style_id):
-            raise ValueError(f"The style “{style.name}” has styles based on it")
+            raise Refusal("The style “{name}” has styles based on it", name=style.name)
         self.version += 1
         return self._styles.pop(style_id)
 
@@ -588,7 +596,7 @@ class RemoveStyle(Command):
         known = _known(book, self.style)
         in_use = getattr(ctx.model, "style_in_use", None)
         if in_use is not None and in_use(self.style):
-            raise ValueError(f"The style “{known.name}” is in use and cannot be taken back")
+            raise Refusal("The style “{name}” is in use and cannot be taken back", name=known.name)
         after = book.next_after(self.style)
         book.remove(self.style)
         _tell(ctx, book)
@@ -755,7 +763,11 @@ class SetStyleNumbering(Command):
         known = _known(book, self.style)
         lists = getattr(ctx.model, "lists", None)
         if self.numbering not in (None, NO_NUMBERING) and (lists is None or self.numbering not in lists):
-            raise ValueError(f"There is no list {self.numbering!r} to number the style “{known.name}” in")
+            raise Refusal(
+                "There is no list {numbering!r} to number the style “{name}” in",
+                numbering=self.numbering,
+                name=known.name,
+            )
         book.set_numbering(self.style, self.numbering)
         _tell(ctx, book)
         return SetStyleNumbering(self.style, known.numbering)
@@ -883,9 +895,10 @@ def held_look(old: Mapping[str, str], base: Mapping[str, str]) -> dict[str, str]
         elif prop in INITIAL_CSS:
             wanted = INITIAL_CSS[prop]
         else:
-            raise ValueError(
-                f"The look cannot be kept: the new parent sets “{prop}” and nothing says what a style "
-                "that does not set it looks like"
+            raise Refusal(
+                "The look cannot be kept: the new parent sets “{prop}” and nothing says what a style that does not set "
+                "it looks like",
+                prop=prop,
             )
         if base.get(prop) != wanted:
             held[prop] = wanted
@@ -920,7 +933,7 @@ def _own_settings(old: _Look, base: _Look) -> tuple[dict[str, str], str | None, 
     number_format = None
     if old.number_format != base.number_format:
         if old.number_format is None:
-            raise ValueError("The look cannot be kept: the new parent shows numbers in a format this style does not")
+            raise Refusal("The look cannot be kept: the new parent shows numbers in a format this style does not")
         number_format = old.number_format
     heading: HeadingLevel = None
     if old.heading_level != base.heading_level:
@@ -1006,16 +1019,17 @@ def plan_delete_style(model: object, style_id: str, *, how: str = "assign", targ
         raise TypeError("This document has no style book, so it cannot delete a style")
     style = _known(book, style_id)
     if style.origin != "document":
-        raise ValueError(f"“{style.name}” is a {ORIGINS[style.origin]} style and can only be hidden, not deleted")
+        kept = _ONLY_HIDDEN.get(style.origin, N_("“{name}” can only be hidden, not deleted"))
+        raise Refusal(kept, name=style.name)
     in_use = getattr(model, "style_in_use", None)
     used = in_use is not None and in_use(style_id)
     restyle = getattr(model, "restyle_users", None)
     if used and restyle is None:
-        raise ValueError(f"The app cannot move what has the style “{style.name}” to another style")
+        raise Refusal("The app cannot move what has the style “{name}” to another style", name=style.name)
     children = book.children(style_id)
     if target is None:
         if used or children:
-            raise ValueError(f"“{style.name}” is in use: say which style takes its place")
+            raise Refusal("“{name}” is in use: say which style takes its place", name=style.name)
         return Batch((RemoveStyle(style_id),), f"Delete style “{style.name}”")
     parent = _checked_target(book, style, target, how)
     steps: list[Command] = []
@@ -1060,16 +1074,24 @@ def plan_delete_style(model: object, style_id: str, *, how: str = "assign", targ
 def _checked_target(book: StyleBook, style: StyleDef, target: str, how: str) -> StyleDef:
     """The style that takes the deleted one's place, if it can: of the same kind, and neither the style itself nor
     one based on it (that would be a cycle)."""
-    verb = "replaced by" if how == "assign" else "re-based on"
+    assign = how == "assign"
     parent = _known(book, target)
     if target == style.id:
-        raise ValueError(f"“{style.name}” cannot be {verb} itself")
+        itself = N_("“{name}” cannot be replaced by itself") if assign else N_("“{name}” cannot be re-based on itself")
+        raise Refusal(itself, name=style.name)
     if any(link.id == style.id for link in book.chain(target)):
-        raise ValueError(f"“{style.name}” cannot be {verb} “{parent.name}”, which is based on it")
+        circle = (
+            N_("“{name}” cannot be replaced by “{other}”, which is based on it")
+            if assign
+            else N_("“{name}” cannot be re-based on “{other}”, which is based on it")
+        )
+        raise Refusal(circle, name=style.name, other=parent.name)
     if parent.kind != style.kind:
-        raise ValueError(
-            f"“{style.name}” is a {style.kind} style and “{parent.name}” a {parent.kind} style: "
-            "a style can only be taken over by one of the same kind"
+        raise Refusal(
+            "“{name}” and “{other}” are styles of different kinds: a style can only be taken over by one of the same "
+            "kind",
+            name=style.name,
+            other=parent.name,
         )
     return parent
 

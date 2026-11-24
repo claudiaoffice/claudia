@@ -1,7 +1,8 @@
 // What the search panel needs from a workbook (E5.15, D282): the `SearchHost` of computes. The panel is one component
 // for all three apps; each app gives it a host that says what can be searched, where, how to name a place and how to
-// get to it. A place in a workbook is `{ sheet, row, col }` (CODE-18): only this file reads it. Everything else — the
-// builder, the sentence, the lists — is shared (`lib/search.ts`, `SearchPanel.vue`).
+// get to it. A place in a workbook is a cell, `{ sheet, row, col }`, or the words of an object on a slide,
+// `{ slide, object, source }` (CODE-18, UX-72): only this file reads it. Everything else — the builder, the sentence,
+// the lists — is shared (`lib/search.ts`, `SearchPanel.vue`).
 import { bounds, type Sel } from './selection'
 import type { Session, SearchScope } from './session'
 import type { Change, Kinds, SearchHost, SearchMatch, SearchPlace, SearchSwitch, Skipped } from './search'
@@ -18,7 +19,10 @@ export interface CellPlace {
   col: number
 }
 
-/** The cell a place names. A workbook's places are always cells; anything else is a bug, and says so. */
+/** Is the place the words of an object on a slide (not a cell)? */
+const onSlide = (at: SearchPlace): boolean => typeof at.slide === 'string'
+
+/** The cell a place names; anything but a cell is a bug, and says so. */
 export function cellOf(at: SearchPlace): CellPlace {
   const { sheet, row, col } = at
   if (typeof sheet !== 'string' || typeof row !== 'number' || typeof col !== 'number') throw new Error(`not a cell: ${JSON.stringify(at)}`)
@@ -37,22 +41,34 @@ export function sheetSearchHost(from: {
   session: Session
   selection: () => Sel
   goTo: (sheet: string, row: number, col: number) => void
+  /** Show a slide: its match is marked in the words, and nothing is selected (a selected object is held from the
+   *  others, and stepping through the matches must not hold each in turn). */
+  goToSlide: (slide: string) => void
   t: Translate
 }): SearchHost<SearchScope> {
   const { session, t } = from
   const state = session.state
+  const hasSlides = () => state.tabs.some((tab) => tab.kind === 'slide')
   return {
     get readonly() {
       return lookOnly(state)
     },
     unit: 'cell',
     switches: SWITCHES,
-    scopes: ['sheet', 'all', 'selection'] satisfies ScopeId[],
+    // a slide has no cells to select
+    get scopes() {
+      return (state.activeSlide ? ['sheet', 'all'] : ['sheet', 'all', 'selection']) satisfies ScopeId[]
+    },
     helpTopic: 'computes.searching-and-replacing',
     extraParts: ['cellref'],
-    scopeLabel: (scope) => (scope === 'sheet' ? t('This sheet') : scope === 'all' ? t('All sheets') : t('Selection')),
+    scopeLabel(scope) {
+      if (scope === 'all') return hasSlides() ? t('All sheets and slides') : t('All sheets')
+      if (scope === 'sheet') return state.activeSlide ? t('This slide') : t('This sheet')
+      return t('Selection')
+    },
     scopeOf(scope) {
       if (scope === 'all') return {}
+      if (state.activeSlide) return { slide: state.activeSlide }
       if (scope === 'sheet') return { sheet: state.activeSheet }
       const b = bounds(from.selection())
       return { sheet: state.activeSheet, range: [b.r0, b.c0, b.r1, b.c1] }
@@ -61,15 +77,23 @@ export function sheetSearchHost(from: {
     preview: (query, kinds, scope, leave) => session.searchPreview(query, chosen(kinds), scope, leave),
     replace: (query, kinds, scope, leave) => session.searchReplace(query, chosen(kinds), scope, leave),
     keyOf: (at) => {
+      if (onSlide(at)) return `${at.slide}/${at.object}/${at.source}`
       const c = cellOf(at)
       return `${c.sheet}!${c.row},${c.col}`
     },
-    where: (at) => whereLabel(cellOf(at), (id) => state.sheets.find((s) => s.id === id)?.name ?? id),
+    where(at) {
+      if (!onSlide(at)) return whereLabel(cellOf(at), (id) => state.sheets.find((s) => s.id === id)?.name ?? id)
+      const slide = state.tabs.find((tab) => tab.id === at.slide)?.name ?? String(at.slide)
+      const name = state.objects[String(at.object)]?.name
+      return name ? `${slide}: ${name}` : t('An object on “{slide}”', { slide })
+    },
     jump: (at) => {
+      if (onSlide(at)) return from.goToSlide(String(at.slide))
       const c = cellOf(at)
       from.goTo(c.sheet, c.row, c.col)
     },
-    revision: () => state.revision,
+    // the tab shown too: "This sheet" and "This slide" name another place once another tab is shown (UX-72)
+    revision: () => `${state.revision}@${state.activeSlide || state.activeSheet}`,
   }
 }
 
@@ -111,6 +135,7 @@ export function marksFor(
 ): SearchMarks {
   const marks: SearchMarks = { cells: new Map(), after: new Map(), blocked: new Map() }
   matches.forEach((m, index) => {
+    if (onSlide(m.at)) return // (the slide view draws those)
     const c = cellOf(m.at)
     if (c.sheet !== sheet) return
     const key = gridKey(c.row, c.col)
@@ -118,10 +143,12 @@ export function marksFor(
     marks.cells.set(key, { current: index === current || seen?.current === true, formula: m.kind === 'formula' || seen?.formula === true })
   })
   for (const change of preview?.changes ?? []) {
+    if (onSlide(change.at)) continue
     const c = cellOf(change.at)
     if (c.sheet === sheet && change.kind === 'text') marks.after.set(gridKey(c.row, c.col), change.after)
   }
   for (const skip of preview?.skipped ?? []) {
+    if (onSlide(skip.at)) continue
     const c = cellOf(skip.at)
     if (c.sheet === sheet && skip.reason === 'locked') marks.blocked.set(gridKey(c.row, c.col), skip.by ?? '')
   }

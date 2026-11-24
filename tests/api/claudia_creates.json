@@ -190,9 +190,9 @@
  },
  "PrintSetupError": {
   "class": [
-   "ValueError"
+   "Refusal"
   ],
-  "init": "(...)",
+  "init": "(template: 'str', **params: 'object')",
   "methods": {},
   "properties": []
  },

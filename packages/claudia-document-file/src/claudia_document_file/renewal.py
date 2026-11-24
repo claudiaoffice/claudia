@@ -20,7 +20,7 @@ still open (D20). The new keys protect what is written from now on from anyone w
 """
 
 from collections.abc import Mapping
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 
 from . import blocks
@@ -35,6 +35,7 @@ from .file import (
     TamperedDocument,
     _carried,
     _changed,
+    _consent_entries,
     _extend,
     _inbox_name,
     _journal_records,
@@ -42,6 +43,7 @@ from .file import (
     _load_chains,
     _manifest_of,
     _normalised,
+    _open_folder_chain,
     _open_people_data,
     _original_aad,
     _people_blob,
@@ -75,7 +77,7 @@ class Renewed:
     so all three), the writer of the journal (a new one if keys were renewed; the old one is closed then) and which
     part keys are new."""
 
-    keys: dict[Part, bytes]
+    keys: dict[Part, bytes] = field(repr=False)  # secrets: never in a log line or a traceback (SEC-23)
     writer: JournalWriter
     renewed: frozenset[Part]
 
@@ -215,8 +217,17 @@ def _resealed(
         except DecryptionError as error:
             raise TamperedDocument("the kept original does not belong to this document or was changed") from error
         made[_ORIGINAL] = seal(new[Part.CONTENT], original, _original_aad(binding))
+    consent = (
+        _open_folder_chain(old[Part.CONTENT], binding, blocks.CONSENT, entries) if Part.CONTENT in renewed else None
+    )
+    if consent is not None:  # the owners' consent is sealed with the content key
+        made.update(_consent_entries(new[Part.CONTENT], binding, consent))
     replaced = {
-        n for n in entries if n in (_HEAD, _SNAPSHOT, _ORIGINAL) or n.startswith(("history/", "chat/", "audit/"))
+        n
+        for n in entries
+        if n in (_HEAD, _SNAPSHOT, _ORIGINAL)
+        or n.startswith(("history/", "chat/", "audit/"))
+        or (consent is not None and n.startswith(f"{blocks.CONSENT}/"))
     }
     if Part.CONTENT not in renewed:  # the original is carried as it is
         replaced.discard(_ORIGINAL)

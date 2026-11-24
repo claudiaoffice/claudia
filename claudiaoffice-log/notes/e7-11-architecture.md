@@ -150,7 +150,7 @@ alternative, carrying it in the text, would make the history unreadable for a ma
 
 - **Web:** `AdminAiModel.vue` becomes `AdminAi.vue` (provider switch, the three panels, answering-now and last error);
   `AiConsentDialog.vue` is new; `document-menus.ts`: `configMenu` becomes `preferencesMenu`, label "Preferences", entry
-  "AI…" (`ai.preferences`, Ctrl+Shift+Alt+H); `SidePanel.vue` shows the badge and the line under the bubble.
+  "AI…" (`ai.preferences`, Ctrl+Shift+Alt+E); `SidePanel.vue` shows the badge and the line under the bubble.
 - **Shells:** `manifest.py` gets the action and the new label; `generate_menu.py` regenerates the Neutralino menus; the contract
   README and the Linux `CHANGELOG` get a line. The macOS app-menu placement stays open points 14/15 of the matrix.
 - **i18n:** every string through the catalogues; the sentence for the asker is one string whose only variable is the
@@ -259,3 +259,5 @@ not the provider; the local model answers and the chat says who answered.
 I recommend **(b)**: the consent is a permission, not a request. Making it an obligation would stop `@ai` in every document the
 moment an administrator moves away from Claude, which is the opposite of what the administrator chose. Error lines stay for what
 fails when Claude *is* the chosen provider (the one sentence of your Q11). If you meant (a), I'll write that into the scenarios.
+
+Agreed (b), the owner

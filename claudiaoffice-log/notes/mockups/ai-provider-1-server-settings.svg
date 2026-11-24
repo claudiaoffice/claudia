@@ -80,8 +80,8 @@
 <text x="350" y="726" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">Documents are encrypted on this server; Claude reads what it is shown in plain text.</text>
 <text x="924" y="688" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="end">Confirmed by anna, today 09:12</text>
 <line x1="318" y1="742" x2="922" y2="742" stroke="#f0cfa6" stroke-width="1"/>
-<text x="318" y="762" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="start">This is not enough on its own: the owners of each document must also allow Claude</text>
-<text x="318" y="780" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">(Preferences ▸ AI…, off by default). Until they do, @ai in that document uses the</text>
+<text x="318" y="762" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="start">This is not enough on its own: the owner of each document must also allow Claude</text>
+<text x="318" y="780" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">(Preferences ▸ AI…, off by default). Until it is allowed, @ai in that document uses the</text>
 <text x="318" y="796" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">local model or the stand-in, and says so.</text>
 <circle cx="278" cy="698" r="11" fill="#5b4bc4"/>
 <text x="278" y="702.5" font-size="12" font-weight="600" fill="#f7f3ec" text-anchor="middle">4</text>
@@ -123,7 +123,7 @@
 <text x="1022" y="542" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">Two approvals, not one</text>
 <text x="1022" y="562" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">The administrator confirms the sentence;</text>
 <text x="1022" y="579" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">it is recorded with who and when. It is</text>
-<text x="1022" y="596" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">not enough: the owners of each document</text>
+<text x="1022" y="596" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">not enough: the owner of each document</text>
 <text x="1022" y="613" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">allow Claude there. The administrator is</text>
 <text x="1022" y="630" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">not an owner and cannot open sealed ones.</text>
 <circle cx="1000" cy="674" r="11" fill="#5b4bc4"/>

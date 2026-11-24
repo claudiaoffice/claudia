@@ -19,6 +19,7 @@ from claudia_core import (
     InsertText,
     ObjectSet,
     PageSetup,
+    Refusal,
     Region,
     RemoveObject,
     SetLanguage,
@@ -447,16 +448,16 @@ class AcceptSuggestion(TextCommand):
         suggestion = model.suggestion(self.id)
         anchor = suggestion.anchor
         if suggestion.state != "open" or suggestion.replacement is None:
-            raise ValueError("only an open suggestion that proposes a change can be accepted")
+            raise Refusal("only an open suggestion that proposes a change can be accepted")
         if model.is_outdated(suggestion):
-            raise ValueError("the text changed since this was suggested; look at it again")
+            raise Refusal("the text changed since this was suggested; look at it again")
         if (anchor.paragraph, anchor.start, anchor.end, suggestion.replacement) != (
             self.paragraph,
             self.start,
             self.end,
             self.replacement,
         ):
-            raise ValueError("this is not the suggestion that is on the document")
+            raise Refusal("this is not the suggestion that is on the document")
         steps = [ResolveSuggestion(self.id, "accepted"), *self._steps(ctx.author)]
         inverses = [step.apply(ctx) for step in steps]
         return Batch(tuple(reversed(inverses)))

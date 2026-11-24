@@ -6,6 +6,8 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 ## [Unreleased]
 
 ### Added
+- The refusals a person can meet are `Refusal`s (CODE-78, D1510); `TextModel.name_taken` adds headings, list items
+  and paragraphs ("a list item", was "an item").
 - An object can be moved to another paragraph (D1351): `TextModel.objects_change_holder`; a move into another
   paragraph takes the character it is dropped on (`TextModel.place_regions`), so a colleague's zone refuses it.
 - `SplitBlock.keep` (D1331): what hangs exactly at the cut stays in the paragraph that is cut, so that a paragraph can

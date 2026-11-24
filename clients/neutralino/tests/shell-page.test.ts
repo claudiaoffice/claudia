@@ -519,7 +519,7 @@ describe('the front page and a document (sheet 11)', () => {
     expect(t.menus.at(-1)).toEqual(MENU)
   })
   it('has no Edit, Format or Tools on the front page', () => {
-    expect(tops(START)).toEqual(['Claudia Creates', 'File', 'Edit', 'View', 'Config'])
+    expect(tops(START)).toEqual(['Claudia Creates', 'File', 'Edit', 'View', 'Preferences'])
   })
 })
 
@@ -578,7 +578,7 @@ describe('on Windows (D660)', () => {
 
   it('shows the manifest\'s menus without an application menu, and the front page keeps no clipboard items', () => {
     expect(tops(menuOf(WINDOWS_PAGE))[0]).toBe('File')
-    expect(tops(startOf(WINDOWS_PAGE))).toEqual(['File', 'View', 'Config', 'Help'])
+    expect(tops(startOf(WINDOWS_PAGE))).toEqual(['File', 'View', 'Preferences', 'Help'])
   })
 
   it('ends the application when the window is closed, as on a Mac: one config for both', async () => {

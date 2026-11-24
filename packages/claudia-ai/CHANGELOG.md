@@ -3,6 +3,16 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.3.0] - 2026-11-22
+
+Claude as a model behind the `@ai` (E7.11).
+
+### Added
+- `ClaudeModel(key, model, *, base_url=…, transport=None, read_timeout=30.0)`: asks Anthropic's Messages API; `generate`
+  stops when `stop()` says so. `Answerer`, the protocol of what answers a `Request` (the local `ModelRunner` is one).
+- `FailureReason` (`admin_sentence`), `ProviderError(reason, detail, provider=…)` and `ModelTimeout` (its own cause,
+  D1492): what went wrong, in words for the administrator, with no secret in it.
+
 ## [0.2.0] - 2026-11-11
 
 A question can take several rounds: the model looks, acts, is told what came of it, and carries on (E7.5).

@@ -11,7 +11,7 @@ defineProps<{ label: string; host: string; signedInAs: string; active: Page }>()
 const emit = defineEmits<{ navigate: [page: Page]; signOut: []; close: [] }>()
 
 const pages: { id: Page; name: string }[] = [
-  { id: 'ai', get name() { return t('AI model') } },
+  { id: 'ai', get name() { return t('AI') } },
   { id: 'typeset', get name() { return t('Typesetting') } },
   { id: 'fonts', get name() { return t('Fonts') } },
   { id: 'security', get name() { return t('Security') } },

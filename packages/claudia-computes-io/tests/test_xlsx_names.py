@@ -31,7 +31,7 @@ def box(sheet: SheetId, first: tuple[int, int], last: tuple[int, int] | None = N
 def a_model(*names: NamedRange, sheet_name: str = "Data") -> WorkbookModel:
     model = WorkbookModel()
     for sheet_id, name in ((DATA, sheet_name), (OTHER, "Other")):
-        model.sheets[sheet_id] = Sheet(sheet_id, name)
+        model.add_sheet(Sheet(sheet_id, name), None)
         model.open_holder(str(sheet_id))
     data = model.sheets[DATA]
     for position, content in {

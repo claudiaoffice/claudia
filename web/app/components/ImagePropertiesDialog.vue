@@ -12,12 +12,13 @@ import { pointer } from '~/lib/objects'
 import { formatByteSize, imageByteSize, imageDataUrl } from '~/lib/images'
 import { pictureAlt } from '~/lib/descriptions'
 import { ago, colorOf, inkOn, initial } from '~/lib/people'
-import type { SlideObject, SlideSession } from '~/lib/slide-session'
+import type { SlideObject } from '~/lib/slide-session'
+import type { SlideHost } from '~/lib/slide-host'
 import { useI18n } from '~/lib/i18n'
 
 const { t } = useI18n()
 
-const props = defineProps<{ session: SlideSession; object: SlideObject }>()
+const props = defineProps<{ session: Pick<SlideHost, 'state'>; object: SlideObject }>()
 const emit = defineEmits<{ close: [] }>()
 
 const state = props.session.state

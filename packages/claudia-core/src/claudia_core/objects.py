@@ -36,6 +36,7 @@ from .asset_store import ASSET_KINDS, IMAGE, KIND_BY_OBJECT, AssetKind, AssetSto
 from .assets import MAX_ALT_CHARS, ImageAsset, ImageImport
 from .commands import Batch, Command, CommandRegistry, core_commands
 from .containers import ContainerDefinition
+from .errors import N_, Refusal
 from .facets import SLOTS, fits
 from .fields import FIELD_CHAR, Field, plain
 from .generated import Generated
@@ -82,7 +83,7 @@ _BODY_FIELDS = (
 #: body's kind becomes ``ref``, and any other pointer that is set is refused. Nothing new is ever added to this list;
 #: a new kind of object uses ``ref`` and needs no field of its own.
 # The kinds that do not turn, and what the sentence calls them (D1021: a chart; D1224: a table).
-_NOT_TURNED = {"diagram": "chart", "table": "table"}
+_NOT_TURNED = {"diagram": N_("A chart does not turn"), "table": N_("A table does not turn")}
 _LEGACY_POINTERS = ("shape", "image", "diagram", "rendered", "table")
 _LEGACY_SETS = (
     frozenset(
@@ -372,7 +373,7 @@ class ObjectSet:
         if not isinstance(holder, str) or not isinstance(ids, list) or not all(isinstance(i, str) for i in ids):
             raise ValueError("not a selection: it names a holder and a list of object ids")
         if len(ids) > MAX_SELECTION:
-            raise ValueError(f"a selection holds at most {MAX_SELECTION} objects")
+            raise Refusal("a selection holds at most {limit} objects", limit=MAX_SELECTION)
         return cls(holder, frozenset(ids))
 
 
@@ -458,6 +459,17 @@ class ObjectModel[A: Anchor]:
     objects_change_holder: ClassVar[bool] = False
     #: The kinds of object this app offers (a subset of ``OBJECT_KINDS``).
     object_kinds: ClassVar[tuple[str, ...]] = OBJECT_KINDS
+    #: The sentence a person is told when the name she gives is another thing's, by the kind of that thing. One sentence
+    #: per kind, since another language says "ein Bild" but "eine Form" (CODE-78, D1510). An app adds the kinds of
+    #: thing it names besides its objects.
+    name_taken: ClassVar[Mapping[str, str]] = {
+        "text": N_("There is already a text box called “{name}”"),
+        "shape": N_("There is already a shape called “{name}”"),
+        "image": N_("There is already a picture called “{name}”"),
+        "diagram": N_("There is already a chart called “{name}”"),
+        "container": N_("There is already a container called “{name}”"),
+        "table": N_("There is already a table called “{name}”"),
+    }
 
     def __init__(self) -> None:
         self.objects: dict[str, VisualObject[A]] = {}
@@ -551,7 +563,7 @@ class ObjectModel[A: Anchor]:
             raise ValueError("the rotation must be whole degrees")
         obj = self.get_object(object_id)
         if not self.can_turn(obj.body):
-            raise ValueError(f"A {_NOT_TURNED[obj.body.kind]} does not turn")
+            raise Refusal(_NOT_TURNED[obj.body.kind])
         turned = rotation % 360
         anchor = self.turned_anchor(obj, turned)
         return RotateObject(object_id, turned, None if anchor == obj.anchor else anchor.to_data())
@@ -668,9 +680,9 @@ class ObjectModel[A: Anchor]:
             return
         problem = name_problem(name)
         if problem is not None:
-            raise ValueError(problem)
+            raise problem
         if clean_name(name) != name:
-            raise ValueError("a name is written without spaces around it or twice in a row")
+            raise Refusal("a name is written without spaces around it or twice in a row")
         if shared and not self._keeps_name(thing_id, name):
             self.check_name_free(thing_id, name)
 
@@ -697,8 +709,8 @@ class ObjectModel[A: Anchor]:
         holder = self.name_holder(thing_id, name, ignoring)
         if holder is not None:
             kind, other_name = holder
-            article = "an" if kind[:1] in "aeiou" else "a"
-            raise ValueError(f"There is already {article} {kind} called “{other_name}”")
+            taken = self.name_taken.get(kind, N_("Something else is already called “{name}”"))
+            raise Refusal(taken, name=other_name)
 
     def names_in_use(self) -> list[str]:
         """Every name in this document, for choosing a free one (:func:`~claudia_core.free_name`)."""
@@ -906,7 +918,7 @@ class ObjectModel[A: Anchor]:
     def _check_description(body: ObjectBody) -> None:
         """``ValueError`` unless the description is short text and a decorative object has none."""
         if not isinstance(body.description, str) or len(body.description) > MAX_ALT_CHARS:
-            raise ValueError(f"the description is text of at most {MAX_ALT_CHARS} characters")
+            raise Refusal("the description is text of at most {limit} characters", limit=MAX_ALT_CHARS)
         if type(body.decorative) is not bool:
             raise ValueError("decorative must be true or false")
         if body.decorative and body.description:
@@ -984,9 +996,12 @@ class ObjectModel[A: Anchor]:
         if not all(_is_whole(value) for value in (body.w, body.h)):
             raise ValueError("w and h must be whole numbers")
         if body.w < self.min_object_size or body.h < self.min_object_size:
-            raise ValueError(f"the size must be at least {self.min_object_size} by {self.min_object_size} units")
+            raise Refusal(
+                "the size must be at least {least} by {least} units",
+                least=self.min_object_size,
+            )
         if aspect is not None and abs(body.w - aspect * body.h) > ASPECT_TOLERANCE:
-            raise ValueError(f"this object keeps its proportions (width divided by height is {aspect:g})")
+            raise Refusal("this object keeps its proportions (width divided by height is {aspect:g})", aspect=aspect)
 
     # -- changing (used by the commands) -----------------------------------------
     def insert_object(self, obj: VisualObject[A], at: int | None = None, *, shared_names: bool = True) -> None:
@@ -996,7 +1011,10 @@ class ObjectModel[A: Anchor]:
         self.check_object(obj, shared_names=shared_names)
         stack = self._stack[obj.holder]
         if len(stack) >= self.max_objects_per_holder:
-            raise ValueError(f"a holder has at most {self.max_objects_per_holder} objects")
+            raise Refusal(
+                "a holder has at most {limit} objects",
+                limit=self.max_objects_per_holder,
+            )
         if at is not None and not 0 <= at <= len(stack):
             raise ValueError(f"there is no stacking place {at} among {len(stack)} objects")
         stack.insert(len(stack) if at is None else at, obj.id)
@@ -1045,7 +1063,10 @@ class ObjectModel[A: Anchor]:
         self.check_object(obj)
         stack = self._stack.setdefault(obj.holder, [])
         if len(stack) >= self.max_objects_per_holder:
-            raise ValueError(f"a holder has at most {self.max_objects_per_holder} objects")
+            raise Refusal(
+                "a holder has at most {limit} objects",
+                limit=self.max_objects_per_holder,
+            )
         was = self._stack[old.holder]
         place = was.index(obj.id)
         del was[place]
@@ -1882,7 +1903,7 @@ class DescribeThing(Command):
     def apply(self, ctx: Context) -> Command:
         model = object_model_of(ctx)
         if not isinstance(self.description, str) or len(self.description) > MAX_ALT_CHARS:
-            raise ValueError(f"the description is text of at most {MAX_ALT_CHARS} characters")
+            raise Refusal("the description is text of at most {limit} characters", limit=MAX_ALT_CHARS)
         if not model.has_thing(self.id):
             raise ValueError(f"there is nothing with the id {self.id!r}")
         old = model.set_thing_description(self.id, self.description)

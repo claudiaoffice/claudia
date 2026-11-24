@@ -8,7 +8,7 @@ from collections.abc import Callable
 from typing import Any
 
 from claudia_computes import WorkbookModel, column_name
-from claudia_computes.events import CellsChanged, SheetsChanged, StructureChanged
+from claudia_computes.events import CellsChanged, StructureChanged, TabsChanged
 from claudia_computes.refs import StructuralEdit
 from claudia_core import Document
 
@@ -155,8 +155,8 @@ class WorkbookRecorder:
                 self._cells[(event.sheet, row, col)] = content
         elif isinstance(event, StructureChanged):
             self._notes.append(self._structure(event.edit))
-        elif isinstance(event, SheetsChanged):
-            self._notes.append("The sheets changed.")
+        elif isinstance(event, TabsChanged):
+            self._notes.append("The sheets or slides changed.")
 
     @staticmethod
     def _structure(edit: StructuralEdit) -> str:

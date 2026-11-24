@@ -3,7 +3,7 @@ command with an exact inverse; both survive the log and a snapshot; removing a s
 
 import pytest
 
-from claudia_core import CommandLog, Document, UndoConflict
+from claudia_core import CommandLog, DescribeThing, Document, UndoConflict
 from claudia_creates import (
     MAX_NOTES_LENGTH,
     MAX_SLIDE_SECONDS,
@@ -102,7 +102,7 @@ def test_removing_a_slide_and_undoing_it_brings_notes_and_time_back(doc):
     doc.execute(RemoveSlide("s2"), author="ann")
     assert (doc.model.notes.get("s2"), doc.model.times.get("s2")) == (None, None)
     doc.undo("ann")
-    assert doc.model.slides == ["s1", "s2"]
+    assert doc.model.order == ["s1", "s2"]
     assert (doc.model.notes_of("s2"), doc.model.time_of("s2")) == ("keep me", 90)
 
 
@@ -128,14 +128,20 @@ def test_notes_and_times_survive_the_log_and_a_snapshot(doc):
     assert SlideModel.restore(state).time_of("s1") == 45
 
 
-def test_a_snapshot_of_schema_7_opens_without_notes_or_times(doc):
+def test_a_presentation_survives_being_stored_and_loaded(doc):
+    doc.execute(AddSlide("s2", at=0, notes="Why", seconds=30, name="Opening", description="The question"), author="ann")
+    doc.execute(AddSlide("s3", name="Close"), author="ann")
+    doc.execute(DescribeThing("s1", "The numbers"), author="ann")
     state = doc.model.serialize()
-    del state["notes"], state["times"], state["names"]
-    old = SlideModel.restore(state)
-    assert (old.notes_of("s1"), old.time_of("s1"), old.total_time()) == ("", None, 0)
+    again = SlideModel.restore(state)
+    assert again.order == ["s2", "s1", "s3"]
+    assert [again.thing_name(s) for s in again.order] == ["Opening", "", "Close"]
+    assert [again.thing_description(s) for s in again.order] == ["The question", "The numbers", ""]
+    assert (again.notes_of("s2"), again.time_of("s2"), again.total_time()) == ("Why", 30, 30)
+    assert again.serialize() == state
     # 9: notes, times; 10: containers; 11: names; 12: headings; 13: lists; 14: schemes; 15: agendas
-    # 16: one ``ref``; 17: slide descriptions
-    assert SlideModel.state_schema == 17
+    # 16: one ``ref``; 17: slide descriptions; 18: slides as records in the order of the presentation (D1470)
+    assert SlideModel.state_schema == 18
 
 
 def test_undoing_my_notes_after_a_colleague_changed_them_is_refused(doc):

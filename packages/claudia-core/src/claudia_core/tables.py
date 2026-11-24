@@ -30,6 +30,7 @@ from decimal import Decimal, InvalidOperation
 from types import MappingProxyType
 from typing import TYPE_CHECKING, ClassVar, Protocol, runtime_checkable
 
+from .errors import Refusal
 from .fields import FIELD_CHAR
 from .paragraphs import Paragraph
 
@@ -350,7 +351,11 @@ class TableDef:
     def blank(cls, table_id: str, rows: int, cols: int, *, header_rows: int = 1, **options) -> TableDef:
         """An empty table of ``rows`` by ``cols`` boxes, with ids ``r1``… and ``c1``…; the options are the fields."""
         if not 1 <= rows <= MAX_ROWS or not 1 <= cols <= MAX_COLUMNS:
-            raise ValueError(f"a table has 1 to {MAX_ROWS} rows and 1 to {MAX_COLUMNS} columns")
+            raise Refusal(
+                "a table has 1 to {max_rows} rows and 1 to {max_columns} columns",
+                max_rows=MAX_ROWS,
+                max_columns=MAX_COLUMNS,
+            )
         return cls(
             table_id,
             tuple(Column(f"c{n}") for n in range(1, cols + 1)),
@@ -495,7 +500,7 @@ class TableDef:
         self.column(col)
         body = self.rows[self.header_rows :]
         if any(m.rows > 1 and self.rows.index(m.row) >= self.header_rows for m in self.merges):
-            raise ValueError("a table with merged rows cannot be sorted: split them first")
+            raise Refusal("a table with merged rows cannot be sorted: split them first")
         numbers: list[tuple[str, Decimal]] = []
         texts: list[tuple[str, str]] = []
         empty: list[str] = []
@@ -544,7 +549,9 @@ class TableDef:
         for spec in specs:
             table = table._insert_row(spec)
         if len(table.rows) > MAX_ROWS:
-            raise ValueError(f"a table has at most {MAX_ROWS} rows: use a linked table or computes for more")
+            raise Refusal(
+                "a table has at most {max_rows} rows: use a linked table or computes for more", max_rows=MAX_ROWS
+            )
         return table if merges is None else table._with_merges(tuple(merges))
 
     def _insert_row(self, spec: RowSpec) -> TableDef:
@@ -568,7 +575,7 @@ class TableDef:
         if not gone <= set(self.rows):
             raise ValueError(f"the table has no row {sorted(gone - set(self.rows))[0]!r}")
         if len(gone) == len(self.rows):
-            raise ValueError("a table keeps at least one row")
+            raise Refusal("a table keeps at least one row")
         rows = tuple(r for r in self.rows if r not in gone)
         merges = self._shrunk(gone, axis=0)
         entries = {k: p for k, p in self.entries.items() if k[0] not in gone}
@@ -582,14 +589,14 @@ class TableDef:
         if sorted(order) != sorted(self.rows):
             raise ValueError("the new order has to hold exactly the rows of the table")
         if order[: self.header_rows] != self.rows[: self.header_rows]:
-            raise ValueError("the header stays at the top of the table")
+            raise Refusal("the header stays at the top of the table")
         for found in self.merges:
             if found.rows > 1:
                 first = self.rows.index(found.row)
                 together = self.rows[first : first + found.rows]
                 at = order.index(together[0])
                 if order[at : at + found.rows] != together:
-                    raise ValueError("a merged box cannot be torn apart: split it first")
+                    raise Refusal("a merged box cannot be torn apart: split it first")
         return replace(self, rows=order)
 
     # -- changing: columns -------------------------------------------------------------------------------------
@@ -599,7 +606,10 @@ class TableDef:
         for spec in specs:
             table = table._insert_column(spec)
         if len(table.columns) > MAX_COLUMNS:
-            raise ValueError(f"a table has at most {MAX_COLUMNS} columns: use a linked table or computes for more")
+            raise Refusal(
+                "a table has at most {max_columns} columns: use a linked table or computes for more",
+                max_columns=MAX_COLUMNS,
+            )
         return table if merges is None else table._with_merges(tuple(merges))
 
     def _insert_column(self, spec: ColumnSpec) -> TableDef:
@@ -623,7 +633,7 @@ class TableDef:
         if not gone <= set(self.column_ids()):
             raise ValueError(f"the table has no column {sorted(gone - set(self.column_ids()))[0]!r}")
         if len(gone) == len(self.columns):
-            raise ValueError("a table keeps at least one column")
+            raise Refusal("a table keeps at least one column")
         columns = tuple(c for c in self.columns if c.id not in gone)
         entries = {k: p for k, p in self.entries.items() if k[1] not in gone}
         return replace(self, columns=columns, entries=entries, merges=self._shrunk(gone, axis=1))
@@ -640,7 +650,7 @@ class TableDef:
                 together = ids[first : first + found.cols]
                 at = order.index(together[0])
                 if order[at : at + found.cols] != together:
-                    raise ValueError("a merged box cannot be torn apart: split it first")
+                    raise Refusal("a merged box cannot be torn apart: split it first")
         by_id = {c.id: c for c in self.columns}
         return replace(self, columns=tuple(by_id[i] for i in order))
 
@@ -662,7 +672,7 @@ class TableDef:
             raise ValueError("a merge is at least one box")
         r, c = self.rows.index(row), ids.index(col)
         if r + rows > len(self.rows) or c + cols > len(ids):
-            raise ValueError("a merge cannot reach beyond the table")
+            raise Refusal("a merge cannot reach beyond the table")
         kept = tuple(m for m in self.merges if (m.row, m.col) != (row, col))
         if rows == 1 and cols == 1:
             return replace(self, merges=kept)
@@ -672,7 +682,7 @@ class TableDef:
         for rr in self.rows[r : r + rows]:
             for cc in ids[c : c + cols]:
                 if (rr, cc) != (row, col) and (p := self.entries.get((rr, cc))) is not None and (p.text or p.style):
-                    raise ValueError("the boxes a merge covers must be empty: move their words first")
+                    raise Refusal("the boxes a merge covers must be empty: move their words first")
         return probe
 
     def _with_merges(self, merges: tuple[Merge, ...]) -> TableDef:
@@ -711,9 +721,14 @@ class TableDef:
         if not isinstance(self.id, str) or not _ID.fullmatch(self.id):
             raise ValueError(f"table id {str(self.id)[:40]!r}: lower-case letters, digits, '-' and '_', first a letter")
         if not 1 <= len(self.rows) <= MAX_ROWS:
-            raise ValueError(f"a table has 1 to {MAX_ROWS} rows: use a linked table or computes for more")
+            raise Refusal(
+                "a table has 1 to {max_rows} rows: use a linked table or computes for more", max_rows=MAX_ROWS
+            )
         if not 1 <= len(self.columns) <= MAX_COLUMNS:
-            raise ValueError(f"a table has 1 to {MAX_COLUMNS} columns: use a linked table or computes for more")
+            raise Refusal(
+                "a table has 1 to {max_columns} columns: use a linked table or computes for more",
+                max_columns=MAX_COLUMNS,
+            )
         if len(set(self.rows)) != len(self.rows) or not all(_PART.fullmatch(r) for r in self.rows):
             raise ValueError("the rows of a table have different ids of lower-case letters, digits, '-' and '_'")
         for column in self.columns:
@@ -729,7 +744,7 @@ class TableDef:
         if self.placement not in PLACEMENTS:
             raise ValueError(f"a table is placed {' or '.join(PLACEMENTS)}, not {self.placement!r}")
         if self.width is not None and (not _whole(self.width) or not MIN_WIDTH <= self.width <= MAX_WIDTH):
-            raise ValueError("a table is from 10 % to 100 % of the line wide")
+            raise Refusal("a table is from 10 % to 100 % of the line wide")
         self._check_merges()
         self._check_entries()
 

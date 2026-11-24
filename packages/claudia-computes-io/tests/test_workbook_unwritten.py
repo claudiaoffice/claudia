@@ -32,8 +32,7 @@ BOTH = pytest.mark.parametrize("unwritten", [ods_unwritten_changes, xlsx_unwritt
 def a_workbook() -> WorkbookModel:
     model = WorkbookModel()
     sheet = Sheet(SheetId("s1"), "Data")
-    model.sheets[sheet.id] = sheet
-    model.open_holder("s1")
+    model.add_sheet(sheet, None)
     sheet.cells[(0, 0)] = {"t": "int", "v": 1}
     return model
 
