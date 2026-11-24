@@ -123,7 +123,7 @@ def _check_position(row: int, col: int) -> None:
 class AddSheet(Command):
     """Add a sheet. Its name must be free in the whole document, not only among the sheets (D550). ``legacy_names`` is
     set for what a log wrote before names were shared: it keeps the old rule (no second sheet of that name), so an old
-    document replays, even one that has a sheet and a slide of one name."""
+    document replays, even one that has a sheet and a chart tab of one name."""
 
     kind: ClassVar[str] = "computes.AddSheet"
     schema: ClassVar[int] = 3  # 2: names are shared with chart tabs and objects (D550); 3: and named ranges (D552)

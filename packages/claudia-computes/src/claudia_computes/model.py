@@ -429,7 +429,7 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor | SlideAnchor]):
     # 3: the workbook also carries images and objects anchored to cells (E6.17)
     # 4: objects are a shared body plus a CellAnchor, and the workbook carries a style book (E10.16)
     # 5: the workbook carries its own colour palette (D200)
-    # 6: the workbook carries chart definitions and chart tabs (E6.6)
+    # 6: the workbook carries diagram definitions and chart tabs, either of which may show one (E6.6)
     # 7: the workbook carries names: named ranges, tables and query results (E6.5, D600)
     # 8: the workbook carries the seed and draw number of its random numbers (E6.22, D291)
     # 9: object bodies carry a description

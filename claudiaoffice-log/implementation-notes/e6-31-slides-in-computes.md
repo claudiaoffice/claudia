@@ -202,3 +202,12 @@ text box is CODE-83; the commit that fixed it still says CODE-79 in its message.
   state, log or file with the old names (D1430, E1.16). The test of step 3 that said "no `charts` in the state" says
   what `charts` holds now; the old wire names (`diagrams`, `define_diagram`, `add_diagram_object`) are among the
   methods the server does not know.
+- **Review (two axes) and what changed after it:** three comments the script had made wrong went back to "diagram"
+  (the legacy pointer fields in `objects.py`, twice; a Mermaid diagram's style sheet in `odp.py`), and a line of
+  history that should not have changed (schema 6 of computes, `AddSheet`'s old logs); `ChartDefinition`'s docstring no
+  longer speaks of a tab; the local `chart` of `insert_chart` is `new_chart`, so `chart=new_chart.spec_id` reads as
+  the id it is; `docs/versioning.md` names the renames and removals that are not upgraded. Left as they were: the
+  computes parameters `chart_id` of `chart_figure` and `chart_cells` (the id of a chart's definition, as on the wire);
+  `.charts` of the ods and xlsx patches, which are the file's chart frames; the versions and `PROTOCOL_VERSION`, which
+  move when main is released, as for step 3; repeated `kind === 'chart'` checks and the twin xlsx/ods chart code,
+  which this rename did not make and does not change.

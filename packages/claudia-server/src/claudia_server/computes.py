@@ -772,18 +772,20 @@ def _insert_chart(ctx, *, definition, show_as, place, name, base):
     workbook = _workbook(ctx)
     _check_place(workbook, show_as, place)
     chosen = clean_name(name or "") or default_name(ctx, "chart")
-    chart = NewChart(fresh_id("g", workbook.charts), fresh_id("o", workbook.objects), chosen, definition)
+    new_chart = NewChart(fresh_id("g", workbook.charts), fresh_id("o", workbook.objects), chosen, definition)
     slide: str | None = None
     if show_as == "slide":
         slide, slide_name = _new_slide(ctx, workbook)
-        step = chart_steps.as_new_slide(workbook, chart, slide_id=slide, slide_name=slide_name, after=place["after"])
+        step = chart_steps.as_new_slide(
+            workbook, new_chart, slide_id=slide, slide_name=slide_name, after=place["after"]
+        )
     elif show_as == "on_slide":
         slide = place["slide"]
-        step = chart_steps.on_slide(workbook, chart, slide)
+        step = chart_steps.on_slide(workbook, new_chart, slide)
     else:
         anchor = CellAnchor(SheetId(place["sheet"]), place["row"], place["col"])
-        step = chart_steps.on_sheet(workbook, chart, anchor, place["w"], place["h"])
-    return done(ctx, step, base, object=chart.object_id, slide=slide, chart=chart.spec_id)
+        step = chart_steps.on_sheet(workbook, new_chart, anchor, place["w"], place["h"])
+    return done(ctx, step, base, object=new_chart.object_id, slide=slide, chart=new_chart.spec_id)
 
 
 @computes_methods.method("move_to_slide", "object:str base:revision?", write=True)

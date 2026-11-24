@@ -1126,7 +1126,7 @@ def odp_export_losses(model: SlideModel, *, rasterised: bool = False) -> tuple[L
     ``"image-missing"`` (an image the document has no picture for), ``"rendering-pending"`` (a container
     nothing has been drawn for yet: it is left out, and says so here), ``"svg-picture"`` (a container
     written as the SVG itself, because nothing could draw it as a PNG: programs other than PowerPoint may leave out
-    colours or text of a chart; none with ``rasterised``) and ``"decorative"`` (an object marked as
+    colours or text of a diagram; none with ``rasterised``) and ``"decorative"`` (an object marked as
     decoration: ODF 1.3 has no attribute for it, so a reader of the file sees an object nobody described); for notes
     ``"notes-link"``, ``"notes-image"``, ``"notes-code"`` and ``"notes-quote"`` (how many slides use what the file shows
     only as plain words), and ``"planned-time"`` (how many slides have a planned time, which an odp has no place for,

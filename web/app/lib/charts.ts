@@ -1,7 +1,8 @@
-// Charts (E6.6): a chart definition (`claudia_computes.ChartSpec`) shown by a chart, an object on a sheet or a slide
-// (E6.31, D1475) — the client half of the shared object layer's `chart` kind (`lib/objects.ts`). Plotly itself (the chart library, D33/D42) is only loaded by the
-// component that actually draws a figure; this module is just the wire shapes and the range-building helper,
-// so it costs nothing to import from code that only lists or edits definitions.
+// Charts (E6.6): the definition of a chart (`claudia_computes.ChartSpec`), shown by the chart object on a sheet or a
+// slide (E6.31, D1475) — the client half of the shared object layer's `chart` kind (`lib/objects.ts`). Plotly itself
+// (the chart library, D33/D42) is only loaded by the component that actually draws a figure; this module is just the
+// wire shapes and the range-building helper, so it costs nothing to import from code that only lists or edits
+// definitions.
 
 /** One corner of a chart's range: always on a named sheet (unlike a formula, a definition has no "current
  * sheet" to default to — `claudia_computes.charts`'s own module docstring says why). */

@@ -79,7 +79,7 @@ _BODY_FIELDS = (
     "decorative",
     "name",
 )
-#: Bodies were once written with one pointer field per kind (``shape``, ``image``, ``chart``, ``rendered``,
+#: Bodies were once written with one pointer field per kind (``shape``, ``image``, ``diagram``, ``rendered``,
 #: ``table``) and grew a generation of field sets with each new field. They still read: the pointer that matches the
 #: body's kind becomes ``ref``, and any other pointer that is set is refused. Nothing new is ever added to this list;
 #: a new kind of object uses ``ref`` and needs no field of its own.
@@ -154,9 +154,8 @@ class ChartDefinition(Protocol):
     own data instead of its placement: the kernel stores a definition by ``id`` and asks only whether one an
     object still points at exists — never what is inside it. ``to_data`` must round-trip through the app's own
     :meth:`~claudia_core.ObjectModel.chart_from_data`, the one door this data enters through, exactly as an
-    anchor does. A definition is referenced by ``id`` from :attr:`ObjectBody.chart` (a floating chart
-    object) or from whatever other, app-specific place an app surfaces the same drawing (a tab, say) — the same
-    way an image asset is referenced by both an object and, one day, something else that reuses it."""
+    anchor does. A definition is referenced by ``id`` from :attr:`ObjectBody.chart`, the chart object that shows
+    it."""
 
     @property
     def id(self) -> str:
@@ -1220,7 +1219,7 @@ class AddObject(Command):
     schema: ClassVar[int] = (
         6  # 1: a body without ``description`` and ``decorative``; 2: without ``rendered``; 3: without ``name``;
         # 4: names were not yet shared with named ranges (D552); 5: a body with one pointer field per kind (``shape``,
-        # ``image``, ``chart``, ``rendered``, ``table``) instead of ``ref``
+        # ``image``, ``diagram``, ``rendered``, ``table``) instead of ``ref``
     )
     body: ObjectBody
     anchor: dict
