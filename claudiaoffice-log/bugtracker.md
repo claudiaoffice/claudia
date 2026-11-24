@@ -2812,3 +2812,31 @@ lines the runner printed were all skipped scenarios; the log is only in the run'
 `pytest -rs`, which leaves failures out of pytest's summary. **Fix.** `pytest -rfEs` (`pytest_command`), and on a
 failure the runner prints pytest's `FAILED`/`ERROR` lines before the last lines of the log. **Test:**
 `tests/test_run_e2e.py::test_a_failed_pytest_run_names_the_tests_that_failed`.
+
+## Round of 2026-11-24 (bug eater, batch 1; branch `batch-1`): proposed, not yet marked
+
+Proposed by the bug eater for the owner's agreement (`notes/bug-eater.md`); the index above changes only once the owner
+agrees. Each item has its commit on `batch-1` and a test that was seen to fail first; the details are in
+`implementation-notes/bug-eater-batch-1.md`.
+
+| Item | Proposed status | Evidence |
+|---|---|---|
+| PROC-15 | partly fixed: the index guard is in (`tests/test_bugtracker.py`: counts, no fixed row under *Open*, priority order) and the triage's stale points are corrected; the backlog's placeholder 50 % and "a branch changes its row in the same commit" stay open (the owner marks items fixed after agreeing) | `tests/test_bugtracker.py` |
+| SEC-06 | fixed (D2001) | `test_server_certs.py` |
+| SEC-14 | fixed | `test_server_api_docs.py` |
+| SEC-16 | partly fixed (D2002): the server runs only a program that names itself; showing what it answered on the settings page is left out | `test_server_admin_api.py` |
+| CODE-20 | fixed (the version is pinned; the digest is not, the registry is not reachable from here) | `tests/test_dockerfile.py` |
+| CODE-54 | fixed | `test_render_service.py`, `test_render_latex_fonts.py` |
+| CODE-56 | fixed | `test_server_computes.py` |
+| UX-75 | fixed | `test_server_ai_provider_settings.py` |
+| PROC-31 | fixed | `test_extract_i18n.py` |
+| CODE-36 | fixed | `web/tests/storage.test.ts` |
+| CODE-71 | fixed | `web/tests/object-menu-hints.test.ts` |
+| UX-63 | fixed | `web/tests/print-preview-wording.test.ts` |
+| UX-66 | fixed | `web/tests/tokens.test.ts` |
+| UX-67 | fixed | `web/tests/style-spec-selects.test.ts` |
+| UX-74 | fixed | `web/tests/ai-provider.test.ts` |
+| UX-32 | fixed | `web/e2e/grid-a11y.cjs` |
+
+Also proposed for closing from the triage (`notes/bug-eater-queue.md`, section 1): CODE-35, CODE-37, CODE-69, UX-06,
+UX-09, UX-27, UX-07, WEB-02, UX-54, UX-59.
