@@ -315,7 +315,7 @@ def _held_in(package: Package, sheets: list[Sheet]) -> tuple[FileTabs, list[File
     boxes and shapes of the file the model holds on them (D1478, D1479)."""
     charts, roots = file_charts(package)
     drawn = list(drawn_anchors(package, roots))
-    held_charts = [found for chart in charts if (found := chart.file_object()) is not None]
+    held_charts = [one for chart in charts if (one := chart.file_object()) is not None]
     found = found_objects(held_charts, drawn, (partial(held_picture, parts=package.parts), held_box))
     tabs = file_tabs_of(sheets, found, SlideMark.from_text(custom_properties(package.parts).get(MARK)))
     return tabs, held_of(found, tabs)

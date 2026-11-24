@@ -58,8 +58,7 @@ def _is_alone(frame: etree._Element, table: etree._Element) -> bool:
 
 def frame_corner(frame: etree._Element) -> tuple[float, float]:
     """Where the corner of a frame is, in pixels from the corner of its sheet: its ``svg:x`` and ``svg:y``, or for a
-    turned one the corner of its box before the turn. To a hundredth of a pixel: what the units of a file leave over
-    (a centimetre to four places, a turn and back) does not put a frame a cell off."""
+    turned one the corner of its box before the turn, to a hundredth of a pixel."""
     transform = frame.get(qname("draw:transform"))
     if transform:
         width, height = (inches(frame.get(qname(f"svg:{side}"))) or 0.0 for side in ("width", "height"))
@@ -99,7 +98,9 @@ def drawn_frames(tables: Sequence[_Table]) -> Iterator[DrawnFrame]:
             if parent is not None and isinstance(parent.tag, str) and local_name(parent.tag) in _CELLS:
                 row, col = cells.get(parent, (0, 0))
             else:
-                pin = cell_at(table.col_widths, table.row_heights, *corner())
+                # (in whole pixels, as the model counts: what a file's units leave over does not put a frame a cell off)
+                x, y = corner()
+                pin = cell_at(table.col_widths, table.row_heights, round(x), round(y))
                 row, col = pin.row, pin.col
             yield DrawnFrame(SheetId(table.id), frame, row, col, corner, order)
 

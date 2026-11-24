@@ -5,16 +5,16 @@ splice     XmlPart -- edit one XML part by splicing bytes, so everything outside
 paragraph  read_text/set_text/insert_elements/hidden_content/frames_of/shapes_of/offset_of -- the text of one
 paragraph, changing it in place, putting change marks between its characters, and what it shows that is not its text
 pictures   graphic_styles, picture_of, held_frame, name_of, description_of, description_element -- the picture a
-           draw:frame holds, as the model holds it, and what it says
+draw:frame holds, as the model holds it, and what it says
 meta       DocumentInfo, new_meta, stamp_office_meta, update_meta, update_package_meta, user_defined -- title, dates,
-           people, the user-defined properties
+people, the user-defined properties
 package    new_package, update_manifest, problems -- a package from its parts, its manifest changed, and a check
 language   default_style_xml, read_language, patch_language -- the language of a file, in its default style
 report     Loss, LossLog, unwritten_changes -- what could not be kept, as a list, and what a writer left out
 transform  inches, pixels, transform_of, turned_box, angle_of -- lengths of the format, how a drawing object is turned
 lists      list_style, level_style, read_levels -- the levels of a numbering scheme as list styles say them (E9.22)
 boxes      BoxLook, look_of, is_written, held_box, box_element, default_name, graphic_properties -- text boxes, shapes
-           in a file: their look, and their OpenDocument elements (D465, D1479)
+in a file: their look, and their OpenDocument elements (D465, D1479)
 fonts      font_faces, font_of -- the font faces of a file and the font a style's text properties name (E3.13)
 """
 

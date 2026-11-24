@@ -545,7 +545,7 @@ def _held_objects(
     charts = file_charts(tables, parts, drawn)
     styles = parts.get("styles.xml")
     graphics = graphic_styles(content, None if styles is None else parse_xml(styles))
-    held_charts = [found for chart in charts if (found := chart.file_object()) is not None]
+    held_charts = [one for chart in charts if (one := chart.file_object()) is not None]
     readers = (partial(held_picture, parts=parts, graphics=graphics), partial(held_box_of, graphics=graphics))
     found = found_objects(held_charts, drawn, readers)
     mark = SlideMark.from_text(user_defined(parts["meta.xml"]).get(MARK) if "meta.xml" in parts else None)

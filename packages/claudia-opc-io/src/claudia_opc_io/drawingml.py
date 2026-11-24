@@ -92,7 +92,7 @@ def outline(colour: Colour, width: int) -> str:
 
 
 def _colour_in(properties: etree._Element | None) -> Colour:
-    """The colour of the ``a:solidFill`` of ``properties``: ``None`` for none or ``a:noFill``, :data:`UNKNOWN` for one
+    """The colour of the ``a:solidFill`` of ``properties``: ``None`` for none or ``a:noFill``, ``UNKNOWN`` for one
     that is not plain."""
     if properties is None or properties.find(f"{_A}noFill") is not None:
         return None
@@ -109,7 +109,7 @@ def _colour_in(properties: etree._Element | None) -> Colour:
 
 def look_in(properties: etree._Element | None, *, styled: bool) -> tuple[Colour, Colour, int]:
     """``(fill, line, line width in EMU)`` a shape's properties (its ``spPr``) say it has. A shape ``styled`` (it has a
-    style of the theme) whose properties do not say is given what the style says: :data:`UNKNOWN`."""
+    style of the theme) whose properties do not say is given what the style says: ``UNKNOWN``."""
     fill = _colour_in(properties)
     if styled and (properties is None or all(properties.find(f"{_A}{tag}") is None for tag in ("solidFill", "noFill"))):
         fill = UNKNOWN

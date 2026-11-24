@@ -7,7 +7,7 @@ reconcile   owns/reconcile -- restore whatever a format library's save() was not
 properties  stamp_core_properties/stamp_package -- who made a fresh file and when (D466)
 custom      custom_properties/set_custom_properties -- the custom properties of a file (D1478)
 drawingml   turn_of/cropped/shown_part/is_decorative/look_in, solid/outline -- what a DrawingML drawing says of itself
-            and how a shape is filled and outlined (D1478, D1479)
+and how a shape is filled and outlined (D1478, D1479)
 theme       ThemeFonts -- the heading and body fonts of the Office theme docx and pptx share (E3.13)
 
 Deliberately knows nothing about any one format: no cell, no paragraph, no shape. openpyxl/python-docx/

@@ -71,7 +71,7 @@ def authored(boxes: Iterable[VisualObject]) -> int:
 @dataclass(frozen=True)
 class BoxLook:
     """What a box looks like in a file: the colour that fills it and the colour and width (in EMU) of its line; ``None``
-    for none, :data:`claudia_opc_io.UNKNOWN` for a colour that is no plain colour."""
+    for none, ``claudia_opc_io.UNKNOWN`` for a colour that is no plain colour."""
 
     fill: tuple[int, int, int] | None
     line: tuple[int, int, int] | None
