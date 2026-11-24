@@ -156,3 +156,35 @@ describe('colours in the components', () => {
     expect(literalsInStyles()).toEqual(LITERALS_ALLOWED)
   })
 })
+
+describe('the pills of the Styles dialog (UX-79)', () => {
+  const dialog = readFileSync(new URL('../app/components/StylesDialog.vue', import.meta.url), 'utf8')
+  /** A declaration of the `.hiddenflag` rule in the dialog's style. */
+  function hiddenflag(property: string): string {
+    const rule = dialog.split('}').find((block) => block.split('{')[0]!.trim() === '.hiddenflag')
+    const found = rule?.match(new RegExp(`(?:^|[\\s;{])${property}:\\s*([^;]+);`))
+    if (!found) throw new Error(`.hiddenflag has no ${property}`)
+    return found[1]!.trim()
+  }
+  /** What `var(--name)` is in the light and in the dark scheme (the dark one where the dark scheme sets it again). */
+  function bothSchemes(value: string): Rgb[] {
+    const name = value.match(/^var\((--[\w-]+)\)$/)?.[1]
+    if (!name) throw new Error(`not one colour token: ${value}`)
+    const resolve = (raw: string): Rgb => (raw.startsWith('var(') ? resolve(rootToken(raw.slice(4, -1))) : parseHex(raw))
+    const light = resolve(rootToken(name))
+    let dark = light
+    try {
+      dark = resolve(token(":root[data-theme='dark']", name))
+    } catch {
+      // not set again for the dark scheme: the same colour
+    }
+    return [light, dark]
+  }
+
+  it('the word "hidden" reads on its light pill in the light and in the dark scheme', () => {
+    const pill = mixedWithWhite(hiddenflag('background'))
+    for (const text of bothSchemes(hiddenflag('color'))) {
+      expect(contrastRatio(text, pill)).toBeGreaterThanOrEqual(AA_TEXT)
+    }
+  })
+})
