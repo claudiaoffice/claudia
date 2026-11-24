@@ -35,7 +35,7 @@ The index is the status of record; a section below keeps the status of the round
 re-checked. **Opened** and **Fixed** are filled from 2026-11-20 on: for older items only where the status already gave
 the date.
 
-### Open (90)
+### Open (92)
 
 By priority (P1, P2, P3, then items that wait for a decision without one), then by ID.
 
@@ -125,6 +125,8 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | CODE-75 | P3 | Code / web clients | Only composes refused a change of a viewer before sending it; computes sent it and showed the server's refusal, creates checked in some places only | **fixed** on `architecture-improvements` (D1432) | 2026-11-21 | 2026-11-21 |
 | CODE-76 | P3 | Code / web clients | The sheet session ignored `shape` events, so an outline a colleague's sheet object needed arrived only with a reload | **fixed** on `architecture-improvements` (D1432) | 2026-11-21 | 2026-11-21 |
 | CODE-77 | P2 | Code / computes | Undoing a chart leaves it in the workbook (the server does not forget it), and the page reports a Plotly error | open (row `@pending:CODE-77`) | 2026-11-22 |  |
+| UX-76 | P2 | UX / AI | The ai in composes cannot make or change a list: the menu and the server have seven list actions (bulleted, numbered, continue, start at, indent, outdent, number headings), the model is offered none of them and no skill teaches them; asked for a numbered list, it says it has no such request | **new, open** (size 2; closed by E7.12, slice 1) | 2026-11-24 |  |
+| UX-77 | P2 | UX / AI | The ai in creates cannot turn an object and cannot tell which way a shape points: `rotate_object` is not offered, a rotation of 0 is not printed, the shapes list gives names only and a shape file does not say how the shape looks; "make an arrow pointing left" was not understood, and with a triangle and a rectangle the pieces were right but the model could not tell the direction | **new, open** (size 2; closed by E7.12, slice 2) | 2026-11-24 |  |
 | UX-74 | P3 | UX / AI | While the administrator has Claude off, the owners' dialog shows no check box, so an owner cannot withdraw a consent given earlier; it resumes when Claude is switched on again | **new, open** (size 3) | 2026-11-22 |  |
 | UX-75 | P3 | UX / AI | A window that is open when the administrator changes the provider keeps its old badge until the next consent change or reload | **new, open** (size 3) | 2026-11-22 |  |
 | PROC-22 | P3 | Process / CI | The LibreOffice job may still fail silently, though it has passed every round | **new, open** |  |  |
