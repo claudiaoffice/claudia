@@ -16,8 +16,9 @@ has to say which batch.
 
 ## The batch loop
 
-1. **Start.** Merge `backlog` into `main` locally, then make a branch for the batch from it. Agree on the branch name and a
-   decision-id range (`decision-log/ranges.md`) and reserve the range, as for any feature branch.
+1. **Start.** Merge `backlog` into `main` locally, then make a branch for the batch from it (`batch-1`, `batch-2` …). All
+   bug-eater decisions take their numbers from the one block D2001–D2100 (`decision-log/ranges.md`, the owner's rule of
+   2026-11-24), in order across batches; a batch does not reserve a block of its own.
 2. **Questions first.** Items that need the owner's decision are collected and asked together, each with a proposed
    default the owner only has to veto (`grill-me` where a fix has open questions). Never guess.
 3. **Per item.** A test that fails for the right reason, with the one-line reason the bug escaped (spec gap / missing
