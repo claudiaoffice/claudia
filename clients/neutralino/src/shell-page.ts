@@ -26,7 +26,7 @@ export interface NeutralinoLike {
   app: { exit(code?: number): Promise<unknown> }
   window: {
     setMainMenu(items: WindowMenuItem[]): Promise<unknown>
-    /** Physical pixels on Windows (UX-76). */
+    /** Physical pixels on Windows (UX-77). */
     setSize?(size: WindowSize): Promise<unknown>
     center?(): Promise<unknown>
   }
@@ -71,7 +71,7 @@ export interface PageEnv {
   log?: (message: string) => void
   /** What this operating system does differently (src/platform/page.ts); this build's by default. */
   platform?: PagePlatform
-  /** The screen the window is on, for the size of the window (UX-76); without it the size is the config's. */
+  /** The screen the window is on, for the size of the window (UX-77); without it the size is the config's. */
   screen?: ScreenSize
 }
 
@@ -170,7 +170,7 @@ export class ShellPage {
     await neutralino.events.on(FROM_CORE, (event) => this.onCore(event.detail))
     await neutralino.events.on('mainMenuItemClicked', (event) => this.onMenuClick(event.detail))
     status.show('Starting…', undefined, false)
-    await this.fitWindow()
+    this.fitWindow()
     await this.setMenu()
     if (await this.startCore()) this.watchCore(1)
   }
@@ -191,16 +191,16 @@ export class ShellPage {
   }
 
   /** The window's size is in physical pixels on Windows, so on a scaled display the config's size is too small for the
-   * page (UX-76, D749): ask again with the scale applied, and centre the window on its screen. */
-  private async fitWindow(): Promise<void> {
+   * page (UX-77, D749): ask again with the scale applied, and centre the window on its screen. Nothing waits for this:
+   * the first version did, the window never answered on the owner's machine, and every app stayed on "Starting…" (CODE-85). */
+  private fitWindow(): void {
     const { neutralino, screen } = this.env
     if (!this.platform.sizesInPhysicalPixels || screen === undefined) return
-    try {
+    const fitted = (async () => {
       await neutralino.window.setSize?.(windowSizeFor(WINDOW_WANTED, screen))
       await neutralino.window.center?.()
-    } catch (problem) {
-      this.log(`the window size could not be set: ${(problem as Error).message}`)
-    }
+    })()
+    fitted.catch((problem: unknown) => this.log(`the window size could not be set: ${(problem as Error).message}`))
   }
 
   private async setMenu(): Promise<void> {

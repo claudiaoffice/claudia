@@ -4,14 +4,14 @@ title: "On Windows the shell page asks for the window's size again, in physical 
 status: current
 applies-to: all
 date: 2026-11-24
-round: "The Windows installer, first real install (UX-76; branch `win-installer-fix`)"
+round: "The Windows installer, first real install (UX-77; branch `win-installer-fix`)"
 supersedes: []
 superseded-by: []
 ---
 
 # D749 · The window's size is asked for again, in physical pixels
 
-**The apps' configs keep saying 1280 × 860 (minimum 700 × 500) as CSS pixels. On Windows the shell page, once it runs,
+**Nothing waits for this** (CODE-85): the first version did, `window.setSize` never answered on the owner's machine, and every app stayed on "Starting…" because the page asked the core to start only after it. The page now sends the request and goes on; a failure is logged in the page's console. **The apps' configs keep saying 1280 × 860 (minimum 700 × 500) as CSS pixels. On Windows the shell page, once it runs,
 multiplies that by the display scale (`devicePixelRatio`), takes at most nine tenths of the free screen
 (`screen.availWidth`, `availHeight`), calls `window.setSize` and `window.center`, and only then goes on to the menu and the
 core.** The arithmetic is `windowSizeFor` (`src/window-size.ts`); `WINDOW_WANTED` there is tested equal to the three configs.

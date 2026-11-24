@@ -123,7 +123,7 @@ jobs:
             throw "The WebView2 bootstrapper is not signed by Microsoft: $($signature.Status) $($signature.SignerCertificate.Subject)"
           }
 
-      # What a shortcut starts (UX-77, D750). It has no window and hides node's, so the one thing to check without a display
+      # What a shortcut starts (UX-78, D750). It has no window and hides node's, so the one thing to check without a display
       # is that it does what it is for: starts the node of its folder with the app's launcher and the options it was given,
       # and keeps both streams in the log. A window of an error would block the runner, so only the good path is run.
       - name: The launcher program hides node and keeps a log of what it prints
@@ -424,7 +424,7 @@ jobs:
             if (-not (Get-Process neutralino-win_x64 -ErrorAction SilentlyContinue)) { throw 'No Neutralino window is running' }
           } finally {
             Stop-Process -Id $window.Id -Force -ErrorAction SilentlyContinue
-            # the core of the window is a node of the installation too, and holds its files until the uninstall (PROC-53)
+            # the core of the window is a node of the installation too, and holds its files until the uninstall (PROC-54)
             # (found by its command line: Windows reports its path in the short form, C:\PROGRA~1\CLAUDI~1\node\node.exe)
             Get-CimInstance Win32_Process -Filter "Name = 'node.exe'" | Where-Object { $_.CommandLine -like '*\Claudia\run\*' } |
               ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }

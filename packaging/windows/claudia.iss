@@ -117,7 +117,7 @@ Source: "{#StageDir}\prerequisites\{#WebView2Setup}"; DestDir: "{tmp}"; Flags: d
 [Icons]
 ; The windows are those of Neutralino. claudia-start.exe starts node with the app's launcher, which starts the window and
 ; its core; it has no window of its own, hides node's, and keeps what they print in
-; %LOCALAPPDATA%\Claudia\<app>\state\launcher.log (UX-77, D750).
+; %LOCALAPPDATA%\Claudia\<app>\state\launcher.log (UX-78, D750).
 Name: "{autoprograms}\Claudia Composes"; Filename: "{app}\client\claudia-start.exe"; Parameters: "composes"; WorkingDir: "{app}"; IconFilename: "{app}\icons\composes.ico"
 Name: "{autoprograms}\Claudia Computes"; Filename: "{app}\client\claudia-start.exe"; Parameters: "computes"; WorkingDir: "{app}"; IconFilename: "{app}\icons\computes.ico"
 Name: "{autoprograms}\Claudia Creates"; Filename: "{app}\client\claudia-start.exe"; Parameters: "creates"; WorkingDir: "{app}"; IconFilename: "{app}\icons\creates.ico"

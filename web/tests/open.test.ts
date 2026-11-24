@@ -345,7 +345,7 @@ describe('the files a window opens (D444)', () => {
 })
 
 describe('what the native menu does on the start page (sheet 11)', () => {
-  // CODE-82: the shell keeps Help > About on the start page's menu (the manifest's `start` actions), and the page did
+  // CODE-84: the shell keeps Help > About on the start page's menu (the manifest's `start` actions), and the page did
   // nothing with it, so the Windows and macOS clients, which have no About dialog of their own, showed nothing.
   it('shows About, which every entry the shell keeps on that page must do something for', () => {
     expect(startPageAction('help.about')).toEqual({ kind: 'about' })

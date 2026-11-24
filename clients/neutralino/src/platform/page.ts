@@ -18,7 +18,7 @@ export interface PagePlatform {
   whereTheLogsAre(app: App): string
   /** How to see the console of the shell page itself. */
   readonly howToSeeTheConsole: string
-  /** Whether Neutralino takes window sizes in physical pixels (Windows, UX-76) and not in points (macOS): then the page
+  /** Whether Neutralino takes window sizes in physical pixels (Windows, UX-77) and not in points (macOS): then the page
    * asks for the size again with the display scale applied (window-size.ts). */
   readonly sizesInPhysicalPixels: boolean
 }

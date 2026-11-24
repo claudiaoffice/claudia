@@ -4,7 +4,7 @@ title: "The shortcuts of the Windows install start claudia-start.exe: node witho
 status: current
 applies-to: all
 date: 2026-11-24
-round: "The Windows installer, first real install (UX-77; branch `win-installer-fix`)"
+round: "The Windows installer, first real install (UX-78; branch `win-installer-fix`)"
 supersedes: []
 superseded-by: []
 ---

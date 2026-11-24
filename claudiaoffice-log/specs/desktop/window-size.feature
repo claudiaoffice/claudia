@@ -1,4 +1,4 @@
-# The size of the window of the Windows client on a scaled display (UX-76, D749).
+# The size of the window of the Windows client on a scaled display (UX-77, D749).
 #
 # Found by the owner on the first real Windows install (2026-11-24): at a display scale of 200% (3840 x 1994) the window
 # was half the size the page needs. Written together with the fix, for the owner's review. What is checked: the arithmetic
@@ -23,3 +23,9 @@ Feature: The window of a desktop app shows the whole page at any display scale
   Scenario: The macOS client
     Given I start an app of the macOS client on a Retina display
     Then the window keeps the size of its config
+
+  @core @unit:clients/neutralino/tests/shell-page.test.ts
+  Scenario: The window does not answer the request for its size
+    Given the window never answers a request to change its size
+    When I start an app of the Windows client
+    Then the app starts all the same

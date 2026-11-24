@@ -1,4 +1,4 @@
-// How big the window is on a screen with display scaling (UX-76, D749): Neutralino takes window sizes in physical pixels
+// How big the window is on a screen with display scaling (UX-77, D749): Neutralino takes window sizes in physical pixels
 // on Windows, the page thinks in CSS pixels, and the two differ by the scale (devicePixelRatio).
 import { describe, expect, it } from 'vitest'
 import { WINDOW_WANTED, windowSizeFor } from '../src/window-size.js'

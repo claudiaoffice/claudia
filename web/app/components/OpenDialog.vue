@@ -300,7 +300,7 @@ function onShellAction(action: string, target?: string) {
   else aboutOpen.value = true
 }
 
-/** Help ▸ About, asked for by the native menu: the Windows and macOS clients have no About dialog of their own (CODE-82). */
+/** Help ▸ About, asked for by the native menu: the Windows and macOS clients have no About dialog of their own (CODE-84). */
 const aboutOpen = ref(false)
 
 /** The ticks of Dark Mode and the language, for the shell's menu (only while this page owns the bridge). */

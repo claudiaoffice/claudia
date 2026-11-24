@@ -4,7 +4,7 @@ title: "Every entry the shell keeps on the start page's menu has an action on th
 status: current
 applies-to: all
 date: 2026-11-24
-round: "The Windows installer, first real install (CODE-82; branch `win-installer-fix`)"
+round: "The Windows installer, first real install (CODE-84; branch `win-installer-fix`)"
 supersedes: []
 superseded-by: []
 ---

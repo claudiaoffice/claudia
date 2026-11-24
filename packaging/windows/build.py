@@ -206,7 +206,7 @@ def stage(root: Path, out: Path, node: Path, winsw: Path, launcher: Path, webvie
 
 
 def launcher_command(compiler: str, out: Path) -> list[str]:
-    """The command line that compiles the program the shortcuts start (``launcher/claudia-start.c``, UX-77, D750): of
+    """The command line that compiles the program the shortcuts start (``launcher/claudia-start.c``, UX-78, D750): of
     the GUI subsystem, so that it has no console window, with wide-character entry for paths with umlauts."""
     return [
         compiler,

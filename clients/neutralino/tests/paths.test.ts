@@ -162,7 +162,7 @@ describe('findServerProgram (D740)', () => {
 })
 
 describe('appFolder', () => {
-  // CODE-81 (D746): the launcher of an installation looked for its apps in a repository that is not there.
+  // CODE-83 (D746): the launcher of an installation looked for its apps in a repository that is not there.
   it.each([
     ['an installation (Windows: <install>\\client\\dist)', join('Programs', 'Claudia Office', 'client')],
     ['a checkout', join('repo', 'clients', 'neutralino')],

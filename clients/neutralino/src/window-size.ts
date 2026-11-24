@@ -1,4 +1,4 @@
-// How big the window is on a screen with display scaling (UX-76, D749). Browser-safe: no Node import.
+// How big the window is on a screen with display scaling (UX-77, D749). Browser-safe: no Node import.
 //
 // The configs (`apps/<app>/neutralino.config.json`) say 1280 x 860 and 700 x 500 as if they were CSS pixels. Neutralino
 // on Windows takes sizes in physical pixels: at a display scale of 200% the window opened at 640 x 430 CSS pixels and

@@ -1,4 +1,4 @@
-/* claudia-start.exe: what the shortcuts of Claudia Office start (UX-77, D750).
+/* claudia-start.exe: what the shortcuts of Claudia Office start (UX-78, D750).
  *
  *   claudia-start.exe composes [options of the app]
  *
