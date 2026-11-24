@@ -11,6 +11,8 @@ from pathlib import Path
 
 from claudia_typeset import EngineUnavailable, Limits, SandboxError, resolve_program, run_sandboxed
 
+from .i18n import msg
+
 _LIMITS = Limits(seconds=10, memory_mb=512, output_mb=1)
 
 #: How each program is asked who it is, and how the first words of its answer must begin.
@@ -35,6 +37,12 @@ async def check_identity(setting: str, configured: str | None) -> None:
         raise ValueError(str(error)) from error
     if not any(line.strip().startswith(banner) for line in done.output.splitlines()):
         raise ValueError(
-            f"{configured} does not say it is {setting}: asked with {' '.join(arguments)}, it should answer "
-            f"with a line that begins “{banner}”"
+            msg(
+                "{program} does not say it is {setting}: asked with {asked}, it should answer with a line that "
+                "begins “{banner}”",
+                program=configured,
+                setting=setting,
+                asked=" ".join(arguments),
+                banner=banner,
+            )
         )

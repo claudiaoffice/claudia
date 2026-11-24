@@ -1325,6 +1325,10 @@ msgstr "[Clàûdé~~]"
 msgid "Claude is not allowed in this document. The owner can change that in Preferences ▸ AI…"
 msgstr "[Clàûdé îs nôt àllôwéd în thîs dôcûmént. Thé ôwnér càn chàngé thàt în Préféréncés ▸ ÀÎ…~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
+#: packages/claudia-server/src/claudia_server/admin_api.py
+msgid "Claude needs a provider key."
+msgstr "[Clàûdé nééds à prôvîdér kéy.~~~~~~~~~~~]"
+
 #: web/app/components/OpenDialog.vue
 msgid "Claudia cannot open this file."
 msgstr "[Clàûdîà cànnôt ôpén thîs fîlé.~~~~~~~~~~~~]"
@@ -1488,6 +1492,10 @@ msgstr "[Cômmôn tîmés~~~~~]"
 #: web/app/components/SearchPanel.vue
 msgid "Condition"
 msgstr "[Côndîtîôn~~~~]"
+
+#: packages/claudia-server/src/claudia_server/admin_api.py
+msgid "Confirm first: {sentence}"
+msgstr "[Cônfîrm fîrst: {sentence}~~~~~~~~~~]"
 
 #: web/app/components/FirstAdminSetup.vue
 msgid "Confirm password"
@@ -8053,6 +8061,14 @@ msgstr "[à céll référéncé~~~~~~]"
 msgid "a chart's range must be inside the sheet"
 msgstr "[à chàrt's ràngé mûst bé însîdé thé shéét~~~~~~~~~~~~~~~~]"
 
+#: packages/claudia-server/src/claudia_server/admin_fonts.py
+msgid "a collection needs a name"
+msgstr "[à côlléctîôn nééds à nàmé~~~~~~~~~~]"
+
+#: packages/claudia-server/src/claudia_server/admin_fonts.py
+msgid "a collection needs a name and a licence"
+msgstr "[à côlléctîôn nééds à nàmé ànd à lîcéncé~~~~~~~~~~~~~~~~]"
+
 #: packages/claudia-server/src/claudia_server/tables.py
 msgid "a column cannot be moved in front of itself"
 msgstr "[à côlûmn cànnôt bé môvéd în frônt ôf îtsélf~~~~~~~~~~~~~~~~~]"
@@ -8072,6 +8088,10 @@ msgstr "[à dîgît~~~]"
 #: packages/claudia-server/src/claudia_server/app.py
 msgid "a file becomes a new document: hello needs create"
 msgstr "[à fîlé bécômés à néw dôcûmént: héllô nééds créàté~~~~~~~~~~~~~~~~~~~~]"
+
+#: packages/claudia-server/src/claudia_server/admin_fonts.py
+msgid "a file is no longer held; choose it again"
+msgstr "[à fîlé îs nô lôngér héld; chôôsé ît àgàîn~~~~~~~~~~~~~~~~]"
 
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "a grid of random numbers (1 row, 1 column, from 0 to 1 and not whole numbers unless said otherwise). With whole TRUE the numbers are whole, from min to max."
@@ -8104,6 +8124,10 @@ msgstr "[à mérgéd bôx cànnôt bé tôrn àpàrt: splît ît fîrst~~~~~~~~~
 #: packages/claudia-core/src/claudia_core/messages.py
 msgid "a message can have at most {limit} characters"
 msgstr "[à méssàgé càn hàvé àt môst {limit} chàràctérs~~~~~~~~~~~~~~~~~~]"
+
+#: packages/claudia-server/src/claudia_server/admin_api.py
+msgid "a name and a password are needed"
+msgstr "[à nàmé ànd à pàsswôrd àré néédéd~~~~~~~~~~~~~]"
 
 #: packages/claudia-computes/src/claudia_computes/names.py packages/claudia-core/src/claudia_core/names.py packages/claudia-server/src/claudia_server/thing_names.py
 msgid "a name has at most {limit} characters"
@@ -8164,6 +8188,10 @@ msgstr "[à pàlétté hôlds àt môst {limit} côlôûr rôlés~~~~~~~~~~~~~~~
 #: packages/claudia-core/src/claudia_core/paragraphs.py
 msgid "a paragraph holds text of at most {limit} characters"
 msgstr "[à pàràgràph hôlds téxt ôf àt môst {limit} chàràctérs~~~~~~~~~~~~~~~~~~~~~]"
+
+#: packages/claudia-server/src/claudia_server/admin_api.py
+msgid "a password is needed"
+msgstr "[à pàsswôrd îs néédéd~~~~~~~~]"
 
 #: packages/claudia-creates/src/claudia_creates/model.py
 msgid "a planned time is a whole number of seconds from 1 to {limit}"
@@ -8316,6 +8344,10 @@ msgstr "[à {thing} hàs nô slôt “{slot}”; ît hàs {slots}~~~~~~~~~~~~~~~
 #: web/app/components/ResultNote.vue
 msgid "about this cell"
 msgstr "[àbôût thîs céll~~~~~~]"
+
+#: packages/claudia-server/src/claudia_server/admin_api.py
+msgid "access_secret must be a string or null"
+msgstr "[àccéss_sécrét mûst bé à strîng ôr nûll~~~~~~~~~~~~~~~]"
 
 #: packages/claudia-server/src/claudia_server/shape_methods.py
 msgid "add_object: a chart is made in computes, not here"
@@ -8825,6 +8857,10 @@ msgstr "[éxpôrtéd às {format}~~~~~~~~]"
 msgid "exported unprotected"
 msgstr "[éxpôrtéd ûnprôtéctéd~~~~~~~~]"
 
+#: packages/claudia-server/src/claudia_server/admin_fonts.py
+msgid "files must be a list of tokens from /api/admin/fonts/files"
+msgstr "[fîlés mûst bé à lîst ôf tôkéns frôm /àpî/àdmîn/fônts/fîlés~~~~~~~~~~~~~~~~~~~~~~~]"
+
 #: web/app/components/PivotPanel.vue
 msgid "find a field"
 msgstr "[fînd à fîéld~~~~~]"
@@ -8977,6 +9013,10 @@ msgstr "[însért_chàrt: thé plàcé ôf à chàrt shôwn às {how} îs {keys}
 msgid "internal server error"
 msgstr "[întérnàl sérvér érrôr~~~~~~~~]"
 
+#: packages/claudia-server/src/claudia_server/admin.py
+msgid "invalid administrator name “{name}”"
+msgstr "[învàlîd àdmînîstràtôr nàmé “{name}”~~~~~~~~~~~~~~]"
+
 #: packages/claudia-server/src/claudia_server/protocol.py
 msgid "invalid command: {reason!r}"
 msgstr "[învàlîd cômmànd: {réàsôn!r}~~~~~~~~~~~]"
@@ -9088,6 +9128,14 @@ msgstr "[lôôks thé vàlûé ûp în thé fîrst rôw ôf thé tàblé.~~~~~~~
 #: web/app/components/RandomDialog.vue
 msgid "low"
 msgstr "[lôw~]"
+
+#: packages/claudia-server/src/claudia_server/admin_api.py
+msgid "max_documents must be a whole number of at least 1"
+msgstr "[màx_dôcûménts mûst bé à whôlé nûmbér ôf àt léàst 1~~~~~~~~~~~~~~~~~~~~]"
+
+#: packages/claudia-server/src/claudia_server/admin_fonts.py
+msgid "may_go must be anywhere or this-server"
+msgstr "[mày_gô mûst bé ànywhéré ôr thîs-sérvér~~~~~~~~~~~~~~~]"
 
 #: web/app/components/OutcomePopover.vue web/app/components/RandomDialog.vue
 msgid "mean"
@@ -9236,6 +9284,10 @@ msgstr "[nô pàràgràph {îd!r}~~~~~~~~]"
 #: web/app/lib/cell-styles.ts
 msgid "no style of their own"
 msgstr "[nô stylé ôf théîr ôwn~~~~~~~~]"
+
+#: packages/claudia-server/src/claudia_server/admin_fonts.py
+msgid "no such collection"
+msgstr "[nô sûch côlléctîôn~~~~~~~]"
 
 #: packages/claudia-computes/src/claudia_computes/pivot_render.py
 msgid "no table or range named “{source}”"
@@ -9396,6 +9448,10 @@ msgstr "[ônly Sûndày îs ôff: Sàtûrdày îs à wôrkdày~~~~~~~~~~~~~~~~]"
 #: packages/claudia-server/src/claudia_server/structure_methods.py
 msgid "only a built-in scheme can be reset"
 msgstr "[ônly à bûîlt-în schémé càn bé rését~~~~~~~~~~~~~~]"
+
+#: packages/claudia-server/src/claudia_server/admin_fonts.py
+msgid "only a collection added in the server settings can be changed here"
+msgstr "[ônly à côlléctîôn àddéd în thé sérvér séttîngs càn bé chàngéd héré~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
 #: packages/claudia-server/src/claudia_server/protocol.py
 msgid "only an editor or an owner of a document may change its description and tags"
@@ -9781,6 +9837,10 @@ msgstr "[shééts, céll ràngés, chàrts ànd ôbjécts~~~~~~~~~~~~~~~~]"
 msgid "show must be one of {shows}"
 msgstr "[shôw mûst bé ôné ôf {shows}~~~~~~~~~~~]"
 
+#: packages/claudia-server/src/claudia_server/admin_api.py
+msgid "sign in as an administrator first"
+msgstr "[sîgn în às àn àdmînîstràtôr fîrst~~~~~~~~~~~~~]"
+
 #: web/app/components/SidePanel.vue
 msgid "silence = agree"
 msgstr "[sîléncé = àgréé~~~~~~]"
@@ -9909,6 +9969,10 @@ msgstr "[téxt ôf thé ôbjéct~~~~~~~]"
 msgid "that is more prints and PDFs than the document records in a minute"
 msgstr "[thàt îs môré prînts ànd PDFs thàn thé dôcûmént récôrds în à mînûté~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
+#: packages/claudia-server/src/claudia_server/admin_api.py
+msgid "that is not this server's setup code; look in the log of its last start (a restart makes a new code)"
+msgstr "[thàt îs nôt thîs sérvér's sétûp côdé; lôôk în thé lôg ôf îts làst stàrt (à réstàrt màkés à néw côdé)~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+
 #: packages/claudia-server/src/claudia_server/protocol.py
 msgid "that is not your current password"
 msgstr "[thàt îs nôt yôûr cûrrént pàsswôrd~~~~~~~~~~~~~]"
@@ -9916,6 +9980,14 @@ msgstr "[thàt îs nôt yôûr cûrrént pàsswôrd~~~~~~~~~~~~~]"
 #: packages/claudia-server/src/claudia_server/composes.py
 msgid "that would make too many paragraphs"
 msgstr "[thàt wôûld màké tôô màny pàràgràphs~~~~~~~~~~~~~~]"
+
+#: packages/claudia-server/src/claudia_server/admin_api.py
+msgid "the AI assistant is disabled for this server (it was started with --no-assistant)"
+msgstr "[thé ÀÎ àssîstànt îs dîsàbléd fôr thîs sérvér (ît wàs stàrtéd wîth --nô-àssîstànt)~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+
+#: packages/claudia-server/src/claudia_server/admin_api.py
+msgid "the answer length must be at least 1"
+msgstr "[thé ànswér léngth mûst bé àt léàst 1~~~~~~~~~~~~~~]"
 
 #: packages/claudia-server/src/claudia_server/protocol.py
 msgid "the assistant cannot apply a raw command; use the app's own methods"
@@ -10065,6 +10137,14 @@ msgstr "[thé hyphénàtîôn pàttérns fôr {name} dîd nôt àrrîvé întàc
 msgid "the largest value"
 msgstr "[thé làrgést vàlûé~~~~~~~]"
 
+#: packages/claudia-server/src/claudia_server/admin.py
+msgid "the last administrator cannot be removed"
+msgstr "[thé làst àdmînîstràtôr cànnôt bé rémôvéd~~~~~~~~~~~~~~~~]"
+
+#: packages/claudia-server/src/claudia_server/admin_api.py
+msgid "the local model needs a model folder"
+msgstr "[thé lôcàl môdél nééds à môdél fôldér~~~~~~~~~~~~~~]"
+
 #: packages/claudia-core/src/claudia_core/page.py
 msgid "the margins leave less than 10 mm for the content"
 msgstr "[thé màrgîns léàvé léss thàn 10 mm fôr thé côntént~~~~~~~~~~~~~~~~~~~~]"
@@ -10089,6 +10169,10 @@ msgstr "[thé ôbjéct mûst stày ôn thé slîdé ({slide_width} by {slide_hei
 msgid "the parts of this document the ai looks at to answer her"
 msgstr "[thé pàrts ôf thîs dôcûmént thé àî lôôks àt tô ànswér hér~~~~~~~~~~~~~~~~~~~~~~]"
 
+#: packages/claudia-server/src/claudia_server/admin.py
+msgid "the password needs at least {count} characters"
+msgstr "[thé pàsswôrd nééds àt léàst {count} chàràctérs~~~~~~~~~~~~~~~~~~]"
+
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "the pivot table called ``name`` — the summary of a table the field panel of Tools ▸ Pivot Table describes. Written by the pivot's own commands, not by hand: change the pivot in its panel, not this formula. As the whole formula it fills the cells below and beside it; inside another formula it gives the first cell."
 msgstr "[thé pîvôt tàblé càlléd ``nàmé`` — thé sûmmàry ôf à tàblé thé fîéld pànél ôf Tôôls ▸ Pîvôt Tàblé déscrîbés. Wrîttén by thé pîvôt's ôwn cômmànds, nôt by hànd: chàngé thé pîvôt în îts pànél, nôt thîs fôrmûlà. Às thé whôlé fôrmûlà ît fîlls thé célls bélôw ànd bésîdé ît; însîdé ànôthér fôrmûlà ît gîvés thé fîrst céll.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
@@ -10112,6 +10196,10 @@ msgstr "[thé pôsîtîôn (frôm 1) ôf thé vàlûé în à rôw ôr côlûmn.
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "the position (from 1) of the value. Match mode 0 is exact, -1 the exact value or else the next smaller, 1 or else the next larger, 2 exact with wildcards. Search mode 1 looks from the first, -1 from the last. Not found is #N/A."
 msgstr "[thé pôsîtîôn (frôm 1) ôf thé vàlûé. Màtch môdé 0 îs éxàct, -1 thé éxàct vàlûé ôr élsé thé néxt smàllér, 1 ôr élsé thé néxt làrgér, 2 éxàct wîth wîldcàrds. Séàrch môdé 1 lôôks frôm thé fîrst, -1 frôm thé làst. Nôt fôûnd îs #N/À.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+
+#: packages/claudia-server/src/claudia_server/admin_api.py
+msgid "the provider must be one of: {providers}"
+msgstr "[thé prôvîdér mûst bé ôné ôf: {providers}~~~~~~~~~~~~~~~~]"
 
 #: packages/claudia-computes/src/claudia_computes/pivot_commands.py
 msgid "the query of {name} is too long for a formula: {length} of {limit} characters"
@@ -10208,6 +10296,10 @@ msgstr "[thé tàblé hàs nô côlûmn {îd!r}~~~~~~~~~~~~]"
 #: packages/claudia-server/src/claudia_server/tables.py
 msgid "the table has no row {id!r}"
 msgstr "[thé tàblé hàs nô rôw {îd!r}~~~~~~~~~~~]"
+
+#: packages/claudia-server/src/claudia_server/kdf_policy.py
+msgid "the target must be a number of seconds from {low} to {high}"
+msgstr "[thé tàrgét mûst bé à nûmbér ôf sécônds frôm {low} tô {high}~~~~~~~~~~~~~~~~~~~~~~~~]"
 
 #: web/app/components/SearchPanel.vue web/app/components/TextEditor.vue web/app/lib/print/source.ts
 msgid "the text"
@@ -10409,6 +10501,10 @@ msgstr "[thîs rôw~~~]"
 msgid "this server"
 msgstr "[thîs sérvér~~~~]"
 
+#: packages/claudia-server/src/claudia_server/admin_api.py
+msgid "this server already has an administrator; sign in to add another"
+msgstr "[thîs sérvér àlréàdy hàs àn àdmînîstràtôr; sîgn în tô àdd ànôthér~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+
 #: packages/claudia-server/src/claudia_server/protocol.py
 msgid "this server cannot keep the owner's consent, so Claude is not allowed"
 msgstr "[thîs sérvér cànnôt kéép thé ôwnér's cônsént, sô Clàûdé îs nôt àllôwéd~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
@@ -10465,6 +10561,10 @@ msgstr "[thîs sérvér dôés nôt sûppôrt hàndîng ôvér ôwnérshîp~~~~~
 msgid "this server does not support leaving a document"
 msgstr "[thîs sérvér dôés nôt sûppôrt léàvîng à dôcûmént~~~~~~~~~~~~~~~~~~~]"
 
+#: packages/claudia-server/src/claudia_server/admin_fonts.py
+msgid "this server has no folder to add fonts to"
+msgstr "[thîs sérvér hàs nô fôldér tô àdd fônts tô~~~~~~~~~~~~~~~~]"
+
 #: packages/claudia-server/src/claudia_server/hub.py
 msgid "this server holds {limit} documents, the most it may hold"
 msgstr "[thîs sérvér hôlds {limit} dôcûménts, thé môst ît mày hôld~~~~~~~~~~~~~~~~~~~~~~~]"
@@ -10472,6 +10572,10 @@ msgstr "[thîs sérvér hôlds {limit} dôcûménts, thé môst ît mày hôld~~
 #: packages/claudia-server/src/claudia_server/hub.py
 msgid "this server keeps its documents in memory and cannot take in a file"
 msgstr "[thîs sérvér kééps îts dôcûménts în mémôry ànd cànnôt tàké în à fîlé~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+
+#: packages/claudia-server/src/claudia_server/admin_api.py
+msgid "this server's document model has no AI assistant yet"
+msgstr "[thîs sérvér's dôcûmént môdél hàs nô ÀÎ àssîstànt yét~~~~~~~~~~~~~~~~~~~~~]"
 
 #: packages/claudia-server/src/claudia_server/composes.py
 msgid "this suggestion is not open any more"
@@ -10501,9 +10605,17 @@ msgstr "[tôbî~~]"
 msgid "today's date as a day number (the time of day is left out)."
 msgstr "[tôdày's dàté às à dày nûmbér (thé tîmé ôf dày îs léft ôût).~~~~~~~~~~~~~~~~~~~~~~~~]"
 
+#: packages/claudia-server/src/claudia_server/admin_fonts.py
+msgid "too many fonts are waiting to be added: at most {files} files or {mb} MB at once; close Add fonts… to let go of them"
+msgstr "[tôô màny fônts àré wàîtîng tô bé àddéd: àt môst {files} fîlés ôr {mb} MB àt ôncé; clôsé Àdd fônts… tô lét gô ôf thém~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+
 #: packages/claudia-server/src/claudia_server/what_if.py
 msgid "too many previews are open: finish or drop one before starting another"
 msgstr "[tôô màny prévîéws àré ôpén: fînîsh ôr drôp ôné béfôré stàrtîng ànôthér~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+
+#: packages/claudia-server/src/claudia_server/admin_api.py
+msgid "too many tries; try again in {seconds} s"
+msgstr "[tôô màny trîés; try àgàîn în {seconds} s~~~~~~~~~~~~~~~~]"
 
 #: packages/claudia-server/src/claudia_server/computes.py
 msgid "trace: reach must be one of {reaches}"
@@ -10636,6 +10748,10 @@ msgstr "[wrîté; à wôrd îs sént whén ît énds, ànd thé ôthérs séé w
 #: web/app/components/TextEditor.vue
 msgid "written by {author}"
 msgstr "[wrîttén by {author}~~~~~~~~]"
+
+#: packages/claudia-server/src/claudia_server/admin_api.py
+msgid "wrong name or password"
+msgstr "[wrông nàmé ôr pàsswôrd~~~~~~~~~]"
 
 #: web/app/components/AdminTypesetting.vue
 msgid "xelatex"
@@ -11285,6 +11401,10 @@ msgstr "[{place} àlréàdy hôlds thîs dôcûmént, às {id}. Ît cànnôt bé
 msgid "{problem}"
 msgstr "[{problem}~~~~]"
 
+#: packages/claudia-server/src/claudia_server/typeset_check.py
+msgid "{program} does not say it is {setting}: asked with {asked}, it should answer with a line that begins “{banner}”"
+msgstr "[{program} dôés nôt sày ît îs {setting}: àskéd wîth {asked}, ît shôûld ànswér wîth à lîné thàt bégîns “{banner}”~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+
 #: web/app/lib/grid-a11y.ts
 msgid "{range} selected, {count} cells"
 msgstr "[{range} séléctéd, {count} célls~~~~~~~~~~~~]"
@@ -11577,9 +11697,17 @@ msgstr "[“{name}” îs à témplàté stylé ànd càn ônly bé hîddén, n�
 msgid "“{name}” is a {kind} style and does not fit {where}"
 msgstr "[“{name}” îs à {kind} stylé ànd dôés nôt fît {where}~~~~~~~~~~~~~~~~~~~~]"
 
+#: packages/claudia-server/src/claudia_server/admin.py
+msgid "“{name}” is already an administrator"
+msgstr "[“{name}” îs àlréàdy àn àdmînîstràtôr~~~~~~~~~~~~~~]"
+
 #: packages/claudia-core/src/claudia_core/styles.py
 msgid "“{name}” is in use: say which style takes its place"
 msgstr "[“{name}” îs în ûsé: sày whîch stylé tàkés îts plàcé~~~~~~~~~~~~~~~~~~~~]"
+
+#: packages/claudia-server/src/claudia_server/admin_api.py
+msgid "“{name}” is not an administrator"
+msgstr "[“{name}” îs nôt àn àdmînîstràtôr~~~~~~~~~~~~~]"
 
 #: web/app/components/DeleteStyleDialog.vue
 msgid "“{name}” is what “no style” means here: the plain one of its kind."

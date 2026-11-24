@@ -48,9 +48,12 @@ def msg(template: str, **params: Any) -> Message:
 
 def message_of(error: BaseException) -> str:
     """What ``error`` says, as a message that :func:`localized` can say in another language: the template of a
-    :class:`~claudia_core.Refusal` of a model (CODE-78, D1510), anything else as its English text."""
+    :class:`~claudia_core.Refusal` of a model (CODE-78, D1510), the message an error of the server's own was raised
+    with, anything else as its English text."""
     if isinstance(error, Refusal):
         return Message(error.template, error.params)
+    if error.args and isinstance(error.args[0], Message):
+        return error.args[0]  # a ValueError of the server's own, raised with a msg(...) (CODE-92)
     return str(error)
 
 

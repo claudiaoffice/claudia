@@ -316,7 +316,8 @@ Redaction rewrites the document file and its journal (D725; `redaction_plan` and
 ## The first administrator (SEC-12)
 
 The server settings (`/admin`, `/api/admin/*`) are for the server's administrators, a different identity from any
-document's people. An administrator can make the server run programs (the LaTeX programs, SEC-16), so naming the first
+document's people. Their pages send their App Language as `Accept-Language`, and the server's own refusals are said in
+it (D2003). An administrator can make the server run programs (the LaTeX programs, SEC-16), so naming the first
 one is kept to whoever runs the server, on every server, this computer's included (D1370):
 
 * **The setup code.** At every start that ends with no administrator, the server makes a code of 12 characters

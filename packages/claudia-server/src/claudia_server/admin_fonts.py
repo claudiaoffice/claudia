@@ -46,6 +46,7 @@ from claudia_fonts import rename_collection as rename_in_record
 from claudia_fonts.adding import MAX_BYTES, MAX_FILES
 
 from .fonts import FontService, Origin
+from .i18n import message_of, msg
 from .uploads import file_name, read_body
 
 #: The format of ``GET /api/admin/fonts``.
@@ -92,8 +93,12 @@ class FontUploads:
         if len(waiting) >= MAX_FILES or sum(len(h.data) for h in waiting) + len(data) > MAX_BYTES:
             raise HTTPException(
                 503,
-                f"too many fonts are waiting to be added: at most {MAX_FILES} files or "
-                f"{MAX_BYTES // (1024 * 1024)} MB at once; close Add fonts… to let go of them",
+                msg(
+                    "too many fonts are waiting to be added: at most {files} files or {mb} MB at once; "
+                    "close Add fonts… to let go of them",
+                    files=MAX_FILES,
+                    mb=MAX_BYTES // (1024 * 1024),
+                ),
             )
         token = secrets.token_urlsafe(18)
         self._held[token] = _Held(admin, name, data, self._clock() + HOLD_SECONDS)
@@ -103,9 +108,9 @@ class FontUploads:
         """The files ``admin`` holds by ``tokens``, in order. ``HTTPException(400)`` for anything else."""
         self._expire()
         if not (isinstance(tokens, list) and tokens and all(isinstance(t, str) for t in tokens)):
-            raise HTTPException(400, "files must be a list of tokens from /api/admin/fonts/files")
+            raise HTTPException(400, msg("files must be a list of tokens from /api/admin/fonts/files"))
         if any(t not in self._held or self._held[t].admin != admin for t in tokens):
-            raise HTTPException(400, "a file is no longer held; choose it again")
+            raise HTTPException(400, msg("a file is no longer held; choose it again"))
         return [(self._held[t].name, self._held[t].data) for t in tokens]
 
     def drop(self, admin: str, tokens: object) -> int:
@@ -285,7 +290,7 @@ def _adding_routes(
         try:
             checks = await asyncio.to_thread(check_files, files, service.catalogue)
         except AddRefused as exc:
-            raise HTTPException(400, str(exc)) from exc
+            raise HTTPException(400, message_of(exc)) from exc
         added = [c for c in checks if c.verdict == "added"]
         families = sorted({c.family for c in added if c.family}, key=str.casefold)
         shipped = {c.record.name for c in service.catalogue.collections if service.origin_of(c) == "shipped"}
@@ -298,13 +303,13 @@ def _adding_routes(
     @router.post("/fonts/collections", status_code=201)
     async def add(admin: Signedin, body: JsonBody):
         if service.added_root is None:
-            raise HTTPException(409, "this server has no folder to add fonts to")
+            raise HTTPException(409, msg("this server has no folder to add fonts to"))
         may_go = body.get("may_go")
         if may_go not in ("anywhere", "this-server"):
-            raise HTTPException(400, "may_go must be anywhere or this-server")
+            raise HTTPException(400, msg("may_go must be anywhere or this-server"))
         name, licence = body.get("name"), body.get("licence")
         if not (isinstance(name, str) and isinstance(licence, str)):
-            raise HTTPException(400, "a collection needs a name and a licence")
+            raise HTTPException(400, msg("a collection needs a name and a licence"))
         tokens = body.get("files")
         files = uploads.files(admin, tokens)
         async with _CHANGING:
@@ -321,7 +326,7 @@ def _adding_routes(
                     added=utc_now()[:10],
                 )
             except AddRefused as exc:
-                raise HTTPException(400, str(exc)) from exc
+                raise HTTPException(400, message_of(exc)) from exc
             uploads.drop(admin, tokens)
             await asyncio.to_thread(service.reload)
         return page()
@@ -337,22 +342,22 @@ def _collection_routes(
         current = _Page(service)
         members = current.cards().get(card)
         if not members:
-            raise HTTPException(404, "no such collection")
+            raise HTTPException(404, msg("no such collection"))
         if current.origin(members[0]) != "added":
-            raise HTTPException(409, "only a collection added in the server settings can be changed here")
+            raise HTTPException(409, msg("only a collection added in the server settings can be changed here"))
         return members[0]
 
     @router.patch("/fonts/collections/{card}")
     async def rename(card: str, admin: Signedin, body: JsonBody):
         name = body.get("name")
         if not isinstance(name, str):
-            raise HTTPException(400, "a collection needs a name")
+            raise HTTPException(400, msg("a collection needs a name"))
         async with _CHANGING:
             collection = editable(card)
             try:
                 await asyncio.to_thread(rename_in_record, collection.folder, name)
             except AddRefused as exc:
-                raise HTTPException(400, str(exc)) from exc
+                raise HTTPException(400, message_of(exc)) from exc
             await asyncio.to_thread(service.reload)
         return page()
 

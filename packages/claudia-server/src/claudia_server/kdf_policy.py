@@ -15,6 +15,8 @@ from collections.abc import Callable
 from claudia_document_file import KdfParams, calibrate
 from claudia_document_file.kdf import DEFAULT_MAX_MEMORY_KIB, DEFAULT_TARGET_SECONDS
 
+from .i18n import msg
+
 log = logging.getLogger("claudia_server")
 
 MIN_TARGET_SECONDS = 0.1
@@ -29,7 +31,13 @@ def check_target(value: object) -> float:
         or not math.isfinite(value)
         or not MIN_TARGET_SECONDS <= value <= MAX_TARGET_SECONDS
     ):
-        raise ValueError(f"the target must be a number of seconds from {MIN_TARGET_SECONDS} to {MAX_TARGET_SECONDS:g}")
+        raise ValueError(
+            msg(
+                "the target must be a number of seconds from {low} to {high}",
+                low=MIN_TARGET_SECONDS,
+                high=f"{MAX_TARGET_SECONDS:g}",
+            )
+        )
     return float(value)
 
 

@@ -1325,6 +1325,10 @@ msgstr "Claude"
 msgid "Claude is not allowed in this document. The owner can change that in Preferences ▸ AI…"
 msgstr "Claude ist in diesem Dokument nicht erlaubt. Die Eigentümerin oder der Eigentümer kann das unter Einstellungen ▸ KI… ändern."
 
+#: packages/claudia-server/src/claudia_server/admin_api.py
+msgid "Claude needs a provider key."
+msgstr "Claude braucht einen Anbieterschlüssel."
+
 #: web/app/components/OpenDialog.vue
 msgid "Claudia cannot open this file."
 msgstr "Claudia kann diese Datei nicht öffnen."
@@ -1488,6 +1492,10 @@ msgstr "Übliche Zeiten"
 #: web/app/components/SearchPanel.vue
 msgid "Condition"
 msgstr "Bedingung"
+
+#: packages/claudia-server/src/claudia_server/admin_api.py
+msgid "Confirm first: {sentence}"
+msgstr "Bestätigen Sie zuerst: {sentence}"
 
 #: web/app/components/FirstAdminSetup.vue
 msgid "Confirm password"
@@ -8053,6 +8061,14 @@ msgstr "ein Zellbezug"
 msgid "a chart's range must be inside the sheet"
 msgstr "Der Bereich eines Diagramms muss im Tabellenblatt liegen"
 
+#: packages/claudia-server/src/claudia_server/admin_fonts.py
+msgid "a collection needs a name"
+msgstr "Eine Sammlung braucht einen Namen"
+
+#: packages/claudia-server/src/claudia_server/admin_fonts.py
+msgid "a collection needs a name and a licence"
+msgstr "Eine Sammlung braucht einen Namen und eine Lizenz"
+
 #: packages/claudia-server/src/claudia_server/tables.py
 msgid "a column cannot be moved in front of itself"
 msgstr "Eine Spalte kann nicht vor sich selbst verschoben werden"
@@ -8072,6 +8088,10 @@ msgstr "eine Ziffer"
 #: packages/claudia-server/src/claudia_server/app.py
 msgid "a file becomes a new document: hello needs create"
 msgstr "aus einer Datei wird ein neues Dokument: hello braucht create"
+
+#: packages/claudia-server/src/claudia_server/admin_fonts.py
+msgid "a file is no longer held; choose it again"
+msgstr "Eine Datei wird nicht mehr bereitgehalten; wählen Sie sie erneut aus"
 
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "a grid of random numbers (1 row, 1 column, from 0 to 1 and not whole numbers unless said otherwise). With whole TRUE the numbers are whole, from min to max."
@@ -8104,6 +8124,10 @@ msgstr "Eine verbundene Zelle kann nicht auseinandergerissen werden: Teilen Sie 
 #: packages/claudia-core/src/claudia_core/messages.py
 msgid "a message can have at most {limit} characters"
 msgstr "Eine Nachricht hat höchstens {limit} Zeichen"
+
+#: packages/claudia-server/src/claudia_server/admin_api.py
+msgid "a name and a password are needed"
+msgstr "Ein Name und ein Passwort werden gebraucht"
 
 #: packages/claudia-computes/src/claudia_computes/names.py packages/claudia-core/src/claudia_core/names.py packages/claudia-server/src/claudia_server/thing_names.py
 msgid "a name has at most {limit} characters"
@@ -8164,6 +8188,10 @@ msgstr "Eine Palette enthält höchstens {limit} Farbrollen"
 #: packages/claudia-core/src/claudia_core/paragraphs.py
 msgid "a paragraph holds text of at most {limit} characters"
 msgstr "Ein Absatz hat höchstens {limit} Zeichen"
+
+#: packages/claudia-server/src/claudia_server/admin_api.py
+msgid "a password is needed"
+msgstr "Ein Passwort wird gebraucht"
 
 #: packages/claudia-creates/src/claudia_creates/model.py
 msgid "a planned time is a whole number of seconds from 1 to {limit}"
@@ -8316,6 +8344,10 @@ msgstr "Ein {thing} hat keinen Platz „{slot}“; es gibt {slots}"
 #: web/app/components/ResultNote.vue
 msgid "about this cell"
 msgstr "zu dieser Zelle"
+
+#: packages/claudia-server/src/claudia_server/admin_api.py
+msgid "access_secret must be a string or null"
+msgstr "access_secret muss eine Zeichenkette oder null sein"
 
 #: packages/claudia-server/src/claudia_server/shape_methods.py
 msgid "add_object: a chart is made in computes, not here"
@@ -8825,6 +8857,10 @@ msgstr "als {format} exportiert"
 msgid "exported unprotected"
 msgstr "ungeschützt exportiert"
 
+#: packages/claudia-server/src/claudia_server/admin_fonts.py
+msgid "files must be a list of tokens from /api/admin/fonts/files"
+msgstr "files muss eine Liste von Tokens aus /api/admin/fonts/files sein"
+
 #: web/app/components/PivotPanel.vue
 msgid "find a field"
 msgstr "Feld suchen"
@@ -8977,6 +9013,10 @@ msgstr "insert_chart: Der Ort eines Diagramms, das als {how} gezeigt wird, ist {
 msgid "internal server error"
 msgstr "Interner Serverfehler"
 
+#: packages/claudia-server/src/claudia_server/admin.py
+msgid "invalid administrator name “{name}”"
+msgstr "Ungültiger Name für eine Administratorin oder einen Administrator: „{name}“"
+
 #: packages/claudia-server/src/claudia_server/protocol.py
 msgid "invalid command: {reason!r}"
 msgstr "Ungültiger Befehl: {reason!r}"
@@ -9088,6 +9128,14 @@ msgstr "sucht den Wert in der ersten Zeile der Tabelle."
 #: web/app/components/RandomDialog.vue
 msgid "low"
 msgstr "niedrig"
+
+#: packages/claudia-server/src/claudia_server/admin_api.py
+msgid "max_documents must be a whole number of at least 1"
+msgstr "max_documents muss eine ganze Zahl von mindestens 1 sein"
+
+#: packages/claudia-server/src/claudia_server/admin_fonts.py
+msgid "may_go must be anywhere or this-server"
+msgstr "may_go muss anywhere oder this-server sein"
 
 #: web/app/components/OutcomePopover.vue web/app/components/RandomDialog.vue
 msgid "mean"
@@ -9236,6 +9284,10 @@ msgstr "kein Absatz {id!r}"
 #: web/app/lib/cell-styles.ts
 msgid "no style of their own"
 msgstr "kein eigenes Format"
+
+#: packages/claudia-server/src/claudia_server/admin_fonts.py
+msgid "no such collection"
+msgstr "Diese Sammlung gibt es nicht"
 
 #: packages/claudia-computes/src/claudia_computes/pivot_render.py
 msgid "no table or range named “{source}”"
@@ -9396,6 +9448,10 @@ msgstr "nur der Sonntag ist frei: der Samstag ist ein Arbeitstag"
 #: packages/claudia-server/src/claudia_server/structure_methods.py
 msgid "only a built-in scheme can be reset"
 msgstr "nur ein vorgegebenes Schema kann zurückgesetzt werden"
+
+#: packages/claudia-server/src/claudia_server/admin_fonts.py
+msgid "only a collection added in the server settings can be changed here"
+msgstr "Hier lässt sich nur eine Sammlung ändern, die in den Servereinstellungen hinzugefügt wurde"
 
 #: packages/claudia-server/src/claudia_server/protocol.py
 msgid "only an editor or an owner of a document may change its description and tags"
@@ -9781,6 +9837,10 @@ msgstr "Blätter, Zellbereiche, Diagramme und Objekte"
 msgid "show must be one of {shows}"
 msgstr "show muss eines von {shows} sein"
 
+#: packages/claudia-server/src/claudia_server/admin_api.py
+msgid "sign in as an administrator first"
+msgstr "Melden Sie sich zuerst als Administratorin oder Administrator an"
+
 #: web/app/components/SidePanel.vue
 msgid "silence = agree"
 msgstr "Schweigen = Zustimmung"
@@ -9909,6 +9969,10 @@ msgstr "Text des Objekts"
 msgid "that is more prints and PDFs than the document records in a minute"
 msgstr "das sind mehr Ausdrucke und PDFs, als das Dokument in einer Minute festhält"
 
+#: packages/claudia-server/src/claudia_server/admin_api.py
+msgid "that is not this server's setup code; look in the log of its last start (a restart makes a new code)"
+msgstr "Das ist nicht der Einrichtungscode dieses Servers; sehen Sie im Protokoll seines letzten Starts nach (ein Neustart erzeugt einen neuen Code)"
+
 #: packages/claudia-server/src/claudia_server/protocol.py
 msgid "that is not your current password"
 msgstr "Das ist nicht Ihr aktuelles Passwort"
@@ -9916,6 +9980,14 @@ msgstr "Das ist nicht Ihr aktuelles Passwort"
 #: packages/claudia-server/src/claudia_server/composes.py
 msgid "that would make too many paragraphs"
 msgstr "Das ergäbe zu viele Absätze"
+
+#: packages/claudia-server/src/claudia_server/admin_api.py
+msgid "the AI assistant is disabled for this server (it was started with --no-assistant)"
+msgstr "Der KI-Assistent ist auf diesem Server ausgeschaltet (er wurde mit --no-assistant gestartet)"
+
+#: packages/claudia-server/src/claudia_server/admin_api.py
+msgid "the answer length must be at least 1"
+msgstr "Die Antwortlänge muss mindestens 1 sein"
 
 #: packages/claudia-server/src/claudia_server/protocol.py
 msgid "the assistant cannot apply a raw command; use the app's own methods"
@@ -10065,6 +10137,14 @@ msgstr "die Trennmuster für {name} sind nicht vollständig angekommen"
 msgid "the largest value"
 msgstr "der größte Wert"
 
+#: packages/claudia-server/src/claudia_server/admin.py
+msgid "the last administrator cannot be removed"
+msgstr "Die letzte Administratorin oder der letzte Administrator kann nicht entfernt werden"
+
+#: packages/claudia-server/src/claudia_server/admin_api.py
+msgid "the local model needs a model folder"
+msgstr "Das lokale Modell braucht einen Modellordner"
+
 #: packages/claudia-core/src/claudia_core/page.py
 msgid "the margins leave less than 10 mm for the content"
 msgstr "Die Ränder lassen weniger als 10 mm für den Inhalt"
@@ -10089,6 +10169,10 @@ msgstr "Das Objekt muss auf der Folie bleiben ({slide_width} mal {slide_height} 
 msgid "the parts of this document the ai looks at to answer her"
 msgstr "die Teile dieses Dokuments, die die KI ansieht, um ihr zu antworten"
 
+#: packages/claudia-server/src/claudia_server/admin.py
+msgid "the password needs at least {count} characters"
+msgstr "Das Passwort braucht mindestens {count} Zeichen"
+
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "the pivot table called ``name`` — the summary of a table the field panel of Tools ▸ Pivot Table describes. Written by the pivot's own commands, not by hand: change the pivot in its panel, not this formula. As the whole formula it fills the cells below and beside it; inside another formula it gives the first cell."
 msgstr "die Pivot-Tabelle namens ``name`` — die Zusammenfassung einer Tabelle, die das Feldfenster unter Werkzeuge ▸ Pivot-Tabelle beschreibt. Wird von den Befehlen der Pivot-Tabelle geschrieben, nicht von Hand: ändern Sie die Pivot-Tabelle in ihrem Feldfenster, nicht diese Formel. Als ganze Formel füllt sie die Zellen darunter und daneben; innerhalb einer anderen Formel gibt sie die erste Zelle zurück."
@@ -10112,6 +10196,10 @@ msgstr "die Position (ab 1) des Wertes in einer Zeile oder Spalte. Typ 0 ist ein
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "the position (from 1) of the value. Match mode 0 is exact, -1 the exact value or else the next smaller, 1 or else the next larger, 2 exact with wildcards. Search mode 1 looks from the first, -1 from the last. Not found is #N/A."
 msgstr "die Position (ab 1) des Wertes. Vergleichsmodus 0 ist genau, -1 der genaue Wert oder sonst der nächstkleinere, 1 oder sonst der nächstgrößere, 2 genau mit Platzhaltern. Suchmodus 1 sucht vom ersten, -1 vom letzten. Nicht gefunden ergibt #N/A."
+
+#: packages/claudia-server/src/claudia_server/admin_api.py
+msgid "the provider must be one of: {providers}"
+msgstr "Der Anbieter muss einer der folgenden sein: {providers}"
 
 #: packages/claudia-computes/src/claudia_computes/pivot_commands.py
 msgid "the query of {name} is too long for a formula: {length} of {limit} characters"
@@ -10208,6 +10296,10 @@ msgstr "Die Tabelle hat keine Spalte {id!r}"
 #: packages/claudia-server/src/claudia_server/tables.py
 msgid "the table has no row {id!r}"
 msgstr "Die Tabelle hat keine Zeile {id!r}"
+
+#: packages/claudia-server/src/claudia_server/kdf_policy.py
+msgid "the target must be a number of seconds from {low} to {high}"
+msgstr "Das Ziel muss eine Zahl von Sekunden zwischen {low} und {high} sein"
 
 #: web/app/components/SearchPanel.vue web/app/components/TextEditor.vue web/app/lib/print/source.ts
 msgid "the text"
@@ -10409,6 +10501,10 @@ msgstr "diese Zeile"
 msgid "this server"
 msgstr "diesem Server"
 
+#: packages/claudia-server/src/claudia_server/admin_api.py
+msgid "this server already has an administrator; sign in to add another"
+msgstr "Dieser Server hat schon eine Administratorin oder einen Administrator; melden Sie sich an, um weitere hinzuzufügen"
+
 #: packages/claudia-server/src/claudia_server/protocol.py
 msgid "this server cannot keep the owner's consent, so Claude is not allowed"
 msgstr "Dieser Server kann die Zustimmung der Eigentümerin oder des Eigentümers nicht speichern, daher ist Claude nicht erlaubt"
@@ -10465,6 +10561,10 @@ msgstr "Dieser Server unterstützt die Übergabe des Eigentums nicht"
 msgid "this server does not support leaving a document"
 msgstr "Dieser Server unterstützt das Verlassen eines Dokuments nicht"
 
+#: packages/claudia-server/src/claudia_server/admin_fonts.py
+msgid "this server has no folder to add fonts to"
+msgstr "Dieser Server hat keinen Ordner, in den sich Schriften hinzufügen lassen"
+
 #: packages/claudia-server/src/claudia_server/hub.py
 msgid "this server holds {limit} documents, the most it may hold"
 msgstr "Dieser Server hält {limit} Dokumente, mehr sind nicht erlaubt"
@@ -10472,6 +10572,10 @@ msgstr "Dieser Server hält {limit} Dokumente, mehr sind nicht erlaubt"
 #: packages/claudia-server/src/claudia_server/hub.py
 msgid "this server keeps its documents in memory and cannot take in a file"
 msgstr "dieser Server hält seine Dokumente nur im Speicher und kann keine Datei aufnehmen"
+
+#: packages/claudia-server/src/claudia_server/admin_api.py
+msgid "this server's document model has no AI assistant yet"
+msgstr "Das Dokumentmodell dieses Servers hat noch keinen KI-Assistenten"
 
 #: packages/claudia-server/src/claudia_server/composes.py
 msgid "this suggestion is not open any more"
@@ -10501,9 +10605,17 @@ msgstr "tobi"
 msgid "today's date as a day number (the time of day is left out)."
 msgstr "das heutige Datum als Tageszahl (die Uhrzeit wird weggelassen)."
 
+#: packages/claudia-server/src/claudia_server/admin_fonts.py
+msgid "too many fonts are waiting to be added: at most {files} files or {mb} MB at once; close Add fonts… to let go of them"
+msgstr "Zu viele Schriften warten darauf, hinzugefügt zu werden: höchstens {files} Dateien oder {mb} MB auf einmal; schließen Sie „Schriften hinzufügen …“, um sie freizugeben"
+
 #: packages/claudia-server/src/claudia_server/what_if.py
 msgid "too many previews are open: finish or drop one before starting another"
 msgstr "Zu viele Vorschauen sind offen: Schließen Sie eine ab oder verwerfen Sie sie, bevor Sie eine neue beginnen"
+
+#: packages/claudia-server/src/claudia_server/admin_api.py
+msgid "too many tries; try again in {seconds} s"
+msgstr "Zu viele Versuche; versuchen Sie es in {seconds} s erneut"
 
 #: packages/claudia-server/src/claudia_server/computes.py
 msgid "trace: reach must be one of {reaches}"
@@ -10636,6 +10748,10 @@ msgstr "schreiben; ein Wort wird gesendet, wenn es endet, und die anderen sehen,
 #: web/app/components/TextEditor.vue
 msgid "written by {author}"
 msgstr "geschrieben von {author}"
+
+#: packages/claudia-server/src/claudia_server/admin_api.py
+msgid "wrong name or password"
+msgstr "Falscher Name oder falsches Passwort"
 
 #: web/app/components/AdminTypesetting.vue
 msgid "xelatex"
@@ -11285,6 +11401,10 @@ msgstr "{place} enthält dieses Dokument bereits, als {id}. Es kann nicht ein zw
 msgid "{problem}"
 msgstr "{problem}"
 
+#: packages/claudia-server/src/claudia_server/typeset_check.py
+msgid "{program} does not say it is {setting}: asked with {asked}, it should answer with a line that begins “{banner}”"
+msgstr "{program} gibt sich nicht als {setting} zu erkennen: Mit {asked} gefragt, sollte es mit einer Zeile antworten, die mit „{banner}“ beginnt"
+
 #: web/app/lib/grid-a11y.ts
 msgid "{range} selected, {count} cells"
 msgstr "{range} ausgewählt, {count} Zellen"
@@ -11577,9 +11697,17 @@ msgstr "„{name}“ ist ein Format der Vorlage und kann nur ausgeblendet, nicht
 msgid "“{name}” is a {kind} style and does not fit {where}"
 msgstr "„{name}“ ist ein Stil für {kind} und passt nicht zu {where}"
 
+#: packages/claudia-server/src/claudia_server/admin.py
+msgid "“{name}” is already an administrator"
+msgstr "„{name}“ ist schon Administratorin oder Administrator"
+
 #: packages/claudia-core/src/claudia_core/styles.py
 msgid "“{name}” is in use: say which style takes its place"
 msgstr "„{name}“ wird verwendet: Sagen Sie, welches Format an seine Stelle tritt"
+
+#: packages/claudia-server/src/claudia_server/admin_api.py
+msgid "“{name}” is not an administrator"
+msgstr "„{name}“ ist keine Administratorin und kein Administrator"
 
 #: web/app/components/DeleteStyleDialog.vue
 msgid "“{name}” is what “no style” means here: the plain one of its kind."

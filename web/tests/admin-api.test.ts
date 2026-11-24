@@ -25,6 +25,21 @@ describe('createAdminApi', () => {
     expect(status).toEqual({ needs_administrator: false, exposed: true, administrator: 'tobi' })
   })
 
+  it('asks to be answered in the App Language of the page (CODE-92)', async () => {
+    let seenHeaders: Record<string, string> = {}
+    const fetchImpl = fakeFetch((_url, init) => {
+      seenHeaders = (init?.headers as Record<string, string>) ?? {}
+      return { status: 200, body: {} }
+    })
+    let language = 'de'
+    const api = createAdminApi(fetchImpl, () => language)
+    await api.status()
+    expect(seenHeaders['accept-language']).toBe('de')
+    language = 'en'
+    await api.status()
+    expect(seenHeaders['accept-language']).toBe('en')
+  })
+
   it('sends a bearer token when one is given, and none when not', async () => {
     let seenHeaders: Record<string, string> = {}
     const fetchImpl = fakeFetch((_url, init) => {

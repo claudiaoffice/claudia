@@ -1325,6 +1325,10 @@ msgstr ""
 msgid "Claude is not allowed in this document. The owner can change that in Preferences ▸ AI…"
 msgstr ""
 
+#: packages/claudia-server/src/claudia_server/admin_api.py
+msgid "Claude needs a provider key."
+msgstr ""
+
 #: web/app/components/OpenDialog.vue
 msgid "Claudia cannot open this file."
 msgstr ""
@@ -1487,6 +1491,10 @@ msgstr ""
 
 #: web/app/components/SearchPanel.vue
 msgid "Condition"
+msgstr ""
+
+#: packages/claudia-server/src/claudia_server/admin_api.py
+msgid "Confirm first: {sentence}"
 msgstr ""
 
 #: web/app/components/FirstAdminSetup.vue
@@ -8053,6 +8061,14 @@ msgstr ""
 msgid "a chart's range must be inside the sheet"
 msgstr ""
 
+#: packages/claudia-server/src/claudia_server/admin_fonts.py
+msgid "a collection needs a name"
+msgstr ""
+
+#: packages/claudia-server/src/claudia_server/admin_fonts.py
+msgid "a collection needs a name and a licence"
+msgstr ""
+
 #: packages/claudia-server/src/claudia_server/tables.py
 msgid "a column cannot be moved in front of itself"
 msgstr ""
@@ -8071,6 +8087,10 @@ msgstr ""
 
 #: packages/claudia-server/src/claudia_server/app.py
 msgid "a file becomes a new document: hello needs create"
+msgstr ""
+
+#: packages/claudia-server/src/claudia_server/admin_fonts.py
+msgid "a file is no longer held; choose it again"
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
@@ -8103,6 +8123,10 @@ msgstr ""
 
 #: packages/claudia-core/src/claudia_core/messages.py
 msgid "a message can have at most {limit} characters"
+msgstr ""
+
+#: packages/claudia-server/src/claudia_server/admin_api.py
+msgid "a name and a password are needed"
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/names.py packages/claudia-core/src/claudia_core/names.py packages/claudia-server/src/claudia_server/thing_names.py
@@ -8163,6 +8187,10 @@ msgstr ""
 
 #: packages/claudia-core/src/claudia_core/paragraphs.py
 msgid "a paragraph holds text of at most {limit} characters"
+msgstr ""
+
+#: packages/claudia-server/src/claudia_server/admin_api.py
+msgid "a password is needed"
 msgstr ""
 
 #: packages/claudia-creates/src/claudia_creates/model.py
@@ -8315,6 +8343,10 @@ msgstr ""
 
 #: web/app/components/ResultNote.vue
 msgid "about this cell"
+msgstr ""
+
+#: packages/claudia-server/src/claudia_server/admin_api.py
+msgid "access_secret must be a string or null"
 msgstr ""
 
 #: packages/claudia-server/src/claudia_server/shape_methods.py
@@ -8825,6 +8857,10 @@ msgstr ""
 msgid "exported unprotected"
 msgstr ""
 
+#: packages/claudia-server/src/claudia_server/admin_fonts.py
+msgid "files must be a list of tokens from /api/admin/fonts/files"
+msgstr ""
+
 #: web/app/components/PivotPanel.vue
 msgid "find a field"
 msgstr ""
@@ -8977,6 +9013,10 @@ msgstr ""
 msgid "internal server error"
 msgstr ""
 
+#: packages/claudia-server/src/claudia_server/admin.py
+msgid "invalid administrator name “{name}”"
+msgstr ""
+
 #: packages/claudia-server/src/claudia_server/protocol.py
 msgid "invalid command: {reason!r}"
 msgstr ""
@@ -9087,6 +9127,14 @@ msgstr ""
 
 #: web/app/components/RandomDialog.vue
 msgid "low"
+msgstr ""
+
+#: packages/claudia-server/src/claudia_server/admin_api.py
+msgid "max_documents must be a whole number of at least 1"
+msgstr ""
+
+#: packages/claudia-server/src/claudia_server/admin_fonts.py
+msgid "may_go must be anywhere or this-server"
 msgstr ""
 
 #: web/app/components/OutcomePopover.vue web/app/components/RandomDialog.vue
@@ -9235,6 +9283,10 @@ msgstr ""
 
 #: web/app/lib/cell-styles.ts
 msgid "no style of their own"
+msgstr ""
+
+#: packages/claudia-server/src/claudia_server/admin_fonts.py
+msgid "no such collection"
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/pivot_render.py
@@ -9395,6 +9447,10 @@ msgstr ""
 
 #: packages/claudia-server/src/claudia_server/structure_methods.py
 msgid "only a built-in scheme can be reset"
+msgstr ""
+
+#: packages/claudia-server/src/claudia_server/admin_fonts.py
+msgid "only a collection added in the server settings can be changed here"
 msgstr ""
 
 #: packages/claudia-server/src/claudia_server/protocol.py
@@ -9781,6 +9837,10 @@ msgstr ""
 msgid "show must be one of {shows}"
 msgstr ""
 
+#: packages/claudia-server/src/claudia_server/admin_api.py
+msgid "sign in as an administrator first"
+msgstr ""
+
 #: web/app/components/SidePanel.vue
 msgid "silence = agree"
 msgstr ""
@@ -9909,12 +9969,24 @@ msgstr ""
 msgid "that is more prints and PDFs than the document records in a minute"
 msgstr ""
 
+#: packages/claudia-server/src/claudia_server/admin_api.py
+msgid "that is not this server's setup code; look in the log of its last start (a restart makes a new code)"
+msgstr ""
+
 #: packages/claudia-server/src/claudia_server/protocol.py
 msgid "that is not your current password"
 msgstr ""
 
 #: packages/claudia-server/src/claudia_server/composes.py
 msgid "that would make too many paragraphs"
+msgstr ""
+
+#: packages/claudia-server/src/claudia_server/admin_api.py
+msgid "the AI assistant is disabled for this server (it was started with --no-assistant)"
+msgstr ""
+
+#: packages/claudia-server/src/claudia_server/admin_api.py
+msgid "the answer length must be at least 1"
 msgstr ""
 
 #: packages/claudia-server/src/claudia_server/protocol.py
@@ -10065,6 +10137,14 @@ msgstr ""
 msgid "the largest value"
 msgstr ""
 
+#: packages/claudia-server/src/claudia_server/admin.py
+msgid "the last administrator cannot be removed"
+msgstr ""
+
+#: packages/claudia-server/src/claudia_server/admin_api.py
+msgid "the local model needs a model folder"
+msgstr ""
+
 #: packages/claudia-core/src/claudia_core/page.py
 msgid "the margins leave less than 10 mm for the content"
 msgstr ""
@@ -10089,6 +10169,10 @@ msgstr ""
 msgid "the parts of this document the ai looks at to answer her"
 msgstr ""
 
+#: packages/claudia-server/src/claudia_server/admin.py
+msgid "the password needs at least {count} characters"
+msgstr ""
+
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "the pivot table called ``name`` — the summary of a table the field panel of Tools ▸ Pivot Table describes. Written by the pivot's own commands, not by hand: change the pivot in its panel, not this formula. As the whole formula it fills the cells below and beside it; inside another formula it gives the first cell."
 msgstr ""
@@ -10111,6 +10195,10 @@ msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "the position (from 1) of the value. Match mode 0 is exact, -1 the exact value or else the next smaller, 1 or else the next larger, 2 exact with wildcards. Search mode 1 looks from the first, -1 from the last. Not found is #N/A."
+msgstr ""
+
+#: packages/claudia-server/src/claudia_server/admin_api.py
+msgid "the provider must be one of: {providers}"
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/pivot_commands.py
@@ -10207,6 +10295,10 @@ msgstr ""
 
 #: packages/claudia-server/src/claudia_server/tables.py
 msgid "the table has no row {id!r}"
+msgstr ""
+
+#: packages/claudia-server/src/claudia_server/kdf_policy.py
+msgid "the target must be a number of seconds from {low} to {high}"
 msgstr ""
 
 #: web/app/components/SearchPanel.vue web/app/components/TextEditor.vue web/app/lib/print/source.ts
@@ -10409,6 +10501,10 @@ msgstr ""
 msgid "this server"
 msgstr ""
 
+#: packages/claudia-server/src/claudia_server/admin_api.py
+msgid "this server already has an administrator; sign in to add another"
+msgstr ""
+
 #: packages/claudia-server/src/claudia_server/protocol.py
 msgid "this server cannot keep the owner's consent, so Claude is not allowed"
 msgstr ""
@@ -10465,12 +10561,20 @@ msgstr ""
 msgid "this server does not support leaving a document"
 msgstr ""
 
+#: packages/claudia-server/src/claudia_server/admin_fonts.py
+msgid "this server has no folder to add fonts to"
+msgstr ""
+
 #: packages/claudia-server/src/claudia_server/hub.py
 msgid "this server holds {limit} documents, the most it may hold"
 msgstr ""
 
 #: packages/claudia-server/src/claudia_server/hub.py
 msgid "this server keeps its documents in memory and cannot take in a file"
+msgstr ""
+
+#: packages/claudia-server/src/claudia_server/admin_api.py
+msgid "this server's document model has no AI assistant yet"
 msgstr ""
 
 #: packages/claudia-server/src/claudia_server/composes.py
@@ -10501,8 +10605,16 @@ msgstr ""
 msgid "today's date as a day number (the time of day is left out)."
 msgstr ""
 
+#: packages/claudia-server/src/claudia_server/admin_fonts.py
+msgid "too many fonts are waiting to be added: at most {files} files or {mb} MB at once; close Add fonts… to let go of them"
+msgstr ""
+
 #: packages/claudia-server/src/claudia_server/what_if.py
 msgid "too many previews are open: finish or drop one before starting another"
+msgstr ""
+
+#: packages/claudia-server/src/claudia_server/admin_api.py
+msgid "too many tries; try again in {seconds} s"
 msgstr ""
 
 #: packages/claudia-server/src/claudia_server/computes.py
@@ -10635,6 +10747,10 @@ msgstr ""
 
 #: web/app/components/TextEditor.vue
 msgid "written by {author}"
+msgstr ""
+
+#: packages/claudia-server/src/claudia_server/admin_api.py
+msgid "wrong name or password"
 msgstr ""
 
 #: web/app/components/AdminTypesetting.vue
@@ -11285,6 +11401,10 @@ msgstr ""
 msgid "{problem}"
 msgstr ""
 
+#: packages/claudia-server/src/claudia_server/typeset_check.py
+msgid "{program} does not say it is {setting}: asked with {asked}, it should answer with a line that begins “{banner}”"
+msgstr ""
+
 #: web/app/lib/grid-a11y.ts
 msgid "{range} selected, {count} cells"
 msgstr ""
@@ -11577,8 +11697,16 @@ msgstr ""
 msgid "“{name}” is a {kind} style and does not fit {where}"
 msgstr ""
 
+#: packages/claudia-server/src/claudia_server/admin.py
+msgid "“{name}” is already an administrator"
+msgstr ""
+
 #: packages/claudia-core/src/claudia_core/styles.py
 msgid "“{name}” is in use: say which style takes its place"
+msgstr ""
+
+#: packages/claudia-server/src/claudia_server/admin_api.py
+msgid "“{name}” is not an administrator"
 msgstr ""
 
 #: web/app/components/DeleteStyleDialog.vue

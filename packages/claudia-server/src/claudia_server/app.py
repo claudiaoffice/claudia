@@ -86,6 +86,7 @@ from .client_address import ClientAddress
 from .fonts import FontService, font_router
 from .formats import CLAUDIA, CLAUDIA_EXPORT, import_state
 from .hosts import AllowedHosts, HostGuard
+from .http_refusal import install as install_refusals
 from .hub import Hub, HubError, same_document_message
 from .hyphenation import HyphenationService, hyphenation_router
 from .i18n import localized, message_of, msg
@@ -782,6 +783,7 @@ def create_app(
             allow_methods=["GET"],
             allow_headers=["Content-Type", "Authorization"],
         )
+    install_refusals(app)  # CODE-92: a refusal is said in the language of the page that asked
     # SEC-13: CSP, nosniff, referrer and permissions on every answer; the start page's inline scripts by hash.
     app.add_middleware(SecurityHeaders, script_hashes=WebScriptHashes(web_dir))
     if idle is not None:

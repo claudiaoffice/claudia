@@ -7,6 +7,7 @@
 // document socket: one less mapping layer, and the tests can compare directly against what the server returns.
 
 import type { CheckAnswer, FontsPage, MayGo } from './admin-fonts'
+import { languageNow } from './i18n'
 
 export class AdminApiError extends Error {
   constructor(
@@ -148,10 +149,12 @@ export interface NewFontCollection {
 }
 
 /** Everything the settings pages call, bound to one `fetch` implementation — a real one in the browser, a fake one
- *  in a test (the same injection `i18n.ts`'s `loadCatalog` uses, just once here instead of on every function). */
-export function createAdminApi(fetchImpl: typeof fetch = fetch) {
+ *  in a test (the same injection `i18n.ts`'s `loadCatalog` uses, just once here instead of on every function), and to
+ *  the App Language the server is asked to answer in (the page's own, by default). */
+export function createAdminApi(fetchImpl: typeof fetch = fetch, language: () => string = languageNow) {
   async function call<T>(method: string, path: string, body?: unknown, token?: string, raw?: { data: Blob; name: string }): Promise<T> {
-    const headers: Record<string, string> = {}
+    // CODE-92: the server says its refusals in the App Language of this page, as a document's connection does (D31)
+    const headers: Record<string, string> = { 'accept-language': language() }
     if (body !== undefined) headers['content-type'] = 'application/json'
     if (raw) headers['x-claudia-name'] = encodeURIComponent(raw.name)
     if (token) headers.authorization = `Bearer ${token}`
