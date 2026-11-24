@@ -22,6 +22,8 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
   markers that changed; a kept odp whose lists changed is written anew.
 
 ### Changed
+- odp and pptx take a box's elements, outlines, graphic styles and DrawingML marks from `claudia_odf_io` and
+  `claudia_opc_io` (CODE-84, D1480). An odp shape's line width is written in points.
 - The loss of a chart on a slide is `chart` (was `diagram`, D1476).
 
 ### Fixed

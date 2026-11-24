@@ -35,7 +35,7 @@ The index is the status of record; a section below keeps the status of the round
 re-checked. **Opened** and **Fixed** are filled from 2026-11-20 on: for older items only where the status already gave
 the date.
 
-### Open (90)
+### Open (89)
 
 
 By priority (P1, P2, P3, then items that wait for a decision without one), then by ID.
@@ -126,14 +126,13 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | CODE-76 | P3 | Code / web clients | The sheet session ignored `shape` events, so an outline a colleague's sheet object needed arrived only with a reload | **fixed** on `architecture-improvements` (D1432) | 2026-11-21 | 2026-11-21 |
 | UX-74 | P3 | UX / AI | While the administrator has Claude off, the owners' dialog shows no check box, so an owner cannot withdraw a consent given earlier; it resumes when Claude is switched on again | **new, open** (size 3) | 2026-11-22 |  |
 | UX-75 | P3 | UX / AI | A window that is open when the administrator changes the provider keeps its old badge until the next consent change or reload | **new, open** (size 3) | 2026-11-22 |  |
-| CODE-84 | P3 | Code / creates I/O | The pptx and odp readers and writers keep their own DrawingML preset names, shape look and ODF graphic-style code beside `claudia_opc_io.drawingml` and `claudia_odf_io.boxes` (D1479), which texts and spreadsheets share | **new, open** (size 3) | 2026-11-24 |  |
 | PROC-22 | P3 | Process / CI | The LibreOffice job may still fail silently, though it has passed every round | **new, open** |  |  |
 | PROC-29 | P3 | Process / E2E | No scenario asserts that a second window sees a holder's outline and name tag (D1223), nor that a colleague's drag is not shown live | **new, open** |  |  |
 | PROC-31 | P3 | Process / i18n | `po/claudia.pot` goes stale at every merge of `main`: only its `#:` source lines move, no msgid changes, and the i18n check of `check_debt.py` fails on them | **new, open** (measured) |  |  |
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |  |  |
 | UX-06 | — | UX | Web menu differs from decisions D4/D5 | needs decision |  |  |
 
-### Fixed (163)
+### Fixed (164)
 
 
 By ID. Items closed without a fix (superseded, wontfix) are here too.
@@ -250,6 +249,7 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | CODE-77 | P2 | Code / computes | Undoing a chart leaves it in the workbook (the server does not forget it), and the page reports a Plotly error | **fixed** 2026-11-23 on `e6-31-slides-in-computes` (D1475) | 2026-11-22 | 2026-11-23 |
 | CODE-83 | P2 | Code / computes | Writing in a text box on a workbook's slide is an internal server error | **fixed** 2026-11-23 on `e6-31-slides-in-computes` | 2026-11-23 | 2026-11-23 |
 | CODE-67 | P3 | computes I/O | Pictures of an XLSX or ODS are not read into the model: they stay in the file, are counted as `picture`, and survive an edit, but cannot be moved or described in computes | **fixed** 2026-11-24 on `e6-31-slides-in-computes` (D1478) | 2026-11-19 | 2026-11-24 |
+| CODE-84 | P3 | Code / creates I/O | The pptx and odp readers and writers keep their own DrawingML preset names, shape look and ODF graphic-style code beside `claudia_opc_io.drawingml` and `claudia_odf_io.boxes` (D1479), which texts and spreadsheets share | **fixed** 2026-11-24 on `e6-31-slides-in-computes` (D1480) | 2026-11-24 | 2026-11-24 |
 | CODE-80 | P2 | Code / AI / privacy | A question to Claude sends, before Claude asks for anything, the sheet list and the top left of the first three sheets (`workbook_lens.orient`; likewise the other two lenses' first look), so a sheet the question has nothing to do with can leave the server; the @core scenario "Claude is sent what the dialog says and nothing else" says it must not | **fixed** 2026-11-23 on `e7-2-skills-and-persona` (D1568) | 2026-11-22 | 2026-11-23 |
 | CODE-81 | P2 | Code / AI | The model was shown doubled braces where a request is explained (`HOW_TO_ASK`, the computes and creates examples), so it did not learn the form of a request: in composes it answered with nothing, in creates it pasted its list into the chat | **fixed** 2026-11-24 on `e7-2-skills-and-persona` (D1566) | 2026-11-23 | 2026-11-24 |
 | CODE-82 | P2 | Code / AI | An empty final answer read "I have nothing to add.", and Claude's answers were cut at the local model's 512 tokens, so a 300-word text failed and a one-sentence text worked | **fixed** 2026-11-24 on `e7-2-skills-and-persona` (D1564, D1565) | 2026-11-23 | 2026-11-24 |
@@ -2788,13 +2788,18 @@ so nothing leaves; but it stays on and comes back with the administrator's next 
 The badge and the dialog read `ai_consent` at join and on `ai_consent_changed` only. **Fix.** Publish the same event to
 the open documents when the provider changes (`AiRuntime.apply`).
 
-### CODE-84 · creates I/O keeps its own copy of the box code · P3 · size 3 · new, open
+### CODE-84 · creates I/O keeps its own copy of the box code · P3 · size 3 · fixed 2026-11-24 (D1480)
 Found while sharing the box code of texts and spreadsheets (E6.31 step 5c, D1479). `claudia_creates_io/pptx.py` and
 `odp.py` have their own preset names of the outlines, their own reading of a shape's fill and line, and their own
 `_graphic_styles` (which keeps the first style of a name where `claudia_odf_io.graphic_styles` keeps the last).
 **Fix.** Use `claudia_opc_io.drawingml` (`PRESET`, `SHAPE_OF`, `look_in`, `solid`, `outline`) and `claudia_odf_io`
 (`graphic_styles`, `box_look`, `held_box`). **Acceptance.** The pptx and odp tests pass unchanged; no second copy of
 those names or readers in creates-io.
+**Fixed** on `e6-31-slides-in-computes` (D1480): odp takes `graphic_styles`, `odf_properties`, `OUTLINES`,
+`outline_element`, `put_words`, `fill_and_line`, `hex_of` and `CM_PER_INCH` from `claudia_odf_io`; pptx takes `PRESET`,
+`mark_decorative`, `add_svg`, `is_decorative`, `shown_part`, `turn_of`, `DRAWINGML` and `EMU_PER_POINT` from
+`claudia_opc_io`. The look readers of `_pptx_looks` and `_odp_looks` stay: they turn theme colours and dashes into
+styles (D467), which `look_in` and `box_look` do not. The pptx and odp tests pass unchanged.
 
 ## Round of 2026-11-22, second part (step code for the names spec, E1.13; branch `e2e-guard`)
 

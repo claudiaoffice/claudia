@@ -69,6 +69,9 @@
  "UNKNOWN": {
   "value": "(-1, -1, -1)"
  },
+ "add_svg": {
+  "function": "(blip: 'etree._Element', rid: 'str') -> 'None'"
+ },
  "check_package": {
   "function": "(zip_bytes: 'bytes', limits: 'PackageLimits' = PackageLimits(max_members=10000, max_part_bytes=268435456, max_total_bytes=536870912, max_ratio=250, ratio_from_bytes=33554432)) -> 'None'"
  },

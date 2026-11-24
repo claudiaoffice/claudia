@@ -331,3 +331,20 @@ The server's changelog had entries on both sides under Unreleased; the compiled 
   offset in it, D1232); `FileChart`, `FileObject`, `DrawnAnchor` and `DrawnFrame` keep similar fields (they are what
   each step of the reading knows); `xlsx_layout.POINTS_PER_PIXEL` (the rows' unit) stays; creates-io's pptx and odp
   readers keep their own preset and graphic-style code (not touched by this step: CODE-84).
+
+## CODE-84 · creates I/O on the shared box code (D1480), 2026-11-24
+
+- **First red:** `claudia-odf-io/tests/test_boxes.py` (the elements of the outlines, the words in them, `OUTLINES` with
+  LibreOffice's `ooxml-*` names, `fill_and_line`, an automatic style winning over a common one) and
+  `test_drawingml.py::test_an_svg_put_beside_a_picture_is_the_part_it_draws`; then the code. CODE-84 changes no
+  behaviour a test of creates asks for, so the 372 tests of creates-io are the net of the move and pass unchanged.
+- **New in `claudia_odf_io`:** `OUTLINES`, `outline_element`, `put_words`, `fill_and_line`, `hex_of`; `box_element` and
+  `graphic_properties` are built on them. **In `claudia_opc_io`:** `add_svg`.
+- **odp:** `_CUSTOM`, `_graphic_styles`, `_TRIANGLE_PATH`, `_hex`, `_CM_PER_INCH` and the walk of `_bare` are gone;
+  the shape elements come from `_drawn` (`outline_element` with the attributes of the slide). **pptx:** `_AUTOSHAPE`
+  is made from `PRESET` (`MSO_SHAPE.from_xml`), the decorative and SVG constants are gone; `pptx_pictures` reads with
+  `shown_part`, `turn_of`, `is_decorative`. `_pptx_looks` and computes' `xlsx_charts` use `EMU_PER_POINT`,
+  `EMU_PER_PIXEL`.
+- **Checked by eye:** the deck of `test_odp.a_deck` (a text box, a circle, a boxed rectangle, a triangle) as odp and
+  pptx, printed by LibreOffice: as before.
+- **Not shared (said in D1480):** the look readers of creates, which read theme colours into styles.
