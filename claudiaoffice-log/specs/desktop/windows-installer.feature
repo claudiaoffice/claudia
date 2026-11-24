@@ -16,3 +16,11 @@ Feature: Claudia Office installed on Windows opens its apps
     When I start Claudia Composes from its icon
     Then it does not say that the app is missing or has not been built
     And the window of Claudia Composes opens
+
+  # UX-79, D751
+  @unit:tests/test_windows_packaging.py
+  Scenario: The installer and the list of programs show the suite's icon
+    Given I installed Claudia Office on Windows
+    When I look at the setup file and at the entry of Claudia Office in the list of installed programs
+    Then both show the three-dot icon of the suite, not the icon of one app
+    And the shortcuts of the apps keep the icons of their apps

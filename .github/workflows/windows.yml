@@ -294,7 +294,7 @@ jobs:
           . .\helpers.ps1
           Install-Claudia 'client,service'
           foreach ($file in 'node\node.exe', 'server\claudia-server.exe', 'client\dist\launch.js', 'client\packaged.json', 'client\claudia-start.exe',
-                   'client\apps\composes\bin\neutralino-win_x64.exe', 'web\index.html', 'service\claudia-service.exe', 'icons\computes.ico') {
+                   'client\apps\composes\bin\neutralino-win_x64.exe', 'web\index.html', 'service\claudia-service.exe', 'icons\computes.ico', 'icons\claudia.ico') {
             if (-not (Test-Path (Join-Path $env:INSTALL_DIR $file))) { throw "The installation lacks $file" }
           }
           $menu = Join-Path $env:ProgramData 'Microsoft\Windows\Start Menu\Programs'

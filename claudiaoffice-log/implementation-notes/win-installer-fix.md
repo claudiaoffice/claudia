@@ -36,7 +36,8 @@ sandbox's, not the installation's).
 | CODE-83 | `appFolder` (`paths.ts`), used by `launch.ts` (`RunDeps.launcherFolder` to test it); tests `paths.test.ts`, `launch.test.ts` (red when `launch.ts` goes back to `defaultRepo`), `test_windows_packaging.py`; D746; the spec `specs/desktop/windows-installer.feature` (written with the fix, for the owner's review) |
 | PROC-53 | `windows.yml`: a step of its own that needs no display and may not fail (*The launcher finds the installed app and prepares its window*); D747; `test_windows_packaging.py` |
 | CODE-84 | `startPageAction` (`web/app/lib/open.ts`) knows `help.about`; `OpenDialog.vue` mounts `AboutDialog`; `web/tests/open.test.ts`; D748; `specs/desktop/about.feature` |
-| UX-77 | `window-size.ts` (`windowSizeFor`, `WINDOW_WANTED`), `ShellPage.fitWindow`, `PagePlatform.sizesInPhysicalPixels`, `window.setSize` and `window.center` on the three allow-lists; tests `window-size.test.ts`, `shell-page.test.ts`, `build-shell.test.ts`; D749; `specs/desktop/window-size.feature` |
+| UX-77 | `setLogicalPixels` (`core-command.ts`), `HostPlatform.windowSizeInPhysicalPixels`, called by `run()` in `launch.ts`; the first attempt (`window-size.ts`, `ShellPage.fitWindow`, `window.setSize` and `window.center` on the allow-lists) is removed; tests `launch.test.ts`, `core-command.test.ts`, `build-shell.test.ts`; D749; `specs/desktop/window-size.feature` |
+| UX-79 | `SUITE_ICON` and `claudia.ico` in `build.py`, `claudia.iss` (`SetupIconFile`, `UninstallDisplayIcon`), `clients/neutralino/suite-icon.svg` and `.png`, a check in `windows.yml`; tests `test_windows_packaging.py`; D751 |
 | UX-78 | `packaging/windows/launcher/claudia-start.c`, `build.py launcher` and `stage --launcher`, `claudia.iss` (shortcuts and post-install start), `windows.yml` (build, try, stage); tests `test_windows_packaging.py`; D750; `specs/desktop/windows-launcher.feature` |
 
 ## PROC-53 in detail
@@ -71,11 +72,14 @@ and the config is read while the launcher is alive, so a very fast failure could
 
 ## UX-77 and UX-78: what is assumed and what has not run
 
-* **Neutralino's window sizes are physical pixels on Windows**, and its process is DPI-aware. The documentation does not
-  say; the owner's screenshot does (1280 × 860 became about 640 × 430 CSS pixels at 200%). The page therefore multiplies by
-  `devicePixelRatio`; macOS is left alone. The window is created at the config's size and resized a moment later, so a
-  brief resize may be seen. Not run on a scaled display.
-* The nine tenths of the free screen and the minimum size are my choice, not the owner's.
+* **Neutralino's window sizes are physical pixels on Windows** (the owner's screenshot: 1280 × 860 became about 640 × 430 CSS
+  pixels at 200%). `modes.window.useLogicalPixels` is documented as the switch that scales width and height by the display
+  scale; **it has not been run**, and it is not known whether Neutralino 6.8 honours it for the window as it is created. If it does
+  not, the window stays as small as it was. It is set on Windows only; what it does on macOS is unknown. Not scaled by it: the
+  minimum size. Not capped to the free screen: on a small screen at 125% or 150% the window can be taller than the screen.
+  The first attempt (`window.setSize` from the page) never took effect on the owner's machine and is removed.
+* The nine tenths of the free screen of the first attempt are gone with it. A cap and a centred window are open.
+* The icon of the setup file and of the Programs entry (UX-79) is made from a committed PNG; not seen on Windows.
 * **`claudia-start.exe` was compiled here** (Zig's `cc`, target `x86_64-windows-gnu`, `-municode`, GUI subsystem, no warnings)
   **and never run**: there is no Windows or Wine in this workspace. CI uses MinGW `gcc`, installed with `choco` where the
   runner has none; the flags `-mwindows -municode` are the usual ones and were not tried with that compiler.

@@ -57,8 +57,9 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | UX-70 | P2 | UX / all apps | What an export could not keep is never shown: the losses come back with the file and no client says them (a workbook's slide written as a sheet among them) | **new, open** (read; size 2) | 2026-11-22 |  |
 | UX-71 | P2 | UX / computes | Text on a workbook's slide is drawn in the workbook's Body text (13 px), tiny on a 1600-unit slide | **needs decision** (measured; size 2) | 2026-11-22 |  |
 | UX-76 | P3 | UX / computes | The New sheet dialog proposes no name: the field is empty (placeholder "Forecast") and Add Sheet stays off until one is typed, though a new sheet is to get a name like "Sheet2" (E1.13) | open (scenario `@pending:UX-76`) | 2026-11-22 |  |
-| UX-77 | P2 | UX / Windows | The window opens at the configured size in physical pixels, so on a scaled display (200%) it is half the size the page needs | **fixed** 2026-11-24 on `win-installer-fix` (D749) | 2026-11-24 | 2026-11-24 |
+| UX-77 | P2 | UX / Windows | The window opens at the configured size in physical pixels, so on a scaled display (200%) it is half the size the page needs | **fixed** 2026-11-24 on `win-installer-fix` (D749; second attempt after the first had no effect; not run on Windows) | 2026-11-24 | 2026-11-24 |
 | UX-78 | P2 | UX / Windows | A console window of node stays open for as long as an app of the Windows client runs, and shows only start-up lines | **fixed** 2026-11-24 on `win-installer-fix` (D750) | 2026-11-24 | 2026-11-24 |
+| UX-79 | P3 | UX / Windows | The setup file and the entry in Programs show the icon of composes, not the suite's three-dot icon | **fixed** 2026-11-24 on `win-installer-fix` (D751; not run on Windows) | 2026-11-24 | 2026-11-24 |
 | CODE-25 | P2 | Code / Export | A renamed object loses its name in pptx and odp without the export saying so (D450) | **new, open** |  |  |
 | CODE-31 | P2 | Code / i18n | The history speaks English to everybody: command labels and summaries are not translated | **new, open** |  |  |
 | CODE-45 | P2 | Code / Import | pptx placeholders (titles, body text) are not imported at all | **new, open** |  |  |
@@ -135,7 +136,7 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |  |  |
 | UX-06 | — | UX | Web menu differs from decisions D4/D5 | needs decision |  |  |
 
-### Fixed (167)
+### Fixed (168)
 
 By ID. Items closed without a fix (superseded, wontfix) are here too.
 
@@ -2839,12 +2840,15 @@ that every entry the shell keeps on a page must do something there).
 ### UX-77 · The window is too small on a scaled display · P2 · size 2 · fixed
 **Found** by the owner (screenshot, 3840 × 1994 at 200%): the window looks like a browser window too small for the page.
 **Cause** (**read**, and the screenshot: about 640 × 430 CSS pixels for 1280 × 860): Neutralino takes window sizes in
-physical pixels on Windows; the config's size was written as CSS pixels. **Fixed** 2026-11-24 (D749): the shell page asks for
-the size again with the scale applied, capped at nine tenths of the free screen, and centres the window. **Tests:**
-`clients/neutralino/tests/window-size.test.ts` (red before: the module did not exist), `shell-page.test.ts` (red before),
-`build-shell.test.ts` (the allow-list; red before), the scenarios of `specs/desktop/window-size.feature`. **Not run on
-Windows or on a scaled display:** the owner's next install is the check. **Escaped** because: spec gap (no one had said
-that a window's size is in CSS pixels) and a unit that no test, on a Mac or on Linux, can see.
+physical pixels on Windows; the config's size was written as CSS pixels. **First fix** (2026-11-24, D749 as first written): the
+shell page asked the window for a larger size with `window.setSize`; **it had no effect** on the owner's machine (the window
+never answered: CODE-85). **Fixed** 2026-11-24 (D749, rewritten): the launcher writes `modes.window.useLogicalPixels: true` into the
+copy of the config the window starts from, on Windows only, and puts it back; the `setSize` code is gone. **Tests:**
+`launch.test.ts` and `core-command.test.ts` (red before), `build-shell.test.ts` (the allow-list without the two entries), the
+scenarios of `specs/desktop/window-size.feature`. **Not run on Windows or on a scaled display:** the owner's next install is the
+check. **Limits:** at 125% or 150% on a 1080p screen the window can be taller than the free screen; the minimum size stays
+physical. **Escaped** because: spec gap (no one had said that a window's size is in CSS pixels), a unit no test on a Mac or
+on Linux can see, and a first fix that could only be tried on the owner's machine.
 
 ### UX-78 · A console window stays open for as long as an app runs · P2 · size 2 · fixed
 **Found** by the owner: the window of node stays open (after closing the app too) and prints only what the start prints:
@@ -2874,6 +2878,14 @@ uninstall check now says what is left and which processes there are.
 not start; the step is advisory and the log did not say which (CODE-83 below, if the owner wants it logged).
 **Escaped** because: the advisory step had never run a window until CODE-83 was fixed.
 
+### UX-79 · The installer shows composes' icon for the whole suite · P3 · size 3 · fixed
+**Found** by the owner: the icon of the setup file and of the entry in Programs is the icon of composes; the three-dot icon
+stands for the suite. **Cause** (**read**): `claudia.iss` set `SetupIconFile` and `UninstallDisplayIcon` to `composes.ico`.
+**Fixed** 2026-11-24 (D751): `icons\claudia.ico`, made by `build.py stage` from `clients/neutralino/suite-icon.png` (drawn as the web
+app's favicon). **Tests:** `tests/test_windows_packaging.py` (red before), the scenario in `specs/desktop/windows-installer.feature`; CI
+checks that the file is installed. **Not run on Windows.** **Escaped** because: spec gap (the design system names a suite icon
+and nothing said where it is used).
+
 ### CODE-85 · Every app stays on "Starting…" · P1 · size 1 · fixed
 **Found** by the owner on the first install with the fixes of this round: all three apps stayed on "Starting…"; the server ran and
 answered in a browser. **Cause** (**measured**, the owner's `shell.log`: the core connected at 20:36:41 and no `<- page: start`
@@ -2881,7 +2893,6 @@ followed, while the starts before show it a second after the connection): UX-77'
 was awaited before the page asked the core to start, and the window never answered. **Fixed** 2026-11-24 (D749): the page asks
 for the size and does not wait for the answer; a failure is logged in the page's console. **Test:**
 `clients/neutralino/tests/shell-page.test.ts`, *does not wait for the window to answer* (red before: it timed out).
-**Not understood:** why `window.setSize` or `window.center` never answers on the owner's machine; it is therefore not known whether
-the window is resized at all (UX-77 may still be open). The page's console says (`--debug`). **Escaped** because: the unit test
+**Not understood:** why `window.setSize` or `window.center` never answers on the owner's machine; the call is gone with the second fix of UX-77. The page's console says (`--debug`). **Escaped** because: the unit test
 answered immediately, and no test can ask a real window; the CI step that starts a window has no display.
 

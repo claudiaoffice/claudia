@@ -101,6 +101,7 @@ def fake_repository(root: Path, *, built: bool = True) -> None:
     for app in build.APPS:
         (client / "bin" / f"{app}.mjs").write_text("// shim", encoding="utf-8")
     (client / "package.json").write_text('{"type": "module"}', encoding="utf-8")
+    (client / build.SUITE_ICON).write_bytes(PNG)
     for app in build.APPS:
         folder = client / "apps" / app
         for sub in ("shell", "ext", "js", "bin"):
@@ -218,6 +219,26 @@ def test_the_service_runs_the_server_and_serves_the_frontend_where_the_stage_has
 def test_the_icons_are_there_for_the_shortcuts_and_the_setup(staged):
     for app in build.APPS:
         assert (staged / "icons" / f"{app}.ico").read_bytes()[:4] == b"\x00\x00\x01\x00"
+
+
+def test_the_suite_has_an_icon_of_its_own_besides_those_of_the_apps(staged):
+    """UX-79: the setup and its entry in Programs stand for the whole suite, not for composes."""
+    assert (staged / "icons" / "claudia.ico").read_bytes()[:4] == b"\x00\x00\x01\x00"
+
+
+def test_the_suite_icon_is_the_three_dot_favicon_of_the_web_app():
+    client = ROOT / "clients" / "neutralino"
+    drawing = (client / "suite-icon.svg").read_text(encoding="utf-8")
+    assert drawing == (ROOT / "web" / "public" / "favicon.svg").read_text(encoding="utf-8"), "one drawing of the icon"
+    icon = build.icon_from_png((client / build.SUITE_ICON).read_bytes())
+    assert icon[22:30] == b"\x89PNG\r\n\x1a\n"
+
+
+def test_the_setup_and_the_programs_list_show_the_suite_icon_not_an_apps():
+    """UX-79: SetupIconFile is the icon of the installer; UninstallDisplayIcon is the one of Apps & features."""
+    text = iss_text()
+    assert re.search(r"^UninstallDisplayIcon=\{app\}\\icons\\claudia\.ico$", text, re.M)
+    assert re.search(r"^SetupIconFile=\{#StageDir\}\\icons\\claudia\.ico$", text, re.M)
 
 
 def test_winsw_is_named_like_its_configuration(staged):

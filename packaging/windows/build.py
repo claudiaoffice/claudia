@@ -30,6 +30,8 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 APPS = ("composes", "computes", "creates")
+# The icon of the suite as a whole (three dots), in clients/neutralino: what the setup and Programs show (UX-79).
+SUITE_ICON = "suite-icon.png"
 NEUTRALINO_BINARY = "neutralino-win_x64.exe"
 LAUNCHER_PROGRAM = "claudia-start.exe"
 VERSION_PATTERN = re.compile(r"^v?(\d+)\.(\d+)\.(\d+)(?:[-+.]?([0-9A-Za-z.+-]+))?$")
@@ -192,6 +194,10 @@ def stage(root: Path, out: Path, node: Path, winsw: Path, launcher: Path, webvie
     for app in APPS:
         icon = icon_from_png((client / "apps" / app / "icon.png").read_bytes())
         (out / "icons" / f"{app}.ico").write_bytes(icon)
+    suite = icon_from_png(
+        require(client / SUITE_ICON, "the suite icon, clients/neutralino/suite-icon.png").read_bytes()
+    )
+    (out / "icons" / "claudia.ico").write_bytes(suite)
 
     (out / "service").mkdir()
     shutil.copy2(winsw, out / "service" / "claudia-service.exe")  # WinSW reads the file with the name of its own exe
