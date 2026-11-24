@@ -130,7 +130,6 @@ const LITERALS_ALLOWED: Record<string, number> = {
   'StyleColorPicker.vue': 5,
   'StyleCssEditor.vue': 1,
   'StyleMenu.vue': 2,
-  'StyleSpec.vue': 1,
   'SuggestionPopover.vue': 1,
   'TableDialog.vue': 1,
   'TextEditor.vue': 2,

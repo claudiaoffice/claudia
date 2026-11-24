@@ -324,7 +324,7 @@ h3 {
 .switch button[aria-pressed='true'] {
   background: var(--surface);
   color: var(--text);
-  box-shadow: 0 1px 2px rgb(31 26 51 / 14%);
+  box-shadow: var(--shadow-raised);
 }
 .scope {
   display: grid;
