@@ -469,6 +469,9 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor | SlideAnchor]):
         #: The one order of the sheets and slides, every one of them in it exactly once (D1471), kept so by
         #: :meth:`add_sheet`, :meth:`drop_sheet`, :meth:`add_slide` and :meth:`remove_slide` and nowhere else.
         self.tabs: list[Tab] = []
+        #: The id of every sheet this workbook has had, removed ones too: a new sheet never gets one of them, or the
+        #: undo of a removal would bring back a second sheet of that id (CODE-56). It only grows.
+        self.sheet_ids_used: set[str] = set()
         self.calc = Calculator(self, functions or default_functions())
         self._ids: dict[str, SheetId] | None = None
         self.styles: StyleBook = styles if styles is not None else builtin_styles()
@@ -521,6 +524,7 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor | SlideAnchor]):
             "sheets": [sheet.to_data() for sheet in self.sheets.values()],
             "slides": self.slides.to_data(self.slide_ids()),
             "tabs": [tab.to_data() for tab in self.tabs],
+            "sheet_ids_used": sorted(self.sheet_ids_used),
             "styles": self.styles.to_data(),
             "palette": self.palette.to_data(),
             **self.assets_to_data(),  # images, shapes, charts, containers, tables (D1431)
@@ -550,6 +554,7 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor | SlideAnchor]):
         for slide_id in slide_ids:
             model.open_holder(slide_id)
         model.tabs = [Tab.from_data(item) for item in state["tabs"]]
+        model.sheet_ids_used = {*state.get("sheet_ids_used", ()), *model.sheets}  # (before CODE-56: those there are)
         if sorted(tab.id for tab in model.tabs) != sorted([*model.sheets, *slide_ids]):
             raise ValueError("the tabs must name every sheet and every slide exactly once")
         model.restore_objects(state["objects"], state)
@@ -1281,6 +1286,7 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor | SlideAnchor]):
         self.check_new_tab(sheet.id, index)
         self.tabs.insert(len(self.tabs) if index is None else index, Tab("sheet", sheet.id))
         self.sheets[sheet.id] = sheet
+        self.sheet_ids_used.add(str(sheet.id))
         self.sheets = {SheetId(tab.id): self.sheets[SheetId(tab.id)] for tab in self.tabs if tab.kind == "sheet"}
         self._ids = None
         self.open_holder(str(sheet.id))

@@ -68,6 +68,18 @@ def test_a_new_workbook_has_no_sheets_and_one_can_be_added(book):
     assert [s["name"] for s in call(book, "sheets")] == ["Budget", "Plan"]
 
 
+def test_a_new_sheet_never_gets_the_id_of_a_removed_one(book):
+    """CODE-56: Ann adds a sheet and takes it back; Ben adds one. His must not get her sheet's id, or her redo would
+    bring back a second sheet of that id, and the history would name his sheet where it meant hers."""
+    call(book, "add_sheet", {"name": "Plan"})
+    hers = call(book, "add_sheet", {"name": "Forecast"})["sheet"]
+    call(book, "undo")
+    his = call(book, "add_sheet", {"name": "Budget"}, account=BEN)["sheet"]
+    assert his != hers
+    call(book, "redo")
+    assert [s["id"] for s in call(book, "sheets")] == ["s1", hers, his]  # hers back in its place
+
+
 def test_sheet_names_must_be_new_and_nonempty(book):
     call(book, "add_sheet", {"name": "Budget"})
     for bad in ("budget", "", "   "):

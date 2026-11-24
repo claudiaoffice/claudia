@@ -578,8 +578,9 @@ def _set_cells(ctx, sheet, cells, base):
 
 
 def _fresh_sheet_id(workbook: WorkbookModel) -> str:
-    """The next sheet id (``s2``, ``s3`` ...) that no sheet or slide of the workbook has (they share the tabs)."""
-    taken = {tab.id for tab in workbook.tabs}
+    """The next sheet id (``s2``, ``s3`` ...) that no sheet or slide of the workbook has (they share the tabs) and no
+    removed sheet had (CODE-56)."""
+    taken = {tab.id for tab in workbook.tabs} | workbook.sheet_ids_used
     number = len(taken) + 1
     while f"s{number}" in taken:
         number += 1
