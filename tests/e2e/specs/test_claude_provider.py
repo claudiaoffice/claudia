@@ -158,10 +158,10 @@ def _read(admin, words):
     expect(admin.page.locator("main, body")).to_contain_text(words)
 
 
-@then("I read that the owners of each document must also allow Claude there")
+@then("I read that the owner of each document must also allow Claude there")
 def _read_owners(admin):
     expect(admin.page.locator("[data-testid=ai-approval]")).to_contain_text(
-        "the owners of each document must also allow Claude"
+        "the owner of each document must also allow Claude"
     )
 
 

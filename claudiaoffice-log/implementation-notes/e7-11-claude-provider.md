@@ -44,7 +44,7 @@ assumptions made while building, and what could not be run.
 3. Action ids stay `config.*` although the menu is *Preferences* now (D1494); only labels changed.
 4. The chord of *AI…* is **Ctrl+Shift+Alt+E**, provisional: Ctrl+Shift+Alt+H, the first choice, is `view.present-here`.
 5. The sentences of the AI in the stored chat stay English; the page translates them when it draws them.
-6. One owner per document exists today; the consent texts say "owners" (D1499, **undecided**).
+6. One owner per document exists today; the consent texts say "owners" (D1499, decided 2026-11-23: one owner; the texts and scenarios were changed in the patch `d1499-one-owner`).
 
 ## What could not be run
 
