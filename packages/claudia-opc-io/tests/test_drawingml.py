@@ -16,6 +16,7 @@ from claudia_opc_io import (
     cropped,
     is_decorative,
     look_in,
+    mark_decorative,
     outline,
     shown_part,
     solid,
@@ -87,3 +88,15 @@ def test_a_colour_that_is_no_plain_colour_is_unknown_and_what_a_style_gives_too(
 def test_the_outlines_of_the_model_have_their_names_in_drawingml():
     assert PRESET == {"circle": "ellipse", "rectangle": "rect", "triangle": "triangle"}
     assert {SHAPE_OF[name] for name in PRESET.values()} == set(PRESET)
+
+
+def test_a_drawing_marked_decorative_says_so_and_has_no_description():
+    properties = etree.fromstring('<cNvPr id="2" name="Logo" descr="A logo"/>')
+    mark_decorative(properties)
+    assert is_decorative(properties)
+    assert properties.get("descr") == ""
+
+
+def test_a_line_width_that_is_no_number_is_none():
+    xml = f'<spPr xmlns:a="{A}"><a:ln w="thick">{solid((0, 0, 0))}</a:ln></spPr>'
+    assert look_in(etree.fromstring(xml), styled=False) == (None, (0, 0, 0), 0)
