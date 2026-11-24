@@ -53,6 +53,10 @@
    * (the design system's rule is still: Rose and Teal are backgrounds with white text; these two are the exception). */
   --rose-dark: #b8386a;
   --teal-dark: #0d7768;
+  /* UX-66: the words on an apricot pill (the Styles dialog's "to name"), `color.apricot-dark` in the Penpot design
+   * system: 6.3:1 on the pill's tint of 28% apricot in white. The pill keeps that light tint in the dark scheme too,
+   * so the value holds in both. */
+  --apricot-dark: #7a4710;
   /* The wordmark only: Rose lightened for a dark background (7.7:1 on `--page-dark`, 6.6:1 on `--surface-dark`) —
    * the inverse of `--rose-dark` above, which is Rose darkened for a light one. */
   --rose-light: #ef87ac;

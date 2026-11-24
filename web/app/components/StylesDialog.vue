@@ -230,7 +230,7 @@ function count(id: string) {
   padding: 1px 6px;
   border-radius: 999px;
   background: color-mix(in srgb, var(--apricot) 28%, white);
-  color: #7a4710;
+  color: var(--apricot-dark);
 }
 .count {
   font-size: 11.5px;
