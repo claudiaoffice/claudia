@@ -73,7 +73,7 @@ const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR
     await page.waitForSelector('dialog[open] textarea')
     assert.equal(await page.locator('dialog input[type=checkbox]').isChecked(), true)
 
-    // -- Backspace and the arrows typed in the name field belong to the field, not to the picture behind the dialog (UX-76)
+    // -- Backspace and the arrows typed in the name field belong to the field, not to the picture behind the dialog (UX-78)
     const name = page.locator('dialog[open] input:not([type=checkbox])').first()
     await name.focus()
     await page.keyboard.press('End')

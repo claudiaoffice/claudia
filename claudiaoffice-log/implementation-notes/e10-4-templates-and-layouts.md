@@ -228,9 +228,9 @@ text label; the preview is plain text. Not measured: contrast of the selected ca
 card meta ("4 layouts · English"), focus order in the dialogs. These are checked in the BITV round, not here.
 
 
-# Patch 4 — UX-76: keys typed in a dialog on the slide (D1541)
+# Patch 4 — UX-78: keys typed in a dialog on the slide (D1541)
 
-Reported by the owner on 2026-11-24, reproduced first (UX-76, size 1) and fixed on this branch. Seams chosen: the E2E
+Reported by the owner on 2026-11-24, reproduced first (UX-78, size 1) and fixed on this branch. Seams chosen: the E2E
 script `describe-creates.cjs` (what a person sees: nothing moves, nothing is deleted, the name is edited and saved) and
 one pure function, `keysAreTheirs`, in vitest. Red before green: the script failed at "the arrow keys moved the text box
 behind the dialog" and then at Backspace.

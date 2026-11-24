@@ -543,7 +543,7 @@ watch(
 async function onKey(event: KeyboardEvent) {
   const o = selected.value
   if (editing.value || containerEditing.value) return
-  if (keysAreTheirs(event.target as HTMLElement)) return // a dialog or a popover on the slide (Name & describe…, Rotate by…) has its own keys: Backspace edits the name, the arrows move its cursor (UX-76)
+  if (keysAreTheirs(event.target as HTMLElement)) return // a dialog or a popover on the slide (Name & describe…, Rotate by…) has its own keys: Backspace edits the name, the arrows move its cursor (UX-78)
   if (event.key === 'Escape') {
     if (cancelTurn()) return
     return void session.select(null)

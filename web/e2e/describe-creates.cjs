@@ -57,7 +57,7 @@ const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR
     await page.keyboard.press('Escape')
 
     // -- the keys typed in the dialog are the dialog's: not the arrows that move, nor Backspace that deletes, the text
-    // box behind it (UX-76)
+    // box behind it (UX-78)
     await page.click('.menus .title:text-is("Edit")')
     await page.click('.menus .drop [role=menuitem]:has-text("Text Box")')
     const box = page.locator('.obj.text')
