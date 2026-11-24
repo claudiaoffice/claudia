@@ -11,7 +11,8 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 - `claudia_opc_io.custom`: `custom_properties(parts)` and `set_custom_properties(parts, values)`, the text properties of
   `docProps/custom.xml` (the part declared and related once), `CUSTOM_PART` (E6.31, D1478).
 - `claudia_opc_io.drawingml`: what a DrawingML drawing says of itself in a docx, xlsx or pptx alike: `turn_of`,
-  `cropped`, `shown_part`, `is_decorative`, and `DRAWINGML`, `ANGLE`, `EMU_PER_PIXEL`, `SVG_URI`, `DECORATIVE_URI`
+  `cropped`, `shown_part`, `is_decorative`, `mark_decorative`, and
+  `DRAWINGML`, `ANGLE`, `EMU_PER_PIXEL`, `SVG_URI`, `DECORATIVE_URI`
   (D1478; composes' docx readers had them).
 
 ## [0.5.0] - 2026-11-17

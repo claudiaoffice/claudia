@@ -306,3 +306,28 @@ The server's changelog had entries on both sides under Unreleased; the compiled 
   with that name; a workbook's own (not built-in) style of a box is not in the file, so a box read into a new workbook
   that has no such style has the plain style (and `look` when it looked otherwise); the words of a box are written as
   one run, so references in them (which computes does not make) would be written as their mark character.
+
+## Step 5 · Review (two axes) and what changed after it, 2026-11-24
+
+- **Standards.** No private constant is imported across modules any more: `CM_PER_PIXEL` and `CM_PER_INCH` are public
+  in `claudia_odf_io` (computes' `ods_layout` and composes' odt modules had copies). The read path is written once:
+  `_read_back.found_objects(charts, drawn, readers)` numbers what each reader makes of the drawings of a file (charts
+  first), and `still_lost` takes held drawings off a tab's losses the same way for both formats (xlsx had subtracted
+  for a loss with a detail too). Each format walks its drawings once (`drawn_anchors` with the drawings parsed by
+  `file_charts`; `drawn_frames` handed to `file_charts`) and reads a drawing's relationships once per drawing
+  (`DrawnAnchor.targets`). `names_of` (xlsx) and `drawing_name` (ods) read what a drawing is called; ods charts use
+  `claudia_odf_io.description_of` (its own `describe` went). `mark_decorative` is in `claudia_opc_io.drawingml`;
+  `default_name` ("Text box n" / "Shape n") in `claudia_odf_io.boxes`; `size_and_turn` is shared by `held_frame` and
+  `held_box`. `EMU` is `claudia_opc_io.EMU_PER_PIXEL` everywhere in composes. `points_of` of the odf layer is
+  `line_points` (the core has a `points_of` that means something else); `POINTS_PER_PIXEL` and `box_look` are no
+  longer exported. `_with_drawings` takes a `_Drawn`.
+- **Spec.** A box without a name is written with one (`box_names`: the next free "Text box n" / "Shape n") and the
+  mark keeps its styles by it, so its styles come back too. New tests: a box without a name, the stack of a slide
+  (a picture at the back comes back at the back: objects are put in by `order`), a box restyled in ods, a cropped
+  picture (stays in the file, `picture`), the size and turn of a picture written back to xlsx. The text box of the
+  tests is called "East leads", as in the spec.
+- **Left as they are:** a tab is a slide only if its drawings fit a slide (an assumption, asked in the report); a tab
+  renamed elsewhere has its drawings at the corner of their cells (an object of a sheet hangs at a cell and has no
+  offset in it, D1232); `FileChart`, `FileObject`, `DrawnAnchor` and `DrawnFrame` keep similar fields (they are what
+  each step of the reading knows); `xlsx_layout.POINTS_PER_PIXEL` (the rows' unit) stays; creates-io's pptx and odp
+  readers keep their own preset and graphic-style code (not touched by this step: CODE-84).

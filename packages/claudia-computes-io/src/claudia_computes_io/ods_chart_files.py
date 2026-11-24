@@ -18,12 +18,11 @@ from lxml import etree
 
 from claudia_computes import MAX_OBJECTS_PER_SHEET, SheetId
 from claudia_core.assets import MAX_ALT_CHARS
-from claudia_odf_io import NS, inches, local_name, pixels, qname, turned_box
+from claudia_odf_io import CM_PER_INCH, CM_PER_PIXEL, NS, description_of, inches, local_name, pixels, qname, turned_box
 
 from ._charts import FileChart as SharedFileChart
 from ._placed import cell_at
-from .ods_charts import describe, holds_a_chart, read_chart, sizes_of
-from .ods_layout import _CM_PER_PIXEL  # noqa: PLC2701 (one length, one conversion)
+from .ods_charts import holds_a_chart, read_chart, sizes_of
 
 if TYPE_CHECKING:
     from .ods import _Table
@@ -32,7 +31,6 @@ _DRAWN = ("frame", "custom-shape", "g", "line", "rect", "ellipse", "circle", "pa
 _DRAWN_TAGS = tuple(f"{{{NS['draw']}}}{name}" for name in _DRAWN)
 _CELLS = ("table-cell", "covered-table-cell")
 _FRAMES = tuple(f"{{{NS['draw']}}}{name}" for name in ("frame", "rect", "ellipse", "custom-shape"))
-_CM_PER_INCH = 2.54
 
 
 @dataclass(kw_only=True)
@@ -65,9 +63,9 @@ def frame_corner(frame: etree._Element) -> tuple[float, float]:
     transform = frame.get(qname("draw:transform"))
     if transform:
         width, height = (inches(frame.get(qname(f"svg:{side}"))) or 0.0 for side in ("width", "height"))
-        turned = turned_box(transform, width * _CM_PER_INCH, height * _CM_PER_INCH)
+        turned = turned_box(transform, width * CM_PER_INCH, height * CM_PER_INCH)
         if turned is not None:
-            return round(turned[1] / _CM_PER_PIXEL, 2), round(turned[2] / _CM_PER_PIXEL, 2)
+            return round(turned[1] / CM_PER_PIXEL, 2), round(turned[2] / CM_PER_PIXEL, 2)
     return round(pixels(frame.get(qname("svg:x"))) or 0.0, 2), round(pixels(frame.get(qname("svg:y"))) or 0.0, 2)
 
 
@@ -106,8 +104,14 @@ def drawn_frames(tables: Sequence[_Table]) -> Iterator[DrawnFrame]:
             yield DrawnFrame(SheetId(table.id), frame, row, col, corner, order)
 
 
-def file_charts(tables: Sequence[_Table], parts: Mapping[str, bytes]) -> list[FileChart]:
-    """Every chart frame of the sheets of a file, with the ones the model holds numbered in the order of the file."""
+def drawing_name(element: etree._Element) -> str:
+    """What a frame or a shape of a file is called (``draw:name``)."""
+    return (element.get(qname("draw:name")) or "").strip()
+
+
+def file_charts(tables: Sequence[_Table], parts: Mapping[str, bytes], drawn: Sequence[DrawnFrame]) -> list[FileChart]:
+    """Every chart frame of the sheets of a file (``drawn``: what :func:`drawn_frames` found on them), with the ones the
+    model holds numbered in the order of the file."""
     sheet_ids = {table.name: SheetId(table.id) for table in tables}
     by_folded = {name.casefold(): sheet for name, sheet in sheet_ids.items()}
 
@@ -117,33 +121,33 @@ def file_charts(tables: Sequence[_Table], parts: Mapping[str, bytes]) -> list[Fi
     found: list[FileChart] = []
     held = 0
     counted: Counter[SheetId] = Counter()
-    for drawn in drawn_frames(tables):
-        folder = holds_a_chart(drawn.frame)
+    for one in drawn:
+        folder = holds_a_chart(one.frame)
         if folder is None:
             continue
-        frame = drawn.frame
+        frame = one.frame
         chart = FileChart(
-            sheet=drawn.sheet,
-            row=drawn.row,
-            col=drawn.col,
-            corner=drawn.corner,
-            order=drawn.order,
-            name=(frame.get(qname("draw:name")) or "").strip(),
+            sheet=one.sheet,
+            row=one.row,
+            col=one.col,
+            corner=one.corner,
+            order=one.order,
+            name=drawing_name(frame),
             frame=frame,
             folder=folder,
         )
         part = parts.get(f"{folder}/content.xml")
         read = None if part is None else read_chart(part, resolve)
         size = None if read is None else sizes_of(frame, read)
-        description = describe(frame)
+        description = description_of(frame)
         if (
             read is not None
             and size is not None
             and len(description) <= MAX_ALT_CHARS
-            and counted[drawn.sheet] < MAX_OBJECTS_PER_SHEET
+            and counted[one.sheet] < MAX_OBJECTS_PER_SHEET
         ):
             held += 1
-            counted[drawn.sheet] += 1
+            counted[one.sheet] += 1
             chart.held, (chart.width, chart.height), chart.description = read, size, description
             chart.object_id, chart.spec_id = f"o{held}", f"c{held}"
         found.append(chart)

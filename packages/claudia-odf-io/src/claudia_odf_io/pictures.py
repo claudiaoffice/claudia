@@ -80,14 +80,11 @@ def description_of(frame: etree._Element) -> str:
     return ""
 
 
-def held_frame(
-    frame: etree._Element, graphics: Mapping[str, etree._Element], parts: Mapping[str, bytes]
-) -> tuple[ImageAsset, tuple[int, int], int] | None:
-    """``(asset, size in pixels, rotation)`` of a ``draw:frame`` that is a picture the model shows as it is, else
-    ``None``."""
-    asset = picture_of(frame, graphics, parts)
+def size_and_turn(frame: etree._Element) -> tuple[tuple[int, int], int] | None:
+    """The size in pixels of a frame or a shape and the whole degrees it is turned by, or ``None`` when it says no
+    size, is turned by more than a rotation, or is smaller than an object of the model may be."""
     width, height = pixels(frame.get(_q("svg", "width"))), pixels(frame.get(_q("svg", "height")))
-    if asset is None or width is None or height is None:
+    if width is None or height is None:
         return None
     size = (round(width), round(height))
     rotation = 0
@@ -96,6 +93,16 @@ def held_frame(
         if turned is None:
             return None
         rotation = round(turned[0]) % 360
-    if min(size) < MIN_OBJECT_SIZE or not keeps_proportions(asset, *size):
+    return None if min(size) < MIN_OBJECT_SIZE else (size, rotation)
+
+
+def held_frame(
+    frame: etree._Element, graphics: Mapping[str, etree._Element], parts: Mapping[str, bytes]
+) -> tuple[ImageAsset, tuple[int, int], int] | None:
+    """``(asset, size in pixels, rotation)`` of a ``draw:frame`` that is a picture the model shows as it is, else
+    ``None``."""
+    asset = picture_of(frame, graphics, parts)
+    placed = size_and_turn(frame)
+    if asset is None or placed is None or not keeps_proportions(asset, *placed[0]):
         return None
-    return asset, size, rotation
+    return asset, *placed

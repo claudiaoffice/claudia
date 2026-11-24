@@ -13,11 +13,9 @@ from dataclasses import dataclass, field
 
 from lxml import etree
 
-from claudia_odf_io import NS, pixels
+from claudia_odf_io import CM_PER_PIXEL, NS, pixels
 
 from .layout_sizes import fit_height, fit_width
-
-_CM_PER_PIXEL = 2.54 / 96
 
 
 def _q(prefix: str, local: str) -> str:
@@ -33,7 +31,7 @@ def pixels_of(length: str | None) -> int | None:
 
 def text_of(pixels: float) -> str:
     """``pixels`` as the length a file writes (centimetres, to four places: finer than a pixel)."""
-    return f"{pixels * _CM_PER_PIXEL:.4f}cm"
+    return f"{pixels * CM_PER_PIXEL:.4f}cm"
 
 
 @dataclass

@@ -23,7 +23,6 @@ from lxml import etree
 
 from claudia_core import (
     ASPECT_TOLERANCE,
-    MIN_OBJECT_SIZE,
     PRIMITIVES,
     SHAPE_LABEL_STYLE,
     ObjectBody,
@@ -37,8 +36,8 @@ from claudia_opc_io import EMU_PER_POINT, UNKNOWN
 
 from .names import NS
 from .paragraph import read_text, xml_safe
-from .pictures import description_of
-from .transform import inches, pixels, turned_box
+from .pictures import description_of, size_and_turn
+from .transform import inches
 
 #: A pixel (the model's unit, 96 to the inch) is this many points.
 POINTS_PER_PIXEL = 0.75
@@ -85,7 +84,7 @@ class BoxLook:
         ) <= EMU_PER_POINT // 50
 
 
-def points_of(value: str | None) -> float:
+def line_points(value: str | None) -> float:
     """The width a style gives a line (CSS pixels, the first number of ``value``; one pixel when it says none) as
     points."""
     found = _NUMBER.search(value) if value else None
@@ -101,12 +100,12 @@ def look_of(model: Styled, body: ObjectBody) -> BoxLook:
     page = colours.get("page")
     if body.kind == "shape":
         fill, line = colour_of(css, "fill", page), colour_of(css, "stroke", page)
-        width = points_of(css.get("stroke-width"))
+        width = line_points(css.get("stroke-width"))
     else:
         fill = colour_of(css, "background-color", page)
         border = css.get("border")
         line = colour_of({"border": border}, "border", page) if border else None
-        width = points_of(border)
+        width = line_points(border)
     return BoxLook(fill, line, round(width * EMU_PER_POINT) if line else 0)
 
 
@@ -261,17 +260,11 @@ def held_box(
     holder = element.find("draw:text-box", NS) if is_box else element
     assert holder is not None
     words = _words_in(holder)
-    width, height = pixels(element.get(_q("svg", "width"))), pixels(element.get(_q("svg", "height")))
-    if words is None or width is None or height is None:
+    placed = size_and_turn(element)
+    if words is None or placed is None:
         return None
-    size = (round(width), round(height))
-    rotation = 0
-    if transform := element.get(_q("draw", "transform")):
-        turned = turned_box(transform, width, height)
-        if turned is None:
-            return None
-        rotation = round(turned[0]) % 360
-    if min(size) < MIN_OBJECT_SIZE or (shape == "circle" and abs(size[0] - size[1]) > ASPECT_TOLERANCE):
+    size, rotation = placed
+    if shape == "circle" and abs(size[0] - size[1]) > ASPECT_TOLERANCE:
         return None
     text, paragraph = words
     style = words_style(paragraph, shape) if paragraph is not None else (SHAPE_LABEL_STYLE if shape else plain_words)
@@ -303,6 +296,11 @@ def graphic_properties(kind: str, look: BoxLook) -> str:
         else f'{fixed} draw:textarea-vertical-align="middle" draw:textarea-horizontal-align="center"'
     )
     return f"{fill} {line} {inside}"
+
+
+def default_name(body: ObjectBody, number: int) -> str:
+    """What a file calls the ``number``-th box that has no name of its own: "Text box n" or "Shape n"."""
+    return f"{'Text box' if body.kind == 'text' else 'Shape'} {number}"
 
 
 def box_element(body: ObjectBody, style: str, name: str, words: etree._Element | None) -> etree._Element:

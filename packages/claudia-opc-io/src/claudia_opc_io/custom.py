@@ -54,7 +54,7 @@ def set_custom_properties(parts: dict[str, bytes], values: Mapping[str, str]) ->
     the others stay. The part is made, declared and related from the package when it has none."""
     root = _root(parts)
     if root is None:
-        root = etree.Element(f"{{{_CUSTOM}}}Properties", nsmap={None: _CUSTOM, "vt": _VT})
+        root = etree.Element(f"{{{_CUSTOM}}}Properties", nsmap={None: _CUSTOM, "vt": _VT})  # type: ignore[dict-item]
         _declare(parts)
     for prop in list(root):
         if prop.get("name") in values:

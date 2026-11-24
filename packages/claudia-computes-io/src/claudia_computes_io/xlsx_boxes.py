@@ -6,7 +6,7 @@ its outline a preset of DrawingML (``rect``, ``ellipse``, ``triangle``), its fil
 directly with what the style of the words says (an xlsx has no paragraph styles for a drawing): the font, its size,
 bold, italic, underlined or struck, its colour, and how the paragraph is aligned.
 
-Read back (:func:`file_boxes`), a shape of the drawing is a box the model holds when it shows it as it is: one of the
+Read back (:func:`held_box`), a shape of the drawing is a box the model holds when it shows it as it is: one of the
 three outlines, not flipped, one paragraph of plain words; a rectangle marked ``txBox`` (or one that draws nothing but
 its words) is a text box. Its look is what the file says, for :func:`._boxes.styled` to compare.
 """
@@ -26,12 +26,11 @@ from claudia_core.stand_ins import file_font
 from claudia_odf_io import BoxLook, xml_safe
 from claudia_opc_io import (
     ANGLE,
-    DECORATIVE_URI,
-    DRAWINGML,
     PRESET,
     SHAPE_OF,
     is_decorative,
     look_in,
+    mark_decorative,
     outline,
     solid,
     turn_of,
@@ -41,8 +40,7 @@ from ._placed import Placed
 from ._read_back import FileObject
 from .cell_looks import points
 from .cell_looks import solid as css_solid
-from .xlsx_charts import NS, DrawnAnchor, drawn_anchors, emu, pinned_at
-from .xlsx_read import Package
+from .xlsx_charts import NS, DrawnAnchor, emu, names_of, pinned_at
 
 #: How a paragraph is aligned, in DrawingML.
 _ALIGN = {"left": "l", "start": "l", "center": "ctr", "right": "r", "end": "r", "justify": "just"}
@@ -71,9 +69,9 @@ def _run_properties(css: Mapping[str, str]) -> str:
     return f"<a:rPr{attributes}>{fill}{font}</a:rPr>"
 
 
-def box_anchor(placed: Placed, number: int, look: BoxLook, words: Mapping[str, str]) -> etree._Element:
-    """The ``oneCellAnchor`` of the text box or shape ``placed``, the ``number``-th shape of its drawing, drawn with
-    ``look`` and its words in the look ``words`` (the CSS of their style)."""
+def box_anchor(placed: Placed, number: int, name: str, look: BoxLook, words: Mapping[str, str]) -> etree._Element:
+    """The ``oneCellAnchor`` of the text box or shape ``placed`` called ``name``, the ``number``-th shape of its
+    drawing, drawn with ``look`` and its words in the look ``words`` (the CSS of their style)."""
     body = placed.obj.body
     is_box = body.kind == "text"
     preset = "rect" if is_box else PRESET[body.shape or "rectangle"]
@@ -98,12 +96,9 @@ def box_anchor(placed: Placed, number: int, look: BoxLook, words: Mapping[str, s
     properties = anchor.find("xdr:sp/xdr:nvSpPr/xdr:cNvPr", NS)
     assert properties is not None
     properties.set("id", str(number))
-    properties.set("name", xml_safe(body.name or f"{'Text box' if is_box else 'Shape'} {number - 1}"))
+    properties.set("name", xml_safe(name))
     if body.decorative:
-        properties.set("descr", "")
-        ext = etree.SubElement(etree.SubElement(properties, f"{{{NS['a']}}}extLst"), f"{{{NS['a']}}}ext")
-        ext.set("uri", DECORATIVE_URI)
-        etree.SubElement(ext, f"{{{DRAWINGML['adec']}}}decorative", nsmap={"adec": DRAWINGML["adec"]}).set("val", "1")
+        mark_decorative(properties)
     elif body.description:
         properties.set("descr", xml_safe(body.description))
     return anchor
@@ -127,7 +122,7 @@ def _words_of(text_body: etree._Element | None) -> str | None:
     return "".join(words)
 
 
-def _held(drawn: DrawnAnchor, object_id: str) -> FileObject | None:
+def held_box(drawn: DrawnAnchor, object_id: str) -> FileObject | None:
     """The box of a shape anchored on a sheet, or ``None`` when it is none the model shows as it is."""
     shape = drawn.anchor.find("xdr:sp", NS)
     if shape is None or drawn.size is None:
@@ -149,7 +144,7 @@ def _held(drawn: DrawnAnchor, object_id: str) -> FileObject | None:
     if min(size) < MIN_OBJECT_SIZE or (ours == "circle" and abs(size[0] - size[1]) > ASPECT_TOLERANCE):
         return None
     named = shape.find("xdr:nvSpPr/xdr:cNvPr", NS)
-    description = "" if named is None else (named.get("descr") or named.get("title") or "").strip()
+    name, description = names_of(named)
     body = box_body(
         object_id,
         size,
@@ -160,16 +155,5 @@ def _held(drawn: DrawnAnchor, object_id: str) -> FileObject | None:
         decorative=is_decorative(named),
         rotation=rotation,
     )
-    body = replace(body, name="" if named is None else (named.get("name") or "").strip())
+    body = replace(body, name=name)
     return FileObject(drawn.sheet.sheet_id, drawn.row, drawn.col, drawn.corner, body, "shape", drawn.order, look=look)
-
-
-def file_boxes(package: Package, first: int) -> list[FileObject]:
-    """The text boxes and shapes of the sheets of a file the model may hold (on a slide), in the order of the file;
-    the ``n``-th is the object ``o{first + n - 1}``."""
-    found: list[FileObject] = []
-    for drawn in drawn_anchors(package, {}):
-        held = _held(drawn, f"o{first + len(found)}")
-        if held is not None:
-            found.append(held)
-    return found

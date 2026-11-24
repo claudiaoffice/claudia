@@ -15,6 +15,7 @@ from claudia_computes_io import (
     apply_edits_to_ods,
     apply_edits_to_xlsx,
     ods_export_losses,
+    ods_import_losses,
     ods_to_workbook,
     workbook_to_ods,
     workbook_to_xlsx,
@@ -51,7 +52,9 @@ def with_a_slide(name: str = "Sales chart", *, at: int = 1) -> WorkbookModel:
     model.charts.define(ChartSpec(id="c1", kind="bar", range=a_range()))
     chart = ObjectBody("o1", "chart", 800, 450, "plain-image", ref="c1", name="Sales")
     model.insert_object(VisualObject(chart, SlideAnchor("p1", 100, 50)))
-    words = ObjectBody("t1", "text", 400, 100, "plain-box", paragraph_for("t1", "body-text", "East leads"), name="Note")
+    words = ObjectBody(
+        "t1", "text", 400, 100, "plain-box", paragraph_for("t1", "body-text", "East leads"), name="East leads"
+    )
     model.insert_object(VisualObject(words, SlideAnchor("p1", 1000, 100)))
     asset = a_png()
     model.images.define(asset)
@@ -178,7 +181,7 @@ def test_a_slide_comes_back_as_a_slide_with_its_objects_where_they_were(fmt, siz
         ("image", 1200, 700, 200, 100),
     ]
     chart, words, picture = again.objects_on(slide)
-    assert (chart.body.name, words.body.name, picture.body.name) == ("Sales", "Note", "Logo")
+    assert (chart.body.name, words.body.name, picture.body.name) == ("Sales", "East leads", "Logo")
     assert (words.body.style, words.body.paragraph.style, words.body.paragraph.text) == (
         "plain-box",
         "body-text",
@@ -189,7 +192,7 @@ def test_a_slide_comes_back_as_a_slide_with_its_objects_where_they_were(fmt, siz
 def test_the_file_says_which_tabs_are_slides_in_its_custom_properties():
     xlsx = openpyxl.load_workbook(BytesIO(workbook_to_xlsx(with_a_slide())))
     (mark,) = [prop for prop in xlsx.custom_doc_props if prop.name == "Claudia slides"]
-    said = {"slides": ["Sales chart"], "px_per_unit": 1.0, "styles": {"Note": ["plain-box", "body-text"]}}
+    said = {"slides": ["Sales chart"], "px_per_unit": 1.0, "styles": {"East leads": ["plain-box", "body-text"]}}
     assert json.loads(mark.value) == said
     meta = read_parts(workbook_to_ods(with_a_slide()))["meta.xml"]
     assert json.loads(user_defined(meta)["Claudia slides"]) == said
@@ -251,7 +254,7 @@ def test_a_text_box_is_a_shape_with_its_words_in_the_look_of_their_style_in_xlsx
     root = etree.fromstring(read_parts(workbook_to_xlsx(with_a_slide()))["xl/drawings/drawing1.xml"])
     (box,) = root.iter(f"{{{XDR}}}sp")
     assert box.find(f"{{{XDR}}}nvSpPr/{{{XDR}}}cNvSpPr").get("txBox") == "1"
-    assert box.find(f"{{{XDR}}}nvSpPr/{{{XDR}}}cNvPr").get("name") == "Note"
+    assert box.find(f"{{{XDR}}}nvSpPr/{{{XDR}}}cNvPr").get("name") == "East leads"
     assert box.find(f".//{{{XLSX_A}}}prstGeom").get("prst") == "rect"
     assert [t.text for t in box.iter(f"{{{XLSX_A}}}t")] == ["East leads"]
     run = box.find(f".//{{{XLSX_A}}}rPr")
@@ -314,3 +317,37 @@ def test_a_box_restyled_in_another_program_has_the_plain_style_and_says_its_look
     (words,) = [obj for obj in again.objects.values() if obj.body.kind == "text"]
     assert words.body.style == "plain-box"
     assert Loss("look", "", 1) in xlsx_import_losses(data)
+
+
+@pytest.mark.parametrize("fmt", sorted(FORMATS))
+def test_a_box_without_a_name_is_written_with_one_and_keeps_its_styles(fmt):
+    write, read, _ = FORMATS[fmt]
+    model = with_a_slide()
+    words = ObjectBody("t2", "text", 300, 80, "plain-box", paragraph_for("t2", "shape-label", "Centred"))
+    model.insert_object(VisualObject(words, SlideAnchor("p1", 100, 700)))
+    again = read(write(model))
+    (back,) = [obj for obj in again.objects.values() if obj.body.paragraph and obj.body.paragraph.text == "Centred"]
+    assert (back.body.name, back.body.style, back.body.paragraph.style) == ("Text box 1", "plain-box", "shape-label")
+
+
+@pytest.mark.parametrize("fmt", sorted(FORMATS))
+def test_the_objects_of_a_slide_come_back_stacked_as_they_were(fmt):
+    write, read, _ = FORMATS[fmt]
+    model = with_a_slide()
+    picture, chart = model.get_object("o2"), model.get_object("o1")
+    for obj in (picture, chart):
+        model.delete_object(obj.id)
+    model.insert_object(picture, 0)  # the picture at the back, the chart in front
+    model.insert_object(chart)
+    again = read(write(model))
+    assert [obj.body.kind for obj in again.objects_on(again.tabs[1].id)] == ["image", "text", "chart"]
+
+
+def test_a_box_restyled_in_another_program_says_its_look_is_lost_in_ods():
+    parts = read_parts(workbook_to_ods(with_a_slide()))
+    content = parts["content.xml"]
+    parts["content.xml"] = content.replace(b'draw:fill="none"', b'draw:fill="solid" draw:fill-color="#ff0000"', 1)
+    data = write_parts(parts)
+    (words,) = [obj for obj in ods_to_workbook(data).objects.values() if obj.body.kind == "text"]
+    assert words.body.style == "plain-box"
+    assert Loss("look", "", 1) in ods_import_losses(data)

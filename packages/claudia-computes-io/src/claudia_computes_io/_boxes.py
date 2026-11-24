@@ -11,11 +11,11 @@ its look is lost (``look``), as a text's box does (D465).
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from dataclasses import replace
 
 from claudia_computes import ObjectBody, WorkbookModel
-from claudia_odf_io import BoxLook, authored, is_written, look_of
+from claudia_odf_io import BoxLook, authored, default_name, is_written, look_of
 
 from ._placed import Placed
 from .slide_mark import SlideMark
@@ -26,13 +26,32 @@ def written_boxes(placed: Iterable[Placed]) -> tuple[Placed, ...]:
     return tuple(one for one in placed if one.tab.is_slide and is_written(one.obj))
 
 
-def box_styles(placed: Iterable[Placed]) -> dict[str, tuple[str, str]]:
-    """What the mark of the slides keeps of their boxes: by the name of each box that has one, its style and the style
-    of its words."""
+def box_names(placed: Sequence[Placed]) -> dict[str, str]:
+    """The name each box a file gets is written with, by the id of its object: its own, or for one that has none the
+    next "Text box n" / "Shape n" no drawing of the file is called (the mark keeps a box's styles by that name)."""
+    taken = {one.obj.body.name.casefold() for one in placed if one.obj.body.name}
+    names: dict[str, str] = {}
+    number = 0
+    for one in written_boxes(placed):
+        name = one.obj.body.name
+        while not name:
+            number += 1
+            candidate = default_name(one.obj.body, number)
+            if candidate.casefold() not in taken:
+                name = candidate
+                taken.add(candidate.casefold())
+        names[one.obj.id] = name
+    return names
+
+
+def box_styles(placed: Sequence[Placed]) -> dict[str, tuple[str, str]]:
+    """What the mark of the slides keeps of their boxes: by the name each is written with, its style and the style of
+    its words."""
+    names = box_names(placed)
     return {
-        one.obj.body.name: (one.obj.body.style, one.obj.body.paragraph.style)
+        names[one.obj.id]: (one.obj.body.style, one.obj.body.paragraph.style)
         for one in written_boxes(placed)
-        if one.obj.body.name and one.obj.body.paragraph is not None
+        if one.obj.body.paragraph is not None
     }
 
 

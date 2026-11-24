@@ -31,13 +31,23 @@ from claudia_core import (
     VisualObject,
     box_body,
 )
-from claudia_odf_io import BoxLook, LossLog, look_of, xml_safe
-from claudia_opc_io import ANGLE, DECORATIVE_URI, PRESET, SHAPE_OF, is_decorative, look_in, outline, solid, turn_of
+from claudia_odf_io import BoxLook, LossLog, default_name, look_of, xml_safe
+from claudia_opc_io import (
+    ANGLE,
+    DECORATIVE_URI,
+    EMU_PER_PIXEL,
+    PRESET,
+    SHAPE_OF,
+    is_decorative,
+    look_in,
+    outline,
+    solid,
+    turn_of,
+)
 
 from ._boxes import all_boxes, shown_words
 from ._docx_pictures import (
     _NS,
-    EMU,
     PictureWriter,
     _escape,
     _mark_decorative,
@@ -221,9 +231,9 @@ class BoxWriter:
     def run(self, obj: VisualObject) -> Any:  # noqa: ANN401
         """The ``w:r`` that carries the drawing of ``obj``."""
         body = obj.body
-        width, height = body.w * EMU, body.h * EMU
+        width, height = body.w * EMU_PER_PIXEL, body.h * EMU_PER_PIXEL
         number, self.ids.next_id = self.ids.next_id, self.ids.next_id + 1
-        title = f"{'Text box' if body.kind == 'text' else 'Shape'} {number}"
+        title = default_name(body, number)
         alt = "" if body.decorative else _escape(body.description)
         decorative = (
             f'<a:extLst><a:ext uri="{DECORATIVE_URI}"><adec:decorative xmlns:adec="{_NS["adec"]}" val="1"/></a:ext>'
@@ -288,7 +298,7 @@ def restyle(box: FileBox, before: ObjectBody, after: ObjectBody, document: Any, 
         properties.set("descr", "" if after.decorative else after.description)
         _mark_decorative(properties, after.decorative)
     if (before.w, before.h) != (after.w, after.h):
-        cx, cy = str(after.w * EMU), str(after.h * EMU)
+        cx, cy = str(after.w * EMU_PER_PIXEL), str(after.h * EMU_PER_PIXEL)
         frame.find(qn("wp:extent")).set("cx", cx)
         frame.find(qn("wp:extent")).set("cy", cy)
         transform = _first(_TRANSFORM(shape))

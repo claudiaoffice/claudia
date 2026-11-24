@@ -44,6 +44,7 @@ class WrittenPicture:
 
     @property
     def name(self) -> str:
+        """What the picture is called (``""``: nothing)."""
         return self.placed.obj.body.name
 
     @property
@@ -54,6 +55,7 @@ class WrittenPicture:
 
     @property
     def decorative(self) -> bool:
+        """Whether the picture has nothing to say to someone who cannot see it."""
         return self.placed.obj.body.decorative
 
 

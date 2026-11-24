@@ -50,8 +50,6 @@ from ._wrap import (
     docx_wrap_of,
 )
 
-#: English Metric Units in a pixel (the model's units are pixels at 96 to the inch).
-EMU = EMU_PER_PIXEL
 _NS = {
     "w": "http://schemas.openxmlformats.org/wordprocessingml/2006/main",
     "wp": "http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing",
@@ -114,9 +112,9 @@ class FilePicture:
 
 
 def pixels(emu: str | None) -> int:
-    """A length in EMU as pixels (``0`` when the file gives none)."""
+    """A length in EMU_PER_PIXEL as pixels (``0`` when the file gives none)."""
     try:
-        return round(int(emu or 0) / EMU)
+        return round(int(emu or 0) / EMU_PER_PIXEL)
     except ValueError:
         return 0
 
@@ -240,7 +238,7 @@ class PictureWriter:
     def run(self, obj: VisualObject, asset: ImageAsset) -> Any:  # noqa: ANN401
         """The ``w:r`` that carries the drawing of ``obj`` showing ``asset``."""
         body = obj.body
-        width, height = body.w * EMU, body.h * EMU
+        width, height = body.w * EMU_PER_PIXEL, body.h * EMU_PER_PIXEL
         picture_id, svg_id = self._relations(asset, body)
         number, self.next_id = self.next_id, self.next_id + 1
         name = _escape(body.imported.source_name if body.imported is not None and body.imported.source_name else "")
@@ -364,7 +362,7 @@ def restyle(picture: FilePicture, before: ObjectBody, after: ObjectBody) -> None
         if properties is not None:
             _mark_decorative(properties, after.decorative)
     if (before.w, before.h) != (after.w, after.h):
-        cx, cy = str(after.w * EMU), str(after.h * EMU)
+        cx, cy = str(after.w * EMU_PER_PIXEL), str(after.h * EMU_PER_PIXEL)
         frame.find(qn("wp:extent")).set("cx", cx)
         frame.find(qn("wp:extent")).set("cy", cy)
         transform = _first(_TRANSFORM(shown))

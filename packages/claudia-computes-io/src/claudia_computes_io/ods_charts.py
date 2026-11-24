@@ -34,11 +34,11 @@ from claudia_computes import ChartSpec, SheetId, WorkbookModel
 from claudia_computes.charts import BAR_COLORS
 from claudia_computes.model import MIN_OBJECT_SIZE
 from claudia_computes.refs import column_name
-from claudia_odf_io import NS, local_name, qname, transform_of, xml_safe
+from claudia_odf_io import CM_PER_PIXEL, NS, local_name, qname, transform_of, xml_safe
 
 from ._placed import Placed
 from .chart_plan import Area, ReadChart, number_text, plan_from, plan_of, spec_of
-from .ods_layout import _CM_PER_PIXEL, pixels_of, text_of  # noqa: PLC2701 (one length, one conversion)
+from .ods_layout import pixels_of, text_of
 from .ods_names import range_of
 
 #: The media type of an embedded chart (the folder ``Object 1/`` in the manifest).
@@ -211,7 +211,7 @@ def place_of(placed: Placed, rotation: int = 0) -> dict[str, str]:
     (``svg:x``, ``svg:y``) or, turned by ``rotation`` degrees, the ``draw:transform`` that turns it about its centre
     and puts it there. Every drawing of a tab is placed this way, a chart and a picture alike (D1477)."""
     size = {"svg:width": text_of(placed.width), "svg:height": text_of(placed.height)}
-    box = tuple(pixels * _CM_PER_PIXEL for pixels in (placed.x, placed.y, placed.width, placed.height))
+    box = tuple(pixels * CM_PER_PIXEL for pixels in (placed.x, placed.y, placed.width, placed.height))
     transform = transform_of(rotation, box)  # type: ignore[arg-type]
     if transform is None:
         return {**size, "svg:x": text_of(placed.x), "svg:y": text_of(placed.y)}
@@ -365,15 +365,6 @@ def sizes_of(frame: etree._Element, chart: ReadChart) -> tuple[int, int] | None:
     width = pixels_of(frame.get(_q("svg:width"))) or chart.width
     height = pixels_of(frame.get(_q("svg:height"))) or chart.height
     return (width, height) if min(width, height) >= MIN_OBJECT_SIZE else None
-
-
-def describe(frame: etree._Element) -> str:
-    """What a frame says to someone who cannot see it: its description, or else its title."""
-    for tag in ("svg:desc", "svg:title"):
-        text = (frame.findtext(_q(tag)) or "").strip()
-        if text:
-            return text
-    return ""
 
 
 # ------------------------------------------------------------------------------------------------ a file's charts

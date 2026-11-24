@@ -454,12 +454,23 @@ class DrawnAnchor:
     geometry: Callable[[], Geometry]
     #: Its place among the anchors of the file (in a drawing, the later is in front).
     order: int
+    #: The parts the drawing reaches, by the id of the relationship.
+    targets: Mapping[str, str]
 
     def corner(self) -> tuple[float, float]:
         """Where its corner is, in pixels from the corner of the sheet."""
         layout = self.geometry()
         x = _span(layout.widths, layout.width, 0, self.col) + self.across
         return x, _span(layout.heights, layout.height, 0, self.row) + self.down
+
+
+def names_of(properties: etree._Element | None) -> tuple[str, str]:
+    """What a drawing's ``cNvPr`` says: its name, and what it says to someone who cannot see it (its description,
+    else its title)."""
+    if properties is None:
+        return "", ""
+    said = properties.get("descr") or properties.get("title") or ""
+    return (properties.get("name") or "").strip(), said.strip()
 
 
 def drawn_anchors(package: Package, roots: dict[str, etree._Element]) -> Iterator[DrawnAnchor]:
@@ -475,6 +486,7 @@ def drawn_anchors(package: Package, roots: dict[str, etree._Element]) -> Iterato
             root = roots.get(part)
             if root is None:
                 root = roots[part] = parse_xml(package.parts[part])
+            targets = {rid: target for rid, _, target in relationships(package.parts, part)}
             for anchor in root:
                 if not isinstance(anchor.tag, str) or etree.QName(anchor).localname not in _ANCHORS:
                     continue
@@ -484,7 +496,7 @@ def drawn_anchors(package: Package, roots: dict[str, etree._Element]) -> Iterato
                 row, col, down, across = start
                 order += 1
                 size = _size_of(anchor, geometry)
-                yield DrawnAnchor(sheet, part, anchor, row, col, down, across, size, geometry, order)
+                yield DrawnAnchor(sheet, part, anchor, row, col, down, across, size, geometry, order, targets)
 
 
 def file_charts(
@@ -499,23 +511,20 @@ def file_charts(
     held = 0
     counted: Counter[SheetId] = Counter()
     for drawn in drawn_anchors(package, roots):
-        targets = {
-            rid: target for rid, kind, target in relationships(package.parts, drawn.drawing) if kind.endswith("/chart")
-        }
         frame = drawn.anchor.find("xdr:graphicFrame", NS)
         reference = None if frame is None else frame.find(".//c:chart", NS)
-        target = None if reference is None else targets.get(reference.get(_q("r", "id"), ""))
+        target = None if reference is None else drawn.targets.get(reference.get(_q("r", "id"), ""))
         if frame is None or target is None:
             continue
         sheet = drawn.sheet.sheet_id
-        properties = frame.find("xdr:nvGraphicFramePr/xdr:cNvPr", NS)
+        name, description = names_of(frame.find("xdr:nvGraphicFramePr/xdr:cNvPr", NS))
         chart = FileChart(
             sheet=sheet,
             row=drawn.row,
             col=drawn.col,
             corner=drawn.corner,
             order=drawn.order,
-            name="" if properties is None else (properties.get("name") or "").strip(),
+            name=name,
             drawing=drawn.drawing,
             anchor=drawn.anchor,
             frame=frame,
@@ -523,7 +532,6 @@ def file_charts(
         )
         data = package.parts.get(target)
         read = None if data is None else read_chart(data, sheet_ids)
-        description = "" if properties is None else (properties.get("descr") or properties.get("title") or "").strip()
         if (
             read is not None
             and drawn.size is not None

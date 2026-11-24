@@ -10,6 +10,12 @@
   },
   "properties": []
  },
+ "CM_PER_INCH": {
+  "value": "2.54"
+ },
+ "CM_PER_PIXEL": {
+  "value": "0.026458333333333334"
+ },
  "DocumentInfo": {
   "class": [
    "object"
@@ -69,9 +75,6 @@
   "methods": {},
   "properties": []
  },
- "POINTS_PER_PIXEL": {
-  "value": "0.75"
- },
  "Span": {
   "class": [
    "object"
@@ -119,11 +122,11 @@
  "box_element": {
   "function": "(body: 'ObjectBody', style: 'str', name: 'str', words: 'etree._Element | None') -> 'etree._Element'"
  },
- "box_look": {
-  "function": "(element: 'etree._Element', graphics: 'Mapping[str, etree._Element]') -> 'BoxLook'"
- },
  "decode_style_name": {
   "function": "(name: 'str') -> 'str'"
+ },
+ "default_name": {
+  "function": "(body: 'ObjectBody', number: 'int') -> 'str'"
  },
  "default_style_xml": {
   "function": "(language: 'str | None') -> 'str'"
@@ -179,6 +182,9 @@
  "level_style": {
   "function": "(kind: 'str', level: 'LevelFormat', number: 'int', inner: 'str' = '', start: 'int | None' = None) -> 'str'"
  },
+ "line_points": {
+  "function": "(value: 'str | None') -> 'float'"
+ },
  "list_style": {
   "function": "(definition: 'ListDef', scheme: 'Scheme', name: 'str') -> 'bytes'"
  },
@@ -217,9 +223,6 @@
  },
  "pixels": {
   "function": "(value: 'str | None') -> 'float | None'"
- },
- "points_of": {
-  "function": "(value: 'str | None') -> 'float'"
  },
  "problems": {
   "function": "(data: 'bytes') -> 'list[str]'"

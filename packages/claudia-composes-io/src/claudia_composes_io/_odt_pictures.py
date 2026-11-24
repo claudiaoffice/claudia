@@ -52,7 +52,6 @@ from ._wrap import (
     odf_wrap_of,
 )
 
-_CM_PER_INCH = 2.54
 #: The name of the style of the frame of a picture: no wrapping, in front of the text, where its character is.
 PICTURE_STYLE = "Claudia_20_picture"
 

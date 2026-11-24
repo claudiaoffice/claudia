@@ -17,6 +17,7 @@ picture stays in the file and is reported as ``picture``.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import replace
 
 from lxml import etree
@@ -24,14 +25,12 @@ from lxml import etree
 from claudia_computes import MIN_OBJECT_SIZE
 from claudia_core import asset_of, keeps_proportions, picture_body
 from claudia_odf_io import xml_safe
-from claudia_opc_io import ANGLE, DECORATIVE_URI, DRAWINGML, SVG_URI, cropped, is_decorative, shown_part, turn_of
+from claudia_opc_io import ANGLE, DRAWINGML, SVG_URI, cropped, is_decorative, mark_decorative, shown_part, turn_of
 
 from ._pictures import WrittenPicture
 from ._read_back import FileObject
-from .xlsx_charts import NS, DrawnAnchor, drawn_anchors, emu, pinned_at
-from .xlsx_read import Package, relationships
+from .xlsx_charts import NS, DrawnAnchor, emu, names_of, pinned_at
 
-DECORATIVE_NS = DRAWINGML["adec"]
 SVG_NS = DRAWINGML["asvg"]
 
 
@@ -56,10 +55,7 @@ def picture_anchor(picture: WrittenPicture, number: int, rid: str, svg_rid: str 
     properties.set("id", str(number))
     properties.set("name", xml_safe(picture.name or f"Picture {number - 1}"))
     if picture.decorative:
-        properties.set("descr", "")
-        ext = etree.SubElement(etree.SubElement(properties, f"{{{NS['a']}}}extLst"), f"{{{NS['a']}}}ext")
-        ext.set("uri", DECORATIVE_URI)
-        etree.SubElement(ext, f"{{{DECORATIVE_NS}}}decorative", nsmap={"adec": DECORATIVE_NS}).set("val", "1")
+        mark_decorative(properties)
     elif picture.description:
         properties.set("descr", xml_safe(picture.description))
     if svg_rid is not None:
@@ -71,8 +67,9 @@ def picture_anchor(picture: WrittenPicture, number: int, rid: str, svg_rid: str 
     return anchor
 
 
-def _held(drawn: DrawnAnchor, package: Package, object_id: str) -> FileObject | None:
-    """The image object of a picture anchored on a sheet, or ``None`` when it is none the model shows as it is."""
+def held_picture(drawn: DrawnAnchor, object_id: str, *, parts: Mapping[str, bytes]) -> FileObject | None:
+    """The image object of a picture anchored on a sheet (its bytes in ``parts``), or ``None`` when it is none the
+    model shows as it is."""
     picture = drawn.anchor.find("xdr:pic", NS)
     blip = None if picture is None else picture.find("xdr:blipFill/a:blip", NS)
     if picture is None or blip is None or drawn.size is None:
@@ -80,20 +77,19 @@ def _held(drawn: DrawnAnchor, package: Package, object_id: str) -> FileObject | 
     if cropped(picture.find("xdr:blipFill/a:srcRect", NS)):
         return None
     rotation = turn_of(picture.find("xdr:spPr/a:xfrm", NS))
-    targets = {rid: target for rid, _, target in relationships(package.parts, drawn.drawing)}
-    asset = asset_of(package.parts.get(targets.get(shown_part(blip), "")))
+    asset = asset_of(parts.get(drawn.targets.get(shown_part(blip), "")))
     if rotation is None or asset is None or min(drawn.size) < MIN_OBJECT_SIZE:
         return None
     if not keeps_proportions(asset, *drawn.size):
         return None
     properties = picture.find("xdr:nvPicPr/xdr:cNvPr", NS)
-    name = "" if properties is None else (properties.get("name") or "").strip()
+    name, description = names_of(properties)
     body = picture_body(
         object_id,
         asset,
         drawn.size,
         name=name,
-        description="" if properties is None else (properties.get("descr") or properties.get("title") or "").strip(),
+        description=description,
         decorative=is_decorative(properties),
         rotation=rotation,
     )
@@ -101,14 +97,3 @@ def _held(drawn: DrawnAnchor, package: Package, object_id: str) -> FileObject | 
     return FileObject(
         drawn.sheet.sheet_id, drawn.row, drawn.col, drawn.corner, body, "picture", drawn.order, image=asset
     )
-
-
-def file_pictures(package: Package, first: int) -> list[FileObject]:
-    """The pictures of the sheets of a file the model holds, in the order of the file; the ``n``-th is the object
-    ``o{first + n - 1}`` (the ids before ``first`` are the charts')."""
-    found: list[FileObject] = []
-    for drawn in drawn_anchors(package, {}):
-        held = _held(drawn, package, f"o{first + len(found)}")
-        if held is not None:
-            found.append(held)
-    return found

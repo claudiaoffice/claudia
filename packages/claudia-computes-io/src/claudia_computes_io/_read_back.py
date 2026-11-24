@@ -57,10 +57,25 @@ def within_limit(found: Iterable[FileObject]) -> list[FileObject]:
     return kept
 
 
-def held_on(held: Iterable[FileObject], tab: SheetId, kind: str) -> int:
-    """How many of ``held`` are on ``tab`` and of ``kind`` (``chart``, ``picture``, ``shape``, ``object``): what is not
-    lost of it."""
-    return sum(1 for one in held if one.tab == tab and one.kind == kind)
+def found_objects[D](
+    charts: Iterable[FileObject], drawn: Sequence[D], readers: Sequence[Callable[[D, str], FileObject | None]]
+) -> list[FileObject]:
+    """The drawings of a file the model may hold: ``charts`` first (their ids come first, for the patch), then, for each
+    of ``readers`` in turn, what it makes of the ``drawn`` elements of the file (``None``: nothing the model holds),
+    numbered on: ``o{n}`` for the ``n``-th."""
+    found = list(charts)
+    for read in readers:
+        for each in drawn:
+            one = read(each, f"o{len(found) + 1}")
+            if one is not None:
+                found.append(one)
+    return found
+
+
+def still_lost(kind: str, detail: str, count: int, held: Iterable[FileObject], tab: SheetId) -> int:
+    """How many of what a file's tab has that the model does not show (``kind``, ``detail``, ``count``) are left
+    when the drawings ``held`` of it are taken off: a chart, a picture, a box of the model is not lost."""
+    return count if detail else count - sum(1 for one in held if one.tab == tab and one.kind == kind)
 
 
 def _on_a_slide(one: FileObject, scale: float) -> tuple[ObjectBody, int, int] | None:

@@ -23,6 +23,7 @@ from __future__ import annotations
 import posixpath
 import zipfile
 from collections.abc import Callable, Hashable
+from dataclasses import dataclass
 from functools import partial
 from io import BytesIO
 from xml.sax.saxutils import escape as _xml_escape
@@ -38,11 +39,11 @@ from claudia_core import Rasterise
 from claudia_odf_io import DocumentInfo, Loss, LossLog, look_of, stamp_office_meta
 from claudia_opc_io import custom_properties, read_parts, set_custom_properties, write_parts
 
-from ._boxes import authorship_lost, box_styles, words_css, written_boxes
+from ._boxes import authorship_lost, box_names, box_styles, words_css, written_boxes
 from ._charts import WrittenChart, written_charts
 from ._pictures import WrittenPicture, picture_losses, written_pictures
 from ._placed import ONE_TO_ONE, Placed, SlideSize, file_tabs, placed_objects
-from ._read_back import FileObject, file_tabs_of, held_of, held_on, hold, lost_looks
+from ._read_back import FileObject, FileTabs, file_tabs_of, found_objects, held_of, hold, lost_looks, still_lost
 from ._unwritten import FRESH_ONLY, XLSX_WRITTEN, in_order, workbook_unwritten_changes
 from .cell_looks import (
     Dressing,
@@ -63,14 +64,14 @@ from .layout_sizes import changed_sizes
 from .openformula import Untranslatable
 from .pivot_exchange import adopt_pivots, pivot_positions, sheet_cells
 from .slide_mark import MARK, SlideMark, properties_of
-from .xlsx_boxes import box_anchor, file_boxes
+from .xlsx_boxes import box_anchor, held_box
 from .xlsx_chart_patch import Drawings, patch_charts
-from .xlsx_charts import chart_xml, file_charts
+from .xlsx_charts import chart_xml, drawn_anchors, file_charts
 from .xlsx_layout import layout_losses
 from .xlsx_looks import XlsxLooks, read_looks
 from .xlsx_names import XlsxNamesPatch, header_losses, write_names
 from .xlsx_patch import PackagePatch, SheetNotes, SheetPatch, UnsupportedEdit, written
-from .xlsx_pictures import file_pictures
+from .xlsx_pictures import held_picture
 from .xlsx_pivots import add_pivots, ask_refresh, read_pivots, written_pivots_of
 from .xlsx_read import (
     Package,
@@ -229,7 +230,8 @@ def workbook_to_xlsx(
     out = BytesIO()
     wb.save(out)
     data = add_pivots(out.getvalue(), model, written_pivots_of(model).pivots)
-    data = _with_drawings(data, model, (charts, pictures, boxes)) if charts or pictures or boxes else data
+    drawn = _Drawn(charts, pictures, boxes, box_names(placed))
+    data = _with_drawings(data, model, drawn) if charts or pictures or boxes else data
     marks = properties_of((tab.name for tab in tabs if tab.is_slide), slide_size, box_styles(placed))
     return stamp_office_meta(_with_properties(data, marks) if marks else data, info)
 
@@ -241,27 +243,33 @@ def _with_properties(data: bytes, properties: dict[str, str]) -> bytes:
     return write_parts(parts)
 
 
-def _with_drawings(
-    data: bytes,
-    model: WorkbookModel,
-    drawn: tuple[tuple[WrittenChart, ...], tuple[WrittenPicture, ...], tuple[Placed, ...]],
-) -> bytes:
-    """``data`` with the charts, pictures and boxes ``drawn`` on its tabs, in the order of their layers: what is
-    stacked later is in front. A chart that reads nothing is left out (``chart``, ``empty``)."""
-    charts, pictures, boxes = drawn
+@dataclass(frozen=True)
+class _Drawn:
+    """What a new file draws on its tabs: charts, pictures and boxes, and the names the boxes are written with."""
+
+    charts: tuple[WrittenChart, ...]
+    pictures: tuple[WrittenPicture, ...]
+    boxes: tuple[Placed, ...]
+    names: dict[str, str]
+
+
+def _with_drawings(data: bytes, model: WorkbookModel, drawn: _Drawn) -> bytes:
+    """``data`` with what is ``drawn`` on its tabs, in the order of the layers: what is stacked later is in front. A
+    chart that reads nothing is left out (``chart``, ``empty``)."""
     package = open_package(data)
     patch = PackagePatch(package.parts)
     drawings = Drawings(patch)
     by_name = {sheet.name.casefold(): sheet.part for sheet in package.sheets}
     things: list[tuple[Placed, Callable[[str], None]]] = []
-    for chart in charts:
+    for chart in drawn.charts:
         xml = chart_xml(model, chart.spec)
         if xml is not None:
             things.append((chart.placed, partial(drawings.add, xml=xml, placed=chart.placed)))
-    things += [(picture.placed, partial(drawings.add_picture, picture=picture)) for picture in pictures]
-    for box in boxes:
+    things += [(picture.placed, partial(drawings.add_picture, picture=picture)) for picture in drawn.pictures]
+    for box in drawn.boxes:
         body = box.obj.body
-        make = partial(box_anchor, box, look=look_of(model, body), words=words_css(model, body))
+        name = drawn.names[box.obj.id]
+        make = partial(box_anchor, box, name=name, look=look_of(model, body), words=words_css(model, body))
         things.append((box, partial(drawings.add_box, make=make)))
     for placed, write in sorted(things, key=lambda each: (str(each[0].tab.id), each[0].layer)):
         write(by_name[placed.tab.name.casefold()])
@@ -293,9 +301,8 @@ def _model_of(package: Package) -> tuple[WorkbookModel, tuple[Loss, ...]]:
         sheet.cells.update(read.cells)
         _dress(dressing, sheet, read)
         sheets.append(sheet)
-    found = _found_objects(package)
-    tabs = file_tabs_of(sheets, found, SlideMark.from_text(custom_properties(package.parts).get(MARK)))
-    hold(model, sheets, held_of(found, tabs), tabs)
+    tabs, held = _held_in(package, sheets)
+    hold(model, sheets, held, tabs)
     for named in names:
         model.names.put(named)
     model._calculate_loaded()  # noqa: SLF001 (the restore()-mirroring construction idiom; see model.py's own)
@@ -303,12 +310,15 @@ def _model_of(package: Package) -> tuple[WorkbookModel, tuple[Loss, ...]]:
     return model, (*pivots.losses.result(), *adopt_pivots(model, pivots.found).losses)
 
 
-def _found_objects(package: Package) -> list[FileObject]:
-    """The charts, pictures, text boxes and shapes of a file the model may hold, in that order (the charts' ids come
-    first, for the patch)."""
-    charts = [found for chart in file_charts(package)[0] if (found := chart.file_object()) is not None]
-    pictures = file_pictures(package, len(charts) + 1)
-    return [*charts, *pictures, *file_boxes(package, len(charts) + len(pictures) + 1)]
+def _held_in(package: Package, sheets: list[Sheet]) -> tuple[FileTabs, list[FileObject]]:
+    """Which of ``sheets`` (the worksheets of the file, with their cells) are slides, and the charts, pictures, text
+    boxes and shapes of the file the model holds on them (D1478, D1479)."""
+    charts, roots = file_charts(package)
+    drawn = list(drawn_anchors(package, roots))
+    held_charts = [found for chart in charts if (found := chart.file_object()) is not None]
+    found = found_objects(held_charts, drawn, (partial(held_picture, parts=package.parts), held_box))
+    tabs = file_tabs_of(sheets, found, SlideMark.from_text(custom_properties(package.parts).get(MARK)))
+    return tabs, held_of(found, tabs)
 
 
 def xlsx_import_losses(xlsx_bytes: bytes) -> tuple[Loss, ...]:
@@ -326,18 +336,16 @@ def xlsx_import_losses(xlsx_bytes: bytes) -> tuple[Loss, ...]:
         read = read_sheet(package, part, known)
         _dress(dressing, Sheet(part.sheet_id, part.name), read)
         reads.append((part, read))
-    found = _found_objects(package)
     sheets = []
     for part, read in reads:
         sheets.append(Sheet(part.sheet_id, part.name))
         sheets[-1].cells.update(read.cells)
-    tabs = file_tabs_of(sheets, found, SlideMark.from_text(custom_properties(package.parts).get(MARK)))
-    held = held_of(found, tabs)
+    tabs, held = _held_in(package, sheets)
     if looks := lost_looks(held, tabs):
         losses.add("look", count=looks)
     for part, read in reads:
         for loss in read.lost.result():
-            count = loss.count - held_on(held, part.sheet_id, loss.kind)
+            count = still_lost(loss.kind, loss.detail, loss.count, held, part.sheet_id)
             if count:
                 losses.add(loss.kind, loss.detail, count)
     for what, count in dressing.lost.items():

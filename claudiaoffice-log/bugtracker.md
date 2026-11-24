@@ -35,7 +35,7 @@ The index is the status of record; a section below keeps the status of the round
 re-checked. **Opened** and **Fixed** are filled from 2026-11-20 on: for older items only where the status already gave
 the date.
 
-### Open (90)
+### Open (91)
 
 
 By priority (P1, P2, P3, then items that wait for a decision without one), then by ID.
@@ -127,6 +127,7 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | CODE-80 | P2 | Code / AI / privacy | A question to Claude sends, before Claude asks for anything, the sheet list and the top left of the first three sheets (`workbook_lens.orient`; likewise the other two lenses' first look), so a sheet the question has nothing to do with can leave the server; the @core scenario "Claude is sent what the dialog says and nothing else" says it must not | **new, open** (size 2; owner to decide: fix now or log) | 2026-11-22 |  |
 | UX-74 | P3 | UX / AI | While the administrator has Claude off, the owners' dialog shows no check box, so an owner cannot withdraw a consent given earlier; it resumes when Claude is switched on again | **new, open** (size 3) | 2026-11-22 |  |
 | UX-75 | P3 | UX / AI | A window that is open when the administrator changes the provider keeps its old badge until the next consent change or reload | **new, open** (size 3) | 2026-11-22 |  |
+| CODE-84 | P3 | Code / creates I/O | The pptx and odp readers and writers keep their own DrawingML preset names, shape look and ODF graphic-style code beside `claudia_opc_io.drawingml` and `claudia_odf_io.boxes` (D1479), which texts and spreadsheets share | **new, open** (size 3) | 2026-11-24 |  |
 | PROC-22 | P3 | Process / CI | The LibreOffice job may still fail silently, though it has passed every round | **new, open** |  |  |
 | PROC-29 | P3 | Process / E2E | No scenario asserts that a second window sees a holder's outline and name tag (D1223), nor that a colleague's drag is not shown live | **new, open** |  |  |
 | PROC-31 | P3 | Process / i18n | `po/claudia.pot` goes stale at every merge of `main`: only its `#:` source lines move, no msgid changes, and the i18n check of `check_debt.py` fails on them | **new, open** (measured) |  |  |
@@ -2759,3 +2760,12 @@ so nothing leaves; but it stays on and comes back with the administrator's next 
 ### UX-75 · The badge of an open window does not follow the administrator's change · P3 · size 3 · new, open
 The badge and the dialog read `ai_consent` at join and on `ai_consent_changed` only. **Fix.** Publish the same event to
 the open documents when the provider changes (`AiRuntime.apply`).
+
+### CODE-84 · creates I/O keeps its own copy of the box code · P3 · size 3 · new, open
+Found while sharing the box code of texts and spreadsheets (E6.31 step 5c, D1479). `claudia_creates_io/pptx.py` and
+`odp.py` have their own preset names of the outlines, their own reading of a shape's fill and line, and their own
+`_graphic_styles` (which keeps the first style of a name where `claudia_odf_io.graphic_styles` keeps the last).
+**Fix.** Use `claudia_opc_io.drawingml` (`PRESET`, `SHAPE_OF`, `look_in`, `solid`, `outline`) and `claudia_odf_io`
+(`graphic_styles`, `box_look`, `held_box`). **Acceptance.** The pptx and odp tests pass unchanged; no second copy of
+those names or readers in creates-io.
+

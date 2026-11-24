@@ -84,6 +84,9 @@
  "look_in": {
   "function": "(properties: 'etree._Element | None', *, styled: 'bool') -> 'tuple[Colour, Colour, int]'"
  },
+ "mark_decorative": {
+  "function": "(properties: 'etree._Element') -> 'None'"
+ },
  "outline": {
   "function": "(colour: 'Colour', width: 'int') -> 'str'"
  },

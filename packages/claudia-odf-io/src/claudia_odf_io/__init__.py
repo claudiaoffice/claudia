@@ -13,25 +13,24 @@ language   default_style_xml, read_language, patch_language -- the language of a
 report     Loss, LossLog, unwritten_changes -- what could not be kept, as a list, and what a writer left out
 transform  inches, pixels, transform_of, turned_box, angle_of -- lengths of the format, how a drawing object is turned
 lists      list_style, level_style, read_levels -- the levels of a numbering scheme as list styles say them (E9.22)
-boxes      BoxLook, look_of, is_written, held_box, box_look, box_element, graphic_properties -- text boxes and shapes
+boxes      BoxLook, look_of, is_written, held_box, box_element, default_name, graphic_properties -- text boxes, shapes
            in a file: their look, and their OpenDocument elements (D465, D1479)
 fonts      font_faces, font_of -- the font faces of a file and the font a style's text properties name (E3.13)
 """
 
 from ._version import __version__
 from .boxes import (
-    POINTS_PER_PIXEL,
     BoxLook,
     Styled,
     authored,
     box_element,
-    box_look,
+    default_name,
     graphic_properties,
     held_box,
     is_written,
+    line_points,
     look_of,
     odf_properties,
-    points_of,
 )
 from .fonts import font_faces, font_of
 from .language import (
@@ -77,21 +76,22 @@ from .paragraph import (
 from .pictures import description_element, description_of, graphic_styles, held_frame, name_of, picture_of
 from .report import NOT_WRITTEN, Loss, LossLog, unwritten_changes
 from .splice import OdfError, Span, XmlPart
-from .transform import angle_of, inches, pixels, transform_of, turned_box
+from .transform import CM_PER_INCH, CM_PER_PIXEL, angle_of, inches, pixels, transform_of, turned_box
 
 __all__ = [
-    "POINTS_PER_PIXEL",
+    "CM_PER_INCH",
+    "CM_PER_PIXEL",
     "BoxLook",
     "Styled",
     "authored",
     "box_element",
-    "box_look",
+    "default_name",
     "graphic_properties",
     "held_box",
     "is_written",
     "look_of",
     "odf_properties",
-    "points_of",
+    "line_points",
     "LEVEL_BULLET",
     "LEVEL_NUMBER",
     "OUTLINE_LEVEL",

@@ -48,7 +48,15 @@ def shown_part(blip: etree._Element) -> str:
     """The relationship of the part a picture draws (its ``a:blip``): its SVG when it has one beside the ordinary
     picture, else the picture itself."""
     found = _SVG(blip)
-    return str(found[0]) if found else blip.get(f"{{{DRAWINGML['r']}}}embed", "")
+    return str(found[0]) if isinstance(found, list) and found else blip.get(f"{{{DRAWINGML['r']}}}embed", "")
+
+
+def mark_decorative(properties: etree._Element) -> None:
+    """Give a drawing's ``docPr`` or ``cNvPr`` Office's mark of a decorative one, and no description."""
+    properties.set("descr", "")
+    ext = etree.SubElement(etree.SubElement(properties, f"{{{DRAWINGML['a']}}}extLst"), f"{{{DRAWINGML['a']}}}ext")
+    ext.set("uri", DECORATIVE_URI)
+    etree.SubElement(ext, f"{{{DRAWINGML['adec']}}}decorative", nsmap={"adec": DRAWINGML["adec"]}).set("val", "1")
 
 
 def is_decorative(properties: etree._Element | None) -> bool:

@@ -38,7 +38,7 @@ from claudia_core import (
     parse_number,
     plain,
 )
-from claudia_odf_io import points_of
+from claudia_odf_io import line_points
 from claudia_opc_io import EMU_PER_POINT
 
 #: How wide a column is at least, in hundredths of a percent of the table (the column check's own limit).
@@ -250,7 +250,7 @@ def cell_look(model: TextModel, style_id: str) -> CellLook:
     sides = []
     for side in ("top", "right", "bottom", "left"):
         colour = colour_of(css, f"border-{side}", page)
-        sides.append((colour, round(points_of(css.get(f"border-{side}")) * EMU_PER_POINT)) if colour else None)
+        sides.append((colour, round(line_points(css.get(f"border-{side}")) * EMU_PER_POINT)) if colour else None)
     return CellLook(colour_of(css, "background-color", page), tuple(sides))
 
 

@@ -16,6 +16,9 @@ from __future__ import annotations
 import math
 import re
 
+#: Centimetres in an inch, and in a pixel (96 to the inch).
+CM_PER_INCH = 2.54
+CM_PER_PIXEL = CM_PER_INCH / 96
 _INCHES = {"cm": 1 / 2.54, "mm": 1 / 25.4, "in": 1.0, "pt": 1 / 72, "pc": 1 / 6, "px": 1 / 96}
 _NUMBER = r"-?(?:\d+\.?\d*|\.\d+)"
 _LENGTH = re.compile(rf"\s*({_NUMBER})\s*(cm|mm|in|pt|pc|px)\s*")

@@ -23,7 +23,7 @@ from lxml import etree
 
 from claudia_composes import TextModel
 from claudia_core import PageSetup, TableDef
-from claudia_odf_io import NS, hidden_content, inches
+from claudia_odf_io import CM_PER_INCH, NS, hidden_content, inches
 from claudia_opc_io import EMU_PER_POINT
 
 from ._layout import sides_of
@@ -54,7 +54,6 @@ _IGNORED = {_q("office", "forms"), _q("table", "table-source"), _q("table", "sha
 _MOST = 1_000
 _EMU_PER_CM = 360_000
 _POINTS_PER_INCH = 72
-_CM_PER_INCH = 2.54
 
 
 def text_width_in(page: PageSetup | None) -> float | None:
@@ -345,7 +344,7 @@ def write_table(
     grid = write_grid(definition, model.language)
     shares = column_shares(definition)
     share = definition.width if definition.width is not None else 10_000
-    width = (text_width_in(model.page) or 6.0) * _CM_PER_INCH * share / 10_000
+    width = (text_width_in(model.page) or 6.0) * CM_PER_INCH * share / 10_000
     table = etree.Element(TABLE, nsmap={"table": NS["table"], "text": NS["text"]})
     table.set(_q("table", "name"), name)
     table.set(_STYLE_NAME, styles.table(share, width))

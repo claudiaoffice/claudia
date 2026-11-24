@@ -36,7 +36,7 @@ import re
 from bisect import bisect_right
 from collections.abc import Mapping
 from dataclasses import dataclass, field, replace
-from functools import cache
+from functools import cache, partial
 from zipfile import BadZipFile
 
 from lxml import etree
@@ -75,24 +75,24 @@ from claudia_odf_io import (
 )
 from claudia_opc_io import parse_xml, read_parts, write_parts
 
-from ._boxes import authorship_lost, box_styles, written_boxes
+from ._boxes import authorship_lost, box_names, box_styles, written_boxes
 from ._charts import written_charts
 from ._pictures import MEDIA_TYPES, picture_losses, written_pictures
 from ._placed import ONE_TO_ONE, Placed, SlideSize, file_tabs, placed_objects
-from ._read_back import FileObject, FileTabs, file_tabs_of, held_of, held_on, hold, lost_looks
+from ._read_back import FileObject, FileTabs, file_tabs_of, found_objects, held_of, hold, lost_looks, still_lost
 from ._unwritten import FRESH_ONLY, ODS_WRITTEN, workbook_unwritten_changes
 from .cell_looks import Dressing, Lines, LookExport, SheetLooks, changed_styles, restyling, sheet_styling
 from .chart_plan import chart_losses
 from .extensions import INVERSE_NAMES, NOTE_MARKER, from_excel, restore_alternatives, to_excel, with_note
 from .layout_sizes import MAX_SIZED_COLUMNS, MAX_SIZED_ROWS, changed_sizes
-from .ods_boxes import box_frame, file_boxes
-from .ods_chart_files import FileChart, file_charts
+from .ods_boxes import box_frame, held_box_of
+from .ods_chart_files import FileChart, drawn_frames, file_charts
 from .ods_chart_patch import ChartPatch
 from .ods_charts import Parts, a_chart, new_shapes
 from .ods_layout import OdsSizes, read_sizes
 from .ods_looks import OdsLooks, column_styles, read_looks
 from .ods_names import NamesPatch, SheetPlace, global_elements, local_expressions, read_names, sheet_names
-from .ods_pictures import decorative_count, file_pictures, part_name, picture_frame
+from .ods_pictures import decorative_count, held_picture, part_name, picture_frame
 from .ods_pivots import data_pilot_tables, read_pivots
 from .ods_write_looks import OdsLookWriter, OdsRestyler
 from .openformula import Untranslatable, from_openformula, to_openformula
@@ -541,12 +541,13 @@ def _held_objects(
     """Every chart of a file (what a patch matches the model's charts with), which of its tables are slides (of
     ``sheets``, the tables as the model has them, by default as they are), and the charts, pictures, text boxes and
     shapes of it the model holds, charts first (D462, CODE-67, D1478, D1479)."""
-    charts = file_charts(tables, parts)
+    drawn = list(drawn_frames(tables))
+    charts = file_charts(tables, parts, drawn)
     styles = parts.get("styles.xml")
     graphics = graphic_styles(content, None if styles is None else parse_xml(styles))
     held_charts = [found for chart in charts if (found := chart.file_object()) is not None]
-    pictures = file_pictures(tables, parts, graphics, len(held_charts) + 1)
-    found = [*held_charts, *pictures, *file_boxes(tables, graphics, len(held_charts) + len(pictures) + 1)]
+    readers = (partial(held_picture, parts=parts, graphics=graphics), partial(held_box_of, graphics=graphics))
+    found = found_objects(held_charts, drawn, readers)
     mark = SlideMark.from_text(user_defined(parts["meta.xml"]).get(MARK) if "meta.xml" in parts else None)
     if sheets is None:
         sheets = [Sheet(SheetId(table.id), table.name) for table in tables]
@@ -559,7 +560,7 @@ def _held_objects(
 def _left_out(table: _Table, held: list[FileObject]) -> list[tuple[str, str, int]]:
     """What ``table`` has that the model does not show, but for the charts and pictures it holds of it."""
     found = [
-        (kind, detail, count - held_on(held, SheetId(table.id), kind) if not detail else count)
+        (kind, detail, still_lost(kind, detail, count, held, SheetId(table.id)))
         for kind, detail, count in table.left_out
     ]
     return [entry for entry in found if entry[2] > 0]
@@ -983,7 +984,8 @@ def _drawings(
     for count, picture in enumerate(written_pictures(model, placed, rasterise=rasterise, svg_beside_png=False), 1):
         frames.append((picture.placed, picture_frame(picture, count)))
         parts[part_name(picture)] = (picture.data, MEDIA_TYPES[picture.format])
-    frames += [(box, box_frame(model, box, styles, count)) for count, box in enumerate(written_boxes(placed), 1)]
+    names = box_names(placed)
+    frames += [(box, box_frame(model, box, styles, names[box.obj.id])) for box in written_boxes(placed)]
     shapes: dict[SheetId, etree._Element] = {}
     for where, frame in sorted(frames, key=lambda each: each[0].layer):
         shapes.setdefault(where.tab.id, new_shapes()).append(frame)

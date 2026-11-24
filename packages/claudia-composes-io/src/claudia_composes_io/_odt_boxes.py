@@ -28,6 +28,7 @@ from claudia_odf_io import (
     BoxLook,
     LossLog,
     box_element,
+    default_name,
     description_element,
     detach,
     frames_of,
@@ -139,7 +140,7 @@ class BoxWriter:
         style = self.styles.name_of(body.kind, look_of(self.model, body), obj.anchor)
         words = body.paragraph
         inner = self.paragraph_of(words.style, xml_safe(shown_words(self.model, words))) if words is not None else None
-        name = f"{'Text box' if body.kind == 'text' else 'Shape'} {self._number}"
+        name = default_name(body, self._number)
         element = box_element(body, style, name, inner)
         element.set(_q("text", "anchor-type"), "char")
         element.set(_q("draw", "z-index"), str(self._number))
