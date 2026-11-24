@@ -60,7 +60,7 @@ Feature: A person can point at anything by its name, change the name, describe i
     Then I see the same dialog as from the Edit menu, with the name field
 
   # Found by the owner on 2026-11-24 (UX-78): the keys typed in the dialog went to the object behind it.
-  @core @app:creates @e2e:describe-creates
+  @core @app:creates @e2e:describe-creates.cjs
   Scenario: The keys typed in the dialog belong to the dialog, not to the object behind it
     Given a text box is on the slide, not selected
     And I opened Name & describe… from its right-click menu
