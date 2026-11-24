@@ -1657,10 +1657,6 @@ msgstr "[Ctrl + C / X / V~~~~~~]"
 msgid "Ctrl + arrows"
 msgstr "[Ctrl + àrrôws~~~~~]"
 
-#: web/app/lib/object-menu.ts
-msgid "Ctrl+C"
-msgstr "[Ctrl+C~~]"
-
 #: web/app/components/RedactionDialog.vue web/app/components/SqlEditor.vue web/app/components/StyleCssEditor.vue
 msgid "Ctrl+Enter"
 msgstr "[Ctrl+Éntér~~~~]"
@@ -1668,10 +1664,6 @@ msgstr "[Ctrl+Éntér~~~~]"
 #: web/app/components/ContainerEditor.vue
 msgid "Ctrl+Enter draws it, Escape leaves it as it was"
 msgstr "[Ctrl+Éntér dràws ît, Éscàpé léàvés ît às ît wàs~~~~~~~~~~~~~~~~~~~]"
-
-#: web/app/lib/object-menu.ts
-msgid "Ctrl+X"
-msgstr "[Ctrl+X~~]"
 
 #: web/app/components/TextEditor.vue
 msgid "Ctrl+click to go there"
@@ -1729,7 +1721,7 @@ msgstr "[Décôràtîvé: ônly fôr lôôks, à scréén réàdér skîps ît~~
 msgid "Define"
 msgstr "[Défîné~~]"
 
-#: web/app/lib/object-menu.ts web/app/lib/table-menu.ts
+#: web/app/lib/shortcuts.ts web/app/lib/table-menu.ts
 msgid "Del"
 msgstr "[Dél~]"
 
@@ -2041,7 +2033,7 @@ msgstr "[Énd thé shôw~~~~~]"
 msgid "End the show (Esc)"
 msgstr "[Énd thé shôw (Ésc)~~~~~~~]"
 
-#: web/app/components/TextWorkspace.vue web/app/lib/object-menu.ts
+#: web/app/components/TextWorkspace.vue web/app/lib/shortcuts.ts
 msgid "Enter"
 msgstr "[Éntér~~]"
 

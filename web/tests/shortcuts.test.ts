@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { Menu } from '~/components/MenuBar.vue'
+import { useI18n } from '~/lib/i18n'
 import { chordLabel, chordOf, dispatch, hintOf, isTypingTarget, matches, menuShortcuts, regionShortcuts, searchShortcuts, sharedShortcuts } from '~/lib/shortcuts'
 
 function key(partial: Partial<{ key: string; code: string; ctrlKey: boolean; metaKey: boolean; shiftKey: boolean; altKey: boolean }>) {
@@ -50,6 +51,17 @@ describe('chordLabel', () => {
   it('upper-cases a single-letter key but leaves a named key alone', () => {
     expect(chordLabel({ key: 's', ctrl: true })).toBe('Ctrl+S')
     expect(chordLabel({ key: 'F10', shift: true })).toBe('Shift+F10')
+  })
+  it('names Delete and Enter in the language chosen, as it does Ctrl (CODE-71: the object menu shows them)', async () => {
+    const real = globalThis.fetch
+    globalThis.fetch = (async () => new Response(JSON.stringify({ Ctrl: 'Strg', Del: 'Entf', Enter: 'Eingabe' }), { status: 200 })) as typeof fetch
+    try {
+      await useI18n().choose('de')
+      expect([chordLabel({ key: 'Delete' }), chordLabel({ key: 'Enter' }), chordLabel({ key: 'x', ctrl: true })]).toEqual(['Entf', 'Eingabe', 'Strg+X'])
+    } finally {
+      globalThis.fetch = real
+      await useI18n().choose('en')
+    }
   })
 })
 

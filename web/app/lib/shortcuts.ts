@@ -110,7 +110,14 @@ export function searchShortcuts(actions: { find: () => void; replace: () => void
   ]
 }
 
-const KEY_NAMES: Readonly<Record<string, string>> = { ArrowUp: '↑', ArrowDown: '↓', ArrowLeft: '←', ArrowRight: '→', Delete: 'Del' }
+const ARROWS: Readonly<Record<string, string>> = { ArrowUp: '↑', ArrowDown: '↓', ArrowLeft: '←', ArrowRight: '→' }
+
+/** A key as its cap reads, in the language chosen where the cap has words on it (Entf, Eingabe). */
+function keyName(key: string): string {
+  if (key === 'Delete') return t('Del')
+  if (key === 'Enter') return t('Enter')
+  return ARROWS[key] ?? (key.length === 1 ? key.toUpperCase() : key)
+}
 
 /** `Ctrl+Shift+Z` for the Preferences ▸ Shortcuts list and the menu's `hint`. A symbol that is typed with Shift (`?`, `_`)
  * is shown as the symbol, without the Shift. */
@@ -120,7 +127,7 @@ export function chordLabel(chord: KeyChord): string {
   if (chord.ctrl) parts.push(t('Ctrl'))
   if (chord.shift && !(symbol && '?_'.includes(chord.key))) parts.push(t('Shift'))
   if (chord.alt) parts.push(t('Alt'))
-  parts.push(KEY_NAMES[chord.key] ?? (chord.key.length === 1 ? chord.key.toUpperCase() : chord.key))
+  parts.push(keyName(chord.key))
   return parts.join('+')
 }
 

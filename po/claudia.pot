@@ -1657,20 +1657,12 @@ msgstr ""
 msgid "Ctrl + arrows"
 msgstr ""
 
-#: web/app/lib/object-menu.ts
-msgid "Ctrl+C"
-msgstr ""
-
 #: web/app/components/RedactionDialog.vue web/app/components/SqlEditor.vue web/app/components/StyleCssEditor.vue
 msgid "Ctrl+Enter"
 msgstr ""
 
 #: web/app/components/ContainerEditor.vue
 msgid "Ctrl+Enter draws it, Escape leaves it as it was"
-msgstr ""
-
-#: web/app/lib/object-menu.ts
-msgid "Ctrl+X"
 msgstr ""
 
 #: web/app/components/TextEditor.vue
@@ -1729,7 +1721,7 @@ msgstr ""
 msgid "Define"
 msgstr ""
 
-#: web/app/lib/object-menu.ts web/app/lib/table-menu.ts
+#: web/app/lib/shortcuts.ts web/app/lib/table-menu.ts
 msgid "Del"
 msgstr ""
 
@@ -2041,7 +2033,7 @@ msgstr ""
 msgid "End the show (Esc)"
 msgstr ""
 
-#: web/app/components/TextWorkspace.vue web/app/lib/object-menu.ts
+#: web/app/components/TextWorkspace.vue web/app/lib/shortcuts.ts
 msgid "Enter"
 msgstr ""
 

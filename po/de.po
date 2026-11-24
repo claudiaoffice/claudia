@@ -1657,10 +1657,6 @@ msgstr "Strg + C / X / V"
 msgid "Ctrl + arrows"
 msgstr "Strg + Pfeiltasten"
 
-#: web/app/lib/object-menu.ts
-msgid "Ctrl+C"
-msgstr "Strg+C"
-
 #: web/app/components/RedactionDialog.vue web/app/components/SqlEditor.vue web/app/components/StyleCssEditor.vue
 msgid "Ctrl+Enter"
 msgstr "Strg+Eingabe"
@@ -1668,10 +1664,6 @@ msgstr "Strg+Eingabe"
 #: web/app/components/ContainerEditor.vue
 msgid "Ctrl+Enter draws it, Escape leaves it as it was"
 msgstr "Strg+Eingabe zeichnet es, Escape lässt es unverändert"
-
-#: web/app/lib/object-menu.ts
-msgid "Ctrl+X"
-msgstr "Strg+X"
 
 #: web/app/components/TextEditor.vue
 msgid "Ctrl+click to go there"
@@ -1729,7 +1721,7 @@ msgstr "Dekorativ: nur zur Zierde, ein Screenreader überspringt es"
 msgid "Define"
 msgstr "Definieren"
 
-#: web/app/lib/object-menu.ts web/app/lib/table-menu.ts
+#: web/app/lib/shortcuts.ts web/app/lib/table-menu.ts
 msgid "Del"
 msgstr "Entf"
 
@@ -2041,7 +2033,7 @@ msgstr "Präsentation beenden"
 msgid "End the show (Esc)"
 msgstr "Präsentation beenden (Esc)"
 
-#: web/app/components/TextWorkspace.vue web/app/lib/object-menu.ts
+#: web/app/components/TextWorkspace.vue web/app/lib/shortcuts.ts
 msgid "Enter"
 msgstr "Eingabe"
 
