@@ -228,13 +228,16 @@ class Person:
 
     def create(self) -> None:
         page = self.page
-        page.goto(self.url + "/", wait_until="domcontentloaded")
+        with page.expect_response(lambda answer: answer.url.endswith("/api/docs")) as listing:
+            page.goto(self.url + "/", wait_until="domcontentloaded")
         page.fill("input[name=document]", self.document)
         page.fill("input[name=user]", self.name.lower())
         page.fill("input[name=password]", self.password)
-        kinds = page.locator(".kinds")  # a server of several apps asks which kind of document (D430)
-        if kinds.count():
-            kinds.get_by_role("radio", name=KIND_WORDS[self.app]).click()
+        # A server of several apps asks which kind of document (D430). Whether it does is in its list, not in what the
+        # page shows so far: the choice appears once the list has come, which on a busy machine was after the form had
+        # been filled, and Create then asked for a kind instead of making the document (PROC-53).
+        if len(listing.value.json().get("apps", [])) > 1:
+            page.locator(".kinds").get_by_role("radio", name=KIND_WORDS[self.app]).click()
         page.click("text=Create document")
         page.wait_for_selector("[data-testid=recovery-key]")
         page.check(".modal input[type=checkbox]")
