@@ -469,7 +469,7 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor | SlideAnchor]):
         #: The one order of the sheets and slides, every one of them in it exactly once (D1471), kept so by
         #: :meth:`add_sheet`, :meth:`drop_sheet`, :meth:`add_slide` and :meth:`remove_slide` and nowhere else.
         self.tabs: list[Tab] = []
-        #: The id of every sheet this workbook has had, removed ones too: a new sheet never gets one of them, or the
+        #: Every sheet id this workbook has had, removed ones included. A new sheet never gets one of them, or the
         #: undo of a removal would bring back a second sheet of that id (CODE-56). It only grows.
         self.sheet_ids_used: set[str] = set()
         self.calc = Calculator(self, functions or default_functions())
