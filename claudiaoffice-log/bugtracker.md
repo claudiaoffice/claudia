@@ -134,12 +134,13 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |  |  |
 | UX-06 | — | UX | Web menu differs from decisions D4/D5 | needs decision |  |  |
 
-### Fixed (159)
+### Fixed (160)
 
 By ID. Items closed without a fix (superseded, wontfix) are here too.
 
 | ID | Pri | Category | Title | Status | Opened | Fixed |
 |---|---|---|---|---|---|---|
+| UX-77 | P2 | UX / Windows | A console window of node stays open for as long as an app of the Windows client runs, and shows only start-up lines | **fixed** 2026-11-24 on `win-installer-fix` (D750) | 2026-11-24 | 2026-11-24 |
 | UX-76 | P2 | UX / Windows | The window opens at the configured size in physical pixels, so on a scaled display (200%) it is half the size the page needs | **fixed** 2026-11-24 on `win-installer-fix` (D749) | 2026-11-24 | 2026-11-24 |
 | CODE-82 | P2 | Code / Windows | Help ▸ About opens nothing on the start page of the Windows and macOS clients | **fixed** 2026-11-24 on `win-installer-fix` (D748) | 2026-11-24 | 2026-11-24 |
 | PROC-52 | P2 | Process / CI | The Windows install test let the launcher fail: its window step was advisory as a whole, so CODE-79 had a green CI | **fixed** 2026-11-23 on `win-installer-fix` (D747) | 2026-11-23 | 2026-11-23 |
@@ -2797,3 +2798,16 @@ the size again with the scale applied, capped at nine tenths of the free screen,
 `build-shell.test.ts` (the allow-list; red before), the scenarios of `specs/desktop/window-size.feature`. **Not run on
 Windows or on a scaled display:** the owner's next install is the check. **Escaped** because: spec gap (no one had said
 that a window's size is in CSS pixels) and a unit that no test, on a Mac or on Linux, can see.
+
+### UX-77 · A console window stays open for as long as an app runs · P2 · size 2 · fixed
+**Found** by the owner: the window of node stays open (after closing the app too) and prints only what the start prints:
+the note that the core is started as a plain `node`, and Neutralino's `NE_RS_TREEGER` (`resources.neu` missing) and
+`NE_RS_UNBLDRE` (`/favicon.ico`). **Cause** (**read**): the shortcuts started `node.exe`, a console program. **Fixed**
+2026-11-24 (D750): `claudia-start.exe`, a small C program of the GUI subsystem, starts node without a console window and
+writes what it prints to `%LOCALAPPDATA%\Claudia\<app>\state\launcher.log`; the shortcuts and the post-install start use it.
+**Tests:** `tests/test_windows_packaging.py` (the shortcuts, the stage, the compile command, the workflow; red before), the
+step *The launcher program hides node and keeps a log of what it prints* of `windows.yml`, the scenarios of
+`specs/desktop/windows-launcher.feature`. **Not run on Windows:** the program was compiled here for Windows (Zig's cc, x86-64,
+no warnings, GUI subsystem checked in the file header) but never run; the CI step is its first run. **Not understood:** why
+the console stayed open *after* closing the app (a `node` left alive, by the launcher or by the core?); if one is left in
+the task manager now, it is invisible. **Escaped** because: spec gap (nobody had said that a shortcut must not show a console).

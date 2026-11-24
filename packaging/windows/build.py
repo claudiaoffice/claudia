@@ -5,7 +5,9 @@ The steps that need a toolchain (npm, PyInstaller, ``neu update``, Inno Setup) a
 what is plain file work and is tested on any system (``tests/test_windows_packaging.py``):
 
     python packaging/windows/build.py version v0.4.0 --build 17
-    python packaging/windows/build.py stage --node C:\\node --winsw WinSW-x64.exe --out build\\stage
+    python packaging/windows/build.py launcher --out build\\claudia-start.exe
+    python packaging/windows/build.py stage --node C:\\node --winsw WinSW-x64.exe --out build\\stage \\
+        --launcher build\\claudia-start.exe
     python packaging/windows/build.py installer --stage build\\stage --version 0.4.0 --out dist
 
 ``stage`` refuses to go on when something that an earlier step builds is missing, and says which step makes it.
@@ -29,6 +31,7 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 APPS = ("composes", "computes", "creates")
 NEUTRALINO_BINARY = "neutralino-win_x64.exe"
+LAUNCHER_PROGRAM = "claudia-start.exe"
 VERSION_PATTERN = re.compile(r"^v?(\d+)\.(\d+)\.(\d+)(?:[-+.]?([0-9A-Za-z.+-]+))?$")
 
 
@@ -131,9 +134,10 @@ def copy_tree(source: Path, target: Path) -> None:
     shutil.copytree(source, target, dirs_exist_ok=True)
 
 
-def stage(root: Path, out: Path, node: Path, winsw: Path, webview2: Path | None = None) -> Path:
+def stage(root: Path, out: Path, node: Path, winsw: Path, launcher: Path, webview2: Path | None = None) -> Path:
     """The files of an install, laid out as ``claudia.iss`` installs them. ``root`` is the repository, ``node`` the
-    folder of a Node.js (``node.exe`` and its ``LICENSE``), ``winsw`` WinSW's executable.
+    folder of a Node.js (``node.exe`` and its ``LICENSE``), ``winsw`` WinSW's executable, ``launcher`` the program
+    the shortcuts start (``build.py launcher``).
 
     What has to be built before: the web frontend (``npm run build`` in web/), the client (``npm run build:windows`` in
     clients/neutralino, and ``npx @neutralinojs/neu update`` in each of its apps) and the server (``pyinstaller``).
@@ -145,6 +149,7 @@ def stage(root: Path, out: Path, node: Path, winsw: Path, webview2: Path | None 
     require(client / "dist" / "launch.js", "npm ci && npm run build:windows, in clients/neutralino/")
     require(node / "node.exe", "a Node.js for Windows: pass its folder with --node")
     require(winsw, "pass WinSW's executable with --winsw (build.py fetch-winsw gets the pinned one)")
+    require(launcher, "build.py launcher, then pass its output with --launcher")
 
     if out.exists():
         shutil.rmtree(out)
@@ -164,6 +169,7 @@ def stage(root: Path, out: Path, node: Path, winsw: Path, webview2: Path | None 
     (target / "apps").mkdir(parents=True)
     copy_tree(client / "bin", target / "bin")
     copy_tree(client / "dist", target / "dist")
+    shutil.copy2(launcher, target / LAUNCHER_PROGRAM)  # what the shortcuts start: node without a window (D750)
     shutil.copy2(client / "package.json", target / "package.json")  # "type": "module": without it dist/*.js is not read
     for app in APPS:
         source = client / "apps" / app
@@ -197,6 +203,32 @@ def stage(root: Path, out: Path, node: Path, winsw: Path, webview2: Path | None 
     if webview2 is not None:
         shutil.copy2(webview2, out / "prerequisites" / "MicrosoftEdgeWebview2Setup.exe")
     return out
+
+
+def launcher_command(compiler: str, out: Path) -> list[str]:
+    """The command line that compiles the program the shortcuts start (``launcher/claudia-start.c``, UX-77, D750): of
+    the GUI subsystem, so that it has no console window, with wide-character entry for paths with umlauts."""
+    return [
+        compiler,
+        "-O2",
+        "-Wall",
+        "-municode",
+        "-mwindows",
+        "-o",
+        str(out),
+        str(HERE / "launcher" / "claudia-start.c"),
+        "-lshell32",
+        "-luser32",
+    ]
+
+
+def build_launcher(out: Path, compiler: str = "gcc") -> Path:
+    """``claudia-start.exe``, compiled with MinGW's ``gcc`` (on the workflow's runners, or ``--cc`` another one)."""
+    if shutil.which(compiler) is None:
+        raise BuildError(f"{compiler} is not installed: MinGW-w64 (`choco install mingw`), or pass another with --cc")
+    out.parent.mkdir(parents=True, exist_ok=True)
+    subprocess.run(launcher_command(compiler, out), check=True)
+    return require(out, f"{compiler} (it said why it did not)")
 
 
 def find_iscc() -> str:
@@ -248,6 +280,9 @@ def _arguments(argv: list[str]) -> argparse.Namespace:
     staged = commands.add_parser("stage", help="lay out the files of an install")
     staged.add_argument("--node", type=Path, required=True, help="the folder of a Node.js for Windows")
     staged.add_argument("--winsw", type=Path, required=True)
+    staged.add_argument(
+        "--launcher", type=Path, required=True, help="claudia-start.exe (the launcher command makes it)"
+    )
     staged.add_argument("--webview2", type=Path)
     staged.add_argument("--out", type=Path, default=ROOT / "build" / "windows" / "stage")
 
@@ -256,6 +291,10 @@ def _arguments(argv: list[str]) -> argparse.Namespace:
     installer.add_argument("--version", required=True, help="the text of the version (build.py version prints it)")
     installer.add_argument("--numeric", default="0.0.0.0")
     installer.add_argument("--out", type=Path, default=ROOT / "dist")
+
+    launcher = commands.add_parser("launcher", help="compile the program the shortcuts start (needs MinGW's gcc)")
+    launcher.add_argument("--out", type=Path, default=ROOT / "build" / "windows" / "claudia-start.exe")
+    launcher.add_argument("--cc", default="gcc", help="the C compiler: MinGW-w64's gcc, or a cross-compiler")
 
     downloads = (("fetch-winsw", "download the pinned WinSW"), ("fetch-webview2", "download Microsoft's bootstrapper"))
     for name, text in downloads:
@@ -275,7 +314,9 @@ def main(argv: list[str]) -> int:
             )
             print(getattr(result, arguments.field))
         elif arguments.command == "stage":
-            print(stage(ROOT, arguments.out, arguments.node, arguments.winsw, arguments.webview2))
+            print(stage(ROOT, arguments.out, arguments.node, arguments.winsw, arguments.launcher, arguments.webview2))
+        elif arguments.command == "launcher":
+            print(build_launcher(arguments.out, arguments.cc))
         elif arguments.command == "installer":
             print(build_installer(arguments.stage, Version(arguments.version, arguments.numeric), arguments.out))
         elif arguments.command == "fetch-winsw":

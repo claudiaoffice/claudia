@@ -135,7 +135,9 @@ def staged(tmp_path):
     winsw.write_bytes(b"MZ")
     webview2 = tmp_path / "MicrosoftEdgeWebview2Setup.exe"
     webview2.write_bytes(b"MZ")
-    return build.stage(repo, tmp_path / "stage", node, winsw, webview2)
+    launcher = tmp_path / "claudia-start.exe"
+    launcher.write_bytes(b"MZ")
+    return build.stage(repo, tmp_path / "stage", node, winsw, launcher, webview2)
 
 
 def test_the_stage_has_every_folder_the_installer_script_takes_from(staged):
@@ -229,7 +231,9 @@ def test_the_licence_of_node_comes_along(staged):
 
 def test_a_stage_is_made_again_from_nothing(staged, tmp_path):
     (staged / "left-over.txt").write_text("x", encoding="utf-8")
-    build.stage(tmp_path / "repo", staged, tmp_path / "node", tmp_path / "WinSW-x64.exe")
+    build.stage(
+        tmp_path / "repo", staged, tmp_path / "node", tmp_path / "WinSW-x64.exe", tmp_path / "claudia-start.exe"
+    )
     assert not (staged / "left-over.txt").exists()
 
 
@@ -241,8 +245,22 @@ def test_what_is_not_built_yet_is_named_with_the_step_that_makes_it(tmp_path):
     (node / "node.exe").write_bytes(b"MZ")
     winsw = tmp_path / "w.exe"
     winsw.write_bytes(b"MZ")
+    launcher = tmp_path / "claudia-start.exe"
+    launcher.write_bytes(b"MZ")
     with pytest.raises(build.BuildError, match=r"npm ci && npm run build, in web/"):
-        build.stage(repo, tmp_path / "out", node, winsw)
+        build.stage(repo, tmp_path / "out", node, winsw, launcher)
+
+
+def test_a_missing_launcher_is_named_with_the_step_that_makes_it(tmp_path):
+    repo = tmp_path / "repo"
+    fake_repository(repo)
+    node = tmp_path / "node"
+    node.mkdir()
+    (node / "node.exe").write_bytes(b"MZ")
+    winsw = tmp_path / "w.exe"
+    winsw.write_bytes(b"MZ")
+    with pytest.raises(build.BuildError, match=r"build.py launcher"):
+        build.stage(repo, tmp_path / "out", node, winsw, tmp_path / "claudia-start.exe")
 
 
 def test_the_installer_is_not_compiled_without_the_webview2_bootstrapper(tmp_path):
@@ -293,12 +311,70 @@ def test_the_languages_are_those_the_suite_has_catalogs_for():
     assert languages == {path.stem for path in (ROOT / "po").glob("*.po") if path.stem != "xx"} | {"en"}
 
 
-def test_the_shortcuts_start_the_shims_that_the_client_has():
-    shims = set(re.findall(r"client\\bin\\(\w+)\.mjs", iss_text()))
-    assert shims == set(build.APPS)
-    for app in shims:
-        assert (ROOT / "clients" / "neutralino" / "bin" / f"{app}.mjs").exists()
+def _app_starting_lines() -> list[str]:
+    """The lines of [Icons] and [Run] that start one of the apps (the others: the service, WebView2's setup)."""
+    lines = [line for line in iss_text().splitlines() if line.startswith(("Name:", "Filename:"))]
+    return [line for line in lines if re.search(r"Parameters: \"(composes|computes|creates)\"", line)]
+
+
+def test_the_shortcuts_start_the_hidden_launcher_with_the_name_of_the_app():
+    """UX-77, D750: a shortcut that starts node.exe shows node's console for as long as the app runs."""
+    lines = _app_starting_lines()
+    started = [re.search(r'Parameters: "(\w+)"', line)[1] for line in lines]
+    assert set(started) == set(build.APPS), "every app has a shortcut"
+    assert len(lines) == 2 * len(build.APPS) + 1, (
+        "a Start menu entry and a desktop icon for each app, and the post-install start"
+    )
+    for line in lines:
+        assert 'Filename: "{app}\\client\\claudia-start.exe"' in line, line
+        assert "runminimized" not in line, f"{line}: the launcher has no window to minimise"
+    assert "node.exe" not in iss_text().replace("{app}\\node\\node.exe", ""), "no entry starts node itself"
+    for app in build.APPS:
+        assert (ROOT / "clients" / "neutralino" / "bin" / f"{app}.mjs").exists(), "the launcher starts this shim"
         assert f"icons\\{app}.ico" in iss_text()
+
+
+def test_the_launcher_starts_the_shims_where_the_stage_puts_them(staged):
+    """claudia-start.exe finds `node\\node.exe` and `client\\bin\\<app>.mjs` from its own place, <root>\\client."""
+    source = (WINDOWS / "launcher" / "claudia-start.c").read_text(encoding="utf-8")
+    assert "%ls\\\\node\\\\node.exe" in source and "%ls\\\\bin\\\\%ls.mjs" in source
+    assert (staged / "client" / "claudia-start.exe").is_file()
+    assert (staged / "node" / "node.exe").is_file()
+    for app in build.APPS:
+        assert (staged / "client" / "bin" / f"{app}.mjs").is_file()
+
+
+def test_the_launcher_program_is_compiled_without_a_console_and_with_wide_characters(tmp_path):
+    command = build.launcher_command("gcc", tmp_path / "claudia-start.exe")
+    assert command[0] == "gcc"
+    assert "-mwindows" in command, "the GUI subsystem: no console of its own"
+    assert "-municode" in command, "wWinMain: paths with umlauts"
+    assert command[command.index("-o") + 1].endswith("claudia-start.exe")
+    assert any(argument.endswith("claudia-start.c") for argument in command)
+    assert "-lshell32" in command
+    source = (WINDOWS / "launcher" / "claudia-start.c").read_text(encoding="utf-8")
+    # what the owner asked for, as long as nothing can run it here: node without a window, its output in a log file
+    assert "CREATE_NO_WINDOW" in source
+    assert "launcher.log" in source and "STARTF_USESTDHANDLES" in source
+
+
+def _installer_job_steps() -> dict[str, str]:
+    text = (ROOT / ".github" / "workflows" / "windows.yml").read_text(encoding="utf-8")
+    job = text[text.index("\n  installer:\n") : text.index("\n  # What a person does")]
+    parts = re.split(r"^      - (?=name: )", job, flags=re.MULTILINE)[1:]
+    return {part.splitlines()[0].removeprefix("name: "): part for part in parts}
+
+
+def test_the_workflow_builds_the_launcher_program_checks_it_and_stages_it():
+    steps = _installer_job_steps()
+    built = "The launcher program hides node and keeps a log of what it prints"
+    assert built in steps, "no step builds and tries claudia-start.exe"
+    assert "build.py launcher" in steps[built] and "continue-on-error" not in steps[built]
+    for needed in ("launcher.log", "Wait-Process", "ExitCode"):
+        assert needed in steps[built], f"the step does not look at {needed}"
+    names = list(steps)
+    assert names.index(built) < names.index("Stage the files of the installation")
+    assert "--launcher" in steps["Stage the files of the installation"]
 
 
 def test_the_service_has_one_name_in_the_script_and_in_its_configuration():

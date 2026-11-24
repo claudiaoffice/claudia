@@ -35,6 +35,9 @@ sandbox's, not the installation's).
 |---|---|
 | CODE-81 | `appFolder` (`paths.ts`), used by `launch.ts` (`RunDeps.launcherFolder` to test it); tests `paths.test.ts`, `launch.test.ts` (red when `launch.ts` goes back to `defaultRepo`), `test_windows_packaging.py`; D746; the spec `specs/desktop/windows-installer.feature` (written with the fix, for the owner's review) |
 | PROC-52 | `windows.yml`: a step of its own that needs no display and may not fail (*The launcher finds the installed app and prepares its window*); D747; `test_windows_packaging.py` |
+| CODE-82 | `startPageAction` (`web/app/lib/open.ts`) knows `help.about`; `OpenDialog.vue` mounts `AboutDialog`; `web/tests/open.test.ts`; D748; `specs/desktop/about.feature` |
+| UX-76 | `window-size.ts` (`windowSizeFor`, `WINDOW_WANTED`), `ShellPage.fitWindow`, `PagePlatform.sizesInPhysicalPixels`, `window.setSize` and `window.center` on the three allow-lists; tests `window-size.test.ts`, `shell-page.test.ts`, `build-shell.test.ts`; D749; `specs/desktop/window-size.feature` |
+| UX-77 | `packaging/windows/launcher/claudia-start.c`, `build.py launcher` and `stage --launcher`, `claudia.iss` (shortcuts and post-install start), `windows.yml` (build, try, stage); tests `test_windows_packaging.py`; D750; `specs/desktop/windows-launcher.feature` |
 
 ## PROC-52 in detail
 
@@ -65,3 +68,27 @@ and the config is read while the launcher is alive, so a very fast failure could
   step away; it is for the owner to review. The scenario says a window opens; no automatic test checks that.
 * "The app is prepared" in CI means: the copy of the app folder is there and the launcher did not print one of its own
   start-up errors. A runner without a display may still stop the window afterwards; that part stays advisory.
+
+## UX-76 and UX-77: what is assumed and what has not run
+
+* **Neutralino's window sizes are physical pixels on Windows**, and its process is DPI-aware. The documentation does not
+  say; the owner's screenshot does (1280 × 860 became about 640 × 430 CSS pixels at 200%). The page therefore multiplies by
+  `devicePixelRatio`; macOS is left alone. The window is created at the config's size and resized a moment later, so a
+  brief resize may be seen. Not run on a scaled display.
+* The nine tenths of the free screen and the minimum size are my choice, not the owner's.
+* **`claudia-start.exe` was compiled here** (Zig's `cc`, target `x86_64-windows-gnu`, `-municode`, GUI subsystem, no warnings)
+  **and never run**: there is no Windows or Wine in this workspace. CI uses MinGW `gcc`, installed with `choco` where the
+  runner has none; the flags `-mwindows -municode` are the usual ones and were not tried with that compiler.
+* The program shows a message box for every exit code other than 0. If Neutralino exits with a non-zero code when its window is
+  closed, every close will show one; the first real run will tell.
+* **Not understood:** why the console stayed open after the app was closed. If a `node.exe` remains in the task manager after
+  closing an app, the cause is in the Node launcher or the core (not in this change), and it is now invisible.
+* The log of the start is `launcher.log`, the run before `launcher.log.old`; only the last two starts are kept.
+* Neutralino's two start-up errors (`resources.neu` missing, `/favicon.ico`) are now in the log, not fixed: offered as
+  a follow-up (size 3).
+* The Windows 11 look of the native menu is not in this branch: see the answer to the owner.
+* The message boxes of `claudia-start.exe` are English only (coding standard 11 asks for translation): offered to the owner as
+  a decision (D750, known limits). The C program has no linter or formatter in CI either (standard 1): `-Wall -Wextra` was
+  clean with Zig's cc, nothing more. `choco install mingw` (only where the runner has no `gcc`) is unpinned (standard 7).
+* The code review found, and this change fixed: argument quoting that swallowed the closing quote of an argument ending in a
+  backslash (now in the CI step), unchecked `swprintf` results, and the arguments being checked after the old log was moved.

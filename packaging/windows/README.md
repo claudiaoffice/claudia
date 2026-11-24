@@ -12,6 +12,7 @@ optional Windows service. Decisions: D740-D745; notes: `claudiaoffice-log/implem
 | `claudia-server.exe` (Python and libraries inside) | PyInstaller, `claudia-server.spec` | `{app}\server` |
 | web frontend | `npm run build` in `web/` | `{app}\web` |
 | the three clients and `packaged.json` | `clients/neutralino` | `{app}\client` |
+| `claudia-start.exe`, what the shortcuts start: node without a console window, its output in a log | MinGW `gcc`, `launcher/claudia-start.c` | `{app}\client` |
 | Node.js | the version CI uses | `{app}\node` |
 | service wrapper | WinSW 2.12.0 (pinned by SHA-256, `third-party.json`) | `{app}\service` |
 | WebView2 bootstrapper | Microsoft; run only if the runtime is missing | temporary |
@@ -33,7 +34,8 @@ cd clients/neutralino; npm ci; npm run build:windows; cd ../..      # and `neu u
 uv run --locked --no-dev --with pyinstaller==6.21.0 pyinstaller --noconfirm --distpath dist --workpath build/pyinstaller packaging/windows/claudia-server.spec
 python packaging/windows/build.py fetch-winsw build/WinSW-x64.exe
 python packaging/windows/build.py fetch-webview2 build/MicrosoftEdgeWebview2Setup.exe
-python packaging/windows/build.py stage --node (Split-Path (Get-Command node).Source) --winsw build/WinSW-x64.exe --webview2 build/MicrosoftEdgeWebview2Setup.exe --out build/stage
+python packaging/windows/build.py launcher --out build/claudia-start.exe        # needs MinGW-w64's gcc (choco install mingw)
+python packaging/windows/build.py stage --node (Split-Path (Get-Command node).Source) --winsw build/WinSW-x64.exe --launcher build/claudia-start.exe --webview2 build/MicrosoftEdgeWebview2Setup.exe --out build/stage
 python packaging/windows/build.py installer --stage build/stage --version 0.3.0-dev.1 --numeric 0.3.0.1 --out dist/installer
 ```
 
@@ -63,6 +65,6 @@ signed, not the programs inside it.
 
 ## Known limits
 
-* Each start of an app shows a minimised console window (node); a launcher without one is a follow-up.
+* The output of an app's start is in `%LOCALAPPDATA%\Claudia\<app>\state\launcher.log` (the run before: `launcher.log.old`); no console window shows it (D750).
 * No file associations: the apps take no file on their command line.
 * No AI runtime, no MSI, no per-app uninstall (D745).

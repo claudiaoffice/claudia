@@ -4,7 +4,7 @@
 ;   iscc /DAppVersion=0.4.0 /DNumericVersion=0.4.0.0 /DStageDir=C:\...\stage /DOutputDir=C:\...\dist claudia.iss
 ;
 ; What is installed (under {app}):
-;   client\    the three desktop apps (Neutralino windows and their Node core), started by node\node.exe
+;   client\    the three desktop apps (Neutralino windows and their Node core), started by client\claudia-start.exe
 ;   node\      the Node.js that runs the launcher and the core
 ;   server\    claudia-server.exe: the server with its Python and its libraries inside
 ;   web\       the built web frontend the server serves
@@ -115,14 +115,15 @@ Source: "{#StageDir}\service\claudia-service.xml"; DestDir: "{app}\service"; Fla
 Source: "{#StageDir}\prerequisites\{#WebView2Setup}"; DestDir: "{tmp}"; Flags: deleteafterinstall; Check: NeedsWebView2
 
 [Icons]
-; The windows are those of Neutralino; node starts the launcher, which starts the window and its core. The console of
-; node is minimised: there is nothing in it to read (the logs are in %LOCALAPPDATA%\Claudia, D741).
-Name: "{autoprograms}\Claudia Composes"; Filename: "{app}\node\node.exe"; Parameters: """{app}\client\bin\composes.mjs"""; WorkingDir: "{app}"; IconFilename: "{app}\icons\composes.ico"; Flags: runminimized
-Name: "{autoprograms}\Claudia Computes"; Filename: "{app}\node\node.exe"; Parameters: """{app}\client\bin\computes.mjs"""; WorkingDir: "{app}"; IconFilename: "{app}\icons\computes.ico"; Flags: runminimized
-Name: "{autoprograms}\Claudia Creates"; Filename: "{app}\node\node.exe"; Parameters: """{app}\client\bin\creates.mjs"""; WorkingDir: "{app}"; IconFilename: "{app}\icons\creates.ico"; Flags: runminimized
-Name: "{autodesktop}\Claudia Composes"; Filename: "{app}\node\node.exe"; Parameters: """{app}\client\bin\composes.mjs"""; WorkingDir: "{app}"; IconFilename: "{app}\icons\composes.ico"; Flags: runminimized; Tasks: desktopicons
-Name: "{autodesktop}\Claudia Computes"; Filename: "{app}\node\node.exe"; Parameters: """{app}\client\bin\computes.mjs"""; WorkingDir: "{app}"; IconFilename: "{app}\icons\computes.ico"; Flags: runminimized; Tasks: desktopicons
-Name: "{autodesktop}\Claudia Creates"; Filename: "{app}\node\node.exe"; Parameters: """{app}\client\bin\creates.mjs"""; WorkingDir: "{app}"; IconFilename: "{app}\icons\creates.ico"; Flags: runminimized; Tasks: desktopicons
+; The windows are those of Neutralino. claudia-start.exe starts node with the app's launcher, which starts the window and
+; its core; it has no window of its own, hides node's, and keeps what they print in
+; %LOCALAPPDATA%\Claudia\<app>\state\launcher.log (UX-77, D750).
+Name: "{autoprograms}\Claudia Composes"; Filename: "{app}\client\claudia-start.exe"; Parameters: "composes"; WorkingDir: "{app}"; IconFilename: "{app}\icons\composes.ico"
+Name: "{autoprograms}\Claudia Computes"; Filename: "{app}\client\claudia-start.exe"; Parameters: "computes"; WorkingDir: "{app}"; IconFilename: "{app}\icons\computes.ico"
+Name: "{autoprograms}\Claudia Creates"; Filename: "{app}\client\claudia-start.exe"; Parameters: "creates"; WorkingDir: "{app}"; IconFilename: "{app}\icons\creates.ico"
+Name: "{autodesktop}\Claudia Composes"; Filename: "{app}\client\claudia-start.exe"; Parameters: "composes"; WorkingDir: "{app}"; IconFilename: "{app}\icons\composes.ico"; Tasks: desktopicons
+Name: "{autodesktop}\Claudia Computes"; Filename: "{app}\client\claudia-start.exe"; Parameters: "computes"; WorkingDir: "{app}"; IconFilename: "{app}\icons\computes.ico"; Tasks: desktopicons
+Name: "{autodesktop}\Claudia Creates"; Filename: "{app}\client\claudia-start.exe"; Parameters: "creates"; WorkingDir: "{app}"; IconFilename: "{app}\icons\creates.ico"; Tasks: desktopicons
 
 [Run]
 Filename: "{tmp}\{#WebView2Setup}"; Parameters: "/silent /install"; StatusMsg: "{cm:StatusWebView2}"; Flags: waituntilterminated; Check: NeedsWebView2
@@ -131,7 +132,7 @@ Filename: "{app}\service\claudia-service.exe"; Parameters: "install"; StatusMsg:
 Filename: "{sys}\sc.exe"; Parameters: "config {#ServiceId} obj= ""NT AUTHORITY\LocalService"""; Flags: runhidden waituntilterminated; Components: service
 Filename: "{sys}\icacls.exe"; Parameters: """{commonappdata}\Claudia"" /grant ""*S-1-5-19:(OI)(CI)M"""; Flags: runhidden waituntilterminated; Components: service
 Filename: "{app}\service\claudia-service.exe"; Parameters: "start"; Flags: runhidden waituntilterminated; Components: service
-Filename: "{app}\node\node.exe"; Parameters: """{app}\client\bin\composes.mjs"""; Description: "{cm:RunComposes}"; Flags: nowait postinstall skipifsilent runminimized
+Filename: "{app}\client\claudia-start.exe"; Parameters: "composes"; Description: "{cm:RunComposes}"; Flags: nowait postinstall skipifsilent
 
 [UninstallRun]
 Filename: "{app}\service\claudia-service.exe"; Parameters: "stop"; RunOnceId: "StopService"; Flags: runhidden waituntilterminated; Components: service

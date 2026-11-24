@@ -123,12 +123,42 @@ jobs:
             throw "The WebView2 bootstrapper is not signed by Microsoft: $($signature.Status) $($signature.SignerCertificate.Subject)"
           }
 
+      # What a shortcut starts (UX-77, D750). It has no window and hides node's, so the one thing to check without a display
+      # is that it does what it is for: starts the node of its folder with the app's launcher and the options it was given,
+      # and keeps both streams in the log. A window of an error would block the runner, so only the good path is run.
+      - name: The launcher program hides node and keeps a log of what it prints
+        shell: pwsh
+        run: |
+          if (-not (Get-Command gcc -ErrorAction SilentlyContinue)) { choco install mingw --no-progress -y }
+          uv run --no-project python packaging/windows/build.py launcher --out build/claudia-start.exe
+          if ($LASTEXITCODE -ne 0) { throw 'The launcher program did not compile' }
+          # a folder laid out as an installation is: node\node.exe, client\claudia-start.exe, client\bin\<app>.mjs
+          $try = Join-Path $env:RUNNER_TEMP 'launcher-try'
+          Remove-Item $try -Recurse -Force -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory -Force "$try\client\bin", "$try\node", "$try\local" | Out-Null
+          Copy-Item build/claudia-start.exe "$try\client\"
+          Copy-Item (Get-Command node).Source "$try\node\node.exe"
+          Set-Content "$try\client\bin\composes.mjs" "console.log('said-out', process.argv.slice(2).join('|')); console.error('said-err')"
+          $env:LOCALAPPDATA = "$try\local"
+          foreach ($round in 1, 2) {
+            $process = Start-Process "$try\client\claudia-start.exe" -ArgumentList 'composes', '--debug', '"a b"', '"C:\My Dir\\"' -PassThru
+            $handle = $process.Handle # without it PowerShell cannot read the exit code of a process that has ended
+            Wait-Process -Id $process.Id -Timeout 60 -ErrorAction Stop
+            if ($process.ExitCode -ne 0) { throw "The launcher program ended with exit code $($process.ExitCode)" }
+          }
+          $state = "$try\local\Claudia\composes\state"
+          $log = Get-Content "$state\launcher.log" -Raw
+          foreach ($expected in 'said-out --debug|a b|C:\My Dir\', 'said-err') {
+            if ($log -notmatch [regex]::Escape($expected)) { throw "launcher.log lacks '$expected':`n$log" }
+          }
+          if (-not (Test-Path "$state\launcher.log.old")) { throw 'The log of the run before was not kept as launcher.log.old' }
+
       - name: Stage the files of the installation
         shell: pwsh
         run: |
           $node = Split-Path (Get-Command node).Source
           uv run --no-project python packaging/windows/build.py stage --node $node --winsw build/WinSW-x64.exe `
-            --webview2 build/MicrosoftEdgeWebview2Setup.exe --out build/stage
+            --launcher build/claudia-start.exe --webview2 build/MicrosoftEdgeWebview2Setup.exe --out build/stage
 
       - name: Inno Setup
         shell: pwsh
@@ -257,7 +287,7 @@ jobs:
         run: |
           . .\helpers.ps1
           Install-Claudia 'client,service'
-          foreach ($file in 'node\node.exe', 'server\claudia-server.exe', 'client\dist\launch.js', 'client\packaged.json',
+          foreach ($file in 'node\node.exe', 'server\claudia-server.exe', 'client\dist\launch.js', 'client\packaged.json', 'client\claudia-start.exe',
                    'client\apps\composes\bin\neutralino-win_x64.exe', 'web\index.html', 'service\claudia-service.exe', 'icons\computes.ico') {
             if (-not (Test-Path (Join-Path $env:INSTALL_DIR $file))) { throw "The installation lacks $file" }
           }
