@@ -167,10 +167,13 @@ a document here.</p>
 <h2>Use it from the desktop app</h2>
 <p>Connect to this address (HOST:PORT is what your browser's address bar shows) and give the document, your name and
 your password.</p>
-<p><a href="/api/health">/api/health</a> &middot; <a href="/api/swagger">API description</a></p>
+<p><a href="/api/health">/api/health</a><!--api-docs--></p>
 </body></html>
 """
 
+
+API_DOCS = "/api/swagger"
+"""Where the interactive API description is served, with ``api_docs`` only (SEC-14)."""
 
 LOOPBACK_CLIENTS = frozenset({"127.0.0.1", "::1"})
 LOOPBACK_HOSTS = frozenset({"127.0.0.1", "localhost", "[::1]"})
@@ -706,6 +709,7 @@ def create_app(
     fonts: FontService | None = None,
     hyphenation: HyphenationService | None = None,
     idle: IdleWatch | None = None,
+    api_docs: bool = False,
 ) -> FastAPI:
     """The server for the apps of ``hub``: a ``Suite`` (one server, several apps, D430), or one ``Hub`` with the users
     of each of its documents in ``directory`` (a server of one app, as every server was before).
@@ -719,7 +723,8 @@ def create_app(
     The server answers only to ``localhost``, to IP addresses and to the host names in ``allowed_hosts`` (SEC-01, see
     ``claudia_server.hosts``); ``ValueError`` if one of them is not a host name. ``list_documents`` serves
     ``GET /api/docs`` (see ``Hub.listing``); switch it off on a shared server where the existence of a document should
-    not be visible.
+    not be visible. ``api_docs`` serves the interactive API description at ``API_DOCS``; it is off by default because
+    FastAPI's page loads its script from a CDN (SEC-14).
 
     With an ``access_secret`` (at least ``MIN_ACCESS_SECRET`` characters, ``ValueError`` otherwise) only those who know
     it can make documents or read the list. ``max_waiting`` and ``max_waiting_per_address`` bound the connections that
@@ -763,7 +768,13 @@ def create_app(
                 await idle.stop()
             await suite.stop()
 
-    app = FastAPI(title="Claudia server", docs_url="/api/swagger", openapi_url="/api/openapi.json", lifespan=lifespan)
+    # SEC-14: FastAPI's page loads its script from a CDN, so it is served only when the administrator asks for it.
+    app = FastAPI(
+        title="Claudia server",
+        docs_url=API_DOCS if api_docs else None,
+        openapi_url="/api/openapi.json",
+        lifespan=lifespan,
+    )
     if allowed:
         app.add_middleware(
             CORSMiddleware,
@@ -802,7 +813,7 @@ def create_app(
     # The addresses with the app (D431) come after every fixed /api/<word>/... route, so that none of those is read as
     # the name of an app.
     _app_routes(app, suite, gateway, list_documents)
-    _web_routes(app, web_dir)
+    _web_routes(app, web_dir, api_docs=api_docs)
     return app
 
 
@@ -964,7 +975,7 @@ def _app_routes(app: FastAPI, suite: Suite, gateway: Gateway, list_documents: bo
         await gateway.serve(websocket, doc_id, app_name)
 
 
-def _web_routes(app: FastAPI, web_dir: str | Path | None) -> None:
+def _web_routes(app: FastAPI, web_dir: str | Path | None, *, api_docs: bool) -> None:
     """The web app, served from the same address: the page and the WebSocket then share an origin, so no allowed
     origin is needed. Mounted last so /api/... wins. Without one, / says what this server is."""
     if web_dir is not None:
@@ -975,7 +986,9 @@ def _web_routes(app: FastAPI, web_dir: str | Path | None) -> None:
             )
         app.mount("/", SinglePageApp(directory=directory_path, html=True), name="web")
     else:
+        api_docs_link = f' &middot; <a href="{API_DOCS}">API description</a>' if api_docs else ""
+        landing_page = _LANDING.replace("<!--api-docs-->", api_docs_link)
 
         @app.get("/", include_in_schema=False, response_class=HTMLResponse)
         async def landing():
-            return HTMLResponse(_LANDING, headers={"Cache-Control": "no-store"})
+            return HTMLResponse(landing_page, headers={"Cache-Control": "no-store"})
