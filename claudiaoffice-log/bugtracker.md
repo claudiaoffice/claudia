@@ -50,7 +50,6 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | PERF-10 | P2 | Performance | What-if outcomes are recalculated on the event loop: 9 s per edit in a 1,000-cell model | **new, open** |  |  |
 | UX-07 | P2 | UX / Web | Website blocks pinch-zoom (`user-scalable=no`) | open; the website is not in this repository (searched 2026-11-13) |  |  |
 | UX-09 | P2 | UX | Six web menus against four in D4; the Linux shell maps between them | **new** |  |  |
-| UX-21 | P2 | UX / AI | The chat promises `@ai` where no AI answers (creates), and the refusal names a missing switch | **new, open** |  |  |
 | UX-22 | P2 | UX | The history speaks three dialects: one per app | **new, open** |  |  |
 | UX-42 | P2 | UX / all | A document cannot be renamed: its name is sealed into the file, which the uid was meant to avoid | **decided, open** (D536, E5.21) |  |  |
 | UX-51 | P2 | UX / composes | The words go round the unturned frame of a turned object, not its bounding box (D1226 decides the box); turning is on screen in composes since D1232 | **new, open** (read) |  |  |
@@ -58,6 +57,7 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | UX-69 | P2 | UX / all apps | A viewer is not told she can only look: greyed entries, hidden controls and object gestures are silent (only Delete on a sheet's object says so) | open (scenario `@pending:UX-69`) | 2026-11-22 |  |
 | UX-70 | P2 | UX / all apps | What an export could not keep is never shown: the losses come back with the file and no client says them | **new, open** (read; size 2) | 2026-11-22 |  |
 | UX-71 | P2 | UX / computes | Text on a workbook's slide is drawn in the workbook's Body text (13 px), tiny on a 1600-unit slide | **needs decision** (measured; size 2) | 2026-11-22 |  |
+| UX-76 | P3 | UX / computes | The New sheet dialog proposes no name: the field is empty (placeholder "Forecast") and Add Sheet stays off until one is typed, though a new sheet is to get a name like "Sheet2" (E1.13) | open (scenario `@pending:UX-76`) | 2026-11-22 |  |
 | CODE-25 | P2 | Code / Export | A renamed object loses its name in pptx and odp without the export saying so (D450) | **new, open** |  |  |
 | CODE-31 | P2 | Code / i18n | The history speaks English to everybody: command labels and summaries are not translated | **new, open** |  |  |
 | CODE-45 | P2 | Code / Import | pptx placeholders (titles, body text) are not imported at all | **new, open** |  |  |
@@ -133,7 +133,7 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |  |  |
 | UX-06 | — | UX | Web menu differs from decisions D4/D5 | needs decision |  |  |
 
-### Fixed (161)
+### Fixed (163)
 
 
 By ID. Items closed without a fix (superseded, wontfix) are here too.
@@ -179,6 +179,7 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | UX-18 | P2 | UX / computes | The formula hint covers the column letters exactly when a whole column is to be picked | **fixed** |  |  |
 | UX-19 | P2 | UX | Picking the caret's own style back in the gallery pins it: a deviation is then not offered a name, and the next change goes to the old style everywhere | **fixed** |  |  |
 | UX-20 | **P1** | UX / AI | The AI in computes does nothing and points at an act/suggest switch no client has | **fixed** 2026-11-12 |  | 2026-11-12 |
+| UX-21 | P2 | UX / AI | The chat promises `@ai` where no AI answers (creates), and the refusal names a missing switch | **fixed** 2026-11-24 (closed by the owner: all three apps have an `ai` participant) |  | 2026-11-24 |
 | UX-24 | P1 | UX / creates | A named style could not be applied to another text box from where people look for it | **fixed** 2026-11-12 |  | 2026-11-12 |
 | UX-25 | P3 | UX / creates | All styles… counted every style's uses as "shapes" when a shape was selected | **fixed** 2026-11-12 |  | 2026-11-12 |
 | UX-26 | P2 | UX | The AI mode switch: the unchosen half invisible in the light theme, and the switch below the history | **fixed** 2026-11-12 |  | 2026-11-12 |
@@ -296,6 +297,7 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | PROC-49 | P2 | Process / CI | The Penpot generator on `main` made the Python jobs red: its `package-lock.json` was neither audited nor watched by dependabot, and `tools/transplant.py` failed ruff | **fixed** 2026-11-22 (size 3) | 2026-11-22 | 2026-11-22 |
 | PROC-50 | P2 | Process / E2E | `./run-e2e.sh regression` ran 27 browser scripts, CI 30: `objects.cjs` and the two client windows ran only in CI | **fixed** 2026-11-22 (D1452, `e2e-guard`) | 2026-11-21 | 2026-11-22 |
 | PROC-51 | P2 | Process / E2E | Every full local regression stopped after the shared servers with "port 8766 is in use" (TIME_WAIT, no `SO_REUSEADDR` in the runner's probe) | **fixed** 2026-11-22 (`e2e-guard`) | 2026-11-22 | 2026-11-22 |
+| PROC-52 | P2 | Process / E2E | When the specs fail, the runner (and so CI) does not say which test: `pytest -rs` leaves failures out of the summary, and the last 20 lines it prints are skipped scenarios | **fixed** 2026-11-23 (`e2e-guard`) | 2026-11-23 | 2026-11-23 |
 | DOC-01 | P2 | Docs | Decision numbers D70–D82 and D97–D99 are used twice for different decisions | fixed |  |  |
 | DOC-02 | P3 | Docs | `start-client.sh` was renamed; the Linux README and the other launchers still named it | **fixed** 2026-11-13 |  | 2026-11-13 |
 | DOC-03 | P3 | Docs | Current decisions that later ones contradict (D2, D44, D84, D115, D242); a stale row in `ranges.md`; stale lines in two notes | **fixed** 2026-11-17 (log audit: D44, D84, D115 superseded; D2, D242 noted) |  | 2026-11-17 |
@@ -881,7 +883,7 @@ none gets act"; computes cannot propose yet (E7.8), so the AI wrote nothing, eve
 `UNSAID_MODE = ACT` for a request without a mode; `DEFAULT_MODE` stays *suggest* for a client with the switch (D262).
 Tests in `test_server_ai_account.py`; `demo.cjs` passes again.
 
-### UX-21 · The chat promises an AI where none answers · P2 · new, open
+### UX-21 · The chat promises an AI where none answers · P2 · fixed 2026-11-24
 **Evidence (measured, screenshots of `slides.cjs`).** creates' chat says "Write to everybody, or @ai to ask the
 assistant. Say @ai help to see what it can do", but creates has no AI user (no `ai` avatar; E7.9 is `todo`). Until
 UX-20 the computes refusal also named "act mode", a switch that exists in no client. **Fix.** The hint comes from what
@@ -2670,6 +2672,9 @@ event that forgets the chart (it does for a picture, a shape and a container, D1
 `Error: DOM element provided is null or undefined` from Plotly's `getGraphDiv`. **Test:** the row `workbook | a chart`
 of the undo scenario, in an `Examples` block of its own tagged `@pending:CODE-77`; it waits with the chart renames of
 E1.18.
+Measured again with the step code of `specs/objects/names.feature`: insert a chart on Sheet1, add a sheet and go back
+to Sheet1; the same Plotly error is in the console. The scenario "A new object, slide, sheet and chart tab have names"
+carries `@pending:CODE-77` as well as `@pending:UX-76`.
 **Fixed** 2026-11-23 on `e6-31-slides-in-computes` (E6.31 step 3, D1475): a chart and its definition are made in one
 step (`insert_chart`, `claudia_computes.chart_steps`), so the undo forgets the definition; `ChartView.vue` checks that
 its element is still there once Plotly has loaded. The row `workbook | a chart` is in the scenario's examples now.
@@ -2791,3 +2796,20 @@ Found while sharing the box code of texts and spreadsheets (E6.31 step 5c, D1479
 (`graphic_styles`, `box_look`, `held_box`). **Acceptance.** The pptx and odp tests pass unchanged; no second copy of
 those names or readers in creates-io.
 
+## Round of 2026-11-22, second part (step code for the names spec, E1.13; branch `e2e-guard`)
+
+### UX-76 · The New sheet dialog proposes no name · P3 · size 3 · open
+**Measured** with the new step code of `specs/objects/names.feature` (computes, Chromium): the footer's "+" opens
+*New sheet* with an empty Name field (placeholder "Forecast") and *Add Sheet* is off until a name is typed. The spec
+says a new sheet has a name like "Sheet 2", and the server gives default names to things that have none
+(`thing_names.py`). **Fix.** Fill the field with the next free default name in the maker's language, selected, so
+Enter takes it and typing replaces it. **Test:** "A new object, slide, sheet and chart tab have names",
+`@pending:UX-76` (strict). (Filed as UX-70 on `e2e-guard`; renumbered when
+`main` had given UX-70 to another bug.)
+
+### PROC-52 · A failed run of the specs does not say which test failed · P2 · size 3 · fixed 2026-11-23
+**Measured** on CI run 45072645568 of `e2e-guard`, twice: "1 failed, 140 passed, 125 skipped, 26 xfailed", and the 20
+lines the runner printed were all skipped scenarios; the log is only in the run's artifact. `scripts/run_e2e.py` ran
+`pytest -rs`, which leaves failures out of pytest's summary. **Fix.** `pytest -rfEs` (`pytest_command`), and on a
+failure the runner prints pytest's `FAILED`/`ERROR` lines before the last lines of the log. **Test:**
+`tests/test_run_e2e.py::test_a_failed_pytest_run_names_the_tests_that_failed`.

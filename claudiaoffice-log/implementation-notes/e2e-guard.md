@@ -94,3 +94,64 @@ person in another app. "After a reload we both see the same" compares with the p
 with Ann's page after it. "Shows the same as before" compares what the page shows (size, the picture, the outline).
 While the viewer scenario waits for UX-69, its steps after "I am told" do not run; they passed when that step was
 switched off by hand on 2026-11-22.
+
+## Follow-up, 2026-11-22: step code for the names spec (E1.13)
+
+* `tests/e2e/specs/test_names.py` (new) binds `specs/objects/names.feature`, which leaves `NOT_BOUND_YET`. All 28
+  scenarios have steps; 21 pass in Chromium and lost `@pending:e1.13`. Six keep it, each failing for a reason of the
+  story (the E1.13 story file lists them). "A new object, slide, sheet and chart tab have names" (not pending before;
+  it never ran) now carries `@pending:UX-76 @pending:CODE-77`.
+* `tests/e2e/specs/things.py` (new): what the cross-app spec and the names spec both use to find, insert and drag
+  objects, moved out of `test_the_same_in_all_three_apps.py`.
+* `conftest.Person.menu_item(label)`: an entry of the open menu whose label *starts* with `label`. `has-text` matched
+  "Undo · Added a text box" for "Text Box" and undid the object it was to make. `web/e2e/objects.cjs` matches entries
+  the same loose way; no run has shown it misfiring, so it is left as it is.
+* Name & describe… is chosen from whichever menu has it (D1455: it is under Format today, the spec says Edit). A
+  scenario with several `@app:` tags runs once with a document of each app (D1456).
+* After a message is sent, the step takes the caret out of the chat box (`leave_chat`): while the box has the caret,
+  a click on a thing in the document writes a tag for it (D551) instead of selecting it. That is the product working,
+  not a bug; it made Ben's later clicks into tags and once looked like a bug of renamed tags.
+* "Where the view is" is read as the way back counts it (D1312): the text's first paragraph under the top of the
+  scroller, the sheet's top-left cell, the slide shown; and only once the smooth scroll of a jump has stopped.
+
+After the code review of this follow-up:
+
+* No fixed waits: a step waits for the view it expects or for the view to stop moving (`steady`, `where`,
+  `moved_from`, `back_at`, `jump`). "I wait a minute" runs the page's clock a minute on (`page.clock`), not the test's.
+* "The option about comments is not there" is judged only after the server has answered how many descriptions there
+  are: `Person.answers` keeps the results of a page's requests, as `sent` and `events` keep the rest of the wire.
+* "I type, or click", and "View ▸ Back where I was, or Ctrl+Shift+B" check each of the two on their own, after the same
+  jump again. "The description can" saves one and reads it back. "Marked for a moment" checks the paragraph is on screen
+  and the mark goes. "Introduction (2)" is read on the later heading, "Introduction" on the first.
+* `Person.finish_import` answers the import dialog for this spec and `test_export.py`; `things.FIRST_CELL` and
+  `things.insert(person, "a text box")` are shared; `insert_container` uses `menu_item`.
+* In computes, after a rename the step waits until the Name Box shows the new name. Once, going on at once to the
+  next cell ("A300" typed into the Name Box) left the selection where it was; why was not found (the likeliest reading,
+  not proven: the Name Box took the new name after the step had typed). Not logged as a bug.
+
+CI on `e2e-guard` (2026-11-23):
+
+* The end-to-end job failed twice with "1 failed, 140 passed" and did not say which test: fixed as PROC-52
+  (`pytest_command` asks for `-rfEs`; a failed run prints pytest's `FAILED`/`ERROR` lines first). Its test is skipped
+  on native Windows, where the runner does not run (WSL); on Windows the printed output did not hold the failed test's
+  name, and why was not looked into.
+* The next run named "A document without descriptions does not offer the option" ("the dialog got no answer"), which
+  failed locally 2 times in 6 as well. The sync Playwright API hands a page's websocket frames to Python only while a
+  Playwright call runs; `eventually` slept in `time.sleep`, so the answer stayed undelivered. `eventually(..., page=)`
+  now waits on the page between tries; the names step and two checks of the cross-app spec that read `Person.events`
+  pass their page (those two had not failed: an earlier wait on the page had delivered the frames). 8 runs of 8 passed
+  after the change.
+* A full local run then failed once on the cross-app row `workbook | move a container`: Ann's container place was
+  remembered as soon as it differed from before, and a dropped object can still settle where the server puts it
+  (Ben's page showed 148/78, Ann's had been read at 132/66). It is now remembered once it stops moving (`steady`, moved
+  to `conftest.py` for both spec files). It passed 10 times of 10 alone before the change; the race shows under load.
+* The Python jobs failed on `test_calculating_a_long_chain_is_linear` (44x and 45x instead of about 10x): PROC-44, open,
+  not touched by this branch; green on a rerun.
+
+Assumptions: "my own language" is English (the browser's language in the runs); a sheet named "Sheet2" is "a name like
+Sheet 2"; a range's names have no spaces ("DescribedCells", "FarAway"); Ben deletes a paragraph by selecting from the
+end of the one before it, so the first paragraph stays; Ann's caret is moved away first, because the place around a
+person's caret is hers while she is there.
+
+What could not be run: Firefox (not in this environment); the GTK client and the Neutralino windows (the spec is run
+in the web client only, as all specs are).
