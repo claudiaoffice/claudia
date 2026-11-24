@@ -249,15 +249,8 @@ def _no_keep(world):
 
 @when(parsers.parse('I name the new document "{name}" and give a password and press Open'))
 def _name_and_open(world, name):
+    world.ann.finish_import(name)
     page = world.ann.page
-    dialog = page.locator(DIALOG)
-    dialog.locator("input[name=import-name]").fill(name)
-    dialog.locator("input[name=import-user]").fill("ann")
-    dialog.locator("input[name=import-password]").fill(world.ann.password)
-    dialog.locator("button[type=submit]").click()
-    page.wait_for_selector("[data-testid=recovery-key]", timeout=20000)  # a new document: its recovery key first
-    page.check(f"{DIALOG} input[type=checkbox]")
-    page.click(f'{DIALOG} button:text-is("Continue")')
     page.wait_for_selector("[data-testid=text]", timeout=20000)
     page.wait_for_function("document.querySelector('.health.open')", timeout=20000)
 
