@@ -278,7 +278,12 @@ jobs:
           function Assert-Gone([string]$Path) {
             # the uninstaller finishes by a copy of itself that removes the last files, a moment after it has exited
             for ($i = 0; $i -lt 30 -and (Test-Path $Path); $i++) { Start-Sleep 1 }
-            if (Test-Path $Path) { throw "$Path is still there after the uninstall" }
+            if (Test-Path $Path) {
+              # what is left, and who holds it: the next reader needs that to see why
+              Get-ChildItem $Path -Recurse -Force -ErrorAction SilentlyContinue | Select-Object -First 30 -ExpandProperty FullName
+              Get-Process -ErrorAction SilentlyContinue | Where-Object { $_.Path -like "$Path*" } | Format-Table Id, ProcessName, Path -AutoSize | Out-String
+              throw "$Path is still there after the uninstall"
+            }
           }
           '@ | Set-Content helpers.ps1
 
