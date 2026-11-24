@@ -86,7 +86,7 @@ describe('buildApp', () => {
     expect(config.extensions).toEqual([{ id: 'de.claudiaoffice.core', commandDarwin: DEFAULT_COMMAND, commandWindows: DEFAULT_COMMAND }])
     // the page may only do what the shell needs: no files, no processes
     expect(config.nativeAllowList.filter((m: string) => /^(filesystem|os|computer)\./.test(m))).toEqual([])
-    expect(config.nativeAllowList).toEqual(expect.arrayContaining(['app.exit', 'window.setMainMenu', 'window.setSize', 'window.center', 'events.on', 'extensions.dispatch', 'app.broadcast']))
+    expect(config.nativeAllowList).toEqual(expect.arrayContaining(['app.exit', 'window.setMainMenu', 'events.on', 'extensions.dispatch', 'app.broadcast']))
     expect(config.cli.binaryVersion).toBe(config.cli.clientVersion)
     expect(existsSync(join(root, 'apps', app, 'icon.png'))).toBe(true)
   })

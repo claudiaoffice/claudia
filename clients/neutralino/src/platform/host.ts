@@ -32,6 +32,9 @@ export interface HostPlatform {
   neutralinoBinaryName(architecture: string): string
   /** The key of the core's command in neutralino.config.json's extension (Neutralino reads one per operating system). */
   readonly coreCommandKey: 'commandDarwin' | 'commandWindows'
+  /** Whether Neutralino takes the window's size in physical pixels, so the config's size must be asked for in logical
+   * ones to show the whole page on a scaled display (Windows; macOS sizes windows in points already). */
+  readonly windowSizeInPhysicalPixels: boolean
   /** The binary a window is started from: on macOS a small .app bundle around the downloaded one, so the app's name
    * shows; on Windows the downloaded binary itself. */
   windowBinary(appDir: string, downloaded: string, identity: AppIdentity): WindowBinary

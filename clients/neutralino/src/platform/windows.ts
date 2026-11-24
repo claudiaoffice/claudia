@@ -62,6 +62,7 @@ export const WINDOWS_HOST: HostPlatform = {
   // which also runs on Windows on ARM.
   neutralinoBinaryName: () => 'neutralino-win_x64.exe',
   coreCommandKey: 'commandWindows',
+  windowSizeInPhysicalPixels: true,
   // No .app bundle: the taskbar and the title bar read the title from the config (notes/e5-11-windows-client.md).
   windowBinary: (_appDir, downloaded) => ({ binary: downloaded }),
   dialogs: () => windowsDialogs(),

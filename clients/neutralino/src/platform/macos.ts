@@ -28,6 +28,7 @@ export const MACOS_HOST: HostPlatform = {
   venvPython: ['.venv', 'bin', 'python'],
   neutralinoBinaryName: macNeutralinoBinaryName,
   coreCommandKey: 'commandDarwin',
+  windowSizeInPhysicalPixels: false,
   windowBinary: (appDir, downloaded, identity) => {
     const displayName = macProcessName(identity)
     // Running the downloaded binary as it is never gets the application's name applied (macos-app-bundle.ts has the

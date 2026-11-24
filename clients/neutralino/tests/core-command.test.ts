@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { afterEach, describe, expect, it } from 'vitest'
-import { buildCoreCommand, DEFAULT_COMMAND, parseCoreArgs, setCoreCommand, setInspector } from '../src/core-command.js'
+import { buildCoreCommand, DEFAULT_COMMAND, parseCoreArgs, setCoreCommand, setInspector, setLogicalPixels } from '../src/core-command.js'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const base = { nodeBinary: '/opt/homebrew/bin/node', systemCa: true, app: 'computes', server: null, debug: false } as const
@@ -110,5 +110,32 @@ describe('setInspector', () => {
     const file = configCopy()
     writeFileSync(file, '{}')
     expect(() => setInspector(file, true)).toThrow(/modes\.window/)
+  })
+})
+
+describe('setLogicalPixels (UX-77, D749)', () => {
+  const dirs: string[] = []
+  afterEach(() => { for (const dir of dirs.splice(0)) rmSync(dir, { recursive: true, force: true }) })
+  const configCopy = (): string => {
+    const dir = mkdtempSync(join(tmpdir(), 'claudia-pixels-'))
+    dirs.push(dir)
+    const file = join(dir, 'neutralino.config.json')
+    copyFileSync(join(root, 'apps', 'creates', 'neutralino.config.json'), file)
+    return file
+  }
+
+  it('asks for sizes in logical pixels and takes the key out again, leaving nothing else changed', () => {
+    const file = configCopy()
+    const before = readFileSync(file, 'utf8')
+    setLogicalPixels(file, true)
+    expect(JSON.parse(readFileSync(file, 'utf8')).modes.window.useLogicalPixels).toBe(true)
+    setLogicalPixels(file, false)
+    expect(readFileSync(file, 'utf8')).toBe(before)
+  })
+
+  it('refuses a config without a window mode', () => {
+    const file = configCopy()
+    writeFileSync(file, '{}')
+    expect(() => setLogicalPixels(file, true)).toThrow(/modes\.window/)
   })
 })

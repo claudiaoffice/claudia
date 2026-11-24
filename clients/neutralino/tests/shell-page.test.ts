@@ -4,7 +4,6 @@ import { describe, expect, it } from 'vitest'
 import { startListing, type ManifestListing } from '../src/menu.js'
 import { MACOS_PAGE, WINDOWS_PAGE, type PagePlatform } from '../src/platform/page.js'
 import { ShellPage, knownActions, type PageEnv } from '../src/shell-page.js'
-import type { ScreenSize } from '../src/window-size.js'
 import { CORE_ID, FROM_CORE, TO_CORE } from '../src/core-protocol.js'
 import listing from '../src/generated/menu.creates.json' with { type: 'json' }
 
@@ -27,16 +26,12 @@ function setup(
     stats?: unknown
     startMenu?: boolean
     platform?: PagePlatform
-    screen?: ScreenSize
-    setSizeFails?: boolean
-    setSizeNeverAnswers?: boolean
   } = {},
 ) {
   const timers: Array<() => void> = []
   const listeners: Record<string, (event: { detail: unknown }) => void> = {}
   const dispatched: Array<{ id: string; event: string; data: any }> = []
   const menus: unknown[][] = []
-  const sizes: unknown[] = []
   const calls: string[] = []
   let failures = overrides.dispatchFails ?? 0
   const neutralino = {
@@ -48,13 +43,6 @@ function setup(
       },
     },
     window: {
-      setSize: async (size: unknown) => {
-        if (overrides.setSizeFails) throw new Error('NE_RT_NATPRMS')
-        if (overrides.setSizeNeverAnswers) return new Promise<never>(() => {})
-        calls.push('size')
-        sizes.push(size)
-      },
-      center: async () => void calls.push('center'),
       setMainMenu: async (items: unknown[]) => {
         if (overrides.setMenuHangs) await new Promise(() => {})
         if (overrides.setMenuFails) throw new Error('no menu')
@@ -102,7 +90,6 @@ function setup(
     frame: frame as never,
     status,
     onWindowMessage: (listener) => (windowListener = listener),
-    ...(overrides.screen ? { screen: overrides.screen } : {}),
     sleep: async () => {},
     after: (_ms, action) => void timers.push(action),
     log: (m) => logged.push(m),
@@ -128,7 +115,7 @@ function setup(
     timers.shift()!()
     await tick()
   }
-  return { second, timers, fromFrameRaw, page, listeners, dispatched, menus, sizes, calls, frame, frameListeners, statuses, posted, logged, core, fromFrame, menuClick, toFrame, hello, open, contentWindow }
+  return { second, timers, fromFrameRaw, page, listeners, dispatched, menus, calls, frame, frameListeners, statuses, posted, logged, core, fromFrame, menuClick, toFrame, hello, open, contentWindow }
 }
 
 describe('start', () => {
@@ -609,44 +596,5 @@ describe('on Windows (D660)', () => {
     const details = (t.statuses.at(-1) as { details: string }).details
     expect(details).toContain('%LOCALAPPDATA%\\Claudia\\creates\\state\\shell.log')
     expect(details).toContain('--debug')
-  })
-})
-
-describe('the size of the window on a scaled screen (UX-77, D749)', () => {
-  const OWNER_SCREEN = { availWidth: 1920, availHeight: 997, devicePixelRatio: 2 }
-
-  it('on Windows asks for the configured size in physical pixels and then centres the window', async () => {
-    const t = setup({ platform: WINDOWS_PAGE, screen: OWNER_SCREEN })
-    await t.page.start()
-    await tick()
-    expect(t.sizes).toEqual([{ width: 2560, height: 1720, minWidth: 1400, minHeight: 1000 }])
-    expect(t.calls.indexOf('size')).toBeLessThan(t.calls.indexOf('center'))
-  })
-
-  it('does not wait for the window to answer: the owner\'s apps stayed on "Starting…" when it never did', async () => {
-    const t = setup({ platform: WINDOWS_PAGE, screen: OWNER_SCREEN, setSizeNeverAnswers: true })
-    await t.page.start()
-    expect(t.calls).toContain('menu')
-    expect(t.dispatched).toEqual([{ id: CORE_ID, event: TO_CORE, data: { kind: 'start' } }])
-  })
-
-  it('on a Mac leaves the size alone: Neutralino takes points there, which the scale does not change', async () => {
-    const t = setup({ platform: MACOS_PAGE, screen: OWNER_SCREEN })
-    await t.page.start()
-    expect(t.sizes).toEqual([])
-  })
-
-  it('does nothing where the page cannot tell the screen', async () => {
-    const t = setup({ platform: WINDOWS_PAGE })
-    await t.page.start()
-    expect(t.sizes).toEqual([])
-  })
-
-  it('still starts when the size cannot be set, and says so in the log', async () => {
-    const t = setup({ platform: WINDOWS_PAGE, screen: OWNER_SCREEN, setSizeFails: true })
-    await t.page.start()
-    await tick()
-    expect(t.calls).toContain('menu')
-    expect(t.logged.join('\n')).toContain('the window size could not be set')
   })
 })

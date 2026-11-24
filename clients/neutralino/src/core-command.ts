@@ -81,6 +81,18 @@ export function setInspector(configFile: string, enabled: boolean): void {
   writeConfig(configFile, text, config)
 }
 
+/** Has Neutralino take the window's size in logical pixels, which it multiplies by the display scale (UX-77, D749); off
+ * takes the key out again, so the config is as it was found. */
+export function setLogicalPixels(configFile: string, enabled: boolean): void {
+  const text = readFileSync(configFile, 'utf8')
+  const config = JSON.parse(text) as { modes?: { window?: { useLogicalPixels?: boolean } } }
+  const window = config.modes?.window
+  if (window === undefined) throw new Error(`${configFile} has no modes.window`)
+  if (enabled) window.useLogicalPixels = true
+  else delete window.useLogicalPixels
+  writeConfig(configFile, text, config)
+}
+
 /** Sets the core's command for one operating system (`key`) in the config file, in the file's own format (two spaces,
  * final newline, its line ends). */
 export function setCoreCommand(configFile: string, command: string, key: CoreCommandKey): void {

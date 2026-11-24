@@ -177,6 +177,7 @@ function harness(overrides: Partial<RunDeps> = {}) {
   const err: string[] = []
   const commands: { appDir: string; command: string }[] = []
   const inspectors: { appDir: string; enabled: boolean }[] = []
+  const logicalPixels: { appDir: string; enabled: boolean }[] = []
   const deps: RunDeps = {
     spawn: ((command: string, args: string[], options: never) => {
       spawned.push({ command, args, options })
@@ -193,11 +194,12 @@ function harness(overrides: Partial<RunDeps> = {}) {
     windowBinary: (_appDir, _downloaded, identity) => ({ binary: '/bundle/Contents/MacOS/claudia-creates', processName: macProcessName(identity) }),
     setCommand: (appDir, command) => void commands.push({ appDir, command }),
     setInspector: (appDir, enabled) => void inspectors.push({ appDir, enabled }),
+    setLogicalPixels: (appDir, enabled) => void logicalPixels.push({ appDir, enabled }),
     out: (line) => out.push(line),
     err: (line) => err.push(line),
     ...overrides,
   }
-  return { deps, spawned, child, out, err, commands, inspectors }
+  return { deps, spawned, child, out, err, commands, inspectors, logicalPixels }
 }
 
 describe('run', () => {
@@ -307,6 +309,12 @@ describe('run', () => {
     await run({ app: 'creates', server: null, debug: true }, deps)
     expect(out.join('\n')).toContain('shell.log')
     expect(out.join('\n')).toContain('server.log')
+  })
+
+  it('leaves the window sizes of the macOS client as the config says (a Retina window is sized in points already)', async () => {
+    const { deps, logicalPixels } = harness()
+    await run({ app: 'creates', server: null, debug: false }, deps)
+    expect(logicalPixels).toEqual([])
   })
 
   it('does not switch the web inspector on unless --debug asks for it, and puts it off again after', async () => {
@@ -468,6 +476,27 @@ describe('run on Windows (D660)', () => {
     })
     expect(await run(creates, deps)).toBe(0)
     expect(commands[0]!.command).toBe('C:\\PROGRA~1\\nodejs\\node.exe --use-system-ca ${NL_PATH}/ext/core.mjs --app=creates')
+  })
+
+  it('asks Neutralino for sizes in logical pixels while the window runs, so the window is as big as the page needs on a scaled display (UX-77)', async () => {
+    const { deps, logicalPixels } = windows()
+    await run(creates, deps)
+    expect(logicalPixels).toEqual([
+      { appDir: join(APPS, 'creates'), enabled: true },
+      { appDir: join(APPS, 'creates'), enabled: false },
+    ])
+  })
+
+  it('puts the sizes back to the config also when the window cannot be started', async () => {
+    const { deps, logicalPixels } = windows({
+      spawn: (() => {
+        const c = new FakeChild()
+        queueMicrotask(() => c.emit('error', new Error('EACCES')))
+        return c
+      }) as never,
+    })
+    await run(creates, deps)
+    expect(logicalPixels.at(-1)).toEqual({ appDir: join(APPS, 'creates'), enabled: false })
   })
 
   it('puts the inspector off again also when the window cannot be started', async () => {

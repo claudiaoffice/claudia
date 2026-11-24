@@ -24,7 +24,7 @@ import { spawn as nodeSpawn } from 'node:child_process'
 import { delimiter, dirname, join } from 'node:path'
 import { arch as hostArch, argv as processArgv, env as processEnv, execPath } from 'node:process'
 import { fileURLToPath, pathToFileURL } from 'node:url'
-import { buildCoreCommand, DEFAULT_COMMAND, setCoreCommand, setInspector } from './core-command.js'
+import { buildCoreCommand, DEFAULT_COMMAND, setCoreCommand, setInspector, setLogicalPixels } from './core-command.js'
 import { parseCommand, splitAppArgument, type Options } from './cli.js'
 import { getIdentity, type AppIdentity } from './identity.js'
 import { appFolder, claudiaFolder, serverStateDir, stateDir, type Env } from './paths.js'
@@ -154,6 +154,7 @@ export interface RunDeps {
   setCommand?: (appDir: string, command: string) => void
   /** Switches the window's web inspector on or off in the app's config (default: in neutralino.config.json). */
   setInspector?: (appDir: string, enabled: boolean) => void
+  setLogicalPixels?: (appDir: string, enabled: boolean) => void
   out?: (line: string) => void
   err?: (line: string) => void
 }
@@ -235,6 +236,7 @@ export async function run(options: Options, deps: RunDeps = {}): Promise<number>
   }
   const setCommand = deps.setCommand ?? ((dir, command) => setCoreCommand(join(dir, 'neutralino.config.json'), command, platform.coreCommandKey))
   const inspector = deps.setInspector ?? ((dir, enabled) => setInspector(join(dir, 'neutralino.config.json'), enabled))
+  const logicalPixels = deps.setLogicalPixels ?? ((dir, enabled) => setLogicalPixels(join(dir, 'neutralino.config.json'), enabled))
   try {
     setCommand(
       workDir,
@@ -242,6 +244,8 @@ export async function run(options: Options, deps: RunDeps = {}): Promise<number>
     )
     // Neutralino opens the DevTools window by itself when the inspector is on: only --debug wants that.
     inspector(workDir, options.debug)
+    // The config's 1280 x 860 are what the page needs as CSS pixels: Windows has them multiplied by the display scale.
+    if (platform.windowSizeInPhysicalPixels) logicalPixels(workDir, true)
   } catch (problem) {
     err(`Could not set up the core's command: ${(problem as Error).message}`)
     return 1
@@ -258,6 +262,7 @@ export async function run(options: Options, deps: RunDeps = {}): Promise<number>
     try {
       setCommand(workDir, DEFAULT_COMMAND)
       inspector(workDir, false)
+      if (platform.windowSizeInPhysicalPixels) logicalPixels(workDir, false)
     } catch (problem) {
       err(`Could not put the default core command back: ${(problem as Error).message}`)
     }
