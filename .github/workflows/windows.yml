@@ -281,7 +281,8 @@ jobs:
             if (Test-Path $Path) {
               # what is left, and who holds it: the next reader needs that to see why
               Get-ChildItem $Path -Recurse -Force -ErrorAction SilentlyContinue | Select-Object -First 30 -ExpandProperty FullName
-              Get-Process -ErrorAction SilentlyContinue | Where-Object { $_.Path -like "$Path*" } | Format-Table Id, ProcessName, Path -AutoSize | Out-String
+              Get-CimInstance Win32_Process | Where-Object { $_.ExecutablePath -like "$Path*" -or $_.CommandLine -like "*$Path*" -or $_.Name -eq 'node.exe' } |
+                Select-Object ProcessId, ParentProcessId, Name, ExecutablePath, CommandLine | Format-List | Out-String
               throw "$Path is still there after the uninstall"
             }
           }
