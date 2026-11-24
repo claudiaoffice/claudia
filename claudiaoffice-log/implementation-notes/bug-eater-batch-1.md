@@ -110,3 +110,20 @@ commits of the batch are not).
 - **The Docker image** was not built (CODE-20's tag is unverified).
 - **Import and export**: no item of this batch changes them; their tests ran with the suite.
 - `print.cjs` needs the server's fonts, which need the internet; not run.
+
+## Review of the follow-up round (since `b3a9d73`)
+
+Fixed after it (CODE-92): the uploads' refusals and the access secret's were still English; the sentence to confirm
+for Claude was half English on a German page; answers without a body (204, 304) are left to FastAPI's own handler; the
+admin page's fallback sentence is translated; two German words now match the interface (Anbieter-Schlüssel,
+Zugangsschlüssel); the changelog entry is under *[Unreleased]*.
+
+Left, and why:
+- A number inside a server sentence is written the English way (`0.1`, not `0,1`): the server's messages have no number
+  formatting by language (D2003 says so).
+- A refusal that comes from another package (fonts, typesetting, document file) stays English, as for the document
+  protocol (E5.17).
+- The glossary lists "export log" among the words to avoid for **Exit record**, while the owner chose "Export-Log" as its
+  German; the glossary is English-only and has no German column. Asked of the owner, not changed.
+- The PROC-53 test delays the server's answer by 500 ms on purpose, to provoke the race; nothing waits on that timer
+  (the fixed helper waits for the kind's button).
