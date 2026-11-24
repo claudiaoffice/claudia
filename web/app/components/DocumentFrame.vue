@@ -180,7 +180,7 @@ onBeforeUnmount(() => clearTimeout(timer))
 
 <template>
   <div ref="frame" class="frame" :class="{ wide: !panelOpen }">
-    <!-- The landmarks (UX-32): the menus and the tools in the header, the document in main, the panel beside it, the footer. -->
+    <!-- One header around every bar above the document, so that the page has exactly one banner landmark (UX-32). -->
     <header class="top">
       <TopBar :session="session" :panel-open="panelOpen" @toggle-panel="panelOpen = !panelOpen" />
       <div v-if="state.preview" class="banner preview" role="status" data-testid="redaction-preview">{{ t('Preview of the redaction: the marked places as they would be. Nothing has changed yet.') }}</div>
