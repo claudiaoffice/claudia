@@ -25,7 +25,6 @@ TEST_TAGS = ("@unit:", "@io:", "@e2e:")
 #: Approved files that cannot be bound yet, each with the story or bug that binds it. Only ever shrinks: the test below
 #: fails when an entry is no longer needed. Adding an entry is a decision for the owner, not a way to get CI green.
 NOT_BOUND_YET = {
-    "objects/names.feature": "E1.13 Names of things, after the renames of E1.18 (charts in computes)",
     "document-file/requirements.feature": "E1.9 Document manifest and requirements",
     "invariants/objects-in-composes.feature": "PROC-40, recommendation 4 of notes/e2e-rework-plan.md",
     "computes/slides.feature": "E6.31 Slides in computes, approved 2026-11-22; branch e6-31-slides-in-computes",

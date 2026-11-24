@@ -5,6 +5,40 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+## [0.44.0] - 2026-11-24
+
+Skills and persona per app (E7.2, D1560–D1563), and what came with it.
+
+### Added
+- **`ai_guidance`** (D1560–D1562): `Guidance`, `Skill`, `load_guidance` and `parse_skills`. Each app ships `ai/persona.md`
+  and `ai/skills.md` in its package; `load_guidance(model_cls)` reads them, and `Guidance.skills_for(offered)` gives the
+  skills whose requests are all offered to the asker. A test holds persona and skills of an app to 6,000 characters.
+- `ModelParts.guidance` and the `guidance` parameter of `ModelEngine`: the persona and skills the model is given.
+- **`help_search` and `help_topic` as requests that look** in the workbook, text and slide lenses (D1563), shown as plain
+  text, not fenced as data. `HELP_METHODS` and `show_help` in `claudia_server.lens`.
+- The AI page edits the answer length of the provider that is chosen: Claude's `claude.max_tokens` has a field of its own.
+- `ClaudeSettings.max_tokens` (default 4096): Claude's own answer length (CODE-82, D1564). `AiRuntime.claude_runner` uses
+  it; `AiSettings.max_tokens` (512) is the local model's. `PUT /api/admin/settings/ai` takes `claude.max_tokens` (at
+  least 1); settings saved without it read as 4096.
+
+### Fixed
+- The examples of a request in the computes and creates lenses showed doubled braces to the model (CODE-81).
+- A final answer of the model with no text was shown as "I have nothing to add."; it is "I could not comply." when nothing
+  was changed and "I made these changes: set_cells x2." when something was (CODE-82, D1565).
+
+### Changed
+- **One owner per document in the consent texts** (D1499). The words about Claude's consent say "the owner" where they
+  said "the owners": the note under an answer ("Claude is not allowed in this document. The owner can change that in
+  Preferences ▸ AI…", `ai_desk.NOTE_NOT_ALLOWED`) and the two refusals of `set_ai_consent`. German is updated with them.
+  The wire format is unchanged: `ai_consent` still lists `owners`.
+
+## [0.43.0] - 2026-11-23
+
+### Added
+- **`Lens.outline`** and **`OutlineLens`** (CODE-80, D1568): a lens's start without anything a person wrote (counts and
+  ids). `ModelEngine` uses it, without a parameter, for a runner whose model is remote. A lens written outside this package
+  must add `outline`. The local model's first message is unchanged.
+
 ## [0.42.0] - 2026-11-22
 
 ### Added

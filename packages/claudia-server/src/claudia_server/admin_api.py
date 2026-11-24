@@ -136,7 +136,9 @@ class AiRuntime:
 
     def claude_runner(self, settings: AiSettings) -> ModelRunner:
         """Claude behind its own worker, as ``settings`` describe it. ``ValueError`` if there is no key."""
-        return ModelRunner(self.claude_model(settings), max_new_tokens=settings.max_tokens, timeout=settings.timeout)
+        return ModelRunner(
+            self.claude_model(settings), max_new_tokens=settings.claude.max_tokens, timeout=settings.timeout
+        )
 
     async def apply(self, suite: Suite, settings: AiSettings) -> None:
         """Make ``settings`` the AI user's configuration in every app of ``suite``, from now on: for every question
@@ -536,7 +538,14 @@ def _ai_settings_asked(context: AdminContext, body: dict, admin: str) -> AiSetti
         raise ValueError("the local model needs a model folder")
     asked = body.get("claude", {})
     key = None if asked.get("remove_key") else asked.get("key", before.claude.key)
-    claude = ClaudeSettings(asked.get("model") or before.claude.model, key, before.claude.confirmed)
+    claude = ClaudeSettings(
+        asked.get("model") or before.claude.model,
+        key,
+        before.claude.confirmed,
+        max_tokens=asked.get("max_tokens", before.claude.max_tokens),
+    )
+    if not isinstance(claude.max_tokens, int) or isinstance(claude.max_tokens, bool) or claude.max_tokens < 1:
+        raise ValueError("the answer length must be at least 1")
     if provider == CLAUDE:
         if context.ai.key_in_use(AiSettings(claude=claude)) is None:
             raise ValueError("Claude needs a provider key.")

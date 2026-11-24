@@ -50,8 +50,12 @@ KIND_WORDS = {"composes": "Text", "computes": "Table", "creates": "Slides"}
 _config: pytest.Config | None = None
 
 
-def eventually(check, seconds: float = 10.0) -> None:
-    """Run ``check`` (it asserts) until it holds, for at most ``seconds``; the last failure is the answer."""
+def eventually(check, seconds: float = 10.0, *, page=None) -> None:
+    """Run ``check`` (it asserts) until it holds, for at most ``seconds``; the last failure is the answer.
+
+    A check that reads what a page heard on the wire (``Person.events``, ``Person.answers``) passes its ``page``: the
+    sync Playwright API hands a page's websocket frames to Python only while a Playwright call runs, so between tries
+    this waits on the page, not in ``time.sleep``, which would leave the frames undelivered."""
     end = time.monotonic() + seconds
     while True:
         try:
@@ -60,7 +64,23 @@ def eventually(check, seconds: float = 10.0) -> None:
         except AssertionError:
             if time.monotonic() > end:
                 raise
-            time.sleep(0.1)
+            if page is None:
+                time.sleep(0.1)
+            else:
+                page.wait_for_timeout(100)
+
+
+def steady(person: Person, read, tries: int = 40):
+    """What ``read()`` gives once two reads a quarter of a second apart agree: a view that has stopped moving, an
+    object the server has put in its place, a list that has stopped filling."""
+    last = read()
+    for _ in range(tries):
+        person.page.wait_for_timeout(250)
+        now = read()
+        if now == last:
+            return now
+        last = now
+    return last
 
 
 def pytest_configure(config: pytest.Config) -> None:
@@ -180,6 +200,7 @@ class Person:
         self.page.on("console", lambda m: m.type == "error" and self.errors.append(f"console: {m.text}"))
         self.sent: list[str] = []  # the methods of the requests this page sent, in order
         self.events: list[dict] = []  # what the server pushed to this page: {"event": ..., "data": ...}
+        self.answers: list[dict] = []  # the results of this page's requests that are objects, in order
         self.page.on("websocket", self._listen)
         # every notice the page shows, kept: a notice goes away by itself after a few seconds
         self.context.add_init_script(
@@ -199,6 +220,8 @@ class Person:
                 message = json.loads(frame)
                 if isinstance(message, dict) and "event" in message:
                     self.events.append(message)
+                elif isinstance(message, dict) and isinstance(message.get("result"), dict):
+                    self.answers.append(message["result"])
 
         socket.on("framesent", sent)
         socket.on("framereceived", pushed)
@@ -234,6 +257,18 @@ class Person:
         self.type_login(password)
         self.press_open()
 
+    def finish_import(self, document: str | None = None) -> None:
+        """The import dialog that a file given to the front page opens: the new document's name (``document``, else
+        this person's), this person's login, Open, and the new document's recovery key put away."""
+        dialog = self.page.locator(".modal")
+        dialog.locator("input[name=import-name]").fill(document or self.document)
+        dialog.locator("input[name=import-user]").fill(self.name.lower())
+        dialog.locator("input[name=import-password]").fill(self.password)
+        dialog.locator("button[type=submit]").click()
+        self.page.wait_for_selector("[data-testid=recovery-key]", timeout=30000)  # a new document: its key first
+        self.page.check(".modal input[type=checkbox]")
+        self.page.click('.modal button:text-is("Continue")')
+
     def wait_until_open(self, timeout: float = 15000) -> None:
         self.page.wait_for_selector(READY[self.app], timeout=timeout)
         self.page.wait_for_function("document.querySelector('.health.open')", timeout=timeout)
@@ -268,8 +303,12 @@ class Person:
         self.page.click(f'.menus .title:text-is("{title}")')
         *submenus, entry = path
         for submenu in submenus:
-            self.page.locator(f'.menus .drop [role=menuitem]:has-text("{submenu}")').first.hover()
-        self.page.locator(f'.menus .drop [role=menuitem]:has-text("{entry}")').first.click()
+            self.menu_item(submenu).hover()
+        self.menu_item(entry).click()
+
+    def menu_item(self, label: str):
+        """The open menu's entry whose label starts with ``label``: "Text Box", not "Undo · Added a text box"."""
+        return self.page.locator(".menus .drop [role=menuitem]", has_text=re.compile("^" + re.escape(label))).first
 
     def paragraphs(self) -> list[str]:
         return self.page.eval_on_selector_all(

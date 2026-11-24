@@ -362,6 +362,14 @@ _avoid_: ping, address
 
 ### The ai at work
 
+**Action**
+Something a person can do in an app, by menu, shortcut or context menu: number a list, turn a shape, merge two cells.
+_avoid_: feature, command, capability, function
+
+**Action catalog**
+The list of all actions of one app, kept so that nothing a person can do is forgotten when the ai is taught what it may do and see.
+_avoid_: feature list, capability matrix
+
 **AI mode**
 How one person wants the ai to treat her requests in one document: act (it makes the change) or propose (it offers the change).
 _avoid_: autopilot, review mode, permission, suggest
@@ -370,9 +378,13 @@ _avoid_: autopilot, review mode, permission, suggest
 What answers when someone asks the ai: the scripted stand-in, a model on the server's own machine, or Claude. The administrator chooses it in the server's settings.
 _avoid_: engine, backend, connection, model
 
-**Owners' consent**
-A switch in a document that lets one named remote provider receive its content; it is off until the owners turn it on, and it records who did and when.
+**Owner's consent**
+A switch in a document that lets one named remote provider receive its content; it is off until the owner turns it on, and it records who did and when.
 _avoid_: opt-in, permission
+
+**Persona**
+How the ai behaves in an app: its tone, how short it is, that it never invents, when it asks. Written once for each app, in the app's persona.md.
+_avoid_: system prompt
 
 **Proposal**
 Changes to a document that are offered but not made, until a person accepts or rejects them; seen by everybody or only by the one who asked.
@@ -389,6 +401,10 @@ _avoid_: comment, annotation
 **Remote provider**
 An AI provider that sends a document's content out of the server; it answers only in a document whose owners have consented to it.
 _avoid_: cloud AI
+
+**Skill**
+A recipe in an app's skills.md: how to do one kind of task there with the ai's requests, with a worked example. The ai is given only the skills for what it may do.
+_avoid_: prompt, macro
 
 **What-if**
 A private copy of a document in which one person tries changes before carrying them out as one step.

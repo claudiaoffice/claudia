@@ -35,7 +35,7 @@ The index is the status of record; a section below keeps the status of the round
 re-checked. **Opened** and **Fixed** are filled from 2026-11-20 on: for older items only where the status already gave
 the date.
 
-### Open (92)
+### Open (90)
 
 By priority (P1, P2, P3, then items that wait for a decision without one), then by ID.
 
@@ -49,7 +49,6 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | PERF-10 | P2 | Performance | What-if outcomes are recalculated on the event loop: 9 s per edit in a 1,000-cell model | **new, open** |  |  |
 | UX-07 | P2 | UX / Web | Website blocks pinch-zoom (`user-scalable=no`) | open; the website is not in this repository (searched 2026-11-13) |  |  |
 | UX-09 | P2 | UX | Six web menus against four in D4; the Linux shell maps between them | **new** |  |  |
-| UX-21 | P2 | UX / AI | The chat promises `@ai` where no AI answers (creates), and the refusal names a missing switch | **new, open** |  |  |
 | UX-22 | P2 | UX | The history speaks three dialects: one per app | **new, open** |  |  |
 | UX-42 | P2 | UX / all | A document cannot be renamed: its name is sealed into the file, which the uid was meant to avoid | **decided, open** (D536, E5.21) |  |  |
 | UX-51 | P2 | UX / composes | The words go round the unturned frame of a turned object, not its bounding box (D1226 decides the box); turning is on screen in composes since D1232 | **new, open** (read) |  |  |
@@ -57,6 +56,9 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | UX-69 | P2 | UX / all apps | A viewer is not told she can only look: greyed entries, hidden controls and object gestures are silent (only Delete on a sheet's object says so) | open (scenario `@pending:UX-69`) | 2026-11-22 |  |
 | UX-70 | P2 | UX / all apps | What an export could not keep is never shown: the losses come back with the file and no client says them (a workbook's slide written as a sheet among them) | **new, open** (read; size 2) | 2026-11-22 |  |
 | UX-71 | P2 | UX / computes | Text on a workbook's slide is drawn in the workbook's Body text (13 px), tiny on a 1600-unit slide | **needs decision** (measured; size 2) | 2026-11-22 |  |
+| UX-76 | P3 | UX / computes | The New sheet dialog proposes no name: the field is empty (placeholder "Forecast") and Add Sheet stays off until one is typed, though a new sheet is to get a name like "Sheet2" (E1.13) | open (scenario `@pending:UX-76`) | 2026-11-22 |  |
+| UX-77 | P2 | UX / Windows | The window opens at the configured size in physical pixels, so on a scaled display (200%) it is half the size the page needs | **fixed** 2026-11-24 on `win-installer-fix` (D749) | 2026-11-24 | 2026-11-24 |
+| UX-78 | P2 | UX / Windows | A console window of node stays open for as long as an app of the Windows client runs, and shows only start-up lines | **fixed** 2026-11-24 on `win-installer-fix` (D750) | 2026-11-24 | 2026-11-24 |
 | CODE-25 | P2 | Code / Export | A renamed object loses its name in pptx and odp without the export saying so (D450) | **new, open** |  |  |
 | CODE-31 | P2 | Code / i18n | The history speaks English to everybody: command labels and summaries are not translated | **new, open** |  |  |
 | CODE-45 | P2 | Code / Import | pptx placeholders (titles, body text) are not imported at all | **new, open** |  |  |
@@ -125,7 +127,6 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | CODE-75 | P3 | Code / web clients | Only composes refused a change of a viewer before sending it; computes sent it and showed the server's refusal, creates checked in some places only | **fixed** on `architecture-improvements` (D1432) | 2026-11-21 | 2026-11-21 |
 | CODE-76 | P3 | Code / web clients | The sheet session ignored `shape` events, so an outline a colleague's sheet object needed arrived only with a reload | **fixed** on `architecture-improvements` (D1432) | 2026-11-21 | 2026-11-21 |
 | CODE-77 | P2 | Code / computes | Undoing a chart leaves it in the workbook (the server does not forget it), and the page reports a Plotly error | open (row `@pending:CODE-77`) | 2026-11-22 |  |
-| CODE-80 | P2 | Code / AI / privacy | A question to Claude sends, before Claude asks for anything, the sheet list and the top left of the first three sheets (`workbook_lens.orient`; likewise the other two lenses' first look), so a sheet the question has nothing to do with can leave the server; the @core scenario "Claude is sent what the dialog says and nothing else" says it must not | **new, open** (size 2; owner to decide: fix now or log) | 2026-11-22 |  |
 | UX-74 | P3 | UX / AI | While the administrator has Claude off, the owners' dialog shows no check box, so an owner cannot withdraw a consent given earlier; it resumes when Claude is switched on again | **new, open** (size 3) | 2026-11-22 |  |
 | UX-75 | P3 | UX / AI | A window that is open when the administrator changes the provider keeps its old badge until the next consent change or reload | **new, open** (size 3) | 2026-11-22 |  |
 | PROC-22 | P3 | Process / CI | The LibreOffice job may still fail silently, though it has passed every round | **new, open** |  |  |
@@ -134,18 +135,12 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |  |  |
 | UX-06 | — | UX | Web menu differs from decisions D4/D5 | needs decision |  |  |
 
-### Fixed (161)
+### Fixed (167)
 
 By ID. Items closed without a fix (superseded, wontfix) are here too.
 
 | ID | Pri | Category | Title | Status | Opened | Fixed |
 |---|---|---|---|---|---|---|
-| PROC-53 | P2 | Process / CI | The Windows install test failed at *Uninstall, standard* on both images: the window step left the core's node running, which held the installation's files | **fixed** 2026-11-24 on `win-installer-fix` | 2026-11-24 | 2026-11-24 |
-| UX-77 | P2 | UX / Windows | A console window of node stays open for as long as an app of the Windows client runs, and shows only start-up lines | **fixed** 2026-11-24 on `win-installer-fix` (D750) | 2026-11-24 | 2026-11-24 |
-| UX-76 | P2 | UX / Windows | The window opens at the configured size in physical pixels, so on a scaled display (200%) it is half the size the page needs | **fixed** 2026-11-24 on `win-installer-fix` (D749) | 2026-11-24 | 2026-11-24 |
-| CODE-82 | P2 | Code / Windows | Help ▸ About opens nothing on the start page of the Windows and macOS clients | **fixed** 2026-11-24 on `win-installer-fix` (D748) | 2026-11-24 | 2026-11-24 |
-| PROC-52 | P2 | Process / CI | The Windows install test let the launcher fail: its window step was advisory as a whole, so CODE-79 had a green CI | **fixed** 2026-11-23 on `win-installer-fix` (D747) | 2026-11-23 | 2026-11-23 |
-| CODE-81 | P1 | Code / Windows | The installed Windows client opens no window: the launcher looks for its apps in a repository that an installation does not have | **fixed** 2026-11-23 on `win-installer-fix` (D746) | 2026-11-23 | 2026-11-23 |
 | SEC-01 | P1 | Security | DNS rebinding defeats the Origin check | fixed (verified at `54d1245`) |  |  |
 | SEC-02 | P2 | Security | Anyone who reaches the server can create unlimited documents | fixed (verified at `54d1245`) |  |  |
 | SEC-03 | P2 | Security / Perf | Password hashing runs on the event loop | fixed (verified at `54d1245`) |  |  |
@@ -185,6 +180,7 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | UX-18 | P2 | UX / computes | The formula hint covers the column letters exactly when a whole column is to be picked | **fixed** |  |  |
 | UX-19 | P2 | UX | Picking the caret's own style back in the gallery pins it: a deviation is then not offered a name, and the next change goes to the old style everywhere | **fixed** |  |  |
 | UX-20 | **P1** | UX / AI | The AI in computes does nothing and points at an act/suggest switch no client has | **fixed** 2026-11-12 |  | 2026-11-12 |
+| UX-21 | P2 | UX / AI | The chat promises `@ai` where no AI answers (creates), and the refusal names a missing switch | **fixed** 2026-11-24 (closed by the owner: all three apps have an `ai` participant) |  | 2026-11-24 |
 | UX-24 | P1 | UX / creates | A named style could not be applied to another text box from where people look for it | **fixed** 2026-11-12 |  | 2026-11-12 |
 | UX-25 | P3 | UX / creates | All styles… counted every style's uses as "shapes" when a shape was selected | **fixed** 2026-11-12 |  | 2026-11-12 |
 | UX-26 | P2 | UX | The AI mode switch: the unchosen half invisible in the light theme, and the switch below the history | **fixed** 2026-11-12 |  | 2026-11-12 |
@@ -252,6 +248,12 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | CODE-73 | P2 | Code / security | File ▸ Download wrote the unencrypted content-only JSON while D110 and the menu workbook say it is the sealed file | **fixed** 2026-11-19 (D1270, E2.12) |  | 2026-11-19 |
 | CODE-78 | P2 | Code / i18n | A refusal of a model (a `ValueError` of core, computes, composes or creates) reaches a German user in English | **fixed** 2026-11-23 on `code-78-translated-refusals` (D1510) | 2026-11-22 | 2026-11-23 |
 | CODE-79 | P2 | Code / AI | The decision which provider answers was made once, when the question was started; a switch of the administrator or of the document's consent while a question ran changed nothing until it ended | **fixed** 2026-11-22 on `e7-11-claude-provider` (D1497) | 2026-11-22 | 2026-11-22 |
+| CODE-80 | P2 | Code / AI / privacy | A question to Claude sends, before Claude asks for anything, the sheet list and the top left of the first three sheets (`workbook_lens.orient`; likewise the other two lenses' first look), so a sheet the question has nothing to do with can leave the server; the @core scenario "Claude is sent what the dialog says and nothing else" says it must not | **fixed** 2026-11-23 on `e7-2-skills-and-persona` (D1568) | 2026-11-22 | 2026-11-23 |
+| CODE-81 | P2 | Code / AI | The model was shown doubled braces where a request is explained (`HOW_TO_ASK`, the computes and creates examples), so it did not learn the form of a request: in composes it answered with nothing, in creates it pasted its list into the chat | **fixed** 2026-11-24 on `e7-2-skills-and-persona` (D1566) | 2026-11-23 | 2026-11-24 |
+| CODE-82 | P2 | Code / AI | An empty final answer read "I have nothing to add.", and Claude's answers were cut at the local model's 512 tokens, so a 300-word text failed and a one-sentence text worked | **fixed** 2026-11-24 on `e7-2-skills-and-persona` (D1564, D1565) | 2026-11-23 | 2026-11-24 |
+| CODE-83 | P1 | Code / Windows | The installed Windows client opens no window: the launcher looks for its apps in a repository that an installation does not have | **fixed** 2026-11-23 on `win-installer-fix` (D746) | 2026-11-23 | 2026-11-23 |
+| CODE-84 | P2 | Code / Windows | Help ▸ About opens nothing on the start page of the Windows and macOS clients | **fixed** 2026-11-24 on `win-installer-fix` (D748) | 2026-11-24 | 2026-11-24 |
+| CODE-85 | P1 | Code / Windows | Every app of the Windows client stayed on "Starting…": the page waited for the window's resize, which never answered | **fixed** 2026-11-24 on `win-installer-fix` (D749) | 2026-11-24 | 2026-11-24 |
 | PROC-01 | P1 | Process | No CI workflow in the repository | fixed (verified at `54d1245`) |  |  |
 | PROC-02 | P2 | Process | The quality gate prints "everything is clean" when half of it was skipped | fixed |  |  |
 | PROC-03 | P2 | Process | Work described as delivered is not in the repository | fixed |  |  |
@@ -296,6 +298,9 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | PROC-49 | P2 | Process / CI | The Penpot generator on `main` made the Python jobs red: its `package-lock.json` was neither audited nor watched by dependabot, and `tools/transplant.py` failed ruff | **fixed** 2026-11-22 (size 3) | 2026-11-22 | 2026-11-22 |
 | PROC-50 | P2 | Process / E2E | `./run-e2e.sh regression` ran 27 browser scripts, CI 30: `objects.cjs` and the two client windows ran only in CI | **fixed** 2026-11-22 (D1452, `e2e-guard`) | 2026-11-21 | 2026-11-22 |
 | PROC-51 | P2 | Process / E2E | Every full local regression stopped after the shared servers with "port 8766 is in use" (TIME_WAIT, no `SO_REUSEADDR` in the runner's probe) | **fixed** 2026-11-22 (`e2e-guard`) | 2026-11-22 | 2026-11-22 |
+| PROC-52 | P2 | Process / E2E | When the specs fail, the runner (and so CI) does not say which test: `pytest -rs` leaves failures out of the summary, and the last 20 lines it prints are skipped scenarios | **fixed** 2026-11-23 (`e2e-guard`) | 2026-11-23 | 2026-11-23 |
+| PROC-53 | P2 | Process / CI | The Windows install test let the launcher fail: its window step was advisory as a whole, so CODE-83 had a green CI | **fixed** 2026-11-23 on `win-installer-fix` (D747) | 2026-11-23 | 2026-11-23 |
+| PROC-54 | P2 | Process / CI | The Windows install test failed at *Uninstall, standard* on both images: the window step left the core's node running, which held the installation's files | **fixed** 2026-11-24 on `win-installer-fix` | 2026-11-24 | 2026-11-24 |
 | DOC-01 | P2 | Docs | Decision numbers D70–D82 and D97–D99 are used twice for different decisions | fixed |  |  |
 | DOC-02 | P3 | Docs | `start-client.sh` was renamed; the Linux README and the other launchers still named it | **fixed** 2026-11-13 |  | 2026-11-13 |
 | DOC-03 | P3 | Docs | Current decisions that later ones contradict (D2, D44, D84, D115, D242); a stale row in `ranges.md`; stale lines in two notes | **fixed** 2026-11-17 (log audit: D44, D84, D115 superseded; D2, D242 noted) |  | 2026-11-17 |
@@ -881,7 +886,7 @@ none gets act"; computes cannot propose yet (E7.8), so the AI wrote nothing, eve
 `UNSAID_MODE = ACT` for a request without a mode; `DEFAULT_MODE` stays *suggest* for a client with the switch (D262).
 Tests in `test_server_ai_account.py`; `demo.cjs` passes again.
 
-### UX-21 · The chat promises an AI where none answers · P2 · new, open
+### UX-21 · The chat promises an AI where none answers · P2 · fixed 2026-11-24
 **Evidence (measured, screenshots of `slides.cjs`).** creates' chat says "Write to everybody, or @ai to ask the
 assistant. Say @ai help to see what it can do", but creates has no AI user (no `ai` avatar; E7.9 is `todo`). Until
 UX-20 the computes refusal also named "act mode", a switch that exists in no client. **Fix.** The hint comes from what
@@ -2667,6 +2672,9 @@ event that forgets the chart (it does for a picture, a shape and a container, D1
 `Error: DOM element provided is null or undefined` from Plotly's `getGraphDiv`. **Test:** the row `workbook | a chart`
 of the undo scenario, in an `Examples` block of its own tagged `@pending:CODE-77`; it waits with the chart renames of
 E1.18.
+Measured again with the step code of `specs/objects/names.feature`: insert a chart on Sheet1, add a sheet and go back
+to Sheet1; the same Plotly error is in the console. The scenario "A new object, slide, sheet and chart tab have names"
+carries `@pending:CODE-77` as well as `@pending:UX-76`.
 
 ## Round of 2026-11-22 (E6.31 step 2: slides in computes, branch `e6-31-slides-in-computes`)
 
@@ -2730,13 +2738,33 @@ switched off." The first router test was written red. **Test:** `test_server_ai_
 "The owners switch Claude off while a question is running" and "The administrator switching to another provider
 stops a running question the same way" in `server/claude-answers.feature`.
 
-### CODE-80 · What Claude is sent before it asks for anything · P2 · size 2 · new, open
+### CODE-80 · What Claude is sent before it asks for anything · P2 · size 2 · fixed 2026-11-23
 **Read** in code review of the branch (not measured with a real sheet): `WorkbookLens.orient` puts the sheet list and
 a preview of the first `PREVIEW_SHEETS` sheets into the first message for every provider. For the local model that stays
 on the machine; for Claude it is content of sheets the question does not name. **Fix, if the owner wants it now.** For a
 remote provider send names and sizes only and let Claude `look` for cells (the scenario's own wording: "what the ai looked
 at"); the lens needs to know the answer goes out (`Via.remote`). **Test:** the @core scenario above, with a "Salaries"
 sheet and the fake Anthropic's recorded requests.
+
+**Fixed 2026-11-23** on `e7-2-skills-and-persona` (D1568), test first: `tests/test_server_remote_orientation.py`. Each lens has
+`orient` (the start, for the local model) and `outline`; `ModelEngine` wraps the lens in `OutlineLens` for a remote runner, so
+there is no flag; for a remote provider each lens gives counts and ids and no word a person wrote
+(sheet names, cells, headings, style names, paragraph and slide text), and says to look. The local model's first message is
+unchanged (a test keeps that). The @core scenario "Claude is sent what the dialog says and nothing else" is the acceptance.
+
+### CODE-81 · The model is shown doubled braces · P2 · size 2 · fixed 2026-11-24
+**Measured** 2026-11-23 (printing the system message): `HOW_TO_ASK` goes out with `{{"method": ...}}`, and the computes and
+creates lens examples are inserted into a formatted template with their `{{ }}` doubled; composes' example was right. This fits
+the owner's real-key test: composes answered with nothing, creates pasted a JSON list into the chat. **Fix** (D1566): single
+braces. **Test first:** `tests/test_server_ai_prompt.py` reads every request the system message shows, in each app, as JSON; it failed
+for all three apps before the change.
+
+### CODE-82 · An empty answer, and Claude's answer length · P2 · size 2 · fixed 2026-11-24
+**Read** (and confirmed by the owner's real-key test): `ModelEngine._converse` returned `turn.say or "I have nothing to add."`;
+`AiSettings.max_tokens` (512) was also Claude's limit. **Fix** (D1564, D1565): an empty final answer is "I could not comply." (nothing
+changed) or "I made these changes: set_cells x2."; Claude has `claude.max_tokens` (4096). **Tests first:**
+`test_server_ai_loop.py` (empty answer, empty after a change, a short answer unchanged) and `test_server_ai_provider_settings.py`
+(default 4096, set to 8192, 0 refused, old settings read as 4096). The AI page field comes with E7.2.
 
 ### UX-74 · An owner cannot withdraw consent while Claude is off · P3 · size 3 · new, open
 `consentDialog` answers `no-remote` when `offered` is false and shows no choice. The consent is only a permission (D1491),
@@ -2747,13 +2775,31 @@ so nothing leaves; but it stays on and comes back with the administrator's next 
 The badge and the dialog read `ai_consent` at join and on `ai_consent_changed` only. **Fix.** Publish the same event to
 the open documents when the provider changes (`AiRuntime.apply`).
 
+## Round of 2026-11-22, second part (step code for the names spec, E1.13; branch `e2e-guard`)
+
+### UX-76 · The New sheet dialog proposes no name · P3 · size 3 · open
+**Measured** with the new step code of `specs/objects/names.feature` (computes, Chromium): the footer's "+" opens
+*New sheet* with an empty Name field (placeholder "Forecast") and *Add Sheet* is off until a name is typed. The spec
+says a new sheet has a name like "Sheet 2", and the server gives default names to things that have none
+(`thing_names.py`). **Fix.** Fill the field with the next free default name in the maker's language, selected, so
+Enter takes it and typing replaces it. **Test:** "A new object, slide, sheet and chart tab have names",
+`@pending:UX-76` (strict). (Filed as UX-70 on `e2e-guard`; renumbered when
+`main` had given UX-70 to another bug.)
+
+### PROC-52 · A failed run of the specs does not say which test failed · P2 · size 3 · fixed 2026-11-23
+**Measured** on CI run 45072645568 of `e2e-guard`, twice: "1 failed, 140 passed, 125 skipped, 26 xfailed", and the 20
+lines the runner printed were all skipped scenarios; the log is only in the run's artifact. `scripts/run_e2e.py` ran
+`pytest -rs`, which leaves failures out of pytest's summary. **Fix.** `pytest -rfEs` (`pytest_command`), and on a
+failure the runner prints pytest's `FAILED`/`ERROR` lines before the last lines of the log. **Test:**
+`tests/test_run_e2e.py::test_a_failed_pytest_run_names_the_tests_that_failed`.
+
 ## Round of 2026-11-23 (the first real install of the Windows installer, branch `win-installer-fix`)
 
 Found by the owner, who installed the Windows installer for the first time ("for my profile only"). The server (as a
-service) installed and answered in a browser; no icon opened a window. The owner ordered the fixes: CODE-81 and PROC-52,
+service) installed and answered in a browser; no icon opened a window. The owner ordered the fixes: CODE-83 and PROC-53,
 one commit each.
 
-### CODE-81 · The installed Windows client opens no window · P1 · size 1 · fixed
+### CODE-83 · The installed Windows client opens no window · P1 · size 1 · fixed
 **Found** by the owner: every shortcut ran `node.exe client\bin\composes.mjs`, which printed "This app has not been built
 (missing index.html, shell\shell.js, ext\core.mjs in `C:\Users\m\AppData\Local\Programs\clients\neutralino\apps\composes`)".
 That folder does not exist after the install, nor after clicking the icon. **Cause** (**measured** on Linux with the
@@ -2764,13 +2810,13 @@ reached. **Fixed** 2026-11-23 (D746): `appFolder` is `apps/<app>` beside the lau
 in an installation alike. **Tests:** `clients/neutralino/tests/paths.test.ts` (red before: `appFolder` did not exist), `launch.test.ts` (the launcher's default, red when it goes back to `defaultRepo`),
 `tests/test_windows_packaging.py::test_the_launcher_finds_the_apps_where_the_stage_and_the_checkout_have_them`, the
 scenario of `specs/desktop/windows-installer.feature`. **Escaped** because: test passed but wrong (every launcher test
-injected the app folder, none used the default) and the CI window step did not fail (PROC-52).
+injected the app folder, none used the default) and the CI window step did not fail (PROC-53).
 
-### PROC-52 · The Windows install test did not fail when the launcher could not start · P2 · size 2 · fixed
-**Found** with CODE-81: `windows.yml` started the installed launcher in one step, "A window opens, and starts the server
+### PROC-53 · The Windows install test did not fail when the launcher could not start · P2 · size 2 · fixed
+**Found** with CODE-83: `windows.yml` started the installed launcher in one step, "A window opens, and starts the server
 it needs", which is `continue-on-error: true` because a runner may have no display for WebView2 (D742). A launcher that
 exits with its own error ("This app has not been built") is the same to that step as a runner without a display. Evidence:
-**read** (the workflow); that CODE-81 reached the owner with a green CI is the proof. **Fixed** 2026-11-23 (D747): a step of
+**read** (the workflow); that CODE-83 reached the owner with a green CI is the proof. **Fixed** 2026-11-23 (D747): a step of
 its own, *The launcher finds the installed app and prepares its window*, which needs no display and is not advisory.
 **Test:** `tests/test_windows_packaging.py::test_a_launcher_that_cannot_prepare_its_window_fails_the_install_test`, red
 before (the step did not exist). **Not run on Windows:** the first run of the workflow on the branch is the check.
@@ -2779,10 +2825,10 @@ before (the step did not exist). **Not run on Windows:** the first run of the wo
 
 ## Round of 2026-11-24 (the first real use of the installed Windows client, branch `win-installer-fix`)
 
-Found by the owner on the Windows install that works since CODE-81: three usability bugs (CODE-82, UX-76, UX-77) and a
+Found by the owner on the Windows install that works since CODE-83: three usability bugs (CODE-84, UX-77, UX-78) and a
 question about the look of the native menu (not a bug: see the note).
 
-### CODE-82 · Help ▸ About opens nothing on the start page · P2 · size 2 · fixed
+### CODE-84 · Help ▸ About opens nothing on the start page · P2 · size 2 · fixed
 **Found** by the owner: the native About entry showed nothing; in an open document it works, on the start page it does
 not. **Cause** (**read**): the manifest keeps `help.about` on the start page's short menu (`_START_ACTIONS`), the shell sends
 it to the page, and `OpenDialog.vue`'s handler had no case for it. **Fixed** 2026-11-24 (D748): `startPageAction` knows it
@@ -2790,7 +2836,7 @@ and the start page mounts the About dialog of the window's app. **Test:** `web/t
 scenarios of `specs/desktop/about.feature`. **Not run** in a real window. **Escaped** because: spec gap (nothing said
 that every entry the shell keeps on a page must do something there).
 
-### UX-76 · The window is too small on a scaled display · P2 · size 2 · fixed
+### UX-77 · The window is too small on a scaled display · P2 · size 2 · fixed
 **Found** by the owner (screenshot, 3840 × 1994 at 200%): the window looks like a browser window too small for the page.
 **Cause** (**read**, and the screenshot: about 640 × 430 CSS pixels for 1280 × 860): Neutralino takes window sizes in
 physical pixels on Windows; the config's size was written as CSS pixels. **Fixed** 2026-11-24 (D749): the shell page asks for
@@ -2800,7 +2846,7 @@ the size again with the scale applied, capped at nine tenths of the free screen,
 Windows or on a scaled display:** the owner's next install is the check. **Escaped** because: spec gap (no one had said
 that a window's size is in CSS pixels) and a unit that no test, on a Mac or on Linux, can see.
 
-### UX-77 · A console window stays open for as long as an app runs · P2 · size 2 · fixed
+### UX-78 · A console window stays open for as long as an app runs · P2 · size 2 · fixed
 **Found** by the owner: the window of node stays open (after closing the app too) and prints only what the start prints:
 the note that the core is started as a plain `node`, and Neutralino's `NE_RS_TREEGER` (`resources.neu` missing) and
 `NE_RS_UNBLDRE` (`/favicon.ico`). **Cause** (**read**): the shortcuts started `node.exe`, a console program. **Fixed**
@@ -2813,7 +2859,7 @@ no warnings, GUI subsystem checked in the file header) but never run; the CI ste
 the console stayed open *after* closing the app (a `node` left alive, by the launcher or by the core?); if one is left in
 the task manager now, it is invisible. **Escaped** because: spec gap (nobody had said that a shortcut must not show a console).
 
-### PROC-53 · The window step of the Windows install test left the core's node running · P2 · size 2 · fixed
+### PROC-54 · The window step of the Windows install test left the core's node running · P2 · size 2 · fixed
 **Found** by the first run of `windows.yml` on `win-installer-fix` with the three fixes of this round (run 45346029894): the
 build and every step passed, *Uninstall, standard* failed on windows-2022 and windows-2025 ("C:\Program Files\Claudia Office
 is still there after the uninstall"); the run of 2026-11-23 failed at the same step. **Cause** (**measured**, the process list of the failing
@@ -2826,4 +2872,16 @@ uninstall check now says what is left and which processes there are.
 **Seen, not fixed:** in that run the window's core connected to Neutralino and the step then waited 120 s for a server on
 `127.0.0.1:8765`, which only the service uses (this install has none): either the check is wrong or the window's own server did
 not start; the step is advisory and the log did not say which (CODE-83 below, if the owner wants it logged).
-**Escaped** because: the advisory step had never run a window until CODE-81 was fixed.
+**Escaped** because: the advisory step had never run a window until CODE-83 was fixed.
+
+### CODE-85 · Every app stays on "Starting…" · P1 · size 1 · fixed
+**Found** by the owner on the first install with the fixes of this round: all three apps stayed on "Starting…"; the server ran and
+answered in a browser. **Cause** (**measured**, the owner's `shell.log`: the core connected at 20:36:41 and no `<- page: start`
+followed, while the starts before show it a second after the connection): UX-77's resize (`window.setSize`, then `window.center`)
+was awaited before the page asked the core to start, and the window never answered. **Fixed** 2026-11-24 (D749): the page asks
+for the size and does not wait for the answer; a failure is logged in the page's console. **Test:**
+`clients/neutralino/tests/shell-page.test.ts`, *does not wait for the window to answer* (red before: it timed out).
+**Not understood:** why `window.setSize` or `window.center` never answers on the owner's machine; it is therefore not known whether
+the window is resized at all (UX-77 may still be open). The page's console says (`--debug`). **Escaped** because: the unit test
+answered immediately, and no test can ask a real window; the CI step that starts a window has no display.
+

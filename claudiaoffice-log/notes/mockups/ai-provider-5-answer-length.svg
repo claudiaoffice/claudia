@@ -1,0 +1,72 @@
+<svg viewBox="0 0 1400 760" xmlns="http://www.w3.org/2000/svg" font-family="Inter, 'Segoe UI', system-ui, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">claudia — Server settings ▸ AI: each provider keeps its own answer length; what the chat says when the ai has nothing to say</title><desc id="d">Three cut-outs: the AI page with the local model chosen (answer length 512), with Claude chosen (answer length 4096), and the chat when the ai could not comply or only made changes.</desc>
+<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#6e6880"/></marker><marker id="inh" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="11" markerHeight="11" orient="auto-start-reverse"><path d="M1 1 L11 6 L1 11 z" fill="#fff" stroke="#6e6880" stroke-width="1.2"/></marker></defs>
+<rect width="1400" height="760" fill="#f3f1ea"/>
+<text x="40" y="44" font-size="22" font-weight="600" fill="#1f1a33" text-anchor="start" font-family="Fraunces, Georgia, serif">claudia — Server settings ▸ AI: the answer length of each provider, and an honest chat (E7.2, CODE-82)</text>
+<text x="40" y="66" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start" >Cut-outs of the page of ai-provider-1 and the chat of ai-provider-4. Only the field next to the provider changes; everything else stays as agreed in E7.11.</text>
+<rect x="40" y="96" width="660" height="300" rx="12" fill="#fff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="60" y="126" font-size="15" font-weight="600" fill="#1f1a33" text-anchor="start" font-family="Fraunces, Georgia, serif">A · Local model chosen</text>
+<rect x="60" y="144" width="520" height="38" rx="9" fill="#fff" stroke="#b9b2d1" stroke-width="1"/>
+<text x="146.66666666666669" y="168" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="middle" >Scripted stand-in</text>
+<rect x="233.33333333333334" y="144" width="173.33333333333334" height="38" rx="9" fill="#5b4bc4" stroke="#5b4bc4" stroke-width="1"/>
+<line x1="233.33333333333334" y1="144" x2="233.33333333333334" y2="182" stroke="#b9b2d1" stroke-width="1"/>
+<text x="320.0" y="168" font-size="13" font-weight="500" fill="#f7f3ec" text-anchor="middle" >Local model</text>
+<line x1="406.6666666666667" y1="144" x2="406.6666666666667" y2="182" stroke="#b9b2d1" stroke-width="1"/>
+<text x="493.33333333333337" y="168" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="middle" >Claude</text>
+<text x="60" y="210" font-size="12.5" font-weight="500" fill="#6e6880" text-anchor="start" >Model folder</text>
+<rect x="60" y="218" width="520" height="38" rx="9" fill="#fff" stroke="#b9b2d1" stroke-width="1"/>
+<text x="74" y="242" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">/srv/claudia/models/qwen2.5-7b-ov</text>
+<text x="60" y="290" font-size="12.5" font-weight="500" fill="#6e6880" text-anchor="start" >Max answer length (tokens)</text>
+<rect x="60" y="298" width="200" height="38" rx="9" fill="#fff" stroke="#b9b2d1" stroke-width="1"/>
+<text x="74" y="322" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">512</text>
+<text x="60" y="356" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start" >About 380 words</text>
+<text x="290" y="290" font-size="12.5" font-weight="500" fill="#6e6880" text-anchor="start" >Timeout (seconds)</text>
+<rect x="290" y="298" width="200" height="38" rx="9" fill="#fff" stroke="#b9b2d1" stroke-width="1"/>
+<text x="304" y="322" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">180</text>
+<text x="60" y="380" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start" >The local model is slow and small: a short limit keeps an answer from running on.</text>
+<rect x="720" y="96" width="640" height="300" rx="12" fill="#fff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="740" y="126" font-size="15" font-weight="600" fill="#1f1a33" text-anchor="start" font-family="Fraunces, Georgia, serif">B · Claude chosen: its own limit</text>
+<rect x="740" y="144" width="520" height="38" rx="9" fill="#fff" stroke="#b9b2d1" stroke-width="1"/>
+<text x="826.6666666666666" y="168" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="middle" >Scripted stand-in</text>
+<line x1="913.3333333333334" y1="144" x2="913.3333333333334" y2="182" stroke="#b9b2d1" stroke-width="1"/>
+<text x="1000.0" y="168" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="middle" >Local model</text>
+<rect x="1086.6666666666667" y="144" width="173.33333333333334" height="38" rx="9" fill="#5b4bc4" stroke="#5b4bc4" stroke-width="1"/>
+<line x1="1086.6666666666667" y1="144" x2="1086.6666666666667" y2="182" stroke="#b9b2d1" stroke-width="1"/>
+<text x="1173.3333333333335" y="168" font-size="13" font-weight="500" fill="#f7f3ec" text-anchor="middle" >Claude</text>
+<text x="740" y="210" font-size="12.5" font-weight="500" fill="#6e6880" text-anchor="start" >Model</text>
+<rect x="740" y="218" width="520" height="38" rx="9" fill="#fff" stroke="#b9b2d1" stroke-width="1"/>
+<text x="754" y="242" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">claude-sonnet-5-5</text>
+<text x="740" y="290" font-size="12.5" font-weight="500" fill="#6e6880" text-anchor="start" >Max answer length (tokens)</text>
+<rect x="740" y="298" width="200" height="38" rx="9" fill="#fff" stroke="#b9b2d1" stroke-width="1"/>
+<text x="754" y="322" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">4096</text>
+<text x="740" y="356" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start" >About 3,000 words</text>
+<rect x="736" y="294" width="208" height="46" rx="9" fill="none" stroke="#d6477a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<text x="970" y="290" font-size="12.5" font-weight="500" fill="#6e6880" text-anchor="start" >Timeout (seconds)</text>
+<rect x="970" y="298" width="200" height="38" rx="9" fill="#fff" stroke="#b9b2d1" stroke-width="1"/>
+<text x="984" y="322" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">180</text>
+<text x="740" y="380" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start" >Changing the provider shows the other one's value: each keeps its own, so neither is lost.</text>
+<rect x="40" y="416" width="1320" height="300" rx="12" fill="#fff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="60" y="446" font-size="15" font-weight="600" fill="#1f1a33" text-anchor="start" font-family="Fraunces, Georgia, serif">C · In the chat: the ai never answers with nothing</text>
+<text x="60" y="476" font-size="12.5" font-weight="500" fill="#6e6880" text-anchor="start" >The model sent an empty answer and made no change</text>
+<rect x="60" y="486" width="330" height="30" rx="8" fill="#fff" stroke="#b9b2d1" stroke-width="1"/>
+<text x="72" y="506" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start" >@ai write a story about a boy, 300 words</text>
+<rect x="60" y="528" width="600" height="70" rx="10" fill="#e7e1f4" stroke="none" stroke-width="1"/>
+<text x="74" y="550" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start" >ai</text>
+<rect x="112" y="537" width="74" height="20" rx="10" fill="#5b4bc4" stroke="#5b4bc4" stroke-width="1"/>
+<text x="149" y="552" font-size="11.5" font-weight="500" fill="#f7f3ec" text-anchor="middle" >remote</text>
+<text x="74" y="574" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start" >I could not comply.</text>
+<text x="74" y="590" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start" >answered by Claude (remote)</text>
+<text x="720" y="476" font-size="12.5" font-weight="500" fill="#6e6880" text-anchor="start" >The model sent an empty answer after it changed two things</text>
+<rect x="720" y="486" width="330" height="30" rx="8" fill="#fff" stroke="#b9b2d1" stroke-width="1"/>
+<text x="732" y="506" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start" >@ai fix B7 and C7</text>
+<rect x="720" y="528" width="600" height="70" rx="10" fill="#e7e1f4" stroke="none" stroke-width="1"/>
+<text x="734" y="550" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start" >ai</text>
+<rect x="772" y="537" width="74" height="20" rx="10" fill="#5b4bc4" stroke="#5b4bc4" stroke-width="1"/>
+<text x="809" y="552" font-size="11.5" font-weight="500" fill="#f7f3ec" text-anchor="middle" >remote</text>
+<text x="734" y="574" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start" >I made these changes: set_cells x2.</text>
+<text x="734" y="590" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start" >answered by Claude (remote)</text>
+<text x="60" y="628" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start" >Before: both were "I have nothing to add.", which sounds as if the question was answered. The words are English like the ai's other</text>
+<text x="60" y="646" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start" >sentences about its own work ("I stopped after 8 steps …"); the request list names are the protocol's, not translated.</text>
+<text x="60" y="676" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start" >Also changed, not drawn: a text of 300 words is no longer cut at 512 tokens for Claude, and a command block shows as single braces in the prompt, so the model</text>
+<text x="60" y="694" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start" >answers in the commands convention instead of pasting JSON into the chat.</text>
+</svg>

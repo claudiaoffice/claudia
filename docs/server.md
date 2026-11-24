@@ -200,7 +200,7 @@ answer `forbidden`. A person who was away gets the new keys at her next login, f
   the server settings (`PUT /api/admin/settings/ai`: `stand-in`, `local` or `claude`), names the Claude model, gives the key
   (write-only: the page shows only that one is set and its last four characters) and approves the sentence "Document
   content is sent to Anthropic when someone asks @ai." The key may also come from the operator (`ANTHROPIC_API_KEY` or
-  `--anthropic-key-file`), which wins. That is not enough: **the owners of each document must allow Claude for that
+  `--anthropic-key-file`), which wins. That is not enough: **the owner of each document must allow Claude for that
   document** (off by default; `ai_consent`, `set_ai_consent`; sealed in the document file, so the administrator cannot give
   it). Where either is missing the server's own provider answers and the chat says so. Each answer carries who gave it
   (`ChatRecord.via`: "Claude · remote" or "Local model"). When Claude fails the person reads "Claude is not available at

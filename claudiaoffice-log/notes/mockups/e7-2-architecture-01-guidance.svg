@@ -1,0 +1,155 @@
+<svg viewBox="0 0 1500 930" xmlns="http://www.w3.org/2000/svg" font-family="Inter, 'Segoe UI', system-ui, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">claudia - E7.2 architecture 1: where the files, the loader and the help requests go</title><desc id="d">Class diagram: persona.md and skills.md in each app package, Guidance and Recipe with load_guidance in claudia_server, ModelParts and ModelEngine passing them to the Request, the lenses with the help requests, and Request and Agent in claudia_ai.</desc>
+<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#6e6880"/></marker><marker id="inh" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="11" markerHeight="11" orient="auto-start-reverse"><path d="M1 1 L11 6 L1 11 z" fill="#fff" stroke="#6e6880" stroke-width="1.2"/></marker></defs>
+<rect width="1500" height="930" fill="#f3f1ea"/>
+<text x="40" y="44" font-size="22" font-weight="600" fill="#1f1a33" text-anchor="start" font-family="Fraunces, Georgia, serif">E7.2 architecture 1 — the files live with the app; the server loads them for that app only</text>
+<text x="40" y="66" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start" >One loader, found by the package of the document's model class: no table of app names. The agent in claudia_ai only prints two more texts.</text>
+<rect x="30" y="90" width="330" height="740" rx="10" fill="#f7f3ec" stroke="#d8d2e6" stroke-width="1"/>
+<text x="44" y="112" font-size="12" font-weight="600" fill="#6e6880" text-anchor="start" >app packages (what each app ships)</text>
+<rect x="380" y="90" width="700" height="740" rx="10" fill="#f7f3ec" stroke="#d8d2e6" stroke-width="1"/>
+<text x="394" y="112" font-size="12" font-weight="600" fill="#6e6880" text-anchor="start" >claudia_server</text>
+<rect x="1100" y="90" width="370" height="740" rx="10" fill="#f7f3ec" stroke="#d8d2e6" stroke-width="1"/>
+<text x="1114" y="112" font-size="12" font-weight="600" fill="#6e6880" text-anchor="start" >claudia_ai (no server, no document)</text>
+<rect x="50" y="130" width="290" height="70" rx="6" fill="#fff" stroke="#d6477a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<path d="M50 136 a6 6 0 0 1 6 -6 h278 a6 6 0 0 1 6 6 v14 h-290 z" fill="#d6477a"/>
+<text x="195.0" y="145" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle" >claudia_computes/ai/</text>
+<text x="62" y="170" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">persona.md</text>
+<text x="62" y="188" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">skills.md</text>
+<rect x="50" y="222" width="290" height="70" rx="6" fill="#fff" stroke="#d6477a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<path d="M50 228 a6 6 0 0 1 6 -6 h278 a6 6 0 0 1 6 6 v14 h-290 z" fill="#d6477a"/>
+<text x="195.0" y="237" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle" >claudia_composes/ai/</text>
+<text x="62" y="262" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">persona.md</text>
+<text x="62" y="280" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">skills.md</text>
+<rect x="50" y="314" width="290" height="70" rx="6" fill="#fff" stroke="#d6477a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<path d="M50 320 a6 6 0 0 1 6 -6 h278 a6 6 0 0 1 6 6 v14 h-290 z" fill="#d6477a"/>
+<text x="195.0" y="329" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle" >claudia_creates/ai/</text>
+<text x="62" y="354" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">persona.md</text>
+<text x="62" y="372" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">skills.md</text>
+<rect x="50" y="406" width="290" height="70" rx="6" fill="#fff" stroke="#5b4bc4" stroke-width="1.6"/>
+<path d="M50 412 a6 6 0 0 1 6 -6 h278 a6 6 0 0 1 6 6 v14 h-290 z" fill="#5b4bc4"/>
+<text x="195.0" y="421" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle" >claudia_&lt;app&gt;/help/</text>
+<text x="62" y="446" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">*.md  (EN, DE)  — exists</text>
+<text x="62" y="464" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">help_search finds them</text>
+<rect x="50" y="500" width="290" height="88" rx="6" fill="#fdf3e6" stroke="#f2a057" stroke-width="1"/>
+<text x="62" y="522" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start" >Placement: a recipe is written by</text>
+<text x="62" y="540" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start" >whoever knows the app, next to the</text>
+<text x="62" y="558" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start" >app's own help. Not in the server:</text>
+<text x="62" y="576" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start" >the server knows no recipe.</text>
+<rect x="400" y="130" width="234" height="156" rx="6" fill="#fff" stroke="#d6477a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<path d="M400 136 a6 6 0 0 1 6 -6 h222 a6 6 0 0 1 6 6 v28 h-234 z" fill="#d6477a"/>
+<text x="517.0" y="144" font-size="10.5" font-weight="400" fill="#fff" text-anchor="middle" >«frozen»</text>
+<text x="517.0" y="159" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle" >Guidance</text>
+<text x="412" y="184" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">persona: str</text>
+<text x="412" y="202" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">recipes: tuple[Recipe, ...]</text>
+<text x="412" y="220" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">skills_for(offered) -&gt; str</text>
+<text x="412" y="238" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">  recipes whose `uses` are all</text>
+<text x="412" y="256" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">  in offered, as one text</text>
+<text x="412" y="274" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">size() -&gt; int  (the 6000 cap)</text>
+<rect x="690" y="130" width="213" height="120" rx="6" fill="#fff" stroke="#d6477a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<path d="M690 136 a6 6 0 0 1 6 -6 h201 a6 6 0 0 1 6 6 v28 h-213 z" fill="#d6477a"/>
+<text x="796.5" y="144" font-size="10.5" font-weight="400" fill="#fff" text-anchor="middle" >«frozen»</text>
+<text x="796.5" y="159" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle" >Recipe</text>
+<text x="702" y="184" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">title: str</text>
+<text x="702" y="202" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">uses: frozenset[str]</text>
+<text x="702" y="220" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">text: str  (with a worked</text>
+<text x="702" y="238" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">  example, without `Uses:`)</text>
+<path d="M634 150 L690 150" fill="none" stroke="#6e6880" stroke-width="1.3" marker-end="url(#ar)"/>
+<text x="648" y="144" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >has</text>
+<rect x="400" y="330" width="276" height="156" rx="6" fill="#fff" stroke="#d6477a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<path d="M400 336 a6 6 0 0 1 6 -6 h264 a6 6 0 0 1 6 6 v28 h-276 z" fill="#d6477a"/>
+<text x="538.0" y="344" font-size="10.5" font-weight="400" fill="#fff" text-anchor="middle" >«function»</text>
+<text x="538.0" y="359" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle" >load_guidance(model_cls)</text>
+<text x="412" y="384" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">module ai_guidance.py</text>
+<text x="412" y="402" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">package = model_cls.__module__ root</text>
+<text x="412" y="420" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">reads ai/persona.md, ai/skills.md</text>
+<text x="412" y="438" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">splits skills on `## title`; a</text>
+<text x="412" y="456" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">`Uses: a, b` line names the requests</text>
+<text x="412" y="474" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">no folder or file -&gt; empty Guidance</text>
+<path d="M460 330 L460 286" fill="none" stroke="#6e6880" stroke-width="1.3" marker-end="url(#ar)"/>
+<text x="466" y="300" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >makes</text>
+<rect x="400" y="520" width="213" height="120" rx="6" fill="#fff" stroke="#5b4bc4" stroke-width="1.6"/>
+<path d="M400 526 a6 6 0 0 1 6 -6 h201 a6 6 0 0 1 6 6 v28 h-213 z" fill="#5b4bc4"/>
+<text x="506.5" y="534" font-size="10.5" font-weight="400" fill="#fff" text-anchor="middle" >«frozen»</text>
+<text x="506.5" y="549" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle" >ModelParts</text>
+<text x="412" y="574" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">lens: Lens</text>
+<text x="412" y="592" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">tools: tuple[ToolSpec, ...]</text>
+<text x="412" y="610" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">budget: Budget</text>
+<text x="412" y="628" font-size="11.5" font-weight="600" fill="#d6477a" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">guidance: Guidance</text>
+<path d="M470 520 L470 486" fill="none" stroke="#6e6880" stroke-width="1.3" marker-end="url(#ar)"/>
+<text x="478" y="510" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >filled by apps._model_parts</text>
+<rect x="400" y="660" width="410" height="102" rx="6" fill="#fff" stroke="#5b4bc4" stroke-width="1.6"/>
+<path d="M400 666 a6 6 0 0 1 6 -6 h398 a6 6 0 0 1 6 6 v28 h-410 z" fill="#5b4bc4"/>
+<text x="605.0" y="674" font-size="10.5" font-weight="400" fill="#fff" text-anchor="middle" >«function»</text>
+<text x="605.0" y="689" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle" >apps._model_parts(model_cls, budget)</text>
+<text x="412" y="714" font-size="11.5" font-weight="600" fill="#d6477a" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">guidance = load_guidance(model_cls)</text>
+<text x="412" y="732" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">tools = look tools + write tools</text>
+<text x="412" y="750" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">-&gt; (ModelParts, names)</text>
+<rect x="740" y="520" width="241" height="160" rx="6" fill="#fff" stroke="#5b4bc4" stroke-width="1.6"/>
+<path d="M740 526 a6 6 0 0 1 6 -6 h229 a6 6 0 0 1 6 6 v14 h-241 z" fill="#5b4bc4"/>
+<text x="860.5" y="535" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle" >ModelEngine</text>
+<text x="752" y="560" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">plan_async(task)</text>
+<text x="752" y="578" font-size="11.5" font-weight="600" fill="#d6477a" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">  Request(.., persona, skills)</text>
+<text x="752" y="596" font-size="11.5" font-weight="600" fill="#d6477a" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">  skills = guidance.skills_for(</text>
+<text x="752" y="614" font-size="11.5" font-weight="600" fill="#d6477a" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">    names of the tools offered)</text>
+<text x="752" y="632" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">_converse(task, request)</text>
+<text x="752" y="650" font-size="11.5" font-weight="600" fill="#d6477a" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">  empty final answer -&gt;</text>
+<text x="752" y="668" font-size="11.5" font-weight="600" fill="#d6477a" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">  honest sentence (diagram 3)</text>
+<path d="M613 560 L740 560" fill="none" stroke="#6e6880" stroke-width="1.3" marker-end="url(#ar)"/>
+<text x="619" y="554" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >holds</text>
+<rect x="740" y="330" width="330" height="120" rx="6" fill="#fff" stroke="#5b4bc4" stroke-width="1.6"/>
+<path d="M740 336 a6 6 0 0 1 6 -6 h318 a6 6 0 0 1 6 6 v28 h-330 z" fill="#5b4bc4"/>
+<text x="905.0" y="344" font-size="10.5" font-weight="400" fill="#fff" text-anchor="middle" >«protocol»</text>
+<text x="905.0" y="359" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle" >Lens</text>
+<text x="752" y="384" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">look_methods: tuple[str, ...]</text>
+<text x="752" y="402" font-size="11.5" font-weight="600" fill="#d6477a" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">  + help_search, help_topic</text>
+<text x="752" y="420" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">orient(document, ...) / show(...)</text>
+<text x="752" y="438" font-size="11.5" font-weight="600" fill="#d6477a" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">show_help(method, result) -&gt; str</text>
+<path d="M860 520 L860 450" fill="none" stroke="#6e6880" stroke-width="1.3" marker-end="url(#ar)"/>
+<text x="866" y="496" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >asks</text>
+<rect x="400" y="774" width="680" height="52" rx="6" fill="#fdf3e6" stroke="#f2a057" stroke-width="1"/>
+<text x="412" y="796" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start" >The three lenses add help_search and help_topic to look_methods; one shared</text>
+<text x="412" y="814" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start" >show_help writes the answer (the product's own text: shown as text, not fenced).</text>
+
+<rect x="1120" y="130" width="192" height="120" rx="6" fill="#fff" stroke="#5b4bc4" stroke-width="1.6"/>
+<path d="M1120 136 a6 6 0 0 1 6 -6 h180 a6 6 0 0 1 6 6 v28 h-192 z" fill="#5b4bc4"/>
+<text x="1216.0" y="144" font-size="10.5" font-weight="400" fill="#fff" text-anchor="middle" >«dataclass»</text>
+<text x="1216.0" y="159" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle" >Request</text>
+<text x="1132" y="184" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">asker, text, context</text>
+<text x="1132" y="202" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">tools, history, exchange</text>
+<text x="1132" y="220" font-size="11.5" font-weight="600" fill="#d6477a" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">persona: str = ""</text>
+<text x="1132" y="238" font-size="11.5" font-weight="600" fill="#d6477a" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">skills: str = ""</text>
+<rect x="1120" y="300" width="248" height="160" rx="6" fill="#fff" stroke="#5b4bc4" stroke-width="1.6"/>
+<path d="M1120 306 a6 6 0 0 1 6 -6 h236 a6 6 0 0 1 6 6 v14 h-248 z" fill="#5b4bc4"/>
+<text x="1244.0" y="315" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle" >Agent</text>
+<text x="1132" y="340" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">messages(request) -&gt; [Message]</text>
+<text x="1132" y="358" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">  system message, in this order:</text>
+<text x="1132" y="376" font-size="11.5" font-weight="600" fill="#d6477a" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">  1 identity + persona</text>
+<text x="1132" y="394" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">  2 context (the lens's orient)</text>
+<text x="1132" y="412" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">  3 how to ask · look · change</text>
+<text x="1132" y="430" font-size="11.5" font-weight="600" fill="#d6477a" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">  4 skills (only offered ones)</text>
+<text x="1132" y="448" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">parse(raw, tools) -&gt; Turn</text>
+<path d="M1220 300 L1220 250" fill="none" stroke="#6e6880" stroke-width="1.3" marker-end="url(#ar)"/>
+<text x="1226" y="268" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >reads</text>
+<rect x="1120" y="520" width="248" height="120" rx="6" fill="#fff" stroke="#5b4bc4" stroke-width="1.6"/>
+<path d="M1120 526 a6 6 0 0 1 6 -6 h236 a6 6 0 0 1 6 6 v28 h-248 z" fill="#5b4bc4"/>
+<text x="1244.0" y="534" font-size="10.5" font-weight="400" fill="#fff" text-anchor="middle" >«module»</text>
+<text x="1244.0" y="549" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle" >prompt constants</text>
+<text x="1132" y="574" font-size="11.5" font-weight="600" fill="#d6477a" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">HOW_TO_ASK: single braces</text>
+<text x="1132" y="592" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">  (CODE-81: the model saw {{ }})</text>
+<text x="1132" y="610" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">SYSTEM_PROMPT.format(context,</text>
+<text x="1132" y="628" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">  ability, persona)</text>
+<path d="M1220 520 L1220 460" fill="none" stroke="#6e6880" stroke-width="1.3" marker-end="url(#ar)"/>
+<text x="1226" y="492" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >used by</text>
+<rect x="1120" y="680" width="330" height="88" rx="6" fill="#fdf3e6" stroke="#f2a057" stroke-width="1"/>
+<text x="1132" y="702" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start" >Agent stays app-blind: it prints</text>
+<text x="1132" y="720" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start" >text it is given and parses commands.</text>
+<text x="1132" y="738" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start" >The lens + guidance decide content,</text>
+<text x="1132" y="756" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start" >the engine decides what is offered.</text>
+<path d="M981 544 H1090 V220 H1120" fill="none" stroke="#6e6880" stroke-width="1.3" marker-end="url(#ar)"/>
+<text x="989" y="538" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >builds</text>
+<rect x="40" y="880" width="26" height="12" rx="3" fill="#fff" stroke="#5b4bc4" stroke-width="1.6"/>
+<text x="74" y="890" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start" >exists today</text>
+<rect x="170" y="880" width="26" height="12" rx="3" fill="#fff" stroke="#d6477a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<text x="204" y="890" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start" >new in E7.2 (dashed)</text>
+<text x="360" y="890" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start" >bold coloured line = new or changed member of an existing class · «…» = kind · open triangle = is a</text>
+</svg>

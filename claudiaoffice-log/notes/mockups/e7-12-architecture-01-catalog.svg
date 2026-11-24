@@ -1,0 +1,134 @@
+<svg viewBox="0 0 1500 900" xmlns="http://www.w3.org/2000/svg" font-family="Inter, 'Segoe UI', system-ui, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">claudia - E7.12 architecture 1: where the catalog files, the checker and the sources go</title><desc id="d">Class and file diagram: one action-catalog.md per app and one for the core, the checker in scripts with Entry, Seen and Catalog, the existing sources it reads, the test and the generated overview.</desc>
+<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#6e6880"/></marker></defs>
+<rect width="1500" height="900" fill="#f3f1ea"/>
+<text x="40" y="44" font-size="22" font-weight="600" fill="#1f1a33" text-anchor="start" font-family="Fraunces, Georgia, serif">E7.12 architecture 1 — the catalog is data next to each app; one checker reads it against the running code</text>
+<text x="40" y="66" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">Nothing is loaded at run time. The model still gets its requests from MODEL_METHODS and its recipes from skills.md; the catalog only checks that they agree with what a person can do.</text>
+<rect x="30" y="90" width="340" height="770" rx="10" fill="#f7f3ec" stroke="#d8d2e6" stroke-width="1"/>
+<text x="44" y="112" font-size="12" font-weight="600" fill="#6e6880" text-anchor="start">packages (written by whoever knows the app)</text>
+<rect x="50" y="120" width="300" height="70" rx="6" fill="#fff" stroke="#d6477a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<path d="M50 126 a6 6 0 0 1 6 -6 h288 a6 6 0 0 1 6 6 v20 h-300 z" fill="#d6477a"/>
+<text x="200.0" y="138" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">claudia_computes/ai/</text>
+<text x="60" y="164" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">action-catalog.md   (new)</text>
+<text x="60" y="182" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">skills.md  persona.md  (E7.2)</text>
+<rect x="50" y="206" width="300" height="70" rx="6" fill="#fff" stroke="#d6477a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<path d="M50 212 a6 6 0 0 1 6 -6 h288 a6 6 0 0 1 6 6 v20 h-300 z" fill="#d6477a"/>
+<text x="200.0" y="224" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">claudia_composes/ai/</text>
+<text x="60" y="250" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">action-catalog.md   (new)</text>
+<text x="60" y="268" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">skills.md  persona.md  (E7.2)</text>
+<rect x="50" y="292" width="300" height="70" rx="6" fill="#fff" stroke="#d6477a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<path d="M50 298 a6 6 0 0 1 6 -6 h288 a6 6 0 0 1 6 6 v20 h-300 z" fill="#d6477a"/>
+<text x="200.0" y="310" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">claudia_creates/ai/</text>
+<text x="60" y="336" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">action-catalog.md   (new)</text>
+<text x="60" y="354" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">skills.md  persona.md  (E7.2)</text>
+<rect x="50" y="378" width="300" height="88" rx="6" fill="#fff" stroke="#d6477a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<path d="M50 384 a6 6 0 0 1 6 -6 h288 a6 6 0 0 1 6 6 v20 h-300 z" fill="#d6477a"/>
+<text x="200.0" y="396" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">claudia_server/ai/</text>
+<text x="60" y="422" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">action-catalog.md   (new)</text>
+<text x="60" y="440" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">the core&#x27;s methods and the</text>
+<text x="60" y="458" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">reasons for &#x27;reserved&#x27;</text>
+<rect x="50" y="482" width="300" height="108" rx="6" fill="#fdf3e6" stroke="#f2a057" stroke-width="1"/>
+<text x="62" y="504" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">Placement: next to skills.md, because</text>
+<text x="62" y="522" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">the person who adds a feature to an</text>
+<text x="62" y="540" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">app adds its line in the same commit.</text>
+<text x="62" y="558" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">Core methods (50, shared by all</text>
+<text x="62" y="576" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">three apps) are listed once.</text>
+<rect x="390" y="90" width="560" height="770" rx="10" fill="#f7f3ec" stroke="#d8d2e6" stroke-width="1"/>
+<text x="404" y="112" font-size="12" font-weight="600" fill="#6e6880" text-anchor="start">scripts/action_catalog.py (new; development only, like api_surface.py)</text>
+<rect x="410" y="120" width="250" height="134" rx="6" fill="#fff" stroke="#d6477a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<path d="M410 126 a6 6 0 0 1 6 -6 h238 a6 6 0 0 1 6 6 v34 h-250 z" fill="#d6477a"/>
+<text x="535.0" y="136" font-size="10.5" font-weight="400" fill="#fff" text-anchor="middle">«frozen»</text>
+<text x="535.0" y="152" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">Entry</text>
+<text x="420" y="178" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">method</text>
+<text x="420" y="196" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">kind: does | looks | plumbing</text>
+<text x="420" y="214" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">ai: yes | reserved | not yet</text>
+<text x="420" y="232" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">note: reason id, or where</text>
+<rect x="680" y="120" width="250" height="134" rx="6" fill="#fff" stroke="#d6477a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<path d="M680 126 a6 6 0 0 1 6 -6 h238 a6 6 0 0 1 6 6 v34 h-250 z" fill="#d6477a"/>
+<text x="805.0" y="136" font-size="10.5" font-weight="400" fill="#fff" text-anchor="middle">«frozen»</text>
+<text x="805.0" y="152" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">Seen</text>
+<text x="690" y="178" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">thing: object, paragraph, cell</text>
+<text x="690" y="196" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">property: rotation, style ...</text>
+<text x="690" y="214" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">ai: yes | reserved | not yet</text>
+<text x="690" y="232" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">note</text>
+<rect x="410" y="290" width="520" height="124" rx="6" fill="#fff" stroke="#d6477a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<path d="M410 296 a6 6 0 0 1 6 -6 h508 a6 6 0 0 1 6 6 v20 h-520 z" fill="#d6477a"/>
+<text x="670.0" y="308" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">Catalog</text>
+<text x="420" y="334" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">entries: list[Entry]    seen: list[Seen]</text>
+<text x="420" y="352" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">not_yet_ceiling: int      reasons: dict[str, str]</text>
+<text x="420" y="370" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">parse(text) -&gt; Catalog            (a line that does not parse is named)</text>
+<text x="420" y="388" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">for_app(app) -&gt; Catalog           (core + the app&#x27;s own; the app&#x27;s line wins)</text>
+<text x="420" y="406" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">overview(apps) -&gt; str             (the cross-app table, as Markdown)</text>
+<rect x="410" y="470" width="520" height="88" rx="6" fill="#fff" stroke="#d6477a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<path d="M410 476 a6 6 0 0 1 6 -6 h508 a6 6 0 0 1 6 6 v20 h-520 z" fill="#d6477a"/>
+<text x="670.0" y="488" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">MenuMap</text>
+<text x="420" y="514" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">reads claudia-menus.xlsx: Menus and Context menus</text>
+<text x="420" y="532" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">methods_of(row, app) -&gt; tuple[str, ...] | &#x27;view only&#x27;</text>
+<text x="420" y="550" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">rows_without_methods(app)    unknown_methods(app, table)</text>
+<rect x="410" y="610" width="520" height="124" rx="6" fill="#fff" stroke="#d6477a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<path d="M410 616 a6 6 0 0 1 6 -6 h508 a6 6 0 0 1 6 6 v20 h-520 z" fill="#d6477a"/>
+<text x="670.0" y="628" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">checks (functions, one per rule)</text>
+<text x="420" y="654" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">methods_are_classified      kinds_match_the_table</text>
+<text x="420" y="672" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">yes_means_offered_and_taught   reserved_has_a_reason</text>
+<text x="420" y="690" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">not_yet_count_is_the_ceiling   menu_entries_name_methods</text>
+<text x="420" y="708" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">properties_are_classified      yes_properties_show</text>
+<text x="420" y="726" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">overview_is_current</text>
+<line x1="535" y1="254" x2="535" y2="290" stroke="#6e6880" stroke-width="1.4" marker-end="url(#ar)"/>
+<line x1="805" y1="254" x2="805" y2="290" stroke="#6e6880" stroke-width="1.4" marker-end="url(#ar)"/>
+<line x1="670" y1="430" x2="670" y2="470" stroke="#6e6880" stroke-width="1.4" marker-end="url(#ar)"/>
+<line x1="670" y1="566" x2="670" y2="610" stroke="#6e6880" stroke-width="1.4" marker-end="url(#ar)"/>
+<rect x="970" y="90" width="500" height="770" rx="10" fill="#f7f3ec" stroke="#d8d2e6" stroke-width="1"/>
+<text x="984" y="112" font-size="12" font-weight="600" fill="#6e6880" text-anchor="start">existing code the checks read (unchanged unless a slice says so)</text>
+<rect x="990" y="120" width="460" height="70" rx="6" fill="#fff" stroke="#5b4bc4" stroke-width="1.6"/>
+<path d="M990 126 a6 6 0 0 1 6 -6 h448 a6 6 0 0 1 6 6 v20 h-460 z" fill="#5b4bc4"/>
+<text x="1220.0" y="138" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">MethodTable.describe()</text>
+<text x="1000" y="164" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">every method: name, params,</text>
+<text x="1000" y="182" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">write flag, reads  (152/159/130)</text>
+<rect x="990" y="204" width="460" height="70" rx="6" fill="#fff" stroke="#5b4bc4" stroke-width="1.6"/>
+<path d="M990 210 a6 6 0 0 1 6 -6 h448 a6 6 0 0 1 6 6 v20 h-460 z" fill="#5b4bc4"/>
+<text x="1220.0" y="222" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">apps.MODEL_METHODS</text>
+<text x="1000" y="248" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">what a model may change per app</text>
+<text x="1000" y="266" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">NOT_FOR_A_MODEL: the hidden ones</text>
+<rect x="990" y="288" width="460" height="70" rx="6" fill="#fff" stroke="#5b4bc4" stroke-width="1.6"/>
+<path d="M990 294 a6 6 0 0 1 6 -6 h448 a6 6 0 0 1 6 6 v20 h-460 z" fill="#5b4bc4"/>
+<text x="1220.0" y="306" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">Lens.look_methods / Lens.show</text>
+<text x="1000" y="332" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">what a model may look at, and how</text>
+<text x="1000" y="350" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">a look is put into words</text>
+<rect x="990" y="372" width="460" height="52" rx="6" fill="#fff" stroke="#5b4bc4" stroke-width="1.6"/>
+<path d="M990 378 a6 6 0 0 1 6 -6 h448 a6 6 0 0 1 6 6 v20 h-460 z" fill="#5b4bc4"/>
+<text x="1220.0" y="390" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">ai_guidance.Skill.uses</text>
+<text x="1000" y="416" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">the requests a skill teaches</text>
+<rect x="990" y="438" width="460" height="70" rx="6" fill="#fff" stroke="#5b4bc4" stroke-width="1.6"/>
+<path d="M990 444 a6 6 0 0 1 6 -6 h448 a6 6 0 0 1 6 6 v20 h-460 z" fill="#5b4bc4"/>
+<text x="1220.0" y="456" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">the model classes</text>
+<text x="1000" y="482" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">ObjectBody, paragraph, cell ...:</text>
+<text x="1000" y="500" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">their fields are the properties</text>
+<rect x="990" y="522" width="460" height="70" rx="6" fill="#fff" stroke="#5b4bc4" stroke-width="1.6"/>
+<path d="M990 528 a6 6 0 0 1 6 -6 h448 a6 6 0 0 1 6 6 v20 h-460 z" fill="#5b4bc4"/>
+<text x="1220.0" y="540" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">claudia-menus.xlsx</text>
+<text x="1000" y="566" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">Menus (97 rows), Context menus (25)</text>
+<text x="1000" y="584" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">+ 3 &#x27;Methods&#x27; columns  (new)</text>
+<line x1="350" y1="430" x2="410" y2="352" stroke="#6e6880" stroke-width="1.4" marker-end="url(#ar)"/>
+<text x="380.0" y="386.0" font-size="11" font-weight="400" fill="#6e6880" text-anchor="middle">parse</text>
+<rect x="410" y="760" width="250" height="88" rx="6" fill="#fff" stroke="#d6477a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<path d="M410 766 a6 6 0 0 1 6 -6 h238 a6 6 0 0 1 6 6 v20 h-250 z" fill="#d6477a"/>
+<text x="535.0" y="778" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">tests/ (new)</text>
+<text x="420" y="804" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">test_action_catalog.py</text>
+<text x="420" y="822" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">ai_samples.py: rich sample</text>
+<text x="420" y="840" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">documents, one per app</text>
+<rect x="680" y="760" width="250" height="70" rx="6" fill="#fff" stroke="#d6477a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<path d="M680 766 a6 6 0 0 1 6 -6 h238 a6 6 0 0 1 6 6 v20 h-250 z" fill="#d6477a"/>
+<text x="805.0" y="778" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">claudiaoffice-log/notes/</text>
+<text x="690" y="804" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">ai-action-catalog.md</text>
+<text x="690" y="822" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">generated: never edited by hand</text>
+<line x1="535" y1="735" x2="535" y2="760" stroke="#6e6880" stroke-width="1.4" marker-end="url(#ar)"/>
+<line x1="670" y1="735" x2="805" y2="760" stroke="#6e6880" stroke-width="1.4" marker-end="url(#ar)"/>
+<line x1="930" y1="672" x2="960" y2="672" stroke="#6e6880" stroke-width="1.4"/><line x1="960" y1="672" x2="960" y2="155" stroke="#6e6880" stroke-width="1.4"/>
+<line x1="960" y1="155" x2="990" y2="155" stroke="#6e6880" stroke-width="1.4" marker-end="url(#ar)"/>
+<line x1="960" y1="239" x2="990" y2="239" stroke="#6e6880" stroke-width="1.4" marker-end="url(#ar)"/>
+<line x1="960" y1="323" x2="990" y2="323" stroke="#6e6880" stroke-width="1.4" marker-end="url(#ar)"/>
+<line x1="960" y1="398" x2="990" y2="398" stroke="#6e6880" stroke-width="1.4" marker-end="url(#ar)"/>
+<line x1="960" y1="473" x2="990" y2="473" stroke="#6e6880" stroke-width="1.4" marker-end="url(#ar)"/>
+<line x1="960" y1="557" x2="990" y2="557" stroke="#6e6880" stroke-width="1.4" marker-end="url(#ar)"/>
+<text x="966" y="690" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">reads</text>
+</svg>
