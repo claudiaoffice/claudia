@@ -13,7 +13,7 @@ table is written as the cells the name is today: a file has no chart that follow
 
 **What of a file the model can hold.** A frame of a bar chart that is drawn the way the model draws one, over one
 range of one sheet of the file, in which the series are what the model would make of that range, is read as a
-floating diagram object (D462). Everything else, a chart of another kind, a stacked or a horizontal one, a chart over
+floating chart object (D462). Everything else, a chart of another kind, a stacked or a horizontal one, a chart over
 several ranges, of a sheet that is not there, one that has series the range does not explain, is left alone in the
 file and counted (``chart``): it is not read and it is not touched.
 
@@ -30,23 +30,22 @@ from dataclasses import dataclass
 
 from lxml import etree
 
-from claudia_computes import CellAnchor, ChartSpec, SheetId, WorkbookModel
+from claudia_computes import ChartSpec, SheetId, WorkbookModel
 from claudia_computes.charts import BAR_COLORS
 from claudia_computes.model import MIN_OBJECT_SIZE
 from claudia_computes.refs import column_name
-from claudia_odf_io import NS, local_name, qname, xml_safe
+from claudia_odf_io import CM_PER_PIXEL, NS, local_name, qname, transform_of, xml_safe
 
-from .chart_plan import Area, ReadChart, chart_losses, number_text, offset_of, plan_from, plan_of, spec_of
+from ._placed import Placed
+from .chart_plan import Area, ReadChart, number_text, plan_from, plan_of, spec_of
 from .ods_layout import pixels_of, text_of
 from .ods_names import range_of
 
 #: The media type of an embedded chart (the folder ``Object 1/`` in the manifest).
 CHART_MEDIA = "application/vnd.oasis.opendocument.chart"
-#: How big a chart that is a tab gets as a sheet's drawing, in pixels.
-TAB_SIZE = (720, 432)
 _DECLARATION = '<?xml version="1.0" encoding="UTF-8"?>\n'
 _DECLARED = " ".join(f'xmlns:{prefix}="{uri}"' for prefix, uri in NS.items() if prefix != "xml")
-_STYLE_OF_OBJECT = "plain-image"  # (a diagram carries its own colours, as an image does)
+_STYLE_OF_OBJECT = "plain-image"  # (a chart carries its own colours, as an image does)
 _LABELS = {(True, True): "both", (True, False): "row", (False, True): "column", (False, False): "none"}
 #: What a chart style may say that the model's bar chart does not: another direction, stacking, a third dimension.
 _NOT_THE_MODELS = ("vertical", "stacked", "percentage", "three-dimensional", "deep", "lines", "symbol-type")
@@ -207,21 +206,22 @@ def chart_document(model: WorkbookModel, spec: ChartSpec, width: int, height: in
     return content.encode()
 
 
-def frame_element(  # noqa: PLR0913 (a frame is: which chart, where, how big and what it says to someone who cannot see)
-    folder: str, name: str, x: float, y: float, width: int, height: int, description: str = "", layer: int = 0
-) -> etree._Element:
-    """The ``draw:frame`` of a chart whose part is ``folder`` (``Object 1``), at ``x``, ``y`` (pixels from the sheet's
-    corner)."""
+def place_of(placed: Placed, rotation: int = 0) -> dict[str, str]:
+    """Where a frame is and how big, as the attributes of a ``draw:frame``: its distance from the corner of its tab
+    (``svg:x``, ``svg:y``) or, turned by ``rotation`` degrees, the ``draw:transform`` that turns it about its centre
+    and puts it there. Every drawing of a tab is placed this way, a chart and a picture alike (D1477)."""
+    size = {"svg:width": text_of(placed.width), "svg:height": text_of(placed.height)}
+    box = tuple(pixels * CM_PER_PIXEL for pixels in (placed.x, placed.y, placed.width, placed.height))
+    transform = transform_of(rotation, box)  # type: ignore[arg-type]
+    if transform is None:
+        return {**size, "svg:x": text_of(placed.x), "svg:y": text_of(placed.y)}
+    return {**size, "draw:transform": transform}
+
+
+def frame_element(folder: str, name: str, placed: Placed) -> etree._Element:
+    """The ``draw:frame`` of a chart whose part is ``folder`` (``Object 1``), where ``placed`` says."""
     frame = etree.Element(_q("draw:frame"), nsmap={p: u for p, u in NS.items() if p != "xml"})
-    attributes = {
-        "draw:z-index": str(layer),
-        "draw:name": name,
-        "svg:width": text_of(width),
-        "svg:height": text_of(height),
-        "svg:x": text_of(x),
-        "svg:y": text_of(y),
-    }
-    for key, value in attributes.items():
+    for key, value in {"draw:z-index": str(placed.layer), "draw:name": name, **place_of(placed)}.items():
         frame.set(_q(key), value)
     chart = etree.SubElement(frame, _q("draw:object"))
     for key, value in {
@@ -231,8 +231,8 @@ def frame_element(  # noqa: PLR0913 (a frame is: which chart, where, how big and
         "xlink:actuate": "onLoad",
     }.items():
         chart.set(_q(key), value)
-    if description:
-        etree.SubElement(frame, _q("svg:desc")).text = xml_safe(description)
+    if placed.obj.body.description:
+        etree.SubElement(frame, _q("svg:desc")).text = xml_safe(placed.obj.body.description)
     return frame
 
 
@@ -367,15 +367,6 @@ def sizes_of(frame: etree._Element, chart: ReadChart) -> tuple[int, int] | None:
     return (width, height) if min(width, height) >= MIN_OBJECT_SIZE else None
 
 
-def describe(frame: etree._Element) -> str:
-    """What a frame says to someone who cannot see it: its description, or else its title."""
-    for tag in ("svg:desc", "svg:title"):
-        text = (frame.findtext(_q(tag)) or "").strip()
-        if text:
-            return text
-    return ""
-
-
 # ------------------------------------------------------------------------------------------------ a file's charts
 Parts = dict[str, tuple[bytes | None, str]]
 
@@ -388,94 +379,16 @@ class ChartOut:
     parts: Parts
 
 
-def a_chart(  # noqa: PLR0913 (what a chart in a file is: the model, its definition, which, how big, where and what it says)
-    model: WorkbookModel,
-    spec: ChartSpec,
-    number: int,
-    size: tuple[int, int],
-    corner: tuple[float, float],
-    description: str = "",
-    layer: int = 0,
-) -> ChartOut | None:
-    """The chart for ``spec`` as ``Object {number}``, ``size`` pixels at ``corner`` of its sheet; ``None`` when it reads
-    no cells."""
-    document = chart_document(model, spec, *size)
+def a_chart(model: WorkbookModel, spec: ChartSpec, number: int, placed: Placed) -> ChartOut | None:
+    """The chart for ``spec`` as ``Object {number}``, where ``placed`` says; ``None`` when it reads no cells."""
+    document = chart_document(model, spec, round(placed.width), round(placed.height))
     if document is None:
         return None
     folder = f"Object {number}"
     parts: Parts = {f"{folder}/": (None, CHART_MEDIA), f"{folder}/content.xml": (document, "text/xml")}
-    return ChartOut(frame_element(folder, f"Chart {number}", *corner, *size, description, layer), parts)
+    return ChartOut(frame_element(folder, placed.obj.body.name or f"Chart {number}", placed), parts)
 
 
 def new_shapes() -> etree._Element:
     """An empty ``table:shapes``."""
     return etree.Element(_q("table:shapes"), nsmap={p: u for p, u in NS.items() if p != "xml"})
-
-
-@dataclass
-class WrittenCharts:
-    """The charts of a new file: the ``table:shapes`` of each sheet that has some, the sheets the chart tabs become
-    (each with its name and its ``table:shapes``), the parts of all of them and what could not be kept."""
-
-    shapes: dict[SheetId, etree._Element]
-    tabs: list[tuple[str, etree._Element]]
-    parts: Parts
-    #: ``(detail, count)``: ``tab`` (a tab is a sheet now), ``source`` (a chart that followed a name has its cells),
-    #: ``empty`` (a chart that read nothing is not written).
-    lost: list[str]
-
-
-def _sheet_name(wanted: str, taken: set[str]) -> str:
-    name = re.sub(r"[\[\]*?:/\\]", "-", xml_safe(wanted)).strip("' ") or "Chart"
-    candidate, number = name, 1
-    while candidate.casefold() in taken:
-        number += 1
-        candidate = f"{name} ({number})"
-    taken.add(candidate.casefold())
-    return candidate
-
-
-def written_charts(model: WorkbookModel, *, first: int = 1) -> WrittenCharts:
-    """The charts of ``model`` for a file: the diagrams floating on its sheets, each pinned where it is, and its chart
-    tabs, each on a sheet of its own (a file has no tab for a chart). ``first`` is the number the first embedded object
-    gets."""
-    out = WrittenCharts({}, [], {}, chart_losses(model))
-    number = first
-    for sheet_id, sheet in model.sheets.items():
-        for layer, object_id in enumerate(model.stack_of(str(sheet_id))):
-            obj = model.get_object(object_id)
-            if obj.body.diagram is None:
-                continue
-            spec = model.diagrams[obj.body.diagram]
-            assert isinstance(spec, ChartSpec)
-            assert isinstance(obj.anchor, CellAnchor)  # (an object on a sheet hangs at a cell)
-            corner = offset_of(sheet.col_widths, sheet.row_heights, obj.anchor.row, obj.anchor.col)
-            made = a_chart(model, spec, number, (obj.body.w, obj.body.h), corner, obj.body.description, layer)
-            if made is not None:
-                out.shapes.setdefault(sheet_id, new_shapes()).append(made.frame)
-                out.parts.update(made.parts)
-                number += 1
-    taken = {sheet.name.casefold() for sheet in model.sheets.values()}
-    for tab in model.charts.values():
-        as_sheet = tab_sheet(model, tab.id, number, taken)
-        if as_sheet is not None:
-            out.tabs.append((as_sheet[0], as_sheet[1]))
-            out.parts.update(as_sheet[2])
-            number += 1
-    return out
-
-
-def tab_sheet(
-    model: WorkbookModel, tab_id: str, number: int, taken: set[str]
-) -> tuple[str, etree._Element, Parts] | None:
-    """The sheet a chart tab becomes in a file: its name (one no sheet in ``taken`` has, which it is added to), its
-    ``table:shapes`` with the chart, and the parts of the chart; ``None`` for a chart that reads nothing."""
-    tab = model.charts[tab_id]
-    spec = model.diagrams[tab.spec_id]
-    assert isinstance(spec, ChartSpec)
-    made = a_chart(model, spec, number, TAB_SIZE, (0, 0))
-    if made is None:
-        return None
-    shapes = new_shapes()
-    shapes.append(made.frame)
-    return _sheet_name(tab.name, taken), shapes, made.parts

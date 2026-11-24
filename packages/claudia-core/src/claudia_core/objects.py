@@ -48,13 +48,14 @@ from .tables import FILLER, TableDef, parse_entry_id
 if TYPE_CHECKING:
     from .context import Context
     from .region import Region
+    from .writing import TextCommand
 
 #: Kinds of object every app understands. A text box carries only words; a shape carries an outline and may carry
-#: words; an image carries an asset; a diagram carries a :class:`DiagramDefinition` (E6.6) — what it draws is
-#: opaque to the kernel, the same way an anchor's own geometry is (see :class:`DiagramDefinition`); a
+#: words; an image carries an asset; a chart carries a :class:`ChartDefinition` (E6.6) — what it draws is
+#: opaque to the kernel, the same way an anchor's own geometry is (see :class:`ChartDefinition`); a
 #: container carries a :class:`~claudia_core.ContainerDefinition` — text that something outside the document turns
 #: into a picture (D390); a table carries a :class:`~claudia_core.TableDef` (D1201).
-OBJECT_KINDS: tuple[str, ...] = ("text", "shape", "image", "diagram", "container", "table")
+OBJECT_KINDS: tuple[str, ...] = ("text", "shape", "image", "chart", "container", "table")
 
 MIN_OBJECT_SIZE = 20  # an object is at least this wide and this tall, in its app's own units
 MAX_OBJECTS_PER_HOLDER = 500
@@ -83,8 +84,8 @@ _BODY_FIELDS = (
 #: body's kind becomes ``ref``, and any other pointer that is set is refused. Nothing new is ever added to this list;
 #: a new kind of object uses ``ref`` and needs no field of its own.
 # The kinds that do not turn, and what the sentence calls them (D1021: a chart; D1224: a table).
-_NOT_TURNED = {"diagram": N_("A chart does not turn"), "table": N_("A table does not turn")}
-_LEGACY_POINTERS = ("shape", "image", "diagram", "rendered", "table")
+_NOT_TURNED = {"chart": N_("A chart does not turn"), "table": N_("A table does not turn")}
+_LEGACY_POINTERS = ("shape", "image", "diagram", "rendered", "table")  # the names old bodies were written with
 _LEGACY_SETS = (
     frozenset(
         (
@@ -143,19 +144,18 @@ class Anchor(Protocol):
         """The plain-data form: what the log stores and clients are sent."""
 
 
-# --------------------------------------------------------------------------- the diagram seam
+# --------------------------------------------------------------------------- the chart seam
 @runtime_checkable
-class DiagramDefinition(Protocol):
-    """What a diagram draws, in the terms of one app only (E6.6) — a chart's cell range, series direction and
+class ChartDefinition(Protocol):
+    """What a chart draws, in the terms of one app only (E6.6) — a chart's cell range, series direction and
     titles (computes); another app may one day give it a different shape entirely.
 
     This is the same split the module description draws between a body and an anchor, applied to a *kind's*
     own data instead of its placement: the kernel stores a definition by ``id`` and asks only whether one an
     object still points at exists — never what is inside it. ``to_data`` must round-trip through the app's own
-    :meth:`~claudia_core.ObjectModel.diagram_from_data`, the one door this data enters through, exactly as an
-    anchor does. A definition is referenced by ``id`` from :attr:`ObjectBody.diagram` (a floating diagram
-    object) or from whatever other, app-specific place an app surfaces the same drawing (a tab, say) — the same
-    way an image asset is referenced by both an object and, one day, something else that reuses it."""
+    :meth:`~claudia_core.ObjectModel.chart_from_data`, the one door this data enters through, exactly as an
+    anchor does. A definition is referenced by ``id`` from :attr:`ObjectBody.chart`, the chart object that shows
+    it."""
 
     @property
     def id(self) -> str:
@@ -180,11 +180,11 @@ class ObjectBody:
     The paragraph's own ``style`` says what the *words* look like, separately from the object's.
     ``ref`` is the id of the definition the kind points at, in the document's own tables of definitions: a
     ``shape`` object's outline (:class:`~claudia_core.ShapeDefinition`), an ``image``'s asset
-    (:class:`~claudia_core.ImageAsset`), a ``diagram``'s :class:`DiagramDefinition` (E6.6, opaque to the kernel, the
+    (:class:`~claudia_core.ImageAsset`), a ``chart``'s :class:`ChartDefinition` (E6.6, opaque to the kernel, the
     way an anchor is), a container's :class:`~claudia_core.ContainerDefinition` (the text it is made from
     and the picture last made of it, D390) and a ``table``'s :class:`~claudia_core.TableDef` (D1201). A text box
     points at nothing (``None``). The kind says which table ``ref`` is looked up in, so one field serves every kind
-    and a new kind of object needs no new field. :attr:`shape`, :attr:`image`, :attr:`diagram`, :attr:`container` and
+    and a new kind of object needs no new field. :attr:`shape`, :attr:`image`, :attr:`chart`, :attr:`container` and
     :attr:`table` read it by kind. ``imported`` is the record of how an image got there.
     ``rotation`` is whole degrees clockwise. ``snap`` is whether the object holds to its app's grid (E10.15,
     D214): the grid is a helper the view draws, but each object's own choice to follow it is real, persisted
@@ -230,9 +230,9 @@ class ObjectBody:
         return self._pointing("image")
 
     @property
-    def diagram(self) -> str | None:
-        """The id of the diagram definition, if this is a diagram."""
-        return self._pointing("diagram")
+    def chart(self) -> str | None:
+        """The id of the chart definition, if this is a chart."""
+        return self._pointing("chart")
 
     @property
     def container(self) -> str | None:
@@ -380,7 +380,7 @@ class ObjectSet:
 # --------------------------------------------------------------------------- the events
 @dataclass(frozen=True)
 class ThingRenamed:
-    """A thing (an object, a slide, a sheet, a chart tab) was given another name (D550): its id and its new name."""
+    """A thing (an object, a slide, a sheet) was given another name (D550): its id and its new name."""
 
     id: str
     name: str
@@ -442,7 +442,7 @@ class ObjectModel[A: Anchor]:
     * ``check_anchor(anchor, body)`` — whether an object with this body fits where the anchor says it does (a
       slide's bounds, a cell of the sheet, an offset inside a paragraph). Raise ``ValueError`` with a sentence.
     * ``anchor_from_data(data)`` — read its own anchor.
-    * ``diagram_from_data(data)`` — read its own :class:`DiagramDefinition`, if this app offers ``"diagram"``
+    * ``chart_from_data(data)`` — read its own :class:`ChartDefinition`, if this app offers ``"chart"``
       among its ``object_kinds`` (an app that does not need raise the default ``NotImplementedError``).
     * ``styles`` — a :class:`~claudia_core.StyleBook`, which ``check_object`` looks a style up in.
 
@@ -454,9 +454,6 @@ class ObjectModel[A: Anchor]:
     min_object_size: ClassVar[int] = MIN_OBJECT_SIZE
     #: The style whose letters are "the body text" a new picture is at least as tall as (D1332).
     body_text_style: ClassVar[str] = "body-text"
-    #: Whether a move may take an object to another holder (D1351). In a text it may go to another paragraph; on
-    #: a slide or a sheet it may not, since there that would make it another object for locks and the stacking order.
-    objects_change_holder: ClassVar[bool] = False
     #: The kinds of object this app offers (a subset of ``OBJECT_KINDS``).
     object_kinds: ClassVar[tuple[str, ...]] = OBJECT_KINDS
     #: The sentence a person is told when the name she gives is another thing's, by the kind of that thing. One sentence
@@ -466,7 +463,7 @@ class ObjectModel[A: Anchor]:
         "text": N_("There is already a text box called “{name}”"),
         "shape": N_("There is already a shape called “{name}”"),
         "image": N_("There is already a picture called “{name}”"),
-        "diagram": N_("There is already a chart called “{name}”"),
+        "chart": N_("There is already a chart called “{name}”"),
         "container": N_("There is already a container called “{name}”"),
         "table": N_("There is already a table called “{name}”"),
     }
@@ -493,9 +490,9 @@ class ObjectModel[A: Anchor]:
         return self.assets["shape"]
 
     @property
-    def diagrams(self) -> AssetStore[DiagramDefinition]:
+    def charts(self) -> AssetStore[ChartDefinition]:
         """The charts' definitions, by id; only the app reads them (E6.6)."""
-        return self.assets["diagram"]
+        return self.assets["chart"]
 
     @property
     def containers(self) -> AssetStore[ContainerDefinition]:
@@ -509,7 +506,7 @@ class ObjectModel[A: Anchor]:
 
     def users_of(self, kind: AssetKind, asset_id: str) -> list[str]:
         """The ids of what uses this asset: the objects that show it, and for an image the containers whose picture it
-        is. An app adds what else of its own may show one (computes: a chart tab)."""
+        is. An app may add what else of its own shows one."""
         users = [o.id for o in self.objects.values() if o.body.kind == kind.object_kind and o.body.ref == asset_id]
         if kind is IMAGE:
             users += [definition.id for definition in self.containers.values() if definition.image == asset_id]
@@ -546,11 +543,11 @@ class ObjectModel[A: Anchor]:
         """Read this app's anchor from its plain-data form; ``ValueError`` if it is not one."""
         raise NotImplementedError
 
-    def diagram_from_data(self, data: dict) -> DiagramDefinition:
-        """Read this app's diagram definition from its plain-data form; ``ValueError`` if it is not one.
+    def chart_from_data(self, data: dict) -> ChartDefinition:
+        """Read this app's chart definition from its plain-data form; ``ValueError`` if it is not one.
 
-        Only apps that put ``"diagram"`` in ``object_kinds`` need override this: the default is never reached by a
-        :class:`~claudia_core.DefineAsset` or :class:`~claudia_core.UpdateAsset` of a diagram unless an app issues
+        Only apps that put ``"chart"`` in ``object_kinds`` need override this: the default is never reached by a
+        :class:`~claudia_core.DefineAsset` or :class:`~claudia_core.UpdateAsset` of a chart unless an app issues
         one."""
         raise NotImplementedError
 
@@ -613,7 +610,7 @@ class ObjectModel[A: Anchor]:
     # -- names (D550, D551) --------------------------------------------------------
     def named_things(self) -> Iterator[tuple[str, str, str]]:
         """``(kind, id, name)`` of everything in this document that has a name: the objects here, and whatever else the
-        app names (its slides, sheets, chart tabs) by adding to this. One namespace for all of it (D550)."""
+        app names (its slides, sheets) by adding to this. One namespace for all of it (D550)."""
         for obj in self.objects.values():
             if obj.body.name:
                 yield obj.body.kind, obj.id, obj.body.name
@@ -626,7 +623,7 @@ class ObjectModel[A: Anchor]:
                 yield obj.body.kind, obj.id
 
     def has_thing(self, thing_id: str) -> bool:
-        """Is there an object, slide, sheet or chart tab with this id, named or not?"""
+        """Is there an object, slide or sheet with this id, named or not?"""
         return any(i == thing_id for _kind, i, _name in self.named_things()) or any(
             i == thing_id for _kind, i in self.unnamed_things()
         )
@@ -803,6 +800,30 @@ class ObjectModel[A: Anchor]:
         self.replace_object(new)
         return self.objects_changed(new.holder, changed=(new,))
 
+    # -- typing (claudia_core.TypingHost): the words of an object, character by character (step G, D1470) ----------
+    # Where an app's paragraphs are only the words of its objects (creates, a workbook's slides), these are its typing;
+    # composes, whose text has paragraphs of its own, answers them itself.
+    def insert_text(
+        self, paragraph_id: str, offset: int, text: str, runs: list[Run], fields: tuple[Field, ...] = ()
+    ) -> tuple[object, ...]:
+        """Type into the words of an object; the event that tells the clients."""
+        return (self.insert_object_text(paragraph_id, offset, text, runs, fields),)
+
+    def remove_text(
+        self, paragraph_id: str, start: int, end: int
+    ) -> tuple[str, list[Run], tuple[Field, ...], tuple[object, ...]]:
+        """Cut characters out of the words of an object."""
+        text, runs, fields, event = self.remove_object_text(paragraph_id, start, end)
+        return text, runs, fields, (event,)
+
+    def text_regions(self, paragraph_id: str, start: int, end: int) -> tuple[Region, ...]:
+        """The object whose words change."""
+        return self.selection_of(paragraph_id)
+
+    def text_moved(self, command: TextCommand) -> tuple[object, ...]:
+        """Nothing hangs from the words of an object: nothing follows."""
+        return ()
+
     def object_list_in_use(self, list_id: str) -> bool:
         """Are the words of any object an item of this list?"""
         return any(
@@ -814,17 +835,17 @@ class ObjectModel[A: Anchor]:
 
     # -- redaction (D720, D723) ---------------------------------------------------
     @classmethod
-    def blank_diagram(cls, definition: dict) -> dict:
-        """A diagram's definition with what people wrote in it gone and its shape kept (its id, what it reads), for
-        redaction. Only an app that has diagrams knows their content; the default refuses."""
+    def blank_chart(cls, definition: dict) -> dict:
+        """A chart's definition with what people wrote in it gone and its shape kept (its id, what it reads), for
+        redaction. Only an app that has charts knows their content; the default refuses."""
         from .errors import RedactionError
 
-        raise RedactionError(f"{getattr(cls, 'app', cls.__name__)} documents cannot blank a diagram")
+        raise RedactionError(f"{getattr(cls, 'app', cls.__name__)} documents cannot blank a chart")
 
     def blank_objects(self, parts: frozenset[str] | None) -> None:
         """Blank the objects whose id is in ``parts`` (all of them for ``None``), in place, for redacting an import
         (D723): their words become filler of the same length, their description and import record lose what a
-        person wrote, and the pictures, containers' texts and diagrams they show are blanked with them. Ids, places,
+        person wrote, and the pictures, containers' texts and charts they show are blanked with them. Ids, places,
         sizes and styles stay."""
         chosen = [obj for obj in self.objects.values() if parts is None or obj.id in parts]
         for obj in chosen:
@@ -838,9 +859,9 @@ class ObjectModel[A: Anchor]:
                 self.containers.put(definition.redacted())
             if body.table is not None and body.table in self.tables:
                 self.tables.put(self.tables[body.table].blanked(keep_length=True))
-            if body.diagram is not None and body.diagram in self.diagrams:
-                blank = self.blank_diagram(self.diagrams[body.diagram].to_data())
-                self.diagrams.put(self.diagram_from_data(blank))
+            if body.chart is not None and body.chart in self.charts:
+                blank = self.blank_chart(self.charts[body.chart].to_data())
+                self.charts.put(self.chart_from_data(blank))
             self.objects[obj.id] = replace(obj, body=blank_body(body, keep_length=True))
 
     # -- tables (D1201) ------------------------------------------------------------------------------------------
@@ -897,7 +918,7 @@ class ObjectModel[A: Anchor]:
             self._check_slot(styles, body.kind, 0, body.style)
         aspect = self._check_visual(body)
         self._check_size(body, aspect)
-        if body.kind in ("image", "diagram", "container", "table"):
+        if body.kind in ("image", "chart", "container", "table"):
             if body.paragraph is not None:
                 raise ValueError(f"a {body.kind} carries no text")
         else:
@@ -938,13 +959,13 @@ class ObjectModel[A: Anchor]:
             )
 
     def _check_visual(self, body: ObjectBody) -> float | None:
-        """What ``body.kind`` requires of ``shape``/``image``/``imported``/``diagram``, and the aspect ratio (if
+        """What ``body.kind`` requires of ``shape``/``image``/``imported``/``chart``, and the aspect ratio (if
         any) it keeps. Each kind's own requirements are a small method of its own below, rather than one long
         dispatch, now that there are four kinds to tell apart."""
         checks = {
             "text": self._check_text_visual,
             "shape": self._check_shape_visual,
-            "diagram": self._check_diagram_visual,
+            "chart": self._check_chart_visual,
             "image": self._check_image_visual,
             "container": self._check_container_visual,
             "table": self._check_table_visual,
@@ -960,9 +981,9 @@ class ObjectModel[A: Anchor]:
         self._check_ref(body, "shape", self.shapes)
         return self.shapes[str(body.ref)].aspect
 
-    def _check_diagram_visual(self, body: ObjectBody) -> None:
-        self._check_ref(body, "diagram", self.diagrams)
-        # a diagram keeps no fixed aspect ratio (falls through to the implicit ``None``)
+    def _check_chart_visual(self, body: ObjectBody) -> None:
+        self._check_ref(body, "chart", self.charts)
+        # a chart keeps no fixed aspect ratio (falls through to the implicit ``None``)
 
     def _check_container_visual(self, body: ObjectBody) -> None:
         self._check_ref(body, "container", self.containers, label="container")
@@ -1050,6 +1071,13 @@ class ObjectModel[A: Anchor]:
             self.paragraph_order += 1
         return old
 
+    def may_change_holder(self, obj: VisualObject[A], new: A) -> bool:  # noqa: ARG002 - an app that allows it looks
+        """May a move take the object ``obj``, where it is now, to the other holder ``new`` puts it on (D1351, A4 of
+        E6.31)? Not by default: on a slide or a sheet a move to another holder would make it another object for
+        locks and the stacking order. A text lets any object go to another paragraph; a workbook a chart from a sheet
+        to a slide."""
+        return False
+
     def rehang_object(self, obj: VisualObject[A], at: int | None = None) -> int:
         """Put a changed (checked) version of an object that exists into another holder (D1351): out of the old
         stack, into the new one at ``at`` (on top when ``None``). Returns the place it had in the old stack, which
@@ -1058,7 +1086,7 @@ class ObjectModel[A: Anchor]:
         if obj.holder == old.holder:
             self.replace_object(obj)
             return self._stack[old.holder].index(obj.id)
-        if not self.objects_change_holder:
+        if not self.may_change_holder(old, obj.anchor):
             raise ValueError("an object cannot change its holder")
         self.check_object(obj)
         stack = self._stack.setdefault(obj.holder, [])
@@ -1209,7 +1237,7 @@ class AddObject(Command):
             "text": "Add text box",
             "shape": "Add shape",
             "image": "Add image",
-            "diagram": "Add diagram",
+            "chart": "Add chart",
             "container": "Add container",
         }
         return labels[self.body.kind]
@@ -1224,8 +1252,8 @@ class AddObject(Command):
                 return "Added a decorative image"
             alt = self.body.description
             return f"Added an image: {_quote(alt)}" if alt.strip() else "Added an image"
-        if self.body.kind == "diagram":
-            return "Added a diagram"
+        if self.body.kind == "chart":
+            return "Added a chart"
         if self.body.kind == "container":
             return "Added a container"
         return f"Added a {self.body.shape}"
@@ -1255,7 +1283,7 @@ class AddObject(Command):
 
     def shifted_by(self, other: Command) -> Command | None:
         """Bringing an object back is refused when somebody made another one with its id, or took its shape,
-        image or diagram away."""
+        image or chart away."""
         if isinstance(other, AddObject) and other.object_id == self.object_id:
             return None
         # (asset_commands builds on this module, so the command that forgets an asset is known by its kind)
@@ -1750,7 +1778,7 @@ def _objects_without_renderings(data: dict) -> dict:
 @core_commands.register
 @dataclass(frozen=True)
 class RenameThing(Command):
-    """Give an object, a slide, a sheet or a chart tab another name (D550). The id stays, so everything that points at
+    """Give an object, a slide or a sheet another name (D550). The id stays, so everything that points at
     the thing (a tag in the chat, a formula) keeps pointing at it. Refused with a sentence when somebody else has that
     name already, whatever kind of thing they are."""
 

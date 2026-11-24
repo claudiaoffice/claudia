@@ -14,7 +14,6 @@ from claudia_computes_io import (
 from claudia_computes import (
     CellAnchor,
     CellRef,
-    Chart,
     ChartSpec,
     ObjectBody,
     RangeRef,
@@ -63,18 +62,10 @@ def a_chart_spec() -> ChartSpec:
 
 
 @BOTH
-def test_a_chart_tab_is_written_as_a_sheet_so_it_is_no_loss(unwritten):
-    after = a_workbook()
-    after.diagrams.define(a_chart_spec())
-    after.charts["c1"] = Chart("c1", "Chart", "spec")
-    assert unwritten(after, a_workbook()) == ()
-
-
-@BOTH
 def test_a_chart_floating_on_a_sheet_is_written_so_it_is_no_loss(unwritten):
     after = a_workbook()
-    after.diagrams.define(a_chart_spec())
-    body = ObjectBody("o1", "diagram", 200, 100, "plain-image", ref="spec")
+    after.charts.define(a_chart_spec())
+    body = ObjectBody("o1", "chart", 200, 100, "plain-image", ref="spec")
     after.insert_object(VisualObject(body, CellAnchor(SheetId("s1"), 3, 3)))
     assert unwritten(after, a_workbook()) == ()
 
@@ -98,6 +89,9 @@ def test_a_fresh_export_compares_with_an_empty_workbook(unwritten):
 
 def test_the_export_loss_lists_say_what_the_converters_do_not_write():
     model = a_workbook()
-    model.charts["c1"] = Chart("c1", "Chart", "spec")
-    assert Loss("chart", "empty", 1) in ods_export_losses(model)  # (a chart tab with nothing to draw)
+    body = ObjectBody("o1", "chart", 200, 100, "plain-image", ref="spec")
+    model.charts.define(a_chart_spec())
+    model.insert_object(VisualObject(body, CellAnchor(SheetId("s1"), 3, 3)))
+    model.charts.put(ChartSpec(id="spec", kind="bar", source="Gone"))
+    assert Loss("chart", "empty", 1) in ods_export_losses(model)  # (a chart with nothing to draw)
     assert Loss("chart", "empty", 1) in xlsx_export_losses(model)

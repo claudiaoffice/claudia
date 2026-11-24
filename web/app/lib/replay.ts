@@ -166,7 +166,7 @@ export const VIEW_READS: ReadonlySet<string> = new Set([
   'cells',
   'sizes',
   'charts',
-  'diagrams',
+  'charts',
   'chart_figure',
   'names',
   'number_formats',

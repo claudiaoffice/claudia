@@ -9,18 +9,13 @@ CSS). A row or column the application sizes by its content (``style:use-optimal-
 
 from __future__ import annotations
 
-import re
 from dataclasses import dataclass, field
 
 from lxml import etree
 
-from claudia_odf_io import NS
+from claudia_odf_io import CM_PER_PIXEL, NS, pixels
 
 from .layout_sizes import fit_height, fit_width
-
-_PIXELS = {"px": 1.0, "pt": 96 / 72, "pc": 16.0, "in": 96.0, "cm": 96 / 2.54, "mm": 96 / 25.4}
-_LENGTH = re.compile(r"(\d+(?:\.\d+)?)(px|pt|pc|in|cm|mm)")
-_CM_PER_PIXEL = 2.54 / 96
 
 
 def _q(prefix: str, local: str) -> str:
@@ -28,14 +23,15 @@ def _q(prefix: str, local: str) -> str:
 
 
 def pixels_of(length: str | None) -> int | None:
-    """A length of a file (``2.258cm``, ``0.5in``, ``12pt``...) in whole pixels; ``None`` for what is not one."""
-    found = _LENGTH.fullmatch((length or "").strip())
-    return None if found is None else round(float(found.group(1)) * _PIXELS[found.group(2)])
+    """A length of a file (``2.258cm``, ``0.5in``, ``12pt``...) in whole pixels; ``None`` for what is not one, or is
+    less than nothing."""
+    found = pixels(length)
+    return None if found is None or found < 0 else round(found)
 
 
 def text_of(pixels: float) -> str:
     """``pixels`` as the length a file writes (centimetres, to four places: finer than a pixel)."""
-    return f"{pixels * _CM_PER_PIXEL:.4f}cm"
+    return f"{pixels * CM_PER_PIXEL:.4f}cm"
 
 
 @dataclass

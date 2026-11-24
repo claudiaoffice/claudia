@@ -1,40 +1,48 @@
 <script setup lang="ts">
-// Edit ▸ Chart… (E6.6): describe a bar chart over the current selection and place it. Mirrors
-// `SheetImageImportDialog.vue`'s shape, but there is no file to pick — the "picture" is the live range itself,
-// shown as a small preview of its own headers (so picking "columns" or "rows" is not a guess) rather than a
-// rendered Plotly figure, which would mean standing up a definition before the person has agreed to one.
+// Edit ▸ Chart… (E6.6): describe a bar chart over the current selection, or a table or query result, and place it.
+// There is no file to pick — the "picture" is the live range itself, described by its size and headers (so picking
+// "columns" or "rows" is not a guess) rather than a rendered Plotly figure.
 //
-// A definition MAY be shown as a tab, a floating object, or both at once (D204) — the object layer underneath
-// this dialog supports all three. But the dialog itself asks for exactly one (D211): the "both, always" default
-// (D209's own fix, one round before this) still read as showing the same chart twice for no reason, so "Show
-// as" is a radio choice, not a pair of independent checkboxes. Picking a different placement later just means
-// inserting again — there is no "move" action, same as before either revision.
+// "Show as" (E6.31, D1475) is one choice: a slide of its own right after the tab shown (the default), or, on a sheet,
+// a floating object on it, and on a slide, on that slide. A slide has no cells to select, so there the chart reads a
+// table or a query result. The name is the chart's, whatever it is shown as; it starts as the next free "Chart n".
 import { computed, onMounted, ref, watch } from 'vue'
 import { show } from '~/lib/cells'
 import { nameAt, purposeLabel, referLabel, visibleNames, type NameInfo } from '~/lib/names'
-import { chartRange, type Session } from '~/lib/session'
+import { chartRange, type ChartShownAs, type Session } from '~/lib/session'
 import { useI18n } from '~/lib/i18n'
 
 const { t } = useI18n()
 
 const props = defineProps<{
   session: Session
+  /** the sheet shown, or the one last shown while a slide is */
   sheet: string
+  /** the slide shown, or `''` while a sheet is */
+  slide: string
   range: { r0: number; c0: number; r1: number; c1: number }
   /** Where the floating object lands — the current selection's top-left cell, at a fixed default size (there is
    * no aspect to keep, unlike an image's `anchorFor`). */
   anchorFor: () => { row: number; col: number; w: number; h: number }
 }>()
-const emit = defineEmits<{ close: []; inserted: [objectId: string | null, chartId: string | null] }>()
+const emit = defineEmits<{ close: []; inserted: [made: { object: string; slide: string | null }, showAs: ChartShownAs] }>()
 
-const name = ref(t('Chart'))
+const onSlide = computed(() => props.slide !== '')
+const name = ref('')
+onMounted(async () => {
+  const free = await props.session.freeName('chart')
+  if (!name.value) name.value = free ?? t('Chart')
+})
 // Where the chart reads from (E6.5, mock 6): the cells that are selected, or the table or query result of a name — which
-// the chart follows as it grows or moves. A selection that is exactly a name starts as that name.
-const sources = computed(() => visibleNames(props.session.state.names, props.sheet).filter((n) => n.header && n.region !== null))
-const picked = ref<string | null>(
-  nameAt(props.session.state.names, props.sheet, props.range.r0, props.range.c0, props.range.r1, props.range.c1)?.name ?? null,
+// the chart follows as it grows or moves. A selection that is exactly a name starts as that name. On a slide there are
+// no cells: every table and query result of the workbook, and the first is chosen.
+const sources = computed(() =>
+  (onSlide.value ? props.session.state.names : visibleNames(props.session.state.names, props.sheet)).filter((n) => n.header && n.region !== null),
 )
-const source = computed<NameInfo | null>(() => sources.value.find((n) => n.name === picked.value) ?? null)
+const keyOf = (n: NameInfo) => `${n.scope ?? ''}:${n.name}`
+const atSelection = onSlide.value ? null : nameAt(props.session.state.names, props.sheet, props.range.r0, props.range.c0, props.range.r1, props.range.c1)
+const picked = ref<string | null>(atSelection ? keyOf(atSelection) : onSlide.value && sources.value[0] ? keyOf(sources.value[0]) : null)
+const source = computed<NameInfo | null>(() => sources.value.find((n) => keyOf(n) === picked.value) ?? null)
 const onNamed = computed(() => source.value !== null)
 const seriesIn = ref<'columns' | 'rows'>('columns')
 const headerRow = ref(true)
@@ -43,16 +51,15 @@ const xTitle = ref('')
 const yTitle = ref('')
 const legend = ref(true)
 const gridlines = ref(true)
-const placement = ref<'tab' | 'object'>('tab')
+const placement = ref<ChartShownAs>('slide')
 const busy = ref(false)
-const error = ref('')
 
 const multiRow = computed(() => (source.value ? true : props.range.r1 > props.range.r0))
 const multiCol = computed(() => (source.value ? source.value.columns.length > 1 : props.range.c1 > props.range.c0))
 /** The first data column — the one past the category column, when there's room for a category column at all
  * (`chart_figure`'s own convention: a header *column* always goes by the range's shape). */
 const dataCol0 = computed(() => props.range.c0 + (multiCol.value ? 1 : 0))
-const canSubmit = computed(() => (placement.value !== 'tab' || name.value.trim() !== '') && !busy.value)
+const canSubmit = computed(() => (!onSlide.value || source.value !== null) && !busy.value)
 
 /** "First row is a header" is meant to save typing, not just toggle a server-side flag: the two cells that sit
  * over the category column and the first data column read exactly like the axis titles a person would
@@ -89,7 +96,6 @@ watch(picked, () => {
 async function submit() {
   if (!canSubmit.value) return
   busy.value = true
-  error.value = ''
   const where = source.value
     ? { source: source.value.name, source_scope: source.value.scope }
     : { range: chartRange(props.sheet, props.range.r0, props.range.c0, props.range.r1, props.range.c1) }
@@ -103,17 +109,9 @@ async function submit() {
     legend: legend.value,
     gridlines: gridlines.value,
   }
-  const diagramId = await props.session.defineDiagram(draft)
-  if (!diagramId) {
-    busy.value = false
-    error.value = t('That range will not make a chart.')
-    return
-  }
-  const chartId = placement.value === 'tab' ? await props.session.addChart(name.value.trim(), diagramId) : null
-  const objectId = placement.value === 'object' ? await props.session.addDiagramObject(diagramId, props.anchorFor()) : null
+  const made = await props.session.insertChart(draft, placement.value, name.value.trim(), placement.value === 'sheet' ? props.anchorFor() : undefined)
   busy.value = false
-  if (objectId || chartId) emit('inserted', objectId, chartId)
-  else error.value = t('Could not place the chart.')
+  if (made) emit('inserted', made, placement.value)
 }
 </script>
 
@@ -128,35 +126,37 @@ async function submit() {
       </fieldset>
       <fieldset class="field sourcelist" data-testid="chart-source">
         <legend>{{ t('Data from') }}</legend>
-        <label v-for="n in sources" :key="`${n.scope}:${n.name}`" class="radio source" :class="{ on: picked === n.name }">
-          <input v-model="picked" type="radio" :value="n.name" >
+        <label v-for="n in sources" :key="keyOf(n)" class="radio source" :class="{ on: picked === keyOf(n) }">
+          <input v-model="picked" type="radio" :value="keyOf(n)" >
           <span class="mono strong">{{ n.name }}</span>
           <span v-if="n.kind === 'result'" class="badge">{{ t('SQL') }}</span>
           <span class="dim">{{ t('{range} · {rows} rows · {purpose}', { range: referLabel(n), rows: n.rows, purpose: purposeLabel(n.purpose) }) }}</span>
         </label>
-        <label class="radio source" :class="{ on: picked === null }">
+        <label v-if="!onSlide" class="radio source" :class="{ on: picked === null }">
           <input v-model="picked" type="radio" :value="null" >
           <span>{{ t('Pick cells instead…') }}</span>
           <span class="dim">{{ t('the selection, as it is now') }}</span>
         </label>
+        <p v-else-if="!sources.length" class="hint" role="alert">{{ t('This workbook has no table or query result yet: select the cells on a sheet first.') }}</p>
       </fieldset>
       <p v-if="onNamed" class="hint">
-        <TransText :text="t('Bar chart of {name}: it follows the table as rows are added, and as a query result changes size.')"><template #name><strong class="mono">{{ picked }}</strong></template></TransText>
+        <TransText :text="t('Bar chart of {name}: it follows the table as rows are added, and as a query result changes size.')"><template #name><strong class="mono">{{ source?.name }}</strong></template></TransText>
         <template v-if="multiCol">{{ t('The first column is read as category names.') }}</template>
       </p>
-      <p v-else class="hint">
+      <p v-else-if="!onSlide" class="hint">
         <TransText :text="t('Bar chart over {rows} rows × {columns} columns.')"><template #rows><strong>{{ range.r1 - range.r0 + 1 }}</strong></template><template #columns><strong>{{ range.c1 - range.c0 + 1 }}</strong></template></TransText>
         <template v-if="multiCol">{{ t('The first column is read as category or series names.') }}</template>
         <template v-else>{{ t('Only one column — no room for a header there; a label is made up.') }}</template>
       </p>
       <fieldset class="field">
         <legend>{{ t('Show as') }}</legend>
-        <label class="radio"><input v-model="placement" type="radio" value="tab" >{{ t('A tab') }}</label>
-        <label class="radio"><input v-model="placement" type="radio" value="object" >{{ t('A floating object on the sheet') }}</label>
+        <label class="radio"><input v-model="placement" type="radio" value="slide" >{{ t('A slide') }}</label>
+        <label v-if="onSlide" class="radio"><input v-model="placement" type="radio" value="on_slide" >{{ t('On this slide') }}</label>
+        <label v-else class="radio"><input v-model="placement" type="radio" value="sheet" >{{ t('A floating object on the sheet') }}</label>
       </fieldset>
-      <label class="field" :class="{ disabled: placement !== 'tab' }">
-        {{ t('Name (the tab it opens as)') }}
-        <input v-model="name" autocomplete="off" maxlength="60" :disabled="placement !== 'tab'" >
+      <label class="field">
+        {{ t('Name of the chart') }}
+        <input v-model="name" autocomplete="off" maxlength="60" >
       </label>
       <div class="two">
         <fieldset class="field" :disabled="!multiRow || !multiCol">
@@ -185,7 +185,6 @@ async function submit() {
         <label class="check"><input v-model="legend" type="checkbox" >{{ t('Legend') }}</label>
         <label class="check"><input v-model="gridlines" type="checkbox" >{{ t('Gridlines') }}</label>
       </div>
-      <p v-if="error" class="error" role="alert">{{ error }}</p>
       <div class="buttons">
         <button class="btn primary" type="submit" :disabled="!canSubmit">{{ busy ? t('Inserting…') : t('Insert') }}</button>
         <button class="btn" type="button" @click="emit('close')">{{ t('Cancel') }}</button>
@@ -284,11 +283,6 @@ fieldset.field.kinds {
   margin: 4px 0 0;
   color: var(--muted);
   font-size: 12px;
-}
-.error {
-  margin: 0;
-  color: var(--rose);
-  font-size: 13px;
 }
 .buttons {
   display: flex;

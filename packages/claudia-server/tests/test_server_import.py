@@ -537,7 +537,7 @@ def test_a_workbook_with_charts_comes_back_patched_with_a_chart_moved_and_descri
     back = (ods_to_workbook if fmt == "ods" else xlsx_to_workbook)(base64.b64decode(answer["data"]))
     found = back.objects["o1"]
     assert (found.anchor, found.body.description) == (CellAnchor("s1", 14, 2), "Sales per region")
-    assert set(back.diagrams) == {"c1", "c2"}
+    assert set(back.charts) == {"c1", "c2"}
 
 
 def test_a_docx_with_descriptions_as_comments_is_written_anew_and_says_the_kept_file_could_not_take_them():

@@ -24,8 +24,8 @@ from lxml import etree
 from claudia_composes import DEFAULT_WRAP_GAP, MAX_WRAP_GAP, ParagraphAnchor
 from claudia_odf_io import NS
 from claudia_odf_io.transform import transform_of, turned_box
+from claudia_opc_io import EMU_PER_PIXEL
 
-EMU = 9525  # one CSS pixel
 _NS_WP = "http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"
 _WRAP_TAGS = ("wrapNone", "wrapSquare", "wrapTight", "wrapThrough", "wrapTopAndBottom")
 _AROUND_TAGS = ("wrapSquare", "wrapTight", "wrapThrough")
@@ -42,10 +42,10 @@ def clamped(pixels: int) -> int:
 
 # ------------------------------------------------------------------------------------------------------------- docx
 def _distances(anchor: ParagraphAnchor) -> dict[str, str]:
-    """The ``distT`` ``distB`` ``distL`` ``distR`` of a ``wp:anchor`` (EMU): how far the words keep away."""
+    """The ``distT`` ``distB`` ``distL`` ``distR`` of a ``wp:anchor`` (EMU_PER_PIXEL): how far the words keep away."""
     around, above_below = anchor.wrap == "around", anchor.wrap == "above-below"
-    side = anchor.gap * EMU if around else 0
-    vertical = anchor.gap * EMU if around or above_below else 0
+    side = anchor.gap * EMU_PER_PIXEL if around else 0
+    vertical = anchor.gap * EMU_PER_PIXEL if around or above_below else 0
     return {"distT": str(vertical), "distB": str(vertical), "distL": str(side), "distR": str(side)}
 
 
@@ -70,9 +70,10 @@ def docx_frame_open(anchor: ParagraphAnchor, number: int) -> str:
 def docx_position(anchor: ParagraphAnchor) -> str:
     """The ``wp:positionH`` and ``wp:positionV`` of a ``wp:anchor``: the object's top left corner sits ``dx`` to the
     right of its character and ``dy`` below its line (D1067)."""
+    across, down = anchor.dx * EMU_PER_PIXEL, anchor.dy * EMU_PER_PIXEL
     return (
-        f'<wp:positionH relativeFrom="character"><wp:posOffset>{anchor.dx * EMU}</wp:posOffset></wp:positionH>'
-        f'<wp:positionV relativeFrom="line"><wp:posOffset>{anchor.dy * EMU}</wp:posOffset></wp:positionV>'
+        f'<wp:positionH relativeFrom="character"><wp:posOffset>{across}</wp:posOffset></wp:positionH>'
+        f'<wp:positionV relativeFrom="line"><wp:posOffset>{down}</wp:posOffset></wp:positionV>'
     )
 
 
@@ -83,7 +84,7 @@ def _offset(frame: etree._Element, name: str, relative_from: str) -> int:
     if found is None or found.get("relativeFrom") != relative_from:
         return 0
     offset = found.find(_wp("posOffset"))
-    return round(_int(offset.text if offset is not None else None) / EMU)
+    return round(_int(offset.text if offset is not None else None) / EMU_PER_PIXEL)
 
 
 def docx_offset_of(frame: etree._Element) -> tuple[int, int]:
@@ -114,9 +115,9 @@ def docx_wrap_of(frame: etree._Element) -> tuple[str, int]:
     kind = next((child.tag for child in frame if child.tag in {_wp(each) for each in _WRAP_TAGS}), _wp("wrapNone"))
     local = etree.QName(kind).localname
     if local in _AROUND_TAGS:
-        return "around", clamped(round(_int(frame.get("distL")) / EMU))
+        return "around", clamped(round(_int(frame.get("distL")) / EMU_PER_PIXEL))
     if local == "wrapTopAndBottom":
-        return "above-below", clamped(round(_int(frame.get("distT")) / EMU))
+        return "above-below", clamped(round(_int(frame.get("distT")) / EMU_PER_PIXEL))
     behind = frame.get("behindDoc") in ("1", "true")
     return ("behind" if behind else "over"), DEFAULT_WRAP_GAP
 
@@ -260,24 +261,6 @@ def odf_offset_of(element: etree._Element, properties: Mapping[str, str]) -> tup
     return (round(x) if from_char else 0), (-round(y) if from_line else 0)
 
 
-def odf_properties(element: etree._Element, graphics: Mapping[str, etree._Element]) -> dict[str, str]:
-    """What the graphic style of ``element`` (and the styles it is based on) says, by ``prefix:name``; what the
-    element's own style says wins over what its parents say."""
-    found: dict[str, str] = {}
-    name: str | None = element.get(f"{{{NS['draw']}}}style-name")
-    seen: set[str] = set()
-    while name and name in graphics and name not in seen:
-        seen.add(name)
-        style = graphics[name]
-        for properties in style.findall("style:graphic-properties", NS):
-            for key, value in properties.attrib.items():
-                uri, local = etree.QName(key).namespace, etree.QName(key).localname
-                short = next((each for each, known in NS.items() if known == uri), "")
-                found.setdefault(f"{short}:{local}", str(value))
-        name = style.get(f"{{{NS['style']}}}parent-style-name")
-    return found
-
-
 def odf_wrap_style_xml(
     name: str, anchor: ParagraphAnchor, parent: str | None = None, *, wrap: bool = True, position: bool = False
 ) -> str:
@@ -330,7 +313,6 @@ __all__ = [
     "odf_name",
     "odf_offset_of",
     "odf_place",
-    "odf_properties",
     "odf_wrap_of",
     "odf_wrap_style_xml",
 ]

@@ -3,6 +3,19 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [Unreleased]
+
+### Added
+- `add_svg`: an SVG beside a picture, as Office 2016 and later draw it (CODE-84, D1480).
+- `claudia_opc_io.drawingml`: `solid`, `outline`, `look_in`, `PRESET`, `SHAPE_OF`, `UNKNOWN`, `EMU_PER_POINT`: how a
+  DrawingML shape is filled and outlined, and what its properties say of that (D1479; composes' docx had them).
+- `claudia_opc_io.custom`: `custom_properties(parts)` and `set_custom_properties(parts, values)`, the text properties of
+  `docProps/custom.xml` (the part declared and related once), `CUSTOM_PART` (E6.31, D1478).
+- `claudia_opc_io.drawingml`: what a DrawingML drawing says of itself in a docx, xlsx or pptx alike: `turn_of`,
+  `cropped`, `shown_part`, `is_decorative`, `mark_decorative`, and
+  `DRAWINGML`, `ANGLE`, `EMU_PER_PIXEL`, `SVG_URI`, `DECORATIVE_URI`
+  (D1478; composes' docx readers had them).
+
 ## [0.5.0] - 2026-11-17
 
 A package is judged before it is unpacked, and its XML is read without entities (SEC-15).

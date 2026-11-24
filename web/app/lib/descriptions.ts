@@ -38,11 +38,11 @@ export function isDescribed(o: Describable): boolean {
 export function objectName(o: Describable, parts: { shape?: string; words?: string } = {}): string {
   // A container (D390) is shown as the picture its renderer drew: its source text is no name for it.
   const picture = o.kind === 'image' || o.kind === 'container'
-  const kind = picture ? t('Picture') : o.kind === 'diagram' ? t('Chart') : o.kind === 'text' ? t('Text box') : (parts.shape ?? t('Shape'))
+  const kind = picture ? t('Picture') : o.kind === 'chart' ? t('Chart') : o.kind === 'text' ? t('Text box') : (parts.shape ?? t('Shape'))
   if (o.decorative) return t('{kind} (decorative)', { kind })
-  const said = pictureAlt(o).trim() || (picture || o.kind === 'diagram' ? '' : (parts.words ?? '').trim())
+  const said = pictureAlt(o).trim() || (picture || o.kind === 'chart' ? '' : (parts.words ?? '').trim())
   if (said) return t('{kind}: {words}', { kind, words: said })
-  return picture || o.kind === 'diagram' ? t('{kind} (no description)', { kind }) : kind
+  return picture || o.kind === 'chart' ? t('{kind} (no description)', { kind }) : kind
 }
 
 /** What is wrong with this description for an object of `kind`: a picture needs words or the decorative mark, any other

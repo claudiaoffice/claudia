@@ -30,6 +30,18 @@ Feature: A picture floating on a sheet is in the file I export, where it is, as 
       | format |
       | xlsx   |
       | ods    |
+  @core @app:computes
+  Scenario Outline: A picture of a file is read in, and written back where it was
+    # CODE-67
+    Given a <format> file with a picture "Our logo" on C3 of Sheet1, 200 by 100, turned by 15°
+    When I import it
+    Then the picture floats on Sheet1 at C3, 200 by 100, turned by 15°, saying "Our logo"
+    When I export the document as <format>
+    Then the file shows the picture at C3 with that size and turn
+    Examples:
+      | format |
+      | xlsx   |
+      | ods    |
   @extended @app:computes
   Scenario Outline: An SVG picture and a container
     Given a container whose picture is an SVG, and one that was never drawn

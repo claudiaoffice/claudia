@@ -1,8 +1,10 @@
 // What the slide on screen (`SlideCanvas.vue`) needs of a session (E6.31, D1473): a slide is the same page of objects in
 // creates and in computes, so one canvas draws both. Creates' `SlideSession` and computes' `Session` implement it; what
 // only creates has (holding an object to the grid, the agenda, the markers of lists, writing a fenced block as a
-// container) is optional, and the canvas leaves it out where a session does not bring it.
+// container) and what only computes has (the figure of a chart) is optional, and the canvas leaves it out where a
+// session does not bring it.
 import type { BaseSession, BaseState } from './base-session'
+import type { ChartFigures } from './charts'
 import type { ContentsEntry } from './contents'
 import type { Frame } from './geometry'
 import type { Shown } from './references'
@@ -92,6 +94,8 @@ export interface SlideHost
   agendaOf?(id: string): ContentsEntry[] | null
   setSnap?(id: string, snap: boolean): Promise<boolean>
   fenceToContainer?(id: string, words: string): Promise<string | null>
+  // computes only: what draws a chart on a slide (E6.31, D1475)
+  readonly figures?: ChartFigures
 }
 
 /** Is `object` on a slide? (A workbook's objects hang at cells too.) */

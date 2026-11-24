@@ -39,8 +39,8 @@ export function lookOf(holder: LookHolder, o: VisualObject<ParagraphAnchor>): Ob
   const facet = (css: Css, names: string[]) => facetCss(css, facets, names)
   const imageId = pointer(o, 'image')
   const asset = imageId ? holder.images[imageId] : undefined
-  const look: ObjectLook = { picture: o.kind === 'image' && asset ? imageDataUrl(asset) : '', outline: null, words: null, container: o.kind === 'container', unsupported: o.kind === 'diagram' }
-  if (o.kind === 'container' || o.kind === 'image' || o.kind === 'diagram') return look
+  const look: ObjectLook = { picture: o.kind === 'image' && asset ? imageDataUrl(asset) : '', outline: null, words: null, container: o.kind === 'container', unsupported: o.kind === 'chart' }
+  if (o.kind === 'container' || o.kind === 'image' || o.kind === 'chart') return look
   const shapeId = pointer(o, 'shape')
   const outline = shapeId ? (holder.shapes[shapeId] ?? null) : null
   if (o.kind === 'shape' && outline) look.outline = { path: outline.path, paint: facet(withDisplayInk(cssOf(styles, o)), ['outline']) }

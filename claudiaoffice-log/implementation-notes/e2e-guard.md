@@ -69,7 +69,7 @@ Branch `e2e-guard`. Recommendations 1 and 2 of the tester review of 2026-11-21 (
   * Two people (14 rows): Ann inserts a picture or a shape, moves a container, renames a style (Format ▸ All Styles…)
     or changes the accent (Format ▸ Colours…); Ben sees it without reloading, and both after a reload.
   * Undo and redo of inserting (8 rows): the object goes and comes back, and the server forgets and brings back what it
-    showed (D1454). `workbook | a chart` waits for CODE-77 in its own `Examples` block.
+    showed (D1454). `workbook | a chart` waited for CODE-77 in an `Examples` block of its own until E6.31 step 3 fixed it.
   * A viewer (15 rows), waiting for UX-69: Vera clicks the entries even when they are greyed, tries the rename and the
     colour controls if there are any, drags the object and a handle, Format ▸ Rotate, Delete. Nothing is sent, the
     document and the colleague's page stay as they were (all of that passes today); she is not told (UX-69).
@@ -99,7 +99,7 @@ switched off by hand on 2026-11-22.
 
 * `tests/e2e/specs/test_names.py` (new) binds `specs/objects/names.feature`, which leaves `NOT_BOUND_YET`. All 28
   scenarios have steps; 21 pass in Chromium and lost `@pending:e1.13`. Six keep it, each failing for a reason of the
-  story (the E1.13 story file lists them). "A new object, slide, sheet and chart tab have names" (not pending before;
+  story (the E1.13 story file lists them). "A new object, slide, sheet and chart have names" (not pending before;
   it never ran) now carries `@pending:UX-76 @pending:CODE-77`.
 * `tests/e2e/specs/things.py` (new): what the cross-app spec and the names spec both use to find, insert and drag
   objects, moved out of `test_the_same_in_all_three_apps.py`.

@@ -15,8 +15,8 @@ describe('objectName: what a screen reader says for an object', () => {
     expect(objectName(picture({ description: '' }))).toBe('Picture (no description)')
   })
   it('names a chart the same way', () => {
-    expect(objectName(body({ kind: 'diagram', description: 'sales by quarter' }))).toBe('Chart: sales by quarter')
-    expect(objectName(body({ kind: 'diagram' }))).toBe('Chart (no description)')
+    expect(objectName(body({ kind: 'chart', description: 'sales by quarter' }))).toBe('Chart: sales by quarter')
+    expect(objectName(body({ kind: 'chart' }))).toBe('Chart (no description)')
   })
   it('names a container (a formula, a diagram drawn from text) as the picture it is shown as', () => {
     expect(objectName(body({ kind: 'container', description: 'the quadratic formula' }), { words: 'x = ...' })).toBe('Picture: the quadratic formula')
@@ -65,7 +65,7 @@ describe('descriptionProblem: what the dialog tells the person', () => {
   })
   it('lets any other object go without', () => {
     expect(descriptionProblem('shape', '', false)).toBeNull()
-    expect(descriptionProblem('diagram', '', false)).toBeNull()
+    expect(descriptionProblem('chart', '', false)).toBeNull()
   })
   it('keeps to the length the model keeps to', () => {
     expect(MAX_DESCRIPTION).toBe(300)

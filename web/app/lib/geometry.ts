@@ -117,7 +117,7 @@ const STEP = 32 // how far each new object is shifted from the one before
 const STEPS = 8
 
 /** The kinds a frame is made for here: a chart and a table get their place otherwise. */
-export type FramedKind = Exclude<ObjectKind, 'diagram' | 'table'>
+export type FramedKind = Exclude<ObjectKind, 'chart' | 'table'>
 
 /** Where a new object goes: the `index`-th one added gets a little further from the first so none hides another.
  * An image is sized the same way a shape is (it always has an aspect, since every decoded picture has a width and

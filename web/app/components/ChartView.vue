@@ -1,22 +1,18 @@
 <script setup lang="ts">
-// Draws one chart's Plotly figure (E6.6) — used both for a chart tab (fills its space, responsive) and for a
-// floating diagram object on a sheet (a fixed pixel frame, matching the object's own `w`/`h`). The figure
-// itself is never built here: the server computes it from the definition plus its sheet's live cells
-// (`chart_figure`), so every client draws the same picture (`e0-3-web-surface-notes.md`). Plotly is bundled
-// offline (D33/D42) and loaded lazily, so a document with no chart in sight never pays for it.
+// Draws one chart's Plotly figure (E6.6) in the frame of the chart object that holds it, on a sheet or on a slide
+// (E6.31). The figure itself is never built here: the server computes it from the definition plus its sheet's live
+// cells (`chart_figure`), so every client draws the same picture (`e0-3-web-surface-notes.md`). Plotly is bundled
+// offline (D33/D42) and loaded lazily, so a document with no chart in sight never pays for it. The object that holds
+// the view names it for a screen reader and takes the pointer; the view itself is only the picture.
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import type { Session } from '~/lib/session'
+import type { ChartFigures } from '~/lib/charts'
 
 const props = defineProps<{
-  session: Session
-  diagramId: string
-  /** A fixed pixel frame (a floating object's own size); omitted for a tab, which fills its container and
-   * redraws on resize instead. */
-  width?: number
-  height?: number
-  /** What a screen reader calls the picture, when this view is the whole of what it shows (a chart tab). A floating
-   * object is named by the object that holds it, so it passes none. */
-  label?: string
+  session: ChartFigures
+  chartId: string
+  /** the chart object's own frame, in pixels */
+  width: number
+  height: number
 }>()
 
 const el = ref<HTMLDivElement | null>(null)
@@ -24,9 +20,8 @@ let plotly: typeof import('plotly.js-dist-min') | null = null
 let drawn = false
 let drawing = false
 let redrawPending = false
-let resizeObserver: ResizeObserver | null = null
 
-const CONFIG = { displayModeBar: false, responsive: props.width === undefined }
+const CONFIG = { displayModeBar: false, responsive: false }
 
 async function draw() {
   if (drawing) {
@@ -36,52 +31,35 @@ async function draw() {
   drawing = true
   do {
     redrawPending = false
-    await props.session.ensureFigure(props.diagramId)
-    const figure = props.session.figureOf(props.diagramId)
+    await props.session.ensureFigure(props.chartId)
+    const figure = props.session.figureOf(props.chartId)
     if (el.value && figure) {
       plotly ??= await import('plotly.js-dist-min')
-      const layout = {
-        ...figure.layout,
-        ...(props.width === undefined ? {} : { width: props.width, height: props.height }),
-        margin: { t: 32, r: 16, b: 36, l: 48 },
-        autosize: props.width === undefined,
-      }
-      await plotly.default.react(el.value, figure.data as Parameters<typeof plotly.default.react>[1], layout, CONFIG)
+      const target = el.value // (the chart may have gone while the chart library was loading)
+      if (!target) break
+      const layout = { ...figure.layout, width: props.width, height: props.height, margin: { t: 32, r: 16, b: 36, l: 48 }, autosize: false }
+      await plotly.default.react(target, figure.data as Parameters<typeof plotly.default.react>[1], layout, CONFIG)
       drawn = true
     }
   } while (redrawPending)
   drawing = false
 }
 
-watch(() => [props.diagramId, props.width, props.height, props.session.figureOf(props.diagramId)] as const, draw)
+watch(() => [props.chartId, props.width, props.height, props.session.figureOf(props.chartId)] as const, draw)
 
-onMounted(async () => {
-  await draw()
-  if (props.width === undefined && el.value) {
-    resizeObserver = new ResizeObserver(() => {
-      if (drawn && el.value && plotly) void plotly.default.Plots.resize(el.value)
-    })
-    resizeObserver.observe(el.value)
-  }
-})
+onMounted(draw)
 
 onBeforeUnmount(() => {
-  resizeObserver?.disconnect()
   if (drawn && el.value && plotly) plotly.default.purge(el.value)
 })
 </script>
 
 <template>
-  <div ref="el" class="chart-view" :role="label ? 'img' : undefined" :aria-label="label" :class="{ fixed: width !== undefined }" :style="width !== undefined ? { width: `${width}px`, height: `${height}px` } : {}" />
+  <div ref="el" class="chart-view" :style="{ width: `${width}px`, height: `${height}px` }" />
 </template>
 
 <style scoped>
 .chart-view {
-  width: 100%;
-  height: 100%;
-  min-height: 0;
-}
-.chart-view.fixed {
-  pointer-events: none; /* the floating object's own `.object` div handles drag/select; Plotly's hover stays visual only */
+  pointer-events: none; /* the object's own frame handles drag/select; Plotly's hover stays visual only */
 }
 </style>

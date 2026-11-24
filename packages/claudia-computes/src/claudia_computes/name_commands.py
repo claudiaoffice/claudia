@@ -38,7 +38,7 @@ class DefineName(Command):
     that, and keeps the old rule so that an old document replays."""
 
     kind: ClassVar[str] = "computes.DefineName"
-    schema: ClassVar[int] = 2  # 2: names are shared with sheets, chart tabs and objects, and have ids (D552)
+    schema: ClassVar[int] = 2  # 2: names are shared with sheets, chart tabs (then) and objects, and have ids (D552)
     name: NamedRange
     legacy_names: bool = False
 

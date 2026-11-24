@@ -3,9 +3,8 @@
 The *page* — paper, margins, page numbers — is the kernel's :class:`~claudia_core.PageSetup`, the one composes and
 creates print on, and belongs to the whole workbook. What belongs to a *sheet* is :class:`SheetPrintSetup`: how the
 page lies, how big the cells are drawn, in which order the pages run, which rows and columns repeat on every page,
-and what is printed besides the cells. A chart tab has one too, of which only the orientation counts (the chart is
-scaled to the page). A sheet without a setup of its own prints with :data:`DEFAULT_SHEET_PRINT`, so the workbook
-stores only the sheets that differ.
+and what is printed besides the cells. A sheet without a setup of its own prints with :data:`DEFAULT_SHEET_PRINT`, so
+the workbook stores only the sheets that differ.
 
 Pages are laid out in the client, by the layout library (D901); the document only says how, so that everybody's
 preview and PDF are the same.
@@ -136,5 +135,5 @@ DEFAULT_SHEET_PRINT = SheetPrintSetup()
 
 
 def sheet_print_to_data(setups: Mapping[str, SheetPrintSetup]) -> dict[str, dict]:
-    """The sheets and chart tabs (by id) that differ from the default, as plain data (none is stored for the others)."""
+    """The sheets (by id) that differ from the default, as plain data (none is stored for the others)."""
     return {str(key): setup.to_data() for key, setup in setups.items() if setup != DEFAULT_SHEET_PRINT}

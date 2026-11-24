@@ -419,7 +419,6 @@ class TextModel(DocumentModel, ObjectModel[ParagraphAnchor]):
 
     app: ClassVar[str] = "composes"
     body_text_style: ClassVar[str] = DEFAULT_STYLE
-    objects_change_holder: ClassVar[bool] = True  # an object can be dragged to another paragraph (D1351)
     name_taken: ClassVar[Mapping[str, str]] = {
         **ObjectModel.name_taken,
         "heading": N_("There is already a heading called “{name}”"),
@@ -516,7 +515,7 @@ class TextModel(DocumentModel, ObjectModel[ParagraphAnchor]):
             "lists": self.lists.to_data(),
             "schemes": self.schemes.to_data(),
             "suggestions": [self.suggestion_data(s, with_state=True) for s in self.suggestions.values()],
-            **self.assets_to_data(),  # images, shapes, diagrams, containers, tables (D1431)
+            **self.assets_to_data(),  # images, shapes, charts, containers, tables (D1431)
             "objects": self.objects_to_data(),
             "names": dict(self.paragraph_names),
             "descriptions": dict(self.paragraph_descriptions),
@@ -609,6 +608,10 @@ class TextModel(DocumentModel, ObjectModel[ParagraphAnchor]):
         page = self.page
         across = page.height if page.orientation == "landscape" else page.width
         return int((across - page.margin_left - page.margin_right) / 1000 * 4 / 3)
+
+    def may_change_holder(self, obj: TextObject, new: ParagraphAnchor) -> bool:  # noqa: ARG002 - any object, anywhere
+        """An object can be dragged to another paragraph (D1351)."""
+        return True
 
     def check_anchor(self, anchor: ParagraphAnchor, body: ObjectBody) -> None:
         """An object hangs from a character of its paragraph, so the offset must lie inside that paragraph.

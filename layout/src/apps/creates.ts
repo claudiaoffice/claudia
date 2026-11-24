@@ -119,7 +119,7 @@ export function layoutSlides(doc: SlideDocument, fonts: FontSet, resolver: FontR
   const shapes = new Map((doc.shapes ?? []).map((s) => [s.id, s]))
   const images = new Map((doc.images ?? []).map((i) => [i.id, i]))
   const embedded = new Map<string, Uint8Array>()
-  const context = { fonts, resolver, styles: sheet, shapes, images, notes, embedded, paragraphOptions: { hyphenator }, diagramNote: 'charts cannot be printed from a presentation yet' }
+  const context = { fonts, resolver, styles: sheet, shapes, images, notes, embedded, paragraphOptions: { hyphenator }, chartNote: 'charts cannot be printed from a presentation yet' }
 
   // the content box, with room kept for page numbers when the bottom margin has none
   const area: Rect = contentBox(geometry)

@@ -17,7 +17,7 @@ def import_checks(model: WorkbookModel) -> None:
     assert model.sheets[SheetId("s1")].cells[(1, 1)] == {"t": "int", "v": 100}
     assert model.sheets[SheetId("s2")].cells == {}
     (chart,) = model.objects.values()
-    assert chart.body.diagram in model.diagrams and chart.anchor.sheet == "s2"
+    assert chart.body.chart in model.charts and chart.anchor.sheet == "s2"
 
 
 def modify(model: WorkbookModel) -> WorkbookModel:

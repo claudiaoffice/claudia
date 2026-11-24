@@ -54,8 +54,11 @@ from claudia_odf_io import (
     decode_style_name,
     default_style_xml,
     frames_of,
+    graphic_styles,
     hidden_content,
     insert_elements,
+    is_written,
+    look_of,
     new_meta,
     new_package,
     set_text,
@@ -66,7 +69,7 @@ from claudia_odf_io import (
 from claudia_opc_io import parse_xml, read_parts, write_parts
 
 from ._annotations import Annotations, name_paragraphs
-from ._boxes import box_losses, boxes_of, is_written, look_of
+from ._boxes import box_losses, boxes_of
 from ._boxes import has_references as has_box_references
 from ._fonts import take_fonts
 from ._odt_annotations import annotate, bookmarks_around
@@ -92,7 +95,6 @@ from ._odt_pictures import (
     PictureWriter,
     file_pictures,
     frames_not_pictures,
-    graphic_styles,
     unheld_pictures,
 )
 from ._odt_references import bookmark_name, bookmarks_starting, mark_target, read_words, reference_item, swap_fields

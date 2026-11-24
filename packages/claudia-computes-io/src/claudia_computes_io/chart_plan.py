@@ -11,13 +11,11 @@ the charts of a workbook.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from dataclasses import dataclass, replace
 from typing import NamedTuple
 
 from claudia_computes import CellRef, ChartError, ChartSpec, RangeRef, SheetId, WorkbookModel
 from claudia_computes.limits import MAX_COLS, MAX_ROWS
-from claudia_computes.model import DEFAULT_COL_WIDTH, DEFAULT_ROW_HEIGHT
 
 
 class Series(NamedTuple):
@@ -132,30 +130,20 @@ def with_id(spec: ChartSpec, spec_id: str) -> ChartSpec:
 
 
 def chart_losses(model: WorkbookModel) -> list[str]:
-    """What a file cannot keep of the charts of ``model``, one detail for each: ``tab`` (a chart tab is a sheet with the
-    chart in it), ``source`` (a chart that follows a name has the cells the name is now), ``rotation`` (a chart in a
-    file stands upright) and ``empty`` (a chart that reads nothing is not written)."""
+    """What a file cannot keep of the charts of ``model``, one detail for each: ``source`` (a chart that follows a name
+    has the cells the name is now), ``rotation`` (a chart in a file stands upright) and ``empty`` (a chart that reads
+    nothing is not written)."""
     lost: list[str] = []
-    shown = [obj.body.diagram for obj in model.objects.values() if obj.body.diagram is not None]
-    tabs = [tab.spec_id for tab in model.charts.values()]
-    lost.extend("rotation" for obj in model.objects.values() if obj.body.diagram is not None and obj.body.rotation)
-    for is_tab, spec_ids in ((False, shown), (True, tabs)):
-        for spec_id in spec_ids:
-            spec = model.diagrams.get(spec_id)
-            if not isinstance(spec, ChartSpec) or model.chart_cells(spec_id) is None:
-                lost.append("empty")
-                continue
-            lost.extend(["tab"] if is_tab else [])
-            lost.extend(["source"] if spec.source else [])
+    shown = [obj.body.chart for obj in model.objects.values() if obj.body.chart is not None]
+    lost.extend("rotation" for obj in model.objects.values() if obj.body.chart is not None and obj.body.rotation)
+    for spec_id in shown:
+        spec = model.charts.get(spec_id)
+        if not isinstance(spec, ChartSpec) or model.chart_cells(spec_id) is None:
+            lost.append("empty")
+            continue
+        lost.extend(["source"] if spec.source else [])
     return lost
 
 
 def number_text(value: float) -> str:
     return repr(int(value)) if float(value).is_integer() else repr(float(value))
-
-
-def offset_of(widths: Mapping[int, float], heights: Mapping[int, float], row: int, col: int) -> tuple[float, float]:
-    """Where the corner of a cell is, in pixels from the corner of the sheet (the inverse of ``cell_at``)."""
-    left = sum(widths.get(column, DEFAULT_COL_WIDTH) for column in range(col))
-    top = sum(heights.get(line, DEFAULT_ROW_HEIGHT) for line in range(row))
-    return left, top

@@ -16,7 +16,8 @@ the series of a chart are the columns or the rows of its range is told by the ce
 from __future__ import annotations
 
 import re
-from collections.abc import Callable, Mapping, Sequence
+from collections import Counter
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from functools import cache
 from io import BytesIO
@@ -24,17 +25,20 @@ from xml.sax.saxutils import escape
 
 from lxml import etree
 
-from claudia_computes import MAX_OBJECTS_PER_SHEET, CellAnchor, ChartSpec, SheetId, WorkbookModel
+from claudia_computes import MAX_OBJECTS_PER_SHEET, ChartSpec, SheetId, WorkbookModel
 from claudia_computes.charts import BAR_COLORS
 from claudia_computes.limits import MAX_COLS, MAX_ROWS
 from claudia_computes.model import MIN_OBJECT_SIZE
 from claudia_computes.refs import column_index, column_name
 from claudia_core.assets import MAX_ALT_CHARS
 from claudia_odf_io import xml_safe
+from claudia_opc_io import EMU_PER_PIXEL
 
-from .chart_plan import Area, ReadChart, number_text, plan_from, plan_of, spec_of, with_id
+from ._charts import FileChart as SharedFileChart
+from ._placed import Pin, Placed
+from .chart_plan import Area, ReadChart, number_text, plan_from, plan_of, spec_of
 from .xlsx_layout import PIXELS_PER_CHARACTER, POINTS_PER_PIXEL
-from .xlsx_read import Package, parse_xml, related, relationships
+from .xlsx_read import Package, WorksheetPart, parse_xml, related, relationships
 
 NS = {
     "c": "http://schemas.openxmlformats.org/drawingml/2006/chart",
@@ -46,10 +50,6 @@ NS = {
 #: The media types of a chart and of a drawing.
 CHART_TYPE = "application/vnd.openxmlformats-officedocument.drawingml.chart+xml"
 DRAWING_TYPE = "application/vnd.openxmlformats-officedocument.drawing+xml"
-#: How big a chart that is a tab gets as a sheet's drawing, in pixels.
-TAB_SIZE = (720, 432)
-#: English Metric Units in a pixel (at 96 dots to the inch).
-EMU = 9525
 _DECLARATION = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'
 _ROOT = 'xmlns:c="{c}" xmlns:a="{a}" xmlns:r="{r}"'.format(**NS)
 _ANCHORS = ("oneCellAnchor", "twoCellAnchor")
@@ -295,20 +295,31 @@ def read_chart(content: bytes, sheet_ids: Mapping[str, SheetId]) -> ReadChart | 
 def pixels(emu: str | None) -> int:
     """A length in EMU as pixels."""
     try:
-        return round(int(emu or 0) / EMU)
+        return round(int(emu or 0) / EMU_PER_PIXEL)
     except ValueError:
         return 0
 
 
-def anchor_element(  # noqa: PLR0913 (an anchor is: which chart, where, how big, what it is called and says)
-    rid: str, number: int, name: str, row: int, col: int, width: int, height: int, description: str = ""
-) -> etree._Element:
-    """The ``oneCellAnchor`` of a chart: pinned to the corner of cell ``row``, ``col`` and ``width`` by ``height``
-    pixels, its chart the part ``rid`` points at."""
+def emu(pixels: float) -> int:
+    """A length in pixels as EMU."""
+    return round(pixels * EMU_PER_PIXEL)
+
+
+def pinned_at(pin: Pin, width: float, height: float) -> str:
+    """The ``xdr:from`` and ``xdr:ext`` of a ``oneCellAnchor``: its corner ``pin``, ``width`` by ``height`` pixels.
+    Every drawing of a sheet is placed this way, a chart and a picture alike (D1477)."""
+    return (
+        f"<xdr:from><xdr:col>{pin.col}</xdr:col><xdr:colOff>{emu(pin.dx)}</xdr:colOff><xdr:row>{pin.row}</xdr:row>"
+        f'<xdr:rowOff>{emu(pin.dy)}</xdr:rowOff></xdr:from><xdr:ext cx="{emu(width)}" cy="{emu(height)}"/>'
+    )
+
+
+def anchor_element(rid: str, number: int, name: str, placed: Placed) -> etree._Element:
+    """The ``oneCellAnchor`` of a chart where ``placed`` says, its chart the part ``rid`` points at, called by its
+    name (or else ``name``)."""
     xml = (
         f'<xdr:oneCellAnchor xmlns:xdr="{NS["xdr"]}" xmlns:a="{NS["a"]}" xmlns:r="{NS["r"]}" xmlns:c="{NS["c"]}">'
-        f"<xdr:from><xdr:col>{col}</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>{row}</xdr:row><xdr:rowOff>0</xdr:rowOff>"
-        f'</xdr:from><xdr:ext cx="{width * EMU}" cy="{height * EMU}"/>'
+        f"{pinned_at(placed.pin, placed.width, placed.height)}"
         f'<xdr:graphicFrame macro=""><xdr:nvGraphicFramePr><xdr:cNvPr/><xdr:cNvGraphicFramePr/>'
         '</xdr:nvGraphicFramePr><xdr:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/></xdr:xfrm>'
         f'<a:graphic><a:graphicData uri="{NS["c"]}"><c:chart r:id="{rid}"/></a:graphicData></a:graphic>'
@@ -318,9 +329,9 @@ def anchor_element(  # noqa: PLR0913 (an anchor is: which chart, where, how big,
     properties = anchor.find("xdr:graphicFrame/xdr:nvGraphicFramePr/xdr:cNvPr", NS)
     assert properties is not None
     properties.set("id", str(number))
-    properties.set("name", xml_safe(name))
-    if description:
-        properties.set("descr", xml_safe(description))
+    properties.set("name", xml_safe(placed.obj.body.name or name))
+    if placed.obj.body.description:
+        properties.set("descr", xml_safe(placed.obj.body.description))
     return anchor
 
 
@@ -329,32 +340,14 @@ def new_drawing() -> etree._Element:
     return etree.fromstring(f'<xdr:wsDr xmlns:xdr="{NS["xdr"]}" xmlns:a="{NS["a"]}"/>')
 
 
-@dataclass
-class FileChart:
-    """One chart of a sheet's drawing."""
+@dataclass(kw_only=True)
+class FileChart(SharedFileChart):
+    """One chart of a sheet's drawing: the part of the drawing, its anchor and the frame in it, and its own part."""
 
-    sheet: SheetId
-    #: The part of the drawing, its anchor and the frame in it, the part of the chart.
     drawing: str
     anchor: etree._Element
     frame: etree._Element
     part: str
-    #: The cell it is pinned to.
-    row: int
-    col: int
-    #: What the model makes of it, and the ids it has there; ``None`` for a chart the model does not hold.
-    held: ReadChart | None = None
-    width: int = 0
-    height: int = 0
-    description: str = ""
-    object_id: str = ""
-    spec_id: str = ""
-
-    @property
-    def spec(self) -> ChartSpec:
-        """The definition the model has of this chart (only for one the model holds)."""
-        assert self.held is not None
-        return with_id(self.held.spec, self.spec_id)
 
 
 def _cell_of(element: etree._Element | None) -> tuple[int, int, int, int] | None:
@@ -443,19 +436,48 @@ def _size_of(anchor: etree._Element, geometry: Callable[[], Geometry]) -> tuple[
     return round(width), round(height)
 
 
-def file_charts(
-    package: Package, drawings: Mapping[str, etree._Element] | None = None
-) -> tuple[list[FileChart], dict[str, etree._Element]]:
-    """Every chart of the sheets of a file, with the ones the model holds numbered in the order of the file: the
-    ``n``-th is the object ``o{n}`` showing the definition ``c{n}``. A ``twoCellAnchor`` is as big as the cells it
-    reaches, by the widths and heights the file gives them. The drawings are returned, parsed, for a patch to change;
-    ``drawings`` can hand over ones that were parsed already."""
-    sheet_ids = {sheet.name.casefold(): sheet.sheet_id for sheet in package.sheets}
-    roots: dict[str, etree._Element] = dict(drawings or {})
-    found: list[FileChart] = []
-    held = 0
+@dataclass(frozen=True)
+class DrawnAnchor:
+    """An anchor of the drawing of a sheet: the sheet, the drawing's part and the anchor, the cell its corner is in
+    and how far into it (pixels), how big it is (``None``: an anchor that does not say) and the sizes of the cells of
+    the sheet, read when they are asked for."""
+
+    sheet: WorksheetPart
+    drawing: str
+    anchor: etree._Element
+    row: int
+    col: int
+    down: int
+    across: int
+    size: tuple[int, int] | None
+    geometry: Callable[[], Geometry]
+    #: Its place among the anchors of the file (in a drawing, the later is in front).
+    order: int
+    #: The parts the drawing reaches, by the id of the relationship.
+    targets: Mapping[str, str]
+
+    def corner(self) -> tuple[float, float]:
+        """Where its corner is, in pixels from the corner of the sheet."""
+        layout = self.geometry()
+        x = _span(layout.widths, layout.width, 0, self.col) + self.across
+        return x, _span(layout.heights, layout.height, 0, self.row) + self.down
+
+
+def names_of(properties: etree._Element | None) -> tuple[str, str]:
+    """What a drawing's ``cNvPr`` says: its name, and what it says to someone who cannot see it (its description,
+    else its title)."""
+    if properties is None:
+        return "", ""
+    said = properties.get("descr") or properties.get("title") or ""
+    return (properties.get("name") or "").strip(), said.strip()
+
+
+def drawn_anchors(package: Package, roots: dict[str, etree._Element]) -> Iterator[DrawnAnchor]:
+    """Every anchor of the drawings of the sheets of a file, sheet by sheet, in the order of the file. A
+    ``twoCellAnchor`` is as big as the cells it reaches, by the widths and heights the file gives them. The drawings
+    are parsed into ``roots`` (by their part) unless they are there already."""
+    order = 0
     for sheet in package.sheets:
-        counted = 0
         geometry = cache(lambda sheet=sheet: geometry_of(package.parts[sheet.part]))
         for part in related(package.parts, sheet.part, "drawing"):
             if part not in package.parts:
@@ -463,98 +485,62 @@ def file_charts(
             root = roots.get(part)
             if root is None:
                 root = roots[part] = parse_xml(package.parts[part])
-            targets = {
-                rid: target for rid, kind, target in relationships(package.parts, part) if kind.endswith("/chart")
-            }
+            targets = {rid: target for rid, _, target in relationships(package.parts, part)}
             for anchor in root:
                 if not isinstance(anchor.tag, str) or etree.QName(anchor).localname not in _ANCHORS:
                     continue
-                frame = anchor.find("xdr:graphicFrame", NS)
-                reference = None if frame is None else frame.find(".//c:chart", NS)
-                target = None if reference is None else targets.get(reference.get(_q("r", "id"), ""))
                 start = _cell_of(anchor.find("xdr:from", NS))
-                if frame is None or target is None or start is None:
+                if start is None:
                     continue
-                chart = FileChart(sheet.sheet_id, part, anchor, frame, target, start[0], start[1])
-                data = package.parts.get(target)
-                read = None if data is None else read_chart(data, sheet_ids)
+                row, col, down, across = start
+                order += 1
                 size = _size_of(anchor, geometry)
-                properties = frame.find("xdr:nvGraphicFramePr/xdr:cNvPr", NS)
-                description = (
-                    "" if properties is None else (properties.get("descr") or properties.get("title") or "").strip()
-                )
-                if (
-                    read is not None
-                    and size is not None
-                    and min(size) >= MIN_OBJECT_SIZE
-                    and len(description) <= MAX_ALT_CHARS
-                    and counted < MAX_OBJECTS_PER_SHEET
-                ):
-                    held += 1
-                    counted += 1
-                    chart.held, (chart.width, chart.height), chart.description = read, size, description
-                    chart.object_id, chart.spec_id = f"o{held}", f"c{held}"
-                found.append(chart)
+                yield DrawnAnchor(sheet, part, anchor, row, col, down, across, size, geometry, order, targets)
+
+
+def file_charts(
+    package: Package, drawings: Mapping[str, etree._Element] | None = None
+) -> tuple[list[FileChart], dict[str, etree._Element]]:
+    """Every chart of the sheets of a file, with the ones the model holds numbered in the order of the file: the
+    ``n``-th is the object ``o{n}`` showing the definition ``c{n}``. The drawings are returned, parsed, for a patch to
+    change; ``drawings`` can hand over ones that were parsed already."""
+    sheet_ids = {sheet.name.casefold(): sheet.sheet_id for sheet in package.sheets}
+    roots: dict[str, etree._Element] = dict(drawings or {})
+    found: list[FileChart] = []
+    held = 0
+    counted: Counter[SheetId] = Counter()
+    for drawn in drawn_anchors(package, roots):
+        frame = drawn.anchor.find("xdr:graphicFrame", NS)
+        reference = None if frame is None else frame.find(".//c:chart", NS)
+        target = None if reference is None else drawn.targets.get(reference.get(_q("r", "id"), ""))
+        if frame is None or target is None:
+            continue
+        sheet = drawn.sheet.sheet_id
+        name, description = names_of(frame.find("xdr:nvGraphicFramePr/xdr:cNvPr", NS))
+        chart = FileChart(
+            sheet=sheet,
+            row=drawn.row,
+            col=drawn.col,
+            corner=drawn.corner,
+            order=drawn.order,
+            name=name,
+            drawing=drawn.drawing,
+            anchor=drawn.anchor,
+            frame=frame,
+            part=target,
+        )
+        data = package.parts.get(target)
+        read = None if data is None else read_chart(data, sheet_ids)
+        if (
+            read is not None
+            and drawn.size is not None
+            and min(drawn.size) >= MIN_OBJECT_SIZE
+            and len(description) <= MAX_ALT_CHARS
+            and counted[sheet] < MAX_OBJECTS_PER_SHEET
+        ):
+            held += 1
+            counted[sheet] += 1
+            chart.held, (chart.width, chart.height), chart.description = read, drawn.size, description
+            chart.object_id, chart.spec_id = f"o{held}", f"c{held}"
+        found.append(chart)
     return found, roots
-
-
-# ------------------------------------------------------------------------------------------------ what is written
-@dataclass(frozen=True)
-class WrittenChart:
-    """A chart ready for a file: the sheet it is on (by name), its part, where it is pinned, its size, what it says."""
-
-    sheet: str
-    xml: bytes
-    row: int
-    col: int
-    width: int
-    height: int
-    description: str
-    layer: int = 0  # its place in the stack of its sheet, which the pictures on it share
-
-
-def sheet_name(wanted: str, taken: set[str]) -> str:
-    """A name for a sheet that holds a chart tab: ``wanted`` as a sheet may be called in Excel (at most 31 characters,
-    none of ``[]*?:/\\``), and one no sheet in ``taken`` has; it is added to ``taken``."""
-    name = re.sub(r"[\[\]*?:/\\]", "-", xml_safe(wanted)).strip("' ")[:31] or "Chart"
-    candidate, number = name, 1
-    while candidate.casefold() in taken:
-        number += 1
-        suffix = f" ({number})"
-        candidate = name[: 31 - len(suffix)] + suffix
-    taken.add(candidate.casefold())
-    return candidate
-
-
-def written_charts(model: WorkbookModel, taken: set[str] | None = None) -> tuple[list[WrittenChart], list[str]]:
-    """The charts of ``model`` for a file: the diagrams floating on its sheets, each pinned where it is, and one sheet
-    for each chart tab (a file has a tab for a chart too, but one that holds no cells, which the model cannot read:
-    the tab is written as a sheet with the chart in it). Returns the charts and the names of the new sheets, in the
-    order of the tabs; ``taken`` has the names of the sheets (folded) and gets the new ones."""
-    names = taken if taken is not None else {sheet.name.casefold() for sheet in model.sheets.values()}
-    out: list[WrittenChart] = []
-    for sheet_id, sheet in model.sheets.items():
-        for layer, object_id in enumerate(model.stack_of(str(sheet_id))):
-            obj = model.get_object(object_id)
-            if obj.body.diagram is None:
-                continue
-            spec = model.diagrams[obj.body.diagram]
-            assert isinstance(spec, ChartSpec)
-            assert isinstance(obj.anchor, CellAnchor)  # (an object on a sheet hangs at a cell)
-            xml = chart_xml(model, spec)
-            if xml is not None:
-                body = obj.body
-                out.append(
-                    WrittenChart(
-                        sheet.name, xml, obj.anchor.row, obj.anchor.col, body.w, body.h, body.description, layer
-                    )
-                )
-    tabs: list[str] = []
-    for tab in model.charts.values():
-        tabbed = model.diagrams.get(tab.spec_id)
-        xml = chart_xml(model, tabbed) if isinstance(tabbed, ChartSpec) else None
-        if xml is not None:
-            name = sheet_name(tab.name, names)
-            tabs.append(name)
-            out.append(WrittenChart(name, xml, 0, 0, *TAB_SIZE, ""))
-    return out, tabs

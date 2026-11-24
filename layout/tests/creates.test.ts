@@ -135,7 +135,7 @@ describe('a presentation on pages', () => {
   })
 
   it('says what it cannot print and what is not hyphenated', () => {
-    const chart: SlideObject = { ...text('d1', 's1', ''), kind: 'diagram', paragraph: null }
+    const chart: SlideObject = { ...text('d1', 's1', ''), kind: 'chart', paragraph: null }
     const hyphenating: TextStyle[] = STYLES.map((s) => (s.id === 'body-text' ? { ...s, resolved: { ...s.resolved, hyphens: 'auto' } } : s))
     const doc = deck(1, SLIDE_PAGE, { styles: hyphenating, language: null })
     ;(doc.slides[0]!.objects as SlideObject[]).push(chart)

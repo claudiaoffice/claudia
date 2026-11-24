@@ -14,17 +14,16 @@ from __future__ import annotations
 import copy
 import re
 from collections.abc import Callable, Mapping, Sequence
-from dataclasses import replace
 
 from lxml import etree
 
 from claudia_computes import ChartSpec, SheetId, VisualObject, WorkbookModel
 from claudia_odf_io import NS, XmlPart, local_name, qname, update_manifest, xml_safe
 
-from .chart_plan import offset_of
+from ._charts import chart_change, definition_of
+from ._placed import placed_on_its_sheet
 from .ods_chart_files import FileChart
-from .ods_charts import Parts, a_chart, chart_document, new_shapes, tab_sheet
-from .ods_layout import text_of
+from .ods_charts import Parts, a_chart, chart_document, new_shapes, place_of
 
 #: What a table of a file holds that comes after its drawings.
 _AFTER_SHAPES = (
@@ -38,21 +37,6 @@ _AFTER_SHAPES = (
     "table-header-rows",
 )
 _FOLDER = re.compile(r"Object (\d+)/")
-
-
-def _definition(model: WorkbookModel, obj: VisualObject) -> ChartSpec:
-    assert obj.body.diagram is not None  # (the caller picks diagram objects)
-    spec = model.diagrams[obj.body.diagram]
-    assert isinstance(spec, ChartSpec)
-    return spec
-
-
-def _without_id(spec: ChartSpec) -> ChartSpec:
-    return replace(spec, id="")
-
-
-def _size(obj: VisualObject) -> tuple[int, int]:
-    return obj.body.w, obj.body.h
 
 
 class ChartPatch:
@@ -78,7 +62,6 @@ class ChartPatch:
         names = [int(found.group(1)) for name in parts if (found := _FOLDER.match(name))]
         self.number = max(names, default=0) + 1
         self.changed = False
-        self.tab_tables: list[etree._Element] = []
 
     # -- the run -----------------------------------------------------------------------------------------------
     def run(self) -> bool:
@@ -87,8 +70,8 @@ class ChartPatch:
         for chart in self.charts:
             if chart.sheet in gone:  # (the sheet is taken out of the file with its frames)
                 self._forget(chart)
-        old = {obj.id: obj for obj in self.baseline.objects.values() if obj.body.diagram is not None}
-        new = {obj.id: obj for obj in self.current.objects.values() if obj.body.diagram is not None}
+        old = {obj.id: obj for obj in self.baseline.objects.values() if obj.body.chart is not None}
+        new = {obj.id: obj for obj in self.current.objects.values() if obj.body.chart is not None}
         for object_id, was in old.items():
             file = self.by_object[object_id]
             if file.sheet in gone:
@@ -101,7 +84,6 @@ class ChartPatch:
         for object_id, now in new.items():
             if object_id not in old:
                 self._add(now)
-        self._add_tabs()
         if self.changed:
             update_manifest(self.parts, add=self.listed, remove=tuple(self.unlisted))
         return self.changed
@@ -151,30 +133,21 @@ class ChartPatch:
             else:
                 self.part.insert_before(first, made)
 
-    def _corner(self, sheet: SheetId, row: int, col: int) -> tuple[float, float]:
-        found = self.current.sheets[sheet]
-        return offset_of(found.col_widths, found.row_heights, row, col)
-
     # -- changes -----------------------------------------------------------------------------------------------
     def _remove(self, file: FileChart) -> None:
         self.part.remove(file.frame)
         self._forget(file)
 
     def _change(self, file: FileChart, was: VisualObject, now: VisualObject) -> None:
-        spec_was, spec_now = _definition(self.baseline, was), _definition(self.current, now)
-        redefined = _without_id(spec_was) != _without_id(spec_now)
-        needs_redraw = (
-            redefined
-            or _size(was) != _size(now)
-            or self.baseline.chart_figure(spec_was.id) != self.current.chart_figure(spec_now.id)
-        )
-        if needs_redraw and not self._redraw(file, (spec_was, was), (spec_now, now), drawn_differently=redefined):
+        change = chart_change(self.baseline, self.current, was, now)
+        before, after = (change.before, was), (change.after, now)
+        if change.redraw and not self._redraw(file, before, after, drawn_differently=change.redefined):
             return
-        size = {"svg:width": text_of(now.body.w), "svg:height": text_of(now.body.h)}
+        place = place_of(placed_on_its_sheet(self.current, now))
         if was.anchor != now.anchor:
-            self._relocate(file, now, size)
-        elif _size(was) != _size(now):
-            self.part.set_attributes(file.frame, size)
+            self._relocate(file, now, place)
+        elif (was.body.w, was.body.h) != (now.body.w, now.body.h):
+            self.part.set_attributes(file.frame, {key: place[key] for key in ("svg:width", "svg:height")})
             self.changed = True
         if was.body.description != now.body.description:
             self._describe(file.frame, now.body.description)
@@ -206,18 +179,16 @@ class ChartPatch:
         self.changed = True
         return True
 
-    def _relocate(self, file: FileChart, now: VisualObject, size: Mapping[str, str]) -> None:
+    def _relocate(self, file: FileChart, now: VisualObject, place: Mapping[str, str]) -> None:
         """The frame at another cell, or on another sheet: a frame in a cell of the file is taken out of it and a
         copy is put among the drawings of the sheet, at the corner of the cell."""
         sheet = now.anchor.sheet
-        x, y = self._corner(sheet, now.anchor.row, now.anchor.col)
-        where = {"svg:x": text_of(x), "svg:y": text_of(y)}
         shapes = file.frame.getparent()
         if file.sheet == sheet and shapes is not None and local_name(shapes.tag) == "shapes":
-            self.part.set_attributes(file.frame, {**where, **size})
+            self.part.set_attributes(file.frame, place)
         else:
             frame = copy.deepcopy(file.frame)
-            for key, value in {**where, **size}.items():
+            for key, value in place.items():
                 frame.set(qname(key), value)
             self.part.remove(file.frame)
             self._put(sheet, frame)
@@ -239,29 +210,10 @@ class ChartPatch:
 
     # -- additions ---------------------------------------------------------------------------------------------
     def _add(self, now: VisualObject) -> None:
-        spec = _definition(self.current, now)
-        corner = self._corner(now.anchor.sheet, now.anchor.row, now.anchor.col)
-        made = a_chart(self.current, spec, self.number, (now.body.w, now.body.h), corner, now.body.description)
+        spec = definition_of(self.current, now)
+        made = a_chart(self.current, spec, self.number, placed_on_its_sheet(self.current, now))
         if made is None:
             return  # (it shows nothing: counted among what could not be written)
         self.number += 1
         self._keep_parts(made.parts)
         self._put(now.anchor.sheet, made.frame)
-
-    def _add_tabs(self) -> None:
-        """The chart tabs that were added: a sheet each, after the last sheet of the workbook."""
-        taken = {sheet.name.casefold() for sheet in self.current.sheets.values()}
-        for tab_id in self.current.charts:
-            if tab_id in self.baseline.charts:
-                continue
-            made = tab_sheet(self.current, tab_id, self.number, taken)
-            if made is None:
-                continue
-            name, shapes, parts = made
-            self.number += 1
-            self._keep_parts(parts)
-            table = etree.Element(qname("table:table"), nsmap={p: u for p, u in NS.items() if p != "xml"})
-            table.set(qname("table:name"), name)
-            table.append(shapes)
-            etree.SubElement(etree.SubElement(table, qname("table:table-row")), qname("table:table-cell"))
-            self.tab_tables.append(table)

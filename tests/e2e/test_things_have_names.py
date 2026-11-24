@@ -122,12 +122,14 @@ def test_a_tag_finds_a_thing_that_is_gone(live: Live) -> None:
 # ------------------------------------------------------------------------------------------------------ computes
 def computes_things(session: Session) -> dict[str, str]:
     things = {}
-    for sheet in session.ok("sheets"):
-        things[sheet["id"]] = sheet["name"]
-        for obj in session.ok("objects", sheet=sheet["id"])["objects"]:
+    for tab in session.ok("tabs"):
+        things[tab["id"]] = tab["name"]
+        if tab["kind"] == "sheet":
+            shown = session.ok("objects", sheet=tab["id"])["objects"]
+        else:
+            shown = session.ok("slide", slide=tab["id"])["objects"]
+        for obj in shown:
             things[obj["id"]] = obj["name"]
-    for chart in session.ok("charts"):
-        things[chart["id"]] = chart["name"]
     for named in session.ok("names")["names"]:
         things[named["id"]] = named["name"]
     return things
@@ -139,16 +141,19 @@ def test_everything_added_to_a_workbook_has_a_name(live: Live) -> None:
         sheet = session.ok("sheets")[0]["id"]
         session.ok("set_cells", sheet=sheet, cells=[{"row": r, "col": 0, "input": str(r + 1)} for r in range(3)])
         costs = session.ok("add_sheet", name="Costs")["sheet"]
-        diagram = session.ok(
-            "define_diagram", definition={"kind": "bar", "range": cells(sheet, 3), "series_in": "columns"}
-        )["diagram"]
+        definition = {"kind": "bar", "range": cells(sheet, 3), "series_in": "columns"}
+        floating = {"sheet": sheet, "row": 4, "col": 2, "w": 200, "h": 120}
+        as_slide = session.ok(
+            "insert_chart", definition=definition, show_as="slide", place={"after": sheet}, name="Sales chart"
+        )
         added = [
-            session.ok("add_diagram_object", sheet=sheet, row=4, col=2, w=200, h=120, diagram=diagram)["object"],
+            session.ok("insert_chart", definition=definition, show_as="sheet", place=floating)["object"],
+            as_slide["object"],
+            as_slide["slide"],
             session.ok(
                 "add_image", sheet=sheet, row=0, col=4, w=40, h=20, data=tiny_png(), alt="a dot", source_name="dot.png"
             )["object"],
         ]
-        session.ok("add_chart", name="Sales chart", spec_id=diagram)
         session.ok("define_name", definition=rate(sheet))
         kind = renderable(session)
         if kind is not None:

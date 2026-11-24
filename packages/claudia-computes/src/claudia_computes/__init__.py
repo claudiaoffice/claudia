@@ -1,13 +1,14 @@
 """claudia-computes: the spreadsheet app, here only the mini-port that proves claudia-core.
 
 refs      CellRef / RangeRef / structural edits (from the demo)
-model     WorkbookModel, CellAnchor, SheetObject, Tab, Chart: sheets and slides in one order of tabs, typed cells
-commands  AddSheet, AddSlide, SetCells, Structure, ResizeLines, SetCellStyle, AddChart, their inverses (rest: core)
+model     WorkbookModel, CellAnchor, SheetObject, Tab: sheets and slides in one order of tabs, typed cells
+commands  AddSheet, AddSlide, SetCells, Structure, ResizeLines, SetCellStyle, their inverses (rest: core)
+chart_steps  NewChart, as_new_slide, on_slide, on_sheet, to_new_slide, removal: what a step with a chart takes along
 heavy     ApplyCalculated, in commands: a worker's result for a deferred heavy call (E4.4, D37, D1314)
 cellstyles CellStyles: a sheet's style ranges, in layers, for the box and the words of its cells (E6.13, D307)
 name_commands  DefineName, RemoveName, RenameName, RestoreNames: named ranges and tables (E6.5)
 names     NamedRange, Names: what a name is, where it is looked up, and which cells ``Sales[Amount]`` means
-charts    ChartSpec: what a diagram draws, computes' own ``DiagramDefinition`` (E6.6)
+charts    ChartSpec: what a chart draws, computes' own ``ChartDefinition`` (E6.6)
 region    CellRegion: moves with structural edits (core's ``ObjectSet``, re-exported, does not)
 styles    BUILTIN_STYLES: the styles a workbook starts with, as core StyleDef entries in the document's own book
 entry     parse_input: what typing into a cell means
@@ -20,11 +21,10 @@ search    scan and plan_replacement: search and replace in text, formulas and va
 A floating object is a shared ``ObjectBody`` plus a ``CellAnchor``: only the anchor is this app's. The anchor and
 the object's pixel size never change because of a row/column insert, delete or resize — only ``MoveObject`` (the
 person dragging it) moves it. Placing, stacking, moving, resizing, rotating, styling and the image, shape and
-diagram assets are ``claudia_core.objects``, shared with creates and composes.
+chart assets are ``claudia_core.objects``, shared with creates and composes.
 
-A chart (E6.6) may be shown as its own tab (``Chart``, ``AddChart``/``RemoveChart``, this app's own) or as a
-floating diagram object on a sheet (``ObjectBody.diagram``, shared) — the two may show the very same
-``ChartSpec``, exactly as two image objects may share one image asset.
+A chart (E6.6) is an object on a sheet or a slide (``ObjectBody.chart``, shared) with a ``ChartSpec`` of its own
+(E6.31, D1475); :mod:`~claudia_computes.chart_steps` makes, moves and removes it with what it takes along.
 
 functions.help  function_catalog/search_functions/get_function: every cell function, library and core alike, as one
 searchable list (E13.5's "Documentation" for computes).
@@ -35,8 +35,8 @@ searchable list (E13.5's "Documentation" for computes).
 # ``claudia_core`` (E10.16). They are re-exported here so that an app package names everything it can do.
 from claudia_core import (  # noqa: F401
     AddObject,
+    ChartDefinition,
     DescribeObject,
-    DiagramDefinition,
     MoveObject,
     ObjectBody,
     ObjectSet,
@@ -57,11 +57,9 @@ from ._version import __version__
 from .cellstyles import CELL_SLOTS, DEFAULT_CELL_STYLE, LAYERS, MAX_STYLE_RANGES, CellStyles, layer_of
 from .charts import CHART_KINDS, ChartError, ChartSpec
 from .commands import (
-    AddChart,
     AddSheet,
     AddSlide,
     ApplyCalculated,
-    RemoveChart,
     RemoveSheet,
     RemoveSlide,
     Resample,
@@ -76,7 +74,6 @@ from .commands import (
 from .entry import parse_input
 from .events import (
     CellStylesChanged,
-    ChartsChanged,
     NamesChanged,
     ObjectsChanged,
     PivotsChanged,
@@ -90,7 +87,6 @@ from .model import (
     MIN_OBJECT_SIZE,
     OBJECT_KINDS,
     CellAnchor,
-    Chart,
     Content,
     Sheet,
     SheetObject,
@@ -156,7 +152,6 @@ __all__ = [
     "OutcomeRow",
     "AltInput",
     "__version__",
-    "AddChart",
     "AddObject",
     "AddSheet",
     "AddSlide",
@@ -169,10 +164,8 @@ __all__ = [
     "CellRegion",
     "CellStyles",
     "CellStylesChanged",
-    "Chart",
     "CHART_KINDS",
     "ChartError",
-    "ChartsChanged",
     "ChartSpec",
     "column_name",
     "Content",
@@ -183,7 +176,7 @@ __all__ = [
     "DescribeObject",
     "DeleteCols",
     "DeleteRows",
-    "DiagramDefinition",
+    "ChartDefinition",
     "FunctionHelp",
     "InsertCols",
     "InsertRows",
@@ -208,7 +201,6 @@ __all__ = [
     "RangeRef",
     "RefParseError",
     "RandomChanged",
-    "RemoveChart",
     "RemoveName",
     "RenameName",
     "RestoreNames",

@@ -11,7 +11,7 @@ from __future__ import annotations
 from collections.abc import Collection
 
 from claudia_computes import WorkbookModel
-from claudia_odf_io import Loss, unwritten_changes
+from claudia_odf_io import Loss, is_written, unwritten_changes
 
 from ._named import unheld
 from ._pictures import PICTURE_KINDS
@@ -20,9 +20,10 @@ from ._pictures import PICTURE_KINDS
 #: definitions they name.
 ODS_WRITTEN: frozenset[str] = frozenset({"sheets", "styles", "palette", "number_formats", "names", "layout", "charts"})
 XLSX_WRITTEN: frozenset[str] = frozenset({"sheets", "styles", "palette", "number_formats", "names", "layout", "charts"})
-#: What only a fresh export writes: a pivot table and a picture are put into a file that is made, not yet into one that
-#: is kept (an edit of an import reports them until its patch learns them).
-FRESH_ONLY: frozenset[str] = frozenset({"pivots", "pictures"})
+#: What only a fresh export writes: a pivot table, a picture and a slide's text boxes and shapes are put into a file
+#: that is made, not yet into one that is kept (an edit of an import reports them until its patch learns them; a
+#: workbook with a slide is always written anew).
+FRESH_ONLY: frozenset[str] = frozenset({"pivots", "pictures", "boxes"})
 
 #: The code a facet is reported under, where an export reported it before the facets existed.
 KINDS: dict[str, str] = {
@@ -30,6 +31,7 @@ KINDS: dict[str, str] = {
     "charts": "chart",
     "objects": "object",
     "pictures": "object",
+    "boxes": "object",
     "names": "name",
     "pivots": "pivot-table",
 }
@@ -38,11 +40,14 @@ KINDS: dict[str, str] = {
 def facets(model: WorkbookModel) -> dict[str, object]:
     """A workbook as the facets a converter writes or leaves out, in the order losses are reported. The sheets count
     by their name, cells and looks; the widths and heights of rows and columns are a facet of their own (only a sheet
-    that has any), the charts shown (a tab, or a diagram floating on a sheet, each with its definition) are one facet
-    and the pictures (an image or a container, with the assets they show) another, and the other floating
-    objects (computes has no text boxes and shapes, D1232, but a model may hold them), with what they use, a last."""
+    that has any), the charts shown (each with its definition) are one facet
+    and the pictures (an image or a container, with the assets they show) another, the text boxes and shapes of the
+    slides (with the outlines they use) another (D1479), and the other floating objects (a sheet has no text boxes and
+    shapes, D1232, but a model may hold them), with what they use, a last."""
     data = model.serialize()
     sheets = data["sheets"]
+    boxes = {obj.id for obj in model.objects.values() if obj.anchor.holder in model.slides and is_written(obj)}
+    outlines = {model.get_object(each).body.shape for each in boxes}
     return {
         "sheets": {s["id"]: (s["name"], s["cells"], s["cell_styles"]) for s in sheets},
         "styles": data["styles"],
@@ -57,9 +62,17 @@ def facets(model: WorkbookModel) -> dict[str, object]:
             *(("image", each) for each in data["images"]),
             *(("container", each) for each in data["containers"]),
         ],
+        "boxes": [
+            *(each for each in data["objects"] if each["id"] in boxes),
+            *(("shape", each) for each in data["shapes"] if each["id"] in outlines),
+        ],
         "objects": [
-            *(each for each in data["objects"] if each["kind"] != "diagram" and each["kind"] not in PICTURE_KINDS),
-            *(("shape", each) for each in data["shapes"]),
+            *(
+                each
+                for each in data["objects"]
+                if each["kind"] != "chart" and each["kind"] not in PICTURE_KINDS and each["id"] not in boxes
+            ),
+            *(("shape", each) for each in data["shapes"] if each["id"] not in outlines),
         ],
     }
 
@@ -71,13 +84,13 @@ def _pivots(model: WorkbookModel) -> dict[str, object]:
 
 
 def _charts(data: dict) -> dict[str, object]:
-    """The charts a workbook shows, each with the definition it draws: a tab, or a diagram floating on a sheet."""
-    definitions = {each["id"]: each for each in data["diagrams"]}
-    shown: dict[str, object] = {f"tab {tab['id']}": (tab, definitions.get(tab["spec_id"])) for tab in data["charts"]}
-    for each in data["objects"]:
-        if each["kind"] == "diagram":
-            shown[f"object {each['id']}"] = (each, definitions.get(each["ref"]))
-    return shown
+    """The charts a workbook shows, each with the definition it draws: a chart on a sheet or a slide."""
+    definitions = {each["id"]: each for each in data["charts"]}
+    return {
+        f"object {each['id']}": (each, definitions.get(each["ref"]))
+        for each in data["objects"]
+        if each["kind"] == "chart"
+    }
 
 
 def workbook_unwritten_changes(

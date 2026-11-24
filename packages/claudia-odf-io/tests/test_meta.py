@@ -17,6 +17,7 @@ from claudia_odf_io import (
     read_manifest,
     update_meta,
     update_package_meta,
+    user_defined,
 )
 from claudia_opc_io import read_parts, write_parts
 
@@ -202,3 +203,21 @@ class TestUpdatePackageMeta:
         parts = read_parts(new_package("text", versioned, versioned))
         update_package_meta(parts, DocumentInfo(modified="2026-11-11T17:13:05Z"))
         assert problems(write_parts(parts)) == []
+
+
+# -- the user-defined properties (E6.31, D1478) ------------------------------------------------------------------------
+def test_a_new_file_says_its_user_defined_properties_as_text_and_reads_them_back():
+    data = new_meta(DocumentInfo(title="Budget"), {"Claudia slides": '{"slides": ["Q1 & <Q2>"]}'})
+    assert user_defined(data) == {"Claudia slides": '{"slides": ["Q1 & <Q2>"]}'}
+    found = etree.fromstring(data).find("office:meta/meta:user-defined", NS)
+    assert found.get(f"{{{NS['meta']}}}value-type") == "string"
+
+
+def test_only_text_properties_are_read_and_a_file_without_any_has_none():
+    data = a_meta(
+        '<meta:user-defined meta:name="a">1</meta:user-defined>'
+        '<meta:user-defined meta:name="n" meta:value-type="float">5</meta:user-defined>'
+    )
+    assert user_defined(data) == {"a": "1"}
+    assert user_defined(a_meta("")) == {}
+    assert user_defined(b"<not xml") == {}

@@ -89,6 +89,8 @@ const emit = defineEmits<{
   object: [selected: boolean]
   /** Name & describe… was chosen for the selected object: the workspace owns the dialog. */
   describe: []
+  /** "Move to Slide" was chosen for this chart (E6.31): the workspace moves it and shows the new slide. */
+  'move-to-slide': [object: string]
   /** The purpose chip on a table's header was pressed (mock 2): open the purpose menu for that column at this point. */
   tableMenu: [table: NameInfo, offset: number, x: number, y: number]
   /** A cell was right-clicked (and selected, unless it is in the selection already): open its menu at this point. */
@@ -641,6 +643,7 @@ const objectItems = computed<MenuItem[]>(() => {
       cut: () => void clip.cut(),
       copy: () => void clip.copy(),
       setSnap: () => undefined, // computes has no grid for objects
+      moveToSlide: () => (close(), emit('move-to-slide', o.id)),
     },
     { edit: o.kind === 'container' }, // a picture and a chart have no words; a container is written in
   )
@@ -1344,7 +1347,7 @@ defineExpose({
             />
             <ContainerFace v-else :src="faceOf(o)!.src" :status="faceOf(o)!.status" :label="faceOf(o)!.label" />
           </template>
-          <ChartView v-else-if="o.kind === 'diagram' && o.ref" :session="session" :diagram-id="o.ref" :width="o.w" :height="o.h" />
+          <ChartView v-else-if="o.kind === 'chart' && o.ref" :session="session" :chart-id="o.ref" :width="o.w" :height="o.h" />
           <img v-else-if="pictureSrc(o)" :src="pictureSrc(o)!" :alt="''" draggable="false" >
         </div>
 

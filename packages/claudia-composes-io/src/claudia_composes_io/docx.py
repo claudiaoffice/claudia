@@ -41,11 +41,11 @@ from claudia_composes import (
     builtin_styles,
 )
 from claudia_core import MAX_LIST_LEVEL, ListItem, Rasterise, StyleBook, TableDef, VisualObject, plain, primitive
-from claudia_odf_io import DocumentInfo, Loss, LossLog, stamp_office_meta
+from claudia_odf_io import DocumentInfo, Loss, LossLog, is_written, look_of, stamp_office_meta
 from claudia_opc_io import owns, reconcile
 
 from ._annotations import Annotations, name_paragraphs, word_bookmark_names
-from ._boxes import box_losses, is_written, look_of
+from ._boxes import box_losses
 from ._boxes import has_references as has_box_references
 from ._docx_boxes import BoxEdits, BoxWriter, FileBox, file_boxes, restyled_words
 from ._docx_comments import write_comment

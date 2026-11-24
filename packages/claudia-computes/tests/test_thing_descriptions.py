@@ -1,4 +1,4 @@
-"""A sheet, a chart tab and a named range can be described (D1317, D1318): a plain string beside the name, by id."""
+"""A sheet and a named range can be described (D1317, D1318): a plain string beside the name, by id."""
 
 import pytest
 from names_helpers import name

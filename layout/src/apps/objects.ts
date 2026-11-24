@@ -47,7 +47,7 @@ export interface PageSetupData {
 
 /** The kinds of floating object, as `claudia_core.OBJECT_KINDS` names them (`tests/test_object_kinds_agree.py` keeps the
  *  two lists the same). A `container` shows the picture made from its text, once somebody drew one. */
-export type ObjectKind = 'text' | 'shape' | 'image' | 'diagram' | 'container' | 'table'
+export type ObjectKind = 'text' | 'shape' | 'image' | 'chart' | 'container' | 'table'
 
 /** A floating object, the shape all three apps share (without its app's anchor). Lengths in CSS pixels. */
 export interface VisualObject {
@@ -291,8 +291,8 @@ export interface ObjectContext {
   notes: Note[]
   embedded: Map<string, Uint8Array>
   paragraphOptions: ParagraphOptions
-  /** what a diagram is called in the note when it cannot be printed */
-  diagramNote: string
+  /** what a chart is called in the note when it cannot be printed */
+  chartNote: string
 }
 
 const parsed = new WeakMap<ImageInfo, SvgDocument>()
@@ -392,7 +392,7 @@ export function drawObject(o: VisualObject, r: Rect, ctx: ObjectContext): GroupI
     }
     return group([{ kind: 'image', image: info.id, ...r }])
   }
-  notes.push({ kind: 'object', object: o.id, reason: ctx.diagramNote })
+  notes.push({ kind: 'object', object: o.id, reason: ctx.chartNote })
   return null
 }
 

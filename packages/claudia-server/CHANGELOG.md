@@ -5,6 +5,27 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+### Added
+- A chart becomes a slide (E6.31 step 3, D1475): computes' `insert_chart(definition, show_as, place, name?)` makes a
+  chart with its definition in one step, as a new slide after a tab (`slide`, `{after}`), on a slide (`on_slide`,
+  `{slide}`) or floating on a sheet (`sheet`, `{sheet, row, col, w, h}`); `move_to_slide(object)` puts a chart of a
+  sheet on a new slide after it. A new slide is the next free "Slide n" in the language of the request. computes'
+  `remove_object` takes a chart's definition and a slide left empty along. `free_name(kind)` (every app) is the next
+  free generic name of a kind, in the language of the request.
+
+### Removed
+- **Breaking** — the chart tabs (E6.31 step 3, D1475): computes' `charts` as the list of the tabs, `add_chart`,
+  `remove_chart`, `add_diagram_object` and the event `charts`; a chart is made with `insert_chart`, and `charts` lists
+  the charts' definitions now (D1476).
+
+### Changed
+- computes' `export_office` writes a slide as a tab of its own with its objects where they were, and no longer reports
+  `slide` among the losses (E6.31 step 5, D1477 to D1479; `claudia-computes-io`).
+- **Breaking** — the chart names of E1.18 (D1476): computes' `diagrams`, `define_diagram`, `update_diagram` and
+  `forget_diagram` are `charts`, `define_chart`, `update_chart` and `forget_chart`; `chart_figure(chart)`; the id of a
+  chart's definition is answered as `chart` (by `define_chart` and `insert_chart`), the event of a definition is
+  `chart`, and the kind of a chart object is `chart` everywhere, `free_name("chart")` included.
+
 ## [0.44.0] - 2026-11-24
 
 Skills and persona per app (E7.2, D1560–D1563), and what came with it.

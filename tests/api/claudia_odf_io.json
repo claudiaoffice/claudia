@@ -1,5 +1,21 @@
 {
  "version": "0.10.1",
+ "BoxLook": {
+  "class": [
+   "object"
+  ],
+  "init": "(fill: 'tuple[int, int, int] | None', line: 'tuple[int, int, int] | None', width: 'int') -> None",
+  "methods": {
+   "matches": "(self, other: 'BoxLook') -> 'bool'"
+  },
+  "properties": []
+ },
+ "CM_PER_INCH": {
+  "value": "2.54"
+ },
+ "CM_PER_PIXEL": {
+  "value": "0.026458333333333334"
+ },
  "DocumentInfo": {
   "class": [
    "object"
@@ -48,6 +64,9 @@
  "NS": {
   "value": "{'office': 'urn:oasis:names:tc:opendocument:xmlns:office:1.0', 'style': 'urn:oasis:names:tc:opendocument:xmlns:style:1.0', 'text': 'urn:oasis:names:tc:opendocument:xmlns:text:1.0', 'table': 'urn:oasis:names:tc:opendocument:xmlns:table:1.0', 'draw': 'urn:oasis:names:tc:opendocument:xmlns:drawing:1.0', 'presentation': 'urn:oasis:names:tc:opendocument:xmlns:presentation:1.0', 'chart': 'urn:oasis:names:tc:opendocument:xmlns:chart:1.0', 'fo': 'urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0', 'svg': 'urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0', 'number': 'urn:oasis:names:tc:opendocument:xmlns:datastyle:1.0', 'meta': 'urn:oasis:names:tc:opendocument:xmlns:meta:1.0', 'manifest': 'urn:oasis:names:tc:opendocument:xmlns:manifest:1.0', 'xlink': 'http://www.w3.org/1999/xlink', 'anim': 'urn:oasis:names:tc:opendocument:xmlns:animation:1.0', 'smil': 'urn:oasis:names:tc:opendocument:xmlns:smil-compatible:1.0', 'calcext': 'urn:org:documentfoundation:names:experimental:calc:xmlns:calcext:1.0', 'of': 'urn:oasis:names:tc:opendocument:xmlns:of:1.2', 'dc': 'http://purl.org/dc/elements/1.1/', 'xml': 'http://www.w3.org/XML/1998/namespace'}"
  },
+ "OUTLINES": {
+  "value": "{'ellipse': 'circle', 'rectangle': 'rectangle', 'isosceles-triangle': 'triangle', 'ooxml-ellipse': 'circle', 'ooxml-rect': 'rectangle', 'ooxml-triangle': 'triangle', 'ooxml-isosceles-triangle': 'triangle'}"
+ },
  "OUTLINE_LEVEL": {
   "value": "'{urn:oasis:names:tc:opendocument:xmlns:text:1.0}outline-level-style'"
  },
@@ -64,6 +83,14 @@
    "object"
   ],
   "init": "(start: 'int', end: 'int', open_end: 'int', close: 'int') -> None",
+  "methods": {},
+  "properties": []
+ },
+ "Styled": {
+  "class": [
+   "Protocol"
+  ],
+  "init": "(*args, **kwargs)",
   "methods": {},
   "properties": []
  },
@@ -92,8 +119,17 @@
  "angle_of": {
   "function": "(transform: 'str') -> 'float | None'"
  },
+ "authored": {
+  "function": "(boxes: 'Iterable[VisualObject]') -> 'int'"
+ },
+ "box_element": {
+  "function": "(body: 'ObjectBody', style: 'str', name: 'str', words: 'etree._Element | None') -> 'etree._Element'"
+ },
  "decode_style_name": {
   "function": "(name: 'str') -> 'str'"
+ },
+ "default_name": {
+  "function": "(body: 'ObjectBody', number: 'int') -> 'str'"
  },
  "default_style_xml": {
   "function": "(language: 'str | None') -> 'str'"
@@ -110,6 +146,9 @@
  "encode_style_name": {
   "function": "(display_name: 'str') -> 'str'"
  },
+ "fill_and_line": {
+  "function": "(look: 'BoxLook') -> 'str'"
+ },
  "font_faces": {
   "function": "(*roots: 'etree._Element | None') -> 'dict[str, str]'"
  },
@@ -118,6 +157,21 @@
  },
  "frames_of": {
   "function": "(paragraph: 'etree._Element') -> 'list[etree._Element]'"
+ },
+ "graphic_properties": {
+  "function": "(kind: 'str', look: 'BoxLook') -> 'str'"
+ },
+ "graphic_styles": {
+  "function": "(*roots: 'etree._Element | None') -> 'dict[str, etree._Element]'"
+ },
+ "held_box": {
+  "function": "(element: 'etree._Element', graphics: 'Mapping[str, etree._Element]', words_style: 'Callable[[etree._Element, str | None], str]', *, plain_words: 'str') -> 'tuple[ObjectBody, BoxLook] | None'"
+ },
+ "held_frame": {
+  "function": "(frame: 'etree._Element', graphics: 'Mapping[str, etree._Element]', parts: 'Mapping[str, bytes]') -> 'tuple[ImageAsset, tuple[int, int], int] | None'"
+ },
+ "hex_of": {
+  "function": "(rgb: 'tuple[int, int, int]') -> 'str'"
  },
  "hidden_content": {
   "function": "(paragraph: 'etree._Element') -> 'list[str]'"
@@ -128,11 +182,17 @@
  "insert_elements": {
   "function": "(paragraph: 'etree._Element', placements: 'Sequence[tuple[int, etree._Element]]') -> 'None'"
  },
+ "is_written": {
+  "function": "(obj: 'VisualObject') -> 'bool'"
+ },
  "language_from_parts": {
   "function": "(language: 'str | None', script: 'str | None', country: 'str | None') -> 'str | None'"
  },
  "level_style": {
   "function": "(kind: 'str', level: 'LevelFormat', number: 'int', inner: 'str' = '', start: 'int | None' = None) -> 'str'"
+ },
+ "line_points": {
+  "function": "(value: 'str | None') -> 'float'"
  },
  "list_style": {
   "function": "(definition: 'ListDef', scheme: 'Scheme', name: 'str') -> 'bytes'"
@@ -140,11 +200,14 @@
  "local_name": {
   "function": "(tag: 'str') -> 'str'"
  },
+ "look_of": {
+  "function": "(model: 'Styled', body: 'ObjectBody') -> 'BoxLook'"
+ },
  "name_of": {
   "function": "(frame: 'etree._Element') -> 'str'"
  },
  "new_meta": {
-  "function": "(info: 'DocumentInfo') -> 'bytes'"
+  "function": "(info: 'DocumentInfo', properties: 'Mapping[str, str] | None' = None) -> 'bytes'"
  },
  "new_package": {
   "function": "(kind: 'str', content: 'bytes', styles: 'bytes', *, meta: 'bytes | None' = None, extra: 'Mapping[str, tuple[bytes | None, str]] | None' = None) -> 'bytes'"
@@ -152,8 +215,14 @@
  "odf_date": {
   "function": "(moment: 'str') -> 'str'"
  },
+ "odf_properties": {
+  "function": "(element: 'etree._Element', graphics: 'Mapping[str, etree._Element]') -> 'dict[str, str]'"
+ },
  "offset_of": {
   "function": "(paragraph: 'etree._Element', element: 'etree._Element') -> 'int | None'"
+ },
+ "outline_element": {
+  "function": "(shape: 'str | None') -> 'etree._Element'"
  },
  "parts_of_language": {
   "function": "(tag: 'str | None') -> 'tuple[str, str | None, str | None]'"
@@ -164,8 +233,14 @@
  "picture_of": {
   "function": "(frame: 'etree._Element', graphics: 'Mapping[str, etree._Element]', parts: 'Mapping[str, bytes]') -> 'ImageAsset | None'"
  },
+ "pixels": {
+  "function": "(value: 'str | None') -> 'float | None'"
+ },
  "problems": {
   "function": "(data: 'bytes') -> 'list[str]'"
+ },
+ "put_words": {
+  "function": "(element: 'etree._Element', paragraphs: 'Iterable[etree._Element]') -> 'None'"
  },
  "qname": {
   "function": "(prefixed: 'str') -> 'str'"
@@ -211,6 +286,9 @@
  },
  "update_package_meta": {
   "function": "(parts: 'dict[str, bytes]', info: 'DocumentInfo') -> 'None'"
+ },
+ "user_defined": {
+  "function": "(meta_xml: 'bytes') -> 'dict[str, str]'"
  },
  "xml_safe": {
   "function": "(text: 'str') -> 'str'"

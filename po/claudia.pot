@@ -265,7 +265,7 @@ msgstr ""
 msgid "A change here changes every use of “{name}”"
 msgstr ""
 
-#: packages/claudia-core/src/claudia_core/objects.py:86
+#: packages/claudia-core/src/claudia_core/objects.py:87
 msgid "A chart does not turn"
 msgstr ""
 
@@ -357,7 +357,7 @@ msgstr ""
 msgid "A name like this exists already and will point here."
 msgstr ""
 
-#: packages/claudia-computes/src/claudia_computes/model.py:919
+#: packages/claudia-computes/src/claudia_computes/model.py:854
 msgid "A named range is renamed in the list of names, which also changes the formulas that use it"
 msgstr ""
 
@@ -425,6 +425,10 @@ msgstr ""
 msgid "A scheme's indent is from 0 to {largest:g} em, got {value!r}"
 msgstr ""
 
+#: web/app/components/SheetChartInsertDialog.vue:153
+msgid "A slide"
+msgstr ""
+
 #: web/app/lib/search.ts:505
 msgid "A square bracket is never closed."
 msgstr ""
@@ -437,15 +441,11 @@ msgstr ""
 msgid "A style name is one line of 1 to {limit} characters, got {name!r}"
 msgstr ""
 
-#: web/app/components/SheetChartInsertDialog.vue:154
-msgid "A tab"
-msgstr ""
-
 #: web/app/components/SheetChartInsertDialog.vue:173
 msgid "A table always has its header row."
 msgstr ""
 
-#: packages/claudia-core/src/claudia_core/objects.py:86
+#: packages/claudia-core/src/claudia_core/objects.py:87
 msgid "A table does not turn"
 msgstr ""
 
@@ -569,7 +569,7 @@ msgstr ""
 msgid "Add 1 font"
 msgstr ""
 
-#: web/app/components/Workspace.vue:1343
+#: web/app/components/Workspace.vue:1330
 msgid "Add Sheet"
 msgstr ""
 
@@ -681,7 +681,7 @@ msgstr ""
 msgid "Agenda"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:519
+#: web/app/components/SidePanel.vue:518
 msgid "Agree"
 msgstr ""
 
@@ -897,7 +897,7 @@ msgstr ""
 msgid "Arrows"
 msgstr ""
 
-#: web/app/components/Workspace.vue:1183
+#: web/app/components/Workspace.vue:1173
 msgid "Arrows, Tab, Enter"
 msgstr ""
 
@@ -985,7 +985,7 @@ msgstr ""
 msgid "Average of {field}"
 msgstr ""
 
-#: web/app/components/FooterBar.vue:74
+#: web/app/components/FooterBar.vue:54
 msgid "Average {value}"
 msgstr ""
 
@@ -993,7 +993,7 @@ msgstr ""
 msgid "Back"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:528
+#: web/app/components/SidePanel.vue:527
 msgid "Back to now"
 msgstr ""
 
@@ -1037,15 +1037,15 @@ msgstr ""
 msgid "Banded rows"
 msgstr ""
 
-#: web/app/components/SheetChartInsertDialog.vue:125
+#: web/app/components/SheetChartInsertDialog.vue:123
 msgid "Bar"
 msgstr ""
 
-#: web/app/components/SheetChartInsertDialog.vue:144
+#: web/app/components/SheetChartInsertDialog.vue:143
 msgid "Bar chart of {name}: it follows the table as rows are added, and as a query result changes size."
 msgstr ""
 
-#: web/app/components/SheetChartInsertDialog.vue:148
+#: web/app/components/SheetChartInsertDialog.vue:147
 msgid "Bar chart over {rows} rows × {columns} columns."
 msgstr ""
 
@@ -1097,7 +1097,7 @@ msgstr ""
 msgid "Box {box} · Words {words} — the two slots now differ"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:604
+#: web/app/components/SidePanel.vue:603
 msgid "Branches"
 msgstr ""
 
@@ -1153,11 +1153,11 @@ msgstr ""
 msgid "Calculation"
 msgstr ""
 
-#: web/app/components/SheetGrid.vue:295
+#: web/app/components/SheetGrid.vue:297
 msgid "Calculation step"
 msgstr ""
 
-#: web/app/components/AcceptOwnershipDialog.vue:34 web/app/components/AddFontsDialog.vue:181 web/app/components/AdminAccessDocuments.vue:229 web/app/components/AdminAccessDocuments.vue:245 web/app/components/AdminFonts.vue:211 web/app/components/AdminPageFooter.vue:21 web/app/components/AiConsentDialog.vue:65 web/app/components/AssignOwnerDialog.vue:57 web/app/components/ChangePasswordDialog.vue:44 web/app/components/DeleteDocumentDialog.vue:32 web/app/components/DeleteStyleDialog.vue:134 web/app/components/DetailsDialog.vue:48 web/app/components/DownloadDialog.vue:67 web/app/components/ExportFormatDialog.vue:131 web/app/components/ExportFormatDialog.vue:132 web/app/components/ImageImportDialog.vue:103 web/app/components/ImportDialog.vue:192 web/app/components/LeaveDocumentDialog.vue:32 web/app/components/LineSizeDialog.vue:120 web/app/components/NameAndDescribeDialog.vue:69 web/app/components/NameDefinePopover.vue:68 web/app/components/NamesDialog.vue:89 web/app/components/OpenDialog.vue:854 web/app/components/OpenDialog.vue:885 web/app/components/PivotCreateDialog.vue:108 web/app/components/PivotDeleteDialog.vue:30 web/app/components/PivotMembersDialog.vue:72 web/app/components/PivotValueDialog.vue:68 web/app/components/PromptDialog.vue:30 web/app/components/RedactionDialog.vue:304 web/app/components/RotatePopover.vue:108 web/app/components/ShareDialog.vue:89 web/app/components/ShareDialog.vue:99 web/app/components/SheetChartInsertDialog.vue:191 web/app/components/SidePanel.vue:552 web/app/components/SqlEditor.vue:164 web/app/components/TableDialog.vue:44
+#: web/app/components/AcceptOwnershipDialog.vue:34 web/app/components/AddFontsDialog.vue:181 web/app/components/AdminAccessDocuments.vue:229 web/app/components/AdminAccessDocuments.vue:245 web/app/components/AdminFonts.vue:211 web/app/components/AdminPageFooter.vue:21 web/app/components/AiConsentDialog.vue:65 web/app/components/AssignOwnerDialog.vue:57 web/app/components/ChangePasswordDialog.vue:44 web/app/components/DeleteDocumentDialog.vue:32 web/app/components/DeleteStyleDialog.vue:134 web/app/components/DetailsDialog.vue:48 web/app/components/DownloadDialog.vue:67 web/app/components/ExportFormatDialog.vue:131 web/app/components/ExportFormatDialog.vue:132 web/app/components/ImageImportDialog.vue:103 web/app/components/ImportDialog.vue:192 web/app/components/LeaveDocumentDialog.vue:32 web/app/components/LineSizeDialog.vue:120 web/app/components/NameAndDescribeDialog.vue:69 web/app/components/NameDefinePopover.vue:68 web/app/components/NamesDialog.vue:89 web/app/components/OpenDialog.vue:854 web/app/components/OpenDialog.vue:885 web/app/components/PivotCreateDialog.vue:108 web/app/components/PivotDeleteDialog.vue:30 web/app/components/PivotMembersDialog.vue:72 web/app/components/PivotValueDialog.vue:68 web/app/components/PromptDialog.vue:30 web/app/components/RedactionDialog.vue:304 web/app/components/RotatePopover.vue:108 web/app/components/ShareDialog.vue:89 web/app/components/ShareDialog.vue:99 web/app/components/SheetChartInsertDialog.vue:190 web/app/components/SidePanel.vue:551 web/app/components/SqlEditor.vue:164 web/app/components/TableDialog.vue:44
 msgid "Cancel"
 msgstr ""
 
@@ -1165,7 +1165,7 @@ msgstr ""
 msgid "Cell"
 msgstr ""
 
-#: web/app/components/Workspace.vue:1341
+#: web/app/components/Workspace.vue:1328
 msgid "Cell menu"
 msgstr ""
 
@@ -1181,7 +1181,7 @@ msgstr ""
 msgid "Cells are"
 msgstr ""
 
-#: web/app/components/Workspace.vue:927
+#: web/app/components/Workspace.vue:910
 msgid "Cells hold no lists"
 msgstr ""
 
@@ -1257,19 +1257,15 @@ msgstr ""
 msgid "Characters from the middle of the text: where to start (from 1) and how many."
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/thing_names.py:36 web/app/components/SheetChartInsertDialog.vue:124 web/app/components/SheetChartInsertDialog.vue:30 web/app/components/SidePanel.vue:286 web/app/components/SidePanel.vue:291 web/app/lib/descriptions.ts:41
+#: packages/claudia-server/src/claudia_server/thing_names.py:36 web/app/components/SheetChartInsertDialog.vue:122 web/app/components/SheetChartInsertDialog.vue:34 web/app/components/SidePanel.vue:286 web/app/lib/descriptions.ts:41
 msgid "Chart"
 msgstr ""
 
-#: web/app/components/Workspace.vue:1279
-msgid "Chart: {name}"
-msgstr ""
-
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:1100
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:1090
 msgid "Chart…"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:106 web/app/components/SidePanel.vue:625
+#: web/app/components/SidePanel.vue:106 web/app/components/SidePanel.vue:624
 msgid "Chat"
 msgstr ""
 
@@ -1357,11 +1353,11 @@ msgstr ""
 msgid "Clear"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:953
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:936
 msgid "Clear Cell Style"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:1125
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:1115
 msgid "Clear Cells"
 msgstr ""
 
@@ -1381,7 +1377,7 @@ msgstr ""
 msgid "Click"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:711 web/app/components/SidePanel.vue:712
+#: web/app/components/SidePanel.vue:710 web/app/components/SidePanel.vue:711
 msgid "Click something in the document to write a tag for it."
 msgstr ""
 
@@ -1457,7 +1453,7 @@ msgstr ""
 msgid "Colours…"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/TableOptionsDialog.vue:79 web/app/components/TableOptionsDialog.vue:81 web/app/components/Workspace.vue:1116 web/app/lib/table-menu.ts:93
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/TableOptionsDialog.vue:79 web/app/components/TableOptionsDialog.vue:81 web/app/components/Workspace.vue:1106 web/app/lib/table-menu.ts:93
 msgid "Column"
 msgstr ""
 
@@ -1553,7 +1549,7 @@ msgstr ""
 msgid "Copied"
 msgstr ""
 
-#: web/app/components/Workspace.vue:481
+#: web/app/components/Workspace.vue:469
 msgid "Copied the result as values."
 msgstr ""
 
@@ -1565,7 +1561,7 @@ msgstr ""
 msgid "Copies, downloads, exports and backups made before keep it."
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/RecoveryKeyDialog.vue:48 web/app/lib/document-menus.ts:137 web/app/lib/object-menu.ts:85
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/RecoveryKeyDialog.vue:48 web/app/lib/document-menus.ts:137 web/app/lib/object-menu.ts:89
 msgid "Copy"
 msgstr ""
 
@@ -1601,10 +1597,6 @@ msgstr ""
 msgid "Could not draw it: {message}"
 msgstr ""
 
-#: web/app/components/SheetChartInsertDialog.vue:116
-msgid "Could not place the chart."
-msgstr ""
-
 #: web/app/components/AddFontsDialog.vue:61 web/app/components/AdminAccessDocuments.vue:116 web/app/components/AdminAccessDocuments.vue:144 web/app/components/AdminAccessDocuments.vue:161 web/app/components/AdminAccessDocuments.vue:177 web/app/components/AdminAccessDocuments.vue:197 web/app/components/AdminAccessDocuments.vue:42 web/app/components/AdminAccessDocuments.vue:54 web/app/components/AdminAccessDocuments.vue:78 web/app/components/AdminAccessDocuments.vue:93 web/app/components/AdminAi.vue:100 web/app/components/AdminAi.vue:68 web/app/components/AdminFonts.vue:78 web/app/components/AdminSecurity.vue:54 web/app/components/AdminSecurity.vue:80 web/app/components/AdminTypesetting.vue:32 web/app/components/AdminTypesetting.vue:49 web/app/lib/admin-session.ts:119 web/app/lib/admin-session.ts:59
 msgid "Could not reach the server."
 msgstr ""
@@ -1625,7 +1617,7 @@ msgstr ""
 msgid "Count of {field}"
 msgstr ""
 
-#: web/app/components/FooterBar.vue:76
+#: web/app/components/FooterBar.vue:56
 msgid "Count {value}"
 msgstr ""
 
@@ -1657,15 +1649,15 @@ msgstr ""
 msgid "Ctrl + Backspace / Delete"
 msgstr ""
 
-#: web/app/components/SlideWorkspace.vue:453 web/app/components/TextWorkspace.vue:665 web/app/components/Workspace.vue:1189
+#: web/app/components/SlideWorkspace.vue:453 web/app/components/TextWorkspace.vue:665 web/app/components/Workspace.vue:1179
 msgid "Ctrl + C / X / V"
 msgstr ""
 
-#: web/app/components/Workspace.vue:1186
+#: web/app/components/Workspace.vue:1176
 msgid "Ctrl + arrows"
 msgstr ""
 
-#: web/app/lib/object-menu.ts:85
+#: web/app/lib/object-menu.ts:89
 msgid "Ctrl+C"
 msgstr ""
 
@@ -1677,7 +1669,7 @@ msgstr ""
 msgid "Ctrl+Enter draws it, Escape leaves it as it was"
 msgstr ""
 
-#: web/app/lib/object-menu.ts:85
+#: web/app/lib/object-menu.ts:89
 msgid "Ctrl+X"
 msgstr ""
 
@@ -1697,7 +1689,7 @@ msgstr ""
 msgid "Custom…"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:138 web/app/lib/object-menu.ts:85
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:138 web/app/lib/object-menu.ts:89
 msgid "Cut"
 msgstr ""
 
@@ -1717,11 +1709,11 @@ msgstr ""
 msgid "Data"
 msgstr ""
 
-#: web/app/components/SheetChartInsertDialog.vue:130
+#: web/app/components/SheetChartInsertDialog.vue:128
 msgid "Data from"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:520
+#: web/app/components/SidePanel.vue:519
 msgid "Decline"
 msgstr ""
 
@@ -1737,11 +1729,11 @@ msgstr ""
 msgid "Define"
 msgstr ""
 
-#: web/app/lib/object-menu.ts:91 web/app/lib/table-menu.ts:122
+#: web/app/lib/object-menu.ts:95 web/app/lib/table-menu.ts:122
 msgid "Del"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/NamesDialog.vue:95 web/app/components/PivotDeleteDialog.vue:31 web/app/components/SlideWorkspace.vue:395 web/app/components/Workspace.vue:1111 web/app/components/Workspace.vue:1121 web/app/lib/object-menu.ts:91 web/app/lib/table-menu.ts:89 web/app/lib/table-menu.ts:95
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/NamesDialog.vue:95 web/app/components/PivotDeleteDialog.vue:31 web/app/components/SlideWorkspace.vue:395 web/app/components/Workspace.vue:1101 web/app/components/Workspace.vue:1111 web/app/lib/object-menu.ts:95 web/app/lib/table-menu.ts:89 web/app/lib/table-menu.ts:95
 msgid "Delete"
 msgstr ""
 
@@ -1757,7 +1749,7 @@ msgstr ""
 msgid "Delete From Server…"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:401
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:389
 msgid "Delete Pivot Table…"
 msgstr ""
 
@@ -1809,7 +1801,7 @@ msgstr ""
 msgid "Delete this document"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:657
+#: web/app/components/SidePanel.vue:656
 msgid "Deleted. Show the last moment it was there."
 msgstr ""
 
@@ -1925,11 +1917,11 @@ msgstr ""
 msgid "Dot plot of {n} outcomes, from {low} to {high}, median {median}"
 msgstr ""
 
-#: web/app/components/FooterBar.vue:45 web/app/components/FooterBar.vue:61 web/app/components/SlideWorkspace.vue:541
+#: web/app/components/FooterBar.vue:40 web/app/components/SlideWorkspace.vue:541
 msgid "Double-click to rename"
 msgstr ""
 
-#: web/app/components/SlideCanvas.vue:625
+#: web/app/components/SlideCanvas.vue:631
 msgid "Double-click to type"
 msgstr ""
 
@@ -1969,7 +1961,7 @@ msgstr ""
 msgid "Drag to move the table"
 msgstr ""
 
-#: web/app/components/Workspace.vue:1251
+#: web/app/components/Workspace.vue:1241
 msgid "Draw new random numbers ({key})"
 msgstr ""
 
@@ -1977,11 +1969,11 @@ msgstr ""
 msgid "Draw new random numbers for everybody"
 msgstr ""
 
-#: web/app/components/Workspace.vue:1255
+#: web/app/components/Workspace.vue:1245
 msgid "Draw {n}"
 msgstr ""
 
-#: web/app/components/Workspace.vue:1252
+#: web/app/components/Workspace.vue:1242
 msgid "Draw {n}: draw new random numbers"
 msgstr ""
 
@@ -2001,7 +1993,7 @@ msgstr ""
 msgid "Easy to see"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:361 web/app/components/StylesDialog.vue:70 web/app/components/TextWorkspace.vue:494 web/app/components/Workspace.vue:1079
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:361 web/app/components/StylesDialog.vue:70 web/app/components/TextWorkspace.vue:494 web/app/components/Workspace.vue:1069
 msgid "Edit"
 msgstr ""
 
@@ -2009,7 +2001,7 @@ msgstr ""
 msgid "Edit Text"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/StylePicker.vue:71 web/app/components/TextWorkspace.vue:270 web/app/components/Workspace.vue:722 web/app/lib/format-menu.ts:121
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/StylePicker.vue:71 web/app/components/TextWorkspace.vue:270 web/app/components/Workspace.vue:705 web/app/lib/format-menu.ts:121
 msgid "Edit This Style…"
 msgstr ""
 
@@ -2017,7 +2009,7 @@ msgstr ""
 msgid "Edit query…"
 msgstr ""
 
-#: web/app/lib/object-menu.ts:66
+#: web/app/lib/object-menu.ts:68
 msgid "Edit text"
 msgstr ""
 
@@ -2049,11 +2041,11 @@ msgstr ""
 msgid "End the show (Esc)"
 msgstr ""
 
-#: web/app/components/TextWorkspace.vue:661 web/app/lib/object-menu.ts:66
+#: web/app/components/TextWorkspace.vue:661 web/app/lib/object-menu.ts:68
 msgid "Enter"
 msgstr ""
 
-#: web/app/components/Workspace.vue:1188
+#: web/app/components/Workspace.vue:1178
 msgid "Enter / Tab / Esc"
 msgstr ""
 
@@ -2149,7 +2141,7 @@ msgstr ""
 msgid "Export…"
 msgstr ""
 
-#: web/app/components/Workspace.vue:1184
+#: web/app/components/Workspace.vue:1174
 msgid "F6 / Shift + F6"
 msgstr ""
 
@@ -2309,11 +2301,11 @@ msgstr ""
 msgid "Flow: the text runs to the width of the window"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:1069 web/app/components/Workspace.vue:1166 web/app/components/Workspace.vue:779
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:1059 web/app/components/Workspace.vue:1156 web/app/components/Workspace.vue:762
 msgid "Follow Computation"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:541
+#: web/app/components/SidePanel.vue:540
 msgid "Follow changes"
 msgstr ""
 
@@ -2361,7 +2353,7 @@ msgstr ""
 msgid "For a Word, Excel or PowerPoint file, use File ▸ Export… instead."
 msgstr ""
 
-#: web/app/components/Workspace.vue:948
+#: web/app/components/Workspace.vue:931
 msgid "For cell {cell}"
 msgstr ""
 
@@ -2369,7 +2361,7 @@ msgstr ""
 msgid "For the cell"
 msgstr ""
 
-#: web/app/components/Workspace.vue:948
+#: web/app/components/Workspace.vue:931
 msgid "For the {count} selected cells"
 msgstr ""
 
@@ -2377,15 +2369,15 @@ msgstr ""
 msgid "For {doc}, as {user}. Everybody else keeps their own password."
 msgstr ""
 
-#: web/app/components/Workspace.vue:1343
+#: web/app/components/Workspace.vue:1330
 msgid "Forecast"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:620
+#: web/app/components/SidePanel.vue:619
 msgid "Forget every hidden branch"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/ImagePropertiesDialog.vue:57 web/app/components/SlideWorkspace.vue:400 web/app/components/TextWorkspace.vue:532 web/app/components/Workspace.vue:1130
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/ImagePropertiesDialog.vue:57 web/app/components/SlideWorkspace.vue:400 web/app/components/TextWorkspace.vue:532 web/app/components/Workspace.vue:1120
 msgid "Format"
 msgstr ""
 
@@ -2429,7 +2421,7 @@ msgstr ""
 msgid "Gap between items"
 msgstr ""
 
-#: web/app/components/TextObjectMenu.vue:179 web/app/lib/object-menu.ts:78
+#: web/app/components/TextObjectMenu.vue:179 web/app/lib/object-menu.ts:80
 msgid "Gap…"
 msgstr ""
 
@@ -2445,7 +2437,7 @@ msgstr ""
 msgid "Give a colleague a name and a password for {doc}. They open the document with them, like you did. Tell them the password yourself: the server never shows it again."
 msgstr ""
 
-#: web/app/components/SidePanel.vue:685
+#: web/app/components/SidePanel.vue:684
 msgid "Give names to {n} things without one"
 msgstr ""
 
@@ -2513,7 +2505,7 @@ msgstr ""
 msgid "Go to the text box where your cursor is to change this text box only"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:657
+#: web/app/components/SidePanel.vue:656
 msgid "Go to this"
 msgstr ""
 
@@ -2589,7 +2581,7 @@ msgstr ""
 msgid "Header rows, banding, look, width and the columns of this table"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:293 web/app/components/StyleSpec.vue:210
+#: web/app/components/SidePanel.vue:292 web/app/components/StyleSpec.vue:210
 msgid "Heading"
 msgstr ""
 
@@ -2601,7 +2593,7 @@ msgstr ""
 msgid "Headings numbered in one list count together as one outline: 1, 1.1, 1.2, 2 …"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SidePanel.vue:507 web/app/lib/document-menus.ts:283
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SidePanel.vue:506 web/app/lib/document-menus.ts:283
 msgid "Help"
 msgstr ""
 
@@ -2617,11 +2609,11 @@ msgstr ""
 msgid "Hide password"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:527
+#: web/app/components/SidePanel.vue:526
 msgid "History"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:506
+#: web/app/components/SidePanel.vue:505
 msgid "History & Chat"
 msgstr ""
 
@@ -2633,7 +2625,7 @@ msgstr ""
 msgid "History and Chat"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:511
+#: web/app/components/SidePanel.vue:510
 msgid "History and chat are for the document's editors."
 msgstr ""
 
@@ -2769,7 +2761,7 @@ msgstr ""
 msgid "Image properties"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:391 web/app/components/TextWorkspace.vue:514 web/app/components/Workspace.vue:1099
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:391 web/app/components/TextWorkspace.vue:514 web/app/components/Workspace.vue:1089
 msgid "Image…"
 msgstr ""
 
@@ -2833,7 +2825,7 @@ msgstr ""
 msgid "Input"
 msgstr ""
 
-#: web/app/components/SheetGrid.vue:294
+#: web/app/components/SheetGrid.vue:296
 msgid "Input of the computation"
 msgstr ""
 
@@ -2841,15 +2833,15 @@ msgstr ""
 msgid "Input {n}"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/ImageImportDialog.vue:102 web/app/components/SheetChartInsertDialog.vue:190 web/app/components/TableDialog.vue:43 web/app/components/TextWorkspace.vue:521 web/app/lib/document-menus.ts:175
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/ImageImportDialog.vue:102 web/app/components/SheetChartInsertDialog.vue:189 web/app/components/TableDialog.vue:43 web/app/components/TextWorkspace.vue:521 web/app/lib/document-menus.ts:175
 msgid "Insert"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:1109 web/app/lib/table-menu.ts:89
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:1099 web/app/lib/table-menu.ts:89
 msgid "Insert Above"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:1110 web/app/lib/table-menu.ts:89
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:1100 web/app/lib/table-menu.ts:89
 msgid "Insert Below"
 msgstr ""
 
@@ -2861,11 +2853,11 @@ msgstr ""
 msgid "Insert Column Right"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:1119 web/app/lib/table-menu.ts:95
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:1109 web/app/lib/table-menu.ts:95
 msgid "Insert Left"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:1120 web/app/lib/table-menu.ts:95
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:1110 web/app/lib/table-menu.ts:95
 msgid "Insert Right"
 msgstr ""
 
@@ -2897,7 +2889,7 @@ msgstr ""
 msgid "Insert an image from disk"
 msgstr ""
 
-#: web/app/components/SheetChartInsertDialog.vue:121
+#: web/app/components/SheetChartInsertDialog.vue:119
 msgid "Insert chart"
 msgstr ""
 
@@ -2917,7 +2909,7 @@ msgstr ""
 msgid "Insert the clipboard without formatting"
 msgstr ""
 
-#: web/app/components/ImageImportDialog.vue:102 web/app/components/SheetChartInsertDialog.vue:190
+#: web/app/components/ImageImportDialog.vue:102 web/app/components/SheetChartInsertDialog.vue:189
 msgid "Inserting…"
 msgstr ""
 
@@ -3145,7 +3137,7 @@ msgstr ""
 msgid "Light up the cells that take part in this cell's computation"
 msgstr ""
 
-#: web/app/components/SheetChartInsertDialog.vue:126
+#: web/app/components/SheetChartInsertDialog.vue:124
 msgid "Line · soon"
 msgstr ""
 
@@ -3153,7 +3145,7 @@ msgstr ""
 msgid "List"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:294
+#: web/app/components/SidePanel.vue:293
 msgid "List item"
 msgstr ""
 
@@ -3273,7 +3265,7 @@ msgstr ""
 msgid "Margins"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:542
+#: web/app/components/SidePanel.vue:541
 msgid "Mark where the document changed after this step: solid outlines are what this step changed, dashed ones what changed later"
 msgstr ""
 
@@ -3345,11 +3337,11 @@ msgstr ""
 msgid "Mermaid"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:693
+#: web/app/components/SidePanel.vue:692
 msgid "Message everyone, or @ai …"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:656
+#: web/app/components/SidePanel.vue:655
 msgid "Message redacted"
 msgstr ""
 
@@ -3393,7 +3385,7 @@ msgstr ""
 msgid "More padding"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:435
+#: web/app/components/SidePanel.vue:434
 msgid "More than {n} places differ from now"
 msgstr ""
 
@@ -3421,6 +3413,10 @@ msgstr ""
 msgid "Move the selection to the clipboard"
 msgstr ""
 
+#: web/app/lib/object-menu.ts:85
+msgid "Move to Slide"
+msgstr ""
+
 #: web/app/components/PivotPanel.vue:105
 msgid "Move to {box}"
 msgstr ""
@@ -3441,7 +3437,7 @@ msgstr ""
 msgid "My places and collections"
 msgstr ""
 
-#: web/app/components/AdminAccessDocuments.vue:242 web/app/components/AdminFonts.vue:204 web/app/components/DetailsDialog.vue:38 web/app/components/ImportDialog.vue:151 web/app/components/NameDefinePopover.vue:51 web/app/components/NameDefinePopover.vue:57 web/app/components/NameDefinePopover.vue:57 web/app/components/NamesDialog.vue:66 web/app/components/NumberingDialog.vue:134 web/app/components/PivotCreateDialog.vue:79 web/app/components/ShareDialog.vue:125 web/app/components/SlideWorkspace.vue:514 web/app/components/StyleSpec.vue:291 web/app/components/Workspace.vue:1342 web/app/components/Workspace.vue:1343 web/app/lib/reference-labels.ts:17
+#: web/app/components/AdminAccessDocuments.vue:242 web/app/components/AdminFonts.vue:204 web/app/components/DetailsDialog.vue:38 web/app/components/ImportDialog.vue:151 web/app/components/NameDefinePopover.vue:51 web/app/components/NameDefinePopover.vue:57 web/app/components/NameDefinePopover.vue:57 web/app/components/NamesDialog.vue:66 web/app/components/NumberingDialog.vue:134 web/app/components/PivotCreateDialog.vue:79 web/app/components/ShareDialog.vue:125 web/app/components/SlideWorkspace.vue:514 web/app/components/StyleSpec.vue:291 web/app/components/Workspace.vue:1329 web/app/components/Workspace.vue:1330 web/app/lib/reference-labels.ts:17
 msgid "Name"
 msgstr ""
 
@@ -3449,12 +3445,8 @@ msgstr ""
 msgid "Name & describe"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:404 web/app/components/TextWorkspace.vue:574 web/app/components/Workspace.vue:1134 web/app/lib/descriptions.ts:63 web/app/lib/object-menu.ts:64 web/app/lib/table-menu.ts:116
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:404 web/app/components/TextWorkspace.vue:574 web/app/components/Workspace.vue:1124 web/app/lib/descriptions.ts:63 web/app/lib/object-menu.ts:66 web/app/lib/table-menu.ts:116
 msgid "Name & describe…"
-msgstr ""
-
-#: web/app/components/SheetChartInsertDialog.vue:158
-msgid "Name (the tab it opens as)"
 msgstr ""
 
 #: web/app/components/NameAndDescribeDialog.vue:37
@@ -3471,6 +3463,10 @@ msgstr ""
 
 #: web/app/components/StylesDialog.vue:96
 msgid "Name it…"
+msgstr ""
+
+#: web/app/components/SheetChartInsertDialog.vue:158
+msgid "Name of the chart"
 msgstr ""
 
 #: web/app/components/AddFontsDialog.vue:148 web/app/components/OpenDialog.vue:882
@@ -3509,7 +3505,7 @@ msgstr ""
 msgid "Names"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/FormulaBar.vue:91 web/app/components/Workspace.vue:1168
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/FormulaBar.vue:91 web/app/components/Workspace.vue:1158
 msgid "Names…"
 msgstr ""
 
@@ -3517,7 +3513,7 @@ msgstr ""
 msgid "New"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:1097
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:1087
 msgid "New Sheet…"
 msgstr ""
 
@@ -3557,7 +3553,7 @@ msgstr ""
 msgid "New pivot table"
 msgstr ""
 
-#: web/app/components/FooterBar.vue:69 web/app/components/Workspace.vue:1343
+#: web/app/components/FooterBar.vue:49 web/app/components/Workspace.vue:1330
 msgid "New sheet"
 msgstr ""
 
@@ -3565,7 +3561,7 @@ msgstr ""
 msgid "Next ({others})"
 msgstr ""
 
-#: web/app/components/Workspace.vue:817
+#: web/app/components/Workspace.vue:800
 msgid "Next Object"
 msgstr ""
 
@@ -3637,7 +3633,7 @@ msgstr ""
 msgid "No styles fit what is selected"
 msgstr ""
 
-#: web/app/components/SlideWorkspace.vue:190 web/app/components/TextWorkspace.vue:535 web/app/components/Workspace.vue:919
+#: web/app/components/SlideWorkspace.vue:190 web/app/components/TextWorkspace.vue:535 web/app/components/Workspace.vue:902
 msgid "No styles yet"
 msgstr ""
 
@@ -3681,7 +3677,7 @@ msgstr ""
 msgid "Not available yet"
 msgstr ""
 
-#: web/app/lib/base-session.ts:1246 web/app/lib/base-session.ts:814
+#: web/app/lib/base-session.ts:1258 web/app/lib/base-session.ts:814
 msgid "Not connected to the server."
 msgstr ""
 
@@ -3733,11 +3729,11 @@ msgstr ""
 msgid "Nothing anybody sees in the document changes: it is only in the history."
 msgstr ""
 
-#: web/app/components/SidePanel.vue:434
+#: web/app/components/SidePanel.vue:433
 msgid "Nothing differs from now"
 msgstr ""
 
-#: web/app/lib/base-session.ts:1386
+#: web/app/lib/base-session.ts:1398
 msgid "Nothing has changed since the last checkpoint."
 msgstr ""
 
@@ -3801,15 +3797,15 @@ msgstr ""
 msgid "Nothing yet. Create the first document."
 msgstr ""
 
-#: web/app/components/SidePanel.vue:555
+#: web/app/components/SidePanel.vue:554
 msgid "Nothing yet. Put a text box on the slide."
 msgstr ""
 
-#: web/app/components/SidePanel.vue:555
+#: web/app/components/SidePanel.vue:554
 msgid "Nothing yet. Start writing."
 msgstr ""
 
-#: web/app/components/SidePanel.vue:555
+#: web/app/components/SidePanel.vue:554
 msgid "Nothing yet. Type into a cell."
 msgstr ""
 
@@ -3869,7 +3865,7 @@ msgstr ""
 msgid "Object in paragraph {n}"
 msgstr ""
 
-#: web/app/components/ContextMenu.vue:31 web/app/components/ContextMenu.vue:32 web/app/components/SheetGrid.vue:1390 web/app/components/SlideCanvas.vue:664 web/app/components/TextObjectMenu.vue:173
+#: web/app/components/ContextMenu.vue:31 web/app/components/ContextMenu.vue:32 web/app/components/SheetGrid.vue:1393 web/app/components/SlideCanvas.vue:670 web/app/components/TextObjectMenu.vue:173
 msgid "Object menu"
 msgstr ""
 
@@ -3909,6 +3905,10 @@ msgstr ""
 msgid "On this sheet at"
 msgstr ""
 
+#: web/app/components/SheetChartInsertDialog.vue:154
+msgid "On this slide"
+msgstr ""
+
 #: web/app/components/OpenDialog.vue:976
 msgid "On {place} · {count}"
 msgstr ""
@@ -3923,6 +3923,10 @@ msgstr ""
 
 #: web/app/components/DeleteStyleDialog.vue:132
 msgid "One step in the history. Undo puts everything back."
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/chart_steps.py:84
+msgid "Only a chart on a sheet moves to a slide."
 msgstr ""
 
 #: web/app/components/DetailsDialog.vue:45
@@ -3953,7 +3957,7 @@ msgstr ""
 msgid "Only on {sheet}"
 msgstr ""
 
-#: web/app/components/SheetChartInsertDialog.vue:150
+#: web/app/components/SheetChartInsertDialog.vue:149
 msgid "Only one column — no room for a header there; a label is made up."
 msgstr ""
 
@@ -4097,7 +4101,7 @@ msgstr ""
 msgid "Other arguments are handed to GTK."
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:1068 web/app/components/Workspace.vue:1165 web/app/components/Workspace.vue:778
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:1058 web/app/components/Workspace.vue:1155 web/app/components/Workspace.vue:761
 msgid "Outcomes of This Cell…"
 msgstr ""
 
@@ -4169,7 +4173,7 @@ msgstr ""
 msgid "Paper"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/thing_names.py:42 web/app/components/SidePanel.vue:295 web/app/components/StyleSpec.vue:193 web/app/components/StyleSpec.vue:194 web/app/lib/object-style-host.ts:52 web/app/lib/text-style-host.ts:11
+#: packages/claudia-server/src/claudia_server/thing_names.py:42 web/app/components/SidePanel.vue:294 web/app/components/StyleSpec.vue:193 web/app/components/StyleSpec.vue:194 web/app/lib/object-style-host.ts:52 web/app/lib/text-style-host.ts:11
 msgid "Paragraph"
 msgstr ""
 
@@ -4229,19 +4233,19 @@ msgstr ""
 msgid "Pick a distribution and put RANDOM into the cell"
 msgstr ""
 
-#: web/app/components/SheetChartInsertDialog.vue:139
+#: web/app/components/SheetChartInsertDialog.vue:137
 msgid "Pick cells instead…"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:570 web/app/components/SidePanel.vue:646
+#: web/app/components/SidePanel.vue:569 web/app/components/SidePanel.vue:645
 msgid "Pick for redaction"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:647
+#: web/app/components/SidePanel.vue:646
 msgid "Pick for redaction: message by {who} at {time}"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:571
+#: web/app/components/SidePanel.vue:570
 msgid "Pick for redaction: {what}"
 msgstr ""
 
@@ -4253,7 +4257,7 @@ msgstr ""
 msgid "Pick more…"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:550
+#: web/app/components/SidePanel.vue:549
 msgid "Pick the changes and messages to redact."
 msgstr ""
 
@@ -4261,7 +4265,7 @@ msgstr ""
 msgid "Pick what to blank"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:550
+#: web/app/components/SidePanel.vue:549
 msgid "Picked to redact: {n}"
 msgstr ""
 
@@ -4277,11 +4281,11 @@ msgstr ""
 msgid "Pivot"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:399
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:387
 msgid "Pivot Fields"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:1171
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:1161
 msgid "Pivot Table…"
 msgstr ""
 
@@ -4297,7 +4301,7 @@ msgstr ""
 msgid "Place it"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:435
+#: web/app/components/SidePanel.vue:434
 msgid "Places that differ from now: {n}"
 msgstr ""
 
@@ -4401,7 +4405,7 @@ msgstr ""
 msgid "Preview of the redaction: the marked places as they would be. Nothing has changed yet."
 msgstr ""
 
-#: web/app/components/Workspace.vue:818
+#: web/app/components/Workspace.vue:801
 msgid "Previous Object"
 msgstr ""
 
@@ -4481,7 +4485,7 @@ msgstr ""
 msgid "Put it in"
 msgstr ""
 
-#: web/app/components/Workspace.vue:370
+#: web/app/components/Workspace.vue:358
 msgid "Put the cursor in a pivot table first."
 msgstr ""
 
@@ -4517,7 +4521,7 @@ msgstr ""
 msgid "Quit"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:1163 web/app/components/Workspace.vue:777
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:1153 web/app/components/Workspace.vue:760
 msgid "Random Generator…"
 msgstr ""
 
@@ -4525,7 +4529,7 @@ msgstr ""
 msgid "Random generator"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:292
+#: web/app/components/SidePanel.vue:291
 msgid "Range"
 msgstr ""
 
@@ -4585,7 +4589,7 @@ msgstr ""
 msgid "Redact for good"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:578
+#: web/app/components/SidePanel.vue:577
 msgid "Redacted: the content of this change was taken away."
 msgstr ""
 
@@ -4593,11 +4597,11 @@ msgstr ""
 msgid "Redacted: {what}, by {who} at {time}"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:718
+#: web/app/components/SidePanel.vue:717
 msgid "Redaction menu"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:551
+#: web/app/components/SidePanel.vue:550
 msgid "Redact…"
 msgstr ""
 
@@ -4637,7 +4641,7 @@ msgstr ""
 msgid "Reject"
 msgstr ""
 
-#: web/app/lib/object-menu.ts:89
+#: web/app/lib/object-menu.ts:93
 msgid "Release from grid"
 msgstr ""
 
@@ -4717,11 +4721,11 @@ msgstr ""
 msgid "Removing the key switches this server to the local model, because nothing else could answer."
 msgstr ""
 
-#: web/app/components/AdminFonts.vue:204 web/app/components/NamesDialog.vue:88 web/app/components/NamesDialog.vue:94 web/app/components/OpenDialog.vue:833 web/app/components/SlideWorkspace.vue:514 web/app/components/StylesDialog.vue:122 web/app/components/StylesDialog.vue:139 web/app/components/StylesDialog.vue:70 web/app/components/Workspace.vue:1342
+#: web/app/components/AdminFonts.vue:204 web/app/components/NamesDialog.vue:88 web/app/components/NamesDialog.vue:94 web/app/components/OpenDialog.vue:833 web/app/components/SlideWorkspace.vue:514 web/app/components/StylesDialog.vue:122 web/app/components/StylesDialog.vue:139 web/app/components/StylesDialog.vue:70 web/app/components/Workspace.vue:1329
 msgid "Rename"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:1098
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:1088
 msgid "Rename Sheet…"
 msgstr ""
 
@@ -4733,7 +4737,7 @@ msgstr ""
 msgid "Rename collection"
 msgstr ""
 
-#: web/app/components/Workspace.vue:1342
+#: web/app/components/Workspace.vue:1329
 msgid "Rename sheet"
 msgstr ""
 
@@ -4813,7 +4817,7 @@ msgstr ""
 msgid "Replaces {family} {style} from {collection}, for every document on this server."
 msgstr ""
 
-#: web/app/components/SidePanel.vue:528
+#: web/app/components/SidePanel.vue:527
 msgid "Replay"
 msgstr ""
 
@@ -4821,7 +4825,7 @@ msgstr ""
 msgid "Replay History…"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:528
+#: web/app/components/SidePanel.vue:527
 msgid "Replay the history: wheel over this panel, or Alt+Page Up"
 msgstr ""
 
@@ -4833,7 +4837,7 @@ msgstr ""
 msgid "Require a secret to create or list documents"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:1070 web/app/components/Workspace.vue:1164 web/app/components/Workspace.vue:776
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:1060 web/app/components/Workspace.vue:1154 web/app/components/Workspace.vue:759
 msgid "Resample Random Numbers"
 msgstr ""
 
@@ -4853,7 +4857,7 @@ msgstr ""
 msgid "Result name"
 msgstr ""
 
-#: web/app/components/SheetGrid.vue:295
+#: web/app/components/SheetGrid.vue:297
 msgid "Result of the computation"
 msgstr ""
 
@@ -4885,7 +4889,7 @@ msgstr ""
 msgid "Rotate Right 90°"
 msgstr ""
 
-#: web/app/lib/object-menu.ts:68
+#: web/app/lib/object-menu.ts:70
 msgid "Rotate by…"
 msgstr ""
 
@@ -4949,7 +4953,7 @@ msgstr ""
 msgid "Rounds up to a multiple of the significance (1 unless given; its sign is ignored)."
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:1106 web/app/lib/table-menu.ts:87
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:1096 web/app/lib/table-menu.ts:87
 msgid "Row"
 msgstr ""
 
@@ -4989,11 +4993,11 @@ msgstr ""
 msgid "SELECT Region, SUM(Amount) AS Revenue FROM Sales GROUP BY Region"
 msgstr ""
 
-#: web/app/components/NamesDialog.vue:75 web/app/components/SheetChartInsertDialog.vue:134
+#: web/app/components/NamesDialog.vue:75 web/app/components/SheetChartInsertDialog.vue:132
 msgid "SQL"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:1169
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:1159
 msgid "SQL Query…"
 msgstr ""
 
@@ -5065,7 +5069,7 @@ msgstr ""
 msgid "Scale"
 msgstr ""
 
-#: web/app/components/SheetChartInsertDialog.vue:127
+#: web/app/components/SheetChartInsertDialog.vue:125
 msgid "Scatter · soon"
 msgstr ""
 
@@ -5145,7 +5149,7 @@ msgstr ""
 msgid "Select an object to style it"
 msgstr ""
 
-#: web/app/components/Workspace.vue:948
+#: web/app/components/Workspace.vue:931
 msgid "Select cells or an object to style them"
 msgstr ""
 
@@ -5157,7 +5161,7 @@ msgstr ""
 msgid "Select {blocker}"
 msgstr ""
 
-#: web/app/components/Workspace.vue:790
+#: web/app/components/Workspace.vue:773
 msgid "Selected: {name}"
 msgstr ""
 
@@ -5229,11 +5233,11 @@ msgstr ""
 msgid "Share…"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:290 web/app/components/Workspace.vue:297
+#: web/app/components/SidePanel.vue:290 web/app/components/Workspace.vue:285
 msgid "Sheet"
 msgstr ""
 
-#: web/app/components/SheetGrid.vue:1212
+#: web/app/components/SheetGrid.vue:1215
 msgid "Sheet {name}"
 msgstr ""
 
@@ -5249,11 +5253,11 @@ msgstr ""
 msgid "Shift"
 msgstr ""
 
-#: web/app/components/Workspace.vue:1185
+#: web/app/components/Workspace.vue:1175
 msgid "Shift + arrows or drag"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:551
+#: web/app/components/SidePanel.vue:550
 msgid "Shift+Del"
 msgstr ""
 
@@ -5273,7 +5277,7 @@ msgstr ""
 msgid "Show Grid"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:400
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:388
 msgid "Show Pivot Table as SQL…"
 msgstr ""
 
@@ -5285,7 +5289,7 @@ msgstr ""
 msgid "Show all levels"
 msgstr ""
 
-#: web/app/components/ReferencePicker.vue:115 web/app/components/ReferencePicker.vue:116 web/app/components/SheetChartInsertDialog.vue:153
+#: web/app/components/ReferencePicker.vue:115 web/app/components/ReferencePicker.vue:116 web/app/components/SheetChartInsertDialog.vue:152
 msgid "Show as"
 msgstr ""
 
@@ -5293,7 +5297,7 @@ msgstr ""
 msgid "Show as SQL…"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:542
+#: web/app/components/SidePanel.vue:541
 msgid "Show differences from now"
 msgstr ""
 
@@ -5321,7 +5325,7 @@ msgstr ""
 msgid "Show password"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:654
+#: web/app/components/SidePanel.vue:653
 msgid "Show the document as it was at this message"
 msgstr ""
 
@@ -5401,7 +5405,7 @@ msgstr ""
 msgid "Slide {n} of {total}: {title}"
 msgstr ""
 
-#: web/app/components/FooterBar.vue:44
+#: web/app/components/FooterBar.vue:39
 msgid "Slide: {name}"
 msgstr ""
 
@@ -5421,7 +5425,7 @@ msgstr ""
 msgid "Smallest"
 msgstr ""
 
-#: web/app/lib/object-menu.ts:89
+#: web/app/lib/object-menu.ts:93
 msgid "Snap to grid"
 msgstr ""
 
@@ -5433,7 +5437,7 @@ msgstr ""
 msgid "Someone has named this server's first administrator in the meantime. Sign in, or ask them to add you."
 msgstr ""
 
-#: packages/claudia-core/src/claudia_core/objects.py:712
+#: packages/claudia-core/src/claudia_core/objects.py:709
 msgid "Something else is already called “{name}”"
 msgstr ""
 
@@ -5441,7 +5445,7 @@ msgstr ""
 msgid "Something is repeated that is not there."
 msgstr ""
 
-#: web/app/lib/base-session.ts:1235 web/app/lib/base-session.ts:1453 web/app/lib/session.ts:695
+#: web/app/lib/base-session.ts:1247 web/app/lib/base-session.ts:1465 web/app/lib/session.ts:689
 msgid "Something went wrong."
 msgstr ""
 
@@ -5541,7 +5545,7 @@ msgstr ""
 msgid "Steps"
 msgstr ""
 
-#: web/app/components/Workspace.vue:1069
+#: web/app/components/Workspace.vue:1059
 msgid "Stop Following"
 msgstr ""
 
@@ -5581,7 +5585,7 @@ msgstr ""
 msgid "Styles"
 msgstr ""
 
-#: web/app/lib/object-menu.ts:67
+#: web/app/lib/object-menu.ts:69
 msgid "Style…"
 msgstr ""
 
@@ -5589,11 +5593,11 @@ msgstr ""
 msgid "Suggest first"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:544
+#: web/app/components/SidePanel.vue:543
 msgid "Suggest going back to the document as it was after this step"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:596
+#: web/app/components/SidePanel.vue:595
 msgid "Suggest going back to this checkpoint"
 msgstr ""
 
@@ -5609,7 +5613,7 @@ msgstr ""
 msgid "Sum of {field}"
 msgstr ""
 
-#: web/app/components/FooterBar.vue:73
+#: web/app/components/FooterBar.vue:53
 msgid "Sum {value}"
 msgstr ""
 
@@ -5825,7 +5829,7 @@ msgstr ""
 msgid "That document exists already — or the name or password is not acceptable. Try Open."
 msgstr ""
 
-#: web/app/components/Workspace.vue:560
+#: web/app/components/Workspace.vue:548
 msgid "That does not fit on the sheet."
 msgstr ""
 
@@ -5841,12 +5845,8 @@ msgstr ""
 msgid "That is not this server's setup code. Check the log of its last start: a restart makes a new code."
 msgstr ""
 
-#: web/app/components/Workspace.vue:559
+#: web/app/components/Workspace.vue:547
 msgid "That is too much to paste at once (at most 10,000 cells)."
-msgstr ""
-
-#: web/app/components/SheetChartInsertDialog.vue:109
-msgid "That range will not make a chart."
 msgstr ""
 
 #: web/app/components/OpenDialog.vue:786
@@ -5857,7 +5857,7 @@ msgstr ""
 msgid "That server runs {other}. This window is {this} — open it there."
 msgstr ""
 
-#: web/app/lib/base-session.ts:1016
+#: web/app/lib/base-session.ts:1028
 msgid "That was deleted. This is the last moment it was there."
 msgstr ""
 
@@ -5937,7 +5937,7 @@ msgstr ""
 msgid "The bottom side"
 msgstr ""
 
-#: web/app/components/Workspace.vue:483
+#: web/app/components/Workspace.vue:471
 msgid "The browser did not allow copying."
 msgstr ""
 
@@ -6145,11 +6145,11 @@ msgstr ""
 msgid "The first characters of the text (one unless a number is given)."
 msgstr ""
 
-#: web/app/components/SheetChartInsertDialog.vue:145
+#: web/app/components/SheetChartInsertDialog.vue:144
 msgid "The first column is read as category names."
 msgstr ""
 
-#: web/app/components/SheetChartInsertDialog.vue:149
+#: web/app/components/SheetChartInsertDialog.vue:148
 msgid "The first column is read as category or series names."
 msgstr ""
 
@@ -7005,7 +7005,7 @@ msgstr ""
 msgid "The “[” at character {position} has no “]”. Nothing is replaced."
 msgstr ""
 
-#: packages/claudia-computes/src/claudia_computes/commands.py:818 packages/claudia-computes/src/claudia_computes/model.py:477 packages/claudia-core/src/claudia_core/objects.py:469
+#: packages/claudia-core/src/claudia_core/objects.py:466
 msgid "There is already a chart called “{name}”"
 msgstr ""
 
@@ -7013,39 +7013,39 @@ msgstr ""
 msgid "There is already a colour role named “{name}”"
 msgstr ""
 
-#: packages/claudia-core/src/claudia_core/objects.py:470
+#: packages/claudia-core/src/claudia_core/objects.py:467
 msgid "There is already a container called “{name}”"
 msgstr ""
 
-#: packages/claudia-composes/src/claudia_composes/model.py:425
+#: packages/claudia-composes/src/claudia_composes/model.py:424
 msgid "There is already a heading called “{name}”"
 msgstr ""
 
-#: packages/claudia-composes/src/claudia_composes/model.py:426
+#: packages/claudia-composes/src/claudia_composes/model.py:425
 msgid "There is already a list item called “{name}”"
 msgstr ""
 
-#: packages/claudia-computes/src/claudia_computes/model.py:478
+#: packages/claudia-computes/src/claudia_computes/model.py:453
 msgid "There is already a named range called “{name}”"
 msgstr ""
 
-#: packages/claudia-composes/src/claudia_composes/model.py:427
+#: packages/claudia-composes/src/claudia_composes/model.py:426
 msgid "There is already a paragraph called “{name}”"
 msgstr ""
 
-#: packages/claudia-core/src/claudia_core/objects.py:468
+#: packages/claudia-core/src/claudia_core/objects.py:465
 msgid "There is already a picture called “{name}”"
 msgstr ""
 
-#: packages/claudia-core/src/claudia_core/objects.py:467
+#: packages/claudia-core/src/claudia_core/objects.py:464
 msgid "There is already a shape called “{name}”"
 msgstr ""
 
-#: packages/claudia-computes/src/claudia_computes/commands.py:153 packages/claudia-computes/src/claudia_computes/model.py:475
+#: packages/claudia-computes/src/claudia_computes/commands.py:147 packages/claudia-computes/src/claudia_computes/model.py:451
 msgid "There is already a sheet called “{name}”"
 msgstr ""
 
-#: packages/claudia-computes/src/claudia_computes/model.py:476 packages/claudia-creates/src/claudia_creates/model.py:108
+#: packages/claudia-computes/src/claudia_computes/model.py:452 packages/claudia-creates/src/claudia_creates/model.py:106
 msgid "There is already a slide called “{name}”"
 msgstr ""
 
@@ -7053,11 +7053,11 @@ msgstr ""
 msgid "There is already a style named “{name}”"
 msgstr ""
 
-#: packages/claudia-core/src/claudia_core/objects.py:471
+#: packages/claudia-core/src/claudia_core/objects.py:468
 msgid "There is already a table called “{name}”"
 msgstr ""
 
-#: packages/claudia-core/src/claudia_core/objects.py:466
+#: packages/claudia-core/src/claudia_core/objects.py:463
 msgid "There is already a text box called “{name}”"
 msgstr ""
 
@@ -7081,7 +7081,7 @@ msgstr ""
 msgid "There is nothing in this to redact."
 msgstr ""
 
-#: web/app/lib/base-session.ts:1013
+#: web/app/lib/base-session.ts:1025
 msgid "There is nothing like that in this document."
 msgstr ""
 
@@ -7121,7 +7121,7 @@ msgstr ""
 msgid "Thicker border"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:667
+#: web/app/components/SidePanel.vue:666
 msgid "Things to point at"
 msgstr ""
 
@@ -7153,7 +7153,7 @@ msgstr ""
 msgid "This cannot be redacted: {why}"
 msgstr ""
 
-#: web/app/components/Workspace.vue:868
+#: web/app/components/Workspace.vue:851
 msgid "This cell has no alternatives and does not depend on any."
 msgstr ""
 
@@ -7167,10 +7167,6 @@ msgstr ""
 
 #: web/app/lib/noun-phrases.ts:46
 msgid "This chart only"
-msgstr ""
-
-#: web/app/components/Workspace.vue:1280
-msgid "This chart's definition is gone."
 msgstr ""
 
 #: web/app/components/StyleColorPicker.vue:98
@@ -7189,7 +7185,7 @@ msgstr ""
 msgid "This document cannot say what deleting the style would do."
 msgstr ""
 
-#: web/app/components/Workspace.vue:1317
+#: web/app/components/Workspace.vue:1304
 msgid "This document has no sheet yet."
 msgstr ""
 
@@ -7265,7 +7261,7 @@ msgstr ""
 msgid "This picture only"
 msgstr ""
 
-#: web/app/components/Workspace.vue:383
+#: web/app/components/Workspace.vue:371
 msgid "This pivot table has no value field yet. Put a field into Values."
 msgstr ""
 
@@ -7289,7 +7285,7 @@ msgstr ""
 msgid "This removes {doc} from the server for good — its content, its history and its chat, and everybody's access to it. There is no way back: no recycle bin, no undo. Make sure everybody who needs something from it has it first (File ▸ Download)."
 msgstr ""
 
-#: web/app/components/Workspace.vue:472
+#: web/app/components/Workspace.vue:460
 msgid "This result has no name to take its cells from: select them and copy (Ctrl+C)."
 msgstr ""
 
@@ -7361,7 +7357,7 @@ msgstr ""
 msgid "This sheet"
 msgstr ""
 
-#: web/app/components/PresentShow.vue:176 web/app/lib/print/source.ts:272 web/app/lib/sheet-search-host.ts:66 web/app/lib/slide-search-host.ts:69
+#: web/app/components/PresentShow.vue:176 web/app/lib/print/source.ts:271 web/app/lib/sheet-search-host.ts:66 web/app/lib/slide-search-host.ts:69
 msgid "This slide"
 msgstr ""
 
@@ -7375,6 +7371,10 @@ msgstr ""
 
 #: web/app/components/PivotValueDialog.vue:72
 msgid "This value is not in the pivot table (any more)."
+msgstr ""
+
+#: web/app/components/SheetChartInsertDialog.vue:140
+msgid "This workbook has no table or query result yet: select the cells on a sheet first."
 msgstr ""
 
 #: web/app/components/RedactionDialog.vue:270
@@ -7421,7 +7421,7 @@ msgstr ""
 msgid "Too many tries. Try again in {seconds} seconds."
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:441 web/app/components/TextWorkspace.vue:608 web/app/components/Workspace.vue:1158
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:441 web/app/components/TextWorkspace.vue:608 web/app/components/Workspace.vue:1148
 msgid "Tools"
 msgstr ""
 
@@ -7473,7 +7473,7 @@ msgstr ""
 msgid "Turn: drag, or arrow keys (Shift for 15°)"
 msgstr ""
 
-#: web/app/components/RotatePopover.vue:102 web/app/components/SheetGrid.vue:570 web/app/components/SheetGrid.vue:578 web/app/components/SheetGrid.vue:587 web/app/components/SheetGrid.vue:605 web/app/components/SlideCanvas.vue:286 web/app/components/SlideCanvas.vue:315 web/app/components/SlideCanvas.vue:323 web/app/components/SlideCanvas.vue:344 web/app/components/TextObjectLayer.vue:350 web/app/components/TextObjectLayer.vue:354 web/app/components/TextObjectMenu.vue:112
+#: web/app/components/RotatePopover.vue:102 web/app/components/SheetGrid.vue:572 web/app/components/SheetGrid.vue:580 web/app/components/SheetGrid.vue:589 web/app/components/SheetGrid.vue:607 web/app/components/SlideCanvas.vue:286 web/app/components/SlideCanvas.vue:315 web/app/components/SlideCanvas.vue:323 web/app/components/SlideCanvas.vue:344 web/app/components/TextObjectLayer.vue:350 web/app/components/TextObjectLayer.vue:354 web/app/components/TextObjectMenu.vue:112
 msgid "Turned to {degrees}"
 msgstr ""
 
@@ -7501,7 +7501,7 @@ msgstr ""
 msgid "Type the address of a server, such as demo.example.org:8420."
 msgstr ""
 
-#: web/app/components/Workspace.vue:1187
+#: web/app/components/Workspace.vue:1177
 msgid "Type, F2 or double click"
 msgstr ""
 
@@ -7577,7 +7577,7 @@ msgstr ""
 msgid "Valid."
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/PivotPanel.vue:110 web/app/components/Workspace.vue:398
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/PivotPanel.vue:110 web/app/components/Workspace.vue:386
 msgid "Value Field Settings…"
 msgstr ""
 
@@ -7617,7 +7617,7 @@ msgstr ""
 msgid "Vertical alignment"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:410 web/app/components/StyleBar.vue:111 web/app/components/TextWorkspace.vue:594 web/app/components/Workspace.vue:1148
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:410 web/app/components/StyleBar.vue:111 web/app/components/TextWorkspace.vue:594 web/app/components/Workspace.vue:1138
 msgid "View"
 msgstr ""
 
@@ -7629,7 +7629,7 @@ msgstr ""
 msgid "Waiting for a name"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:516
+#: web/app/components/SidePanel.vue:515
 msgid "Waiting on {names}."
 msgstr ""
 
@@ -7681,7 +7681,7 @@ msgstr ""
 msgid "What regular payments (and a sum at the end) are worth today at a fixed rate."
 msgstr ""
 
-#: web/app/components/SidePanel.vue:605
+#: web/app/components/SidePanel.vue:604
 msgid "What silence at a suggestion's deadline means"
 msgstr ""
 
@@ -7721,7 +7721,7 @@ msgstr ""
 msgid "What “{name}” sets itself. The rest comes from its parent."
 msgstr ""
 
-#: web/app/components/SidePanel.vue:490
+#: web/app/components/SidePanel.vue:489
 msgid "When I ask the AI, in this document:"
 msgstr ""
 
@@ -7761,7 +7761,7 @@ msgstr ""
 msgid "Which side the border is on"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:531
+#: web/app/components/SidePanel.vue:530
 msgid "Which steps the wheel visits"
 msgstr ""
 
@@ -7781,7 +7781,7 @@ msgstr ""
 msgid "White"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:626
+#: web/app/components/SidePanel.vue:625
 msgid "Who answers @ai in this document now"
 msgstr ""
 
@@ -7845,7 +7845,7 @@ msgstr ""
 msgid "Will look different: {what}"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:521
+#: web/app/components/SidePanel.vue:520
 msgid "Withdraw"
 msgstr ""
 
@@ -7873,7 +7873,7 @@ msgstr ""
 msgid "Words"
 msgstr ""
 
-#: web/app/components/Workspace.vue:297
+#: web/app/components/Workspace.vue:285
 msgid "Workbook"
 msgstr ""
 
@@ -7897,7 +7897,7 @@ msgstr ""
 msgid "Wrap long text"
 msgstr ""
 
-#: web/app/lib/object-menu.ts:72
+#: web/app/lib/object-menu.ts:74
 msgid "Wrap text…"
 msgstr ""
 
@@ -7929,7 +7929,7 @@ msgstr ""
 msgid "Write the pattern yourself…"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:629
+#: web/app/components/SidePanel.vue:628
 msgid "Write to everybody, or {ask} to ask the assistant. Say {help} to see what it can do."
 msgstr ""
 
@@ -7981,7 +7981,7 @@ msgstr ""
 msgid "You can change it anyway — this is a warning, not a refusal."
 msgstr ""
 
-#: web/app/components/SheetGrid.vue:456 web/app/components/SheetGrid.vue:585 web/app/components/SheetGrid.vue:595 web/app/components/SlideCanvas.vue:322 web/app/components/SlideCanvas.vue:331 web/app/components/SlideCanvas.vue:462 web/app/components/SlideCanvas.vue:485 web/app/components/TextObjectLayer.vue:255 web/app/components/TextObjectMenu.vue:110 web/app/components/TextObjectMenu.vue:118 web/app/components/TextWorkspace.vue:265 web/app/components/Workspace.vue:300 web/app/components/Workspace.vue:357 web/app/components/Workspace.vue:408 web/app/components/Workspace.vue:490 web/app/components/Workspace.vue:550 web/app/components/Workspace.vue:556 web/app/components/Workspace.vue:638 web/app/components/Workspace.vue:807 web/app/components/Workspace.vue:861 web/app/components/Workspace.vue:981 web/app/lib/base-session.ts:1208 web/app/lib/base-session.ts:1244
+#: web/app/components/SheetGrid.vue:458 web/app/components/SheetGrid.vue:587 web/app/components/SheetGrid.vue:597 web/app/components/SlideCanvas.vue:322 web/app/components/SlideCanvas.vue:331 web/app/components/SlideCanvas.vue:462 web/app/components/SlideCanvas.vue:485 web/app/components/TextObjectLayer.vue:255 web/app/components/TextObjectMenu.vue:110 web/app/components/TextObjectMenu.vue:118 web/app/components/TextWorkspace.vue:265 web/app/components/Workspace.vue:288 web/app/components/Workspace.vue:345 web/app/components/Workspace.vue:396 web/app/components/Workspace.vue:478 web/app/components/Workspace.vue:538 web/app/components/Workspace.vue:544 web/app/components/Workspace.vue:621 web/app/components/Workspace.vue:790 web/app/components/Workspace.vue:844 web/app/components/Workspace.vue:964 web/app/lib/base-session.ts:1220 web/app/lib/base-session.ts:1256
 msgid "You can only look at this document."
 msgstr ""
 
@@ -8005,7 +8005,7 @@ msgstr ""
 msgid "Your browser would not copy it: select the key and copy it yourself."
 msgstr ""
 
-#: web/app/lib/base-session.ts:1241
+#: web/app/lib/base-session.ts:1253
 msgid "Your change was not applied: the document changed under you. It was reloaded."
 msgstr ""
 
@@ -8057,11 +8057,7 @@ msgstr ""
 msgid "a cell reference"
 msgstr ""
 
-#: packages/claudia-computes/src/claudia_computes/model.py:927
-msgid "a chart needs a name"
-msgstr ""
-
-#: packages/claudia-computes/src/claudia_computes/model.py:721
+#: packages/claudia-computes/src/claudia_computes/model.py:688
 msgid "a chart's range must be inside the sheet"
 msgstr ""
 
@@ -8073,7 +8069,7 @@ msgstr ""
 msgid "a column has no setting {name!r}"
 msgstr ""
 
-#: packages/claudia-computes/src/claudia_computes/commands.py:743
+#: packages/claudia-computes/src/claudia_computes/commands.py:752
 msgid "a column is {lo} to {hi} wide, not {size}"
 msgstr ""
 
@@ -8093,7 +8089,7 @@ msgstr ""
 msgid "a heading is called by its words: change the words to change the name"
 msgstr ""
 
-#: packages/claudia-core/src/claudia_core/objects.py:1014 packages/claudia-core/src/claudia_core/objects.py:1066
+#: packages/claudia-core/src/claudia_core/objects.py:1035 packages/claudia-core/src/claudia_core/objects.py:1094
 msgid "a holder has at most {limit} objects"
 msgstr ""
 
@@ -8129,7 +8125,7 @@ msgstr ""
 msgid "a name has no control characters"
 msgstr ""
 
-#: packages/claudia-core/src/claudia_core/objects.py:685
+#: packages/claudia-core/src/claudia_core/objects.py:682
 msgid "a name is written without spaces around it or twice in a row"
 msgstr ""
 
@@ -8177,7 +8173,7 @@ msgstr ""
 msgid "a paragraph holds text of at most {limit} characters"
 msgstr ""
 
-#: packages/claudia-creates/src/claudia_creates/model.py:88
+#: packages/claudia-creates/src/claudia_creates/model.py:86
 msgid "a planned time is a whole number of seconds from 1 to {limit}"
 msgstr ""
 
@@ -8213,7 +8209,7 @@ msgstr ""
 msgid "a row cannot be moved in front of itself"
 msgstr ""
 
-#: packages/claudia-computes/src/claudia_computes/commands.py:741
+#: packages/claudia-computes/src/claudia_computes/commands.py:750
 msgid "a row is {lo} to {hi} high, not {size}"
 msgstr ""
 
@@ -8225,11 +8221,11 @@ msgstr ""
 msgid "a sheet holds at most {limit} style ranges"
 msgstr ""
 
-#: packages/claudia-computes/src/claudia_computes/model.py:896
+#: packages/claudia-computes/src/claudia_computes/model.py:831
 msgid "a sheet needs a name"
 msgstr ""
 
-#: packages/claudia-computes/src/claudia_computes/commands.py:280 packages/claudia-computes/src/claudia_computes/model.py:922
+#: packages/claudia-computes/src/claudia_computes/commands.py:274 packages/claudia-computes/src/claudia_computes/model.py:857
 msgid "a slide needs a name"
 msgstr ""
 
@@ -8281,15 +8277,15 @@ msgstr ""
 msgid "a table keeps at least one row"
 msgstr ""
 
-#: packages/claudia-computes/src/claudia_computes/model.py:1115
+#: packages/claudia-computes/src/claudia_computes/model.py:1044
 msgid "a table needs a header row"
 msgstr ""
 
-#: packages/claudia-composes/src/claudia_composes/model.py:1123
+#: packages/claudia-composes/src/claudia_composes/model.py:1126
 msgid "a table of contents cannot be joined to a paragraph; remove it instead"
 msgstr ""
 
-#: packages/claudia-composes/src/claudia_composes/model.py:1065
+#: packages/claudia-composes/src/claudia_composes/model.py:1068
 msgid "a table of contents takes no typing: its entries come from the headings"
 msgstr ""
 
@@ -8309,7 +8305,7 @@ msgstr ""
 msgid "a text"
 msgstr ""
 
-#: packages/claudia-computes/src/claudia_computes/charts.py:97
+#: packages/claudia-computes/src/claudia_computes/charts.py:96
 msgid "a title of a chart has at most {limit} characters"
 msgstr ""
 
@@ -8327,10 +8323,6 @@ msgstr ""
 
 #: web/app/components/ResultNote.vue:31
 msgid "about this cell"
-msgstr ""
-
-#: packages/claudia-server/src/claudia_server/computes.py:760
-msgid "add_chart: the name must have 1 to {limit} characters"
 msgstr ""
 
 #: packages/claudia-server/src/claudia_server/shape_methods.py:41
@@ -8357,7 +8349,7 @@ msgstr ""
 msgid "add_object: use add_image to put a picture here"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:600
+#: packages/claudia-server/src/claudia_server/computes.py:597
 msgid "add_sheet: the name must have 1 to {limit} characters"
 msgstr ""
 
@@ -8413,11 +8405,11 @@ msgstr ""
 msgid "an image is at most {megabytes} MB"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:1228
+#: packages/claudia-server/src/claudia_server/computes.py:1261
 msgid "an object on a sheet is placed with row and col"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:1222
+#: packages/claudia-server/src/claudia_server/computes.py:1255
 msgid "an object on a slide is placed with x and y"
 msgstr ""
 
@@ -8521,7 +8513,7 @@ msgstr ""
 msgid "border"
 msgstr ""
 
-#: web/app/components/FooterBar.vue:77 web/app/components/SlideWorkspace.vue:554 web/app/components/TextWorkspace.vue:694
+#: web/app/components/FooterBar.vue:57 web/app/components/SlideWorkspace.vue:554 web/app/components/TextWorkspace.vue:694
 msgid "branch {branch}"
 msgstr ""
 
@@ -8545,7 +8537,7 @@ msgstr ""
 msgid "cell content"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:542
+#: packages/claudia-server/src/claudia_server/computes.py:539
 msgid "cell_styles: the window must not end before it starts"
 msgstr ""
 
@@ -8557,11 +8549,11 @@ msgstr ""
 msgid "cells is a list of rows, each a list of words"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:504
+#: packages/claudia-server/src/claudia_server/computes.py:501
 msgid "cells: the window must not end before it starts"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:508
+#: packages/claudia-server/src/claudia_server/computes.py:505
 msgid "cells: window too large (at most {limit} positions)"
 msgstr ""
 
@@ -8577,11 +8569,11 @@ msgstr ""
 msgid "chart"
 msgstr ""
 
-#: web/app/components/SheetChartInsertDialog.vue:123
+#: web/app/components/SheetChartInsertDialog.vue:121
 msgid "chart type"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:694
+#: web/app/components/SidePanel.vue:693
 msgid "chat message"
 msgstr ""
 
@@ -8597,7 +8589,7 @@ msgstr ""
 msgid "chat_log: limit must be from 1 to {limit}"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:614
+#: web/app/components/SidePanel.vue:613
 msgid "close"
 msgstr ""
 
@@ -8621,7 +8613,7 @@ msgstr ""
 msgid "columns: at most one column field in this version"
 msgstr ""
 
-#: web/app/components/Workspace.vue:1259
+#: web/app/components/Workspace.vue:1249
 msgid "completions"
 msgstr ""
 
@@ -8661,7 +8653,7 @@ msgstr ""
 msgid "content and history"
 msgstr ""
 
-#: web/app/components/SlideWorkspace.vue:453 web/app/components/TextWorkspace.vue:665 web/app/components/Workspace.vue:1189
+#: web/app/components/SlideWorkspace.vue:453 web/app/components/TextWorkspace.vue:665 web/app/components/Workspace.vue:1179
 msgid "copy, cut and paste, also from and to other programs"
 msgstr ""
 
@@ -8677,23 +8669,23 @@ msgstr ""
 msgid "count must be from 1 to {limit}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:712
-msgid "define_diagram: id and format are assigned by the server"
+#: packages/claudia-server/src/claudia_server/computes.py:702
+msgid "define_chart: id and format are assigned by the server"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:1119
+#: packages/claudia-server/src/claudia_server/computes.py:1152
 msgid "define_pivot: give the sheet it starts on or new_sheet, not both"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:1129
+#: packages/claudia-server/src/claudia_server/computes.py:1162
 msgid "define_pivot: the name of the new sheet must have 1 to {limit} characters"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:1010
+#: packages/claudia-server/src/claudia_server/computes.py:1043
 msgid "define_sql: query must be text of at most {limit} characters"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:1026
+#: packages/claudia-server/src/claudia_server/computes.py:1059
 msgid "define_sql: {problem}"
 msgstr ""
 
@@ -8749,7 +8741,7 @@ msgstr ""
 msgid "document ids are 1-64 letters, digits, '-' or '_'"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:484
+#: web/app/components/SidePanel.vue:483
 msgid "document panel"
 msgstr ""
 
@@ -8769,15 +8761,15 @@ msgstr ""
 msgid "edit"
 msgstr ""
 
-#: web/app/components/Workspace.vue:1187
+#: web/app/components/Workspace.vue:1177
 msgid "edit a cell (others are kept out of it while you do)"
 msgstr ""
 
-#: web/app/components/SheetGrid.vue:1374
+#: web/app/components/SheetGrid.vue:1377
 msgid "editing cell"
 msgstr ""
 
-#: web/app/components/FooterBar.vue:77 web/app/components/SlideWorkspace.vue:554 web/app/components/TextWorkspace.vue:694 web/app/lib/grid-a11y.ts:49
+#: web/app/components/FooterBar.vue:57 web/app/components/SlideWorkspace.vue:554 web/app/components/TextWorkspace.vue:694 web/app/lib/grid-a11y.ts:49
 msgid "empty"
 msgstr ""
 
@@ -8809,7 +8801,7 @@ msgstr ""
 msgid "every role is an object with id, name, purpose and colour"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:554
+#: web/app/components/SidePanel.vue:553
 msgid "everything that was done to this document"
 msgstr ""
 
@@ -8829,7 +8821,7 @@ msgstr ""
 msgid "export_office: format must be \"pptx\" or \"odp\""
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:286
+#: packages/claudia-server/src/claudia_server/computes.py:283
 msgid "export_office: format must be \"xlsx\" or \"ods\""
 msgstr ""
 
@@ -8867,6 +8859,10 @@ msgstr ""
 
 #: web/app/components/SearchPanel.vue:359 web/app/lib/grid-a11y.ts:50
 msgid "formula"
+msgstr ""
+
+#: packages/claudia-server/src/claudia_server/thing_names.py:279
+msgid "free_name: there are no things of the kind {kind!r}"
 msgstr ""
 
 #: web/app/components/ContentsDialog.vue:51 web/app/components/RandomDialog.vue:180
@@ -8917,7 +8913,7 @@ msgstr ""
 msgid "high"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:510
+#: web/app/components/SidePanel.vue:509
 msgid "history and chat"
 msgstr ""
 
@@ -8969,6 +8965,22 @@ msgstr ""
 msgid "insert"
 msgstr ""
 
+#: packages/claudia-server/src/claudia_server/computes.py:771
+msgid "insert_chart: id and format are assigned by the server"
+msgstr ""
+
+#: packages/claudia-server/src/claudia_server/computes.py:753
+msgid "insert_chart: row, col, w and h are whole numbers from 0"
+msgstr ""
+
+#: packages/claudia-server/src/claudia_server/computes.py:735
+msgid "insert_chart: show_as is one of {kinds}"
+msgstr ""
+
+#: packages/claudia-server/src/claudia_server/computes.py:739
+msgid "insert_chart: the place of a chart shown as {how} is {keys}"
+msgstr ""
+
 #: packages/claudia-server/src/claudia_server/hub.py:362
 msgid "internal server error"
 msgstr ""
@@ -8977,7 +8989,7 @@ msgstr ""
 msgid "invalid command: {reason!r}"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:663
+#: web/app/components/SidePanel.vue:662
 msgid "is working"
 msgstr ""
 
@@ -8985,7 +8997,7 @@ msgstr ""
 msgid "italic"
 msgstr ""
 
-#: web/app/components/Workspace.vue:1186
+#: web/app/components/Workspace.vue:1176
 msgid "jump to the edge of a block of data"
 msgstr ""
 
@@ -8993,7 +9005,7 @@ msgstr ""
 msgid "just now"
 msgstr ""
 
-#: web/app/components/Workspace.vue:1188
+#: web/app/components/Workspace.vue:1178
 msgid "keep and go down / keep and go right / cancel"
 msgstr ""
 
@@ -9009,7 +9021,7 @@ msgstr ""
 msgid "least"
 msgstr ""
 
-#: web/app/components/Workspace.vue:1184
+#: web/app/components/Workspace.vue:1174
 msgid "leave the table: on to the next / back to the previous part of the window"
 msgstr ""
 
@@ -9137,7 +9149,7 @@ msgstr ""
 msgid "move it; the handles resize it"
 msgstr ""
 
-#: web/app/components/Workspace.vue:1183
+#: web/app/components/Workspace.vue:1173
 msgid "move through the table"
 msgstr ""
 
@@ -9149,7 +9161,7 @@ msgstr ""
 msgid "name"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:1210
+#: packages/claudia-server/src/claudia_server/computes.py:1243
 msgid "name the sheet or the slide the object goes on"
 msgstr ""
 
@@ -9169,7 +9181,7 @@ msgstr ""
 msgid "new name"
 msgstr ""
 
-#: web/app/components/FooterBar.vue:69
+#: web/app/components/FooterBar.vue:49
 msgid "new sheet"
 msgstr ""
 
@@ -9201,7 +9213,7 @@ msgstr ""
 msgid "no field “{field}” in “{source}”: {names}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:802
+#: packages/claudia-server/src/claudia_server/computes.py:835
 msgid "no function named {name!r}"
 msgstr ""
 
@@ -9345,7 +9357,7 @@ msgstr ""
 msgid "notes"
 msgstr ""
 
-#: packages/claudia-creates/src/claudia_creates/model.py:81
+#: packages/claudia-creates/src/claudia_creates/model.py:79
 msgid "notes are at most {limit} characters"
 msgstr ""
 
@@ -9485,7 +9497,7 @@ msgstr ""
 msgid "other settings"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:457
+#: packages/claudia-server/src/claudia_server/computes.py:454
 msgid "outcome_table: combine must be \"all\" or \"pair\""
 msgstr ""
 
@@ -9533,7 +9545,7 @@ msgstr ""
 msgid "pdftocairo"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:614
+#: web/app/components/SidePanel.vue:613
 msgid "peek"
 msgstr ""
 
@@ -9593,7 +9605,7 @@ msgstr ""
 msgid "purpose of {name}"
 msgstr ""
 
-#: web/app/components/SheetGrid.vue:1304
+#: web/app/components/SheetGrid.vue:1307
 msgid "purpose of {name} column {n}"
 msgstr ""
 
@@ -9609,19 +9621,19 @@ msgstr ""
 msgid "query result"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:425
+#: packages/claudia-server/src/claudia_server/computes.py:422
 msgid "random_preview: params must be numbers"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:430
+#: packages/claudia-server/src/claudia_server/computes.py:427
 msgid "random_preview: there is no distribution {distribution!r}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:436
+#: packages/claudia-server/src/claudia_server/computes.py:433
 msgid "random_preview: {problem}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:411
+#: packages/claudia-server/src/claudia_server/computes.py:408
 msgid "random_preview: {what} must be a number or null"
 msgstr ""
 
@@ -9661,23 +9673,23 @@ msgstr ""
 msgid "request failed"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:633
+#: packages/claudia-server/src/claudia_server/computes.py:630
 msgid "resize_lines: at most {limit} lines at a time"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:657
+#: packages/claudia-server/src/claudia_server/computes.py:654
 msgid "resize_lines: axis must be \"row\" or \"col\""
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:640
+#: packages/claudia-server/src/claudia_server/computes.py:637
 msgid "resize_lines: each line is [index, size]"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:645
+#: packages/claudia-server/src/claudia_server/computes.py:642
 msgid "resize_lines: size must be a number or null"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:647
+#: packages/claudia-server/src/claudia_server/computes.py:644
 msgid "resize_lines: size must be between {lo} and {hi}"
 msgstr ""
 
@@ -9729,7 +9741,7 @@ msgstr ""
 msgid "search_replace: the search took longer than {seconds} seconds, so nothing was replaced: narrow it"
 msgstr ""
 
-#: web/app/components/Workspace.vue:1185
+#: web/app/components/Workspace.vue:1175
 msgid "select a block"
 msgstr ""
 
@@ -9737,19 +9749,19 @@ msgstr ""
 msgid "select an object (colleagues cannot change it while you hold it)"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:707
+#: web/app/components/SidePanel.vue:706
 msgid "send"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:517
+#: packages/claudia-server/src/claudia_server/computes.py:514
 msgid "set_cells: at most {limit} cells at a time"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:521
+#: packages/claudia-server/src/claudia_server/computes.py:518
 msgid "set_cells: each cell is an object with row, col and input"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:526
+#: packages/claudia-server/src/claudia_server/computes.py:523
 msgid "set_cells: input must be text of at most {limit} characters"
 msgstr ""
 
@@ -9765,7 +9777,7 @@ msgstr ""
 msgid "shape"
 msgstr ""
 
-#: web/app/components/FooterBar.vue:34
+#: web/app/components/FooterBar.vue:29
 msgid "sheets and slides"
 msgstr ""
 
@@ -9777,11 +9789,11 @@ msgstr ""
 msgid "show must be one of {shows}"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:607
+#: web/app/components/SidePanel.vue:606
 msgid "silence = agree"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:606
+#: web/app/components/SidePanel.vue:605
 msgid "silence = decline"
 msgstr ""
 
@@ -9825,7 +9837,7 @@ msgstr ""
 msgid "spread of the logarithm"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:979
+#: packages/claudia-server/src/claudia_server/computes.py:1012
 msgid "sql_preview: limit must be a whole number from 0 to {limit}"
 msgstr ""
 
@@ -9845,19 +9857,19 @@ msgstr ""
 msgid "stopped at its next step"
 msgstr ""
 
-#: packages/claudia-computes/src/claudia_computes/model.py:1374
+#: packages/claudia-computes/src/claudia_computes/model.py:1303
 msgid "structural edit is outside the sheet"
 msgstr ""
 
-#: packages/claudia-computes/src/claudia_computes/model.py:1392
+#: packages/claudia-computes/src/claudia_computes/model.py:1321
 msgid "structural edit would push cells off the sheet"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:612
+#: packages/claudia-server/src/claudia_server/computes.py:609
 msgid "structure: axis must be \"row\" or \"col\""
 msgstr ""
 
-#: web/app/components/SidePanel.vue:615
+#: web/app/components/SidePanel.vue:614
 msgid "suggest switching here"
 msgstr ""
 
@@ -9893,11 +9905,11 @@ msgstr ""
 msgid "text box"
 msgstr ""
 
-#: packages/claudia-composes/src/claudia_composes/model.py:1125
+#: packages/claudia-composes/src/claudia_composes/model.py:1128
 msgid "text cannot be joined into a table of contents"
 msgstr ""
 
-#: web/app/components/SlideCanvas.vue:633 web/app/components/TextObjectLayer.vue:425
+#: web/app/components/SlideCanvas.vue:639 web/app/components/TextObjectLayer.vue:425
 msgid "text of the object"
 msgstr ""
 
@@ -9969,7 +9981,7 @@ msgstr ""
 msgid "the cells are more than the table's rows and cols"
 msgstr ""
 
-#: packages/claudia-computes/src/claudia_computes/model.py:1113
+#: packages/claudia-computes/src/claudia_computes/model.py:1042
 msgid "the cells of a name must be inside the sheet"
 msgstr ""
 
@@ -9989,7 +10001,7 @@ msgstr ""
 msgid "the date and time as a day number with the time of day as its fraction."
 msgstr ""
 
-#: packages/claudia-core/src/claudia_core/objects.py:1906 packages/claudia-core/src/claudia_core/objects.py:921
+#: packages/claudia-core/src/claudia_core/objects.py:1934 packages/claudia-core/src/claudia_core/objects.py:942
 msgid "the description is text of at most {limit} characters"
 msgstr ""
 
@@ -10005,7 +10017,7 @@ msgstr ""
 msgid "the document's own"
 msgstr ""
 
-#: packages/claudia-computes/src/claudia_computes/commands.py:914
+#: packages/claudia-computes/src/claudia_computes/commands.py:817
 msgid "the draw number cannot go below 0"
 msgstr ""
 
@@ -10089,7 +10101,7 @@ msgstr ""
 msgid "the pivot table called ``name`` — the summary of a table the field panel of Tools ▸ Pivot Table describes. Written by the pivot's own commands, not by hand: change the pivot in its panel, not this formula. As the whole formula it fills the cells below and beside it; inside another formula it gives the first cell."
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:1173
+#: packages/claudia-server/src/claudia_server/computes.py:1206
 msgid "the pivot table {name} gave nothing: there is no SQL to show"
 msgstr ""
 
@@ -10141,11 +10153,11 @@ msgstr ""
 msgid "the rows without the header"
 msgstr ""
 
-#: packages/claudia-computes/src/claudia_computes/printing.py:73
+#: packages/claudia-computes/src/claudia_computes/printing.py:72
 msgid "the scale is between {min_percent} % and {max_percent} %"
 msgstr ""
 
-#: web/app/components/SheetChartInsertDialog.vue:140
+#: web/app/components/SheetChartInsertDialog.vue:138
 msgid "the selection, as it is now"
 msgstr ""
 
@@ -10161,11 +10173,11 @@ msgstr ""
 msgid "the sheet is {style}"
 msgstr ""
 
-#: packages/claudia-computes/src/claudia_computes/commands.py:201
+#: packages/claudia-computes/src/claudia_computes/commands.py:195
 msgid "the sheet “{name}” still has the data of the chart “{chart}” on it"
 msgstr ""
 
-#: web/app/lib/print/source.ts:261
+#: web/app/lib/print/source.ts:260
 msgid "the sheets"
 msgstr ""
 
@@ -10173,7 +10185,7 @@ msgstr ""
 msgid "the sheet’s style"
 msgstr ""
 
-#: packages/claudia-core/src/claudia_core/objects.py:999
+#: packages/claudia-core/src/claudia_core/objects.py:1020
 msgid "the size must be at least {least} by {least} units"
 msgstr ""
 
@@ -10269,20 +10281,32 @@ msgstr ""
 msgid "there is no earlier list of this kind to continue"
 msgstr ""
 
-#: packages/claudia-computes/src/claudia_computes/model.py:1212
+#: packages/claudia-computes/src/claudia_computes/model.py:1141
 msgid "there is no name “{old}”"
+msgstr ""
+
+#: packages/claudia-server/src/claudia_server/computes.py:1291 packages/claudia-server/src/claudia_server/computes.py:799
+msgid "there is no object {id!r}"
 msgstr ""
 
 #: packages/claudia-server/src/claudia_server/composes.py:373 packages/claudia-server/src/claudia_server/composes.py:433 packages/claudia-server/src/claudia_server/composes.py:599 packages/claudia-server/src/claudia_server/composes_words.py:117 packages/claudia-server/src/claudia_server/composes_words.py:53
 msgid "there is no paragraph {paragraph!r}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:1169
+#: packages/claudia-server/src/claudia_server/computes.py:1202
 msgid "there is no pivot table called {name!r}"
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/pivot_commands.py:150
 msgid "there is no pivot table called “{name}”"
+msgstr ""
+
+#: packages/claudia-server/src/claudia_server/computes.py:746
+msgid "there is no sheet or slide {id!r}"
+msgstr ""
+
+#: packages/claudia-server/src/claudia_server/computes.py:748
+msgid "there is no slide {id!r}"
 msgstr ""
 
 #: packages/claudia-server/src/claudia_server/protocol.py:734
@@ -10321,7 +10345,7 @@ msgstr ""
 msgid "this document has no lists"
 msgstr ""
 
-#: packages/claudia-computes/src/claudia_computes/model.py:715
+#: packages/claudia-computes/src/claudia_computes/model.py:682
 msgid "this document has no name “{source}” to draw a chart from"
 msgstr ""
 
@@ -10337,7 +10361,7 @@ msgstr ""
 msgid "this document has no table {id!r}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/replay.py:176 packages/claudia-server/src/claudia_server/thing_names.py:55
+#: packages/claudia-server/src/claudia_server/replay.py:175 packages/claudia-server/src/claudia_server/thing_names.py:55
 msgid "this document has nothing that can be named"
 msgstr ""
 
@@ -10349,7 +10373,7 @@ msgstr ""
 msgid "this document is not a text"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:216
+#: packages/claudia-server/src/claudia_server/computes.py:214
 msgid "this document is not a workbook"
 msgstr ""
 
@@ -10365,7 +10389,7 @@ msgstr ""
 msgid "this object is too large to turn that way: it would be {width} by {height} units on a slide of {slide_width} by {slide_height}"
 msgstr ""
 
-#: packages/claudia-core/src/claudia_core/objects.py:1004
+#: packages/claudia-core/src/claudia_core/objects.py:1025
 msgid "this object keeps its proportions (width divided by height is {aspect:g})"
 msgstr ""
 
@@ -10381,7 +10405,7 @@ msgstr ""
 msgid "this preview is gone: start it again"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/replay.py:138
+#: packages/claudia-server/src/claudia_server/replay.py:137
 msgid "this preview is no longer kept; work the redaction out again"
 msgstr ""
 
@@ -10489,19 +10513,19 @@ msgstr ""
 msgid "too many previews are open: finish or drop one before starting another"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:475
+#: packages/claudia-server/src/claudia_server/computes.py:472
 msgid "trace: reach must be one of {reaches}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:483
+#: packages/claudia-server/src/claudia_server/computes.py:480
 msgid "trace: the window must not end before it starts"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:479
+#: packages/claudia-server/src/claudia_server/computes.py:476
 msgid "trace: window is [row0, col0, row1, col1]"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:486
+#: packages/claudia-server/src/claudia_server/computes.py:483
 msgid "trace: window too large (at most {limit} positions)"
 msgstr ""
 
@@ -10513,7 +10537,7 @@ msgstr ""
 msgid "two value fields are both called “{title}”: give one of them another name"
 msgstr ""
 
-#: web/app/components/SheetGrid.vue:1240
+#: web/app/components/SheetGrid.vue:1243
 msgid "type here to add a row"
 msgstr ""
 
@@ -10529,11 +10553,11 @@ msgstr ""
 msgid "unknown parameter {parameter!r} for {name}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:1005 packages/claudia-server/src/claudia_server/computes.py:1216 packages/claudia-server/src/claudia_server/computes.py:670 packages/claudia-server/src/claudia_server/computes.py:744 packages/claudia-server/src/claudia_server/computes.py:975
+#: packages/claudia-server/src/claudia_server/computes.py:1008 packages/claudia-server/src/claudia_server/computes.py:1038 packages/claudia-server/src/claudia_server/computes.py:1249 packages/claudia-server/src/claudia_server/computes.py:667 packages/claudia-server/src/claudia_server/computes.py:751
 msgid "unknown sheet {sheet!r}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:1213 packages/claudia-server/src/claudia_server/computes.py:271 packages/claudia-server/src/claudia_server/computes_search.py:136 packages/claudia-server/src/claudia_server/creates.py:204
+#: packages/claudia-server/src/claudia_server/computes.py:1246 packages/claudia-server/src/claudia_server/computes.py:268 packages/claudia-server/src/claudia_server/computes_search.py:136 packages/claudia-server/src/claudia_server/creates.py:204
 msgid "unknown slide {slide!r}"
 msgstr ""
 
@@ -10701,7 +10725,7 @@ msgstr ""
 msgid "{cell} (no table right now)"
 msgstr ""
 
-#: packages/claudia-computes/src/claudia_computes/model.py:1342
+#: packages/claudia-computes/src/claudia_computes/model.py:1271
 msgid "{cell} shows the result of the formula in {owner} (SQL(), SORT() ...): change that formula, not its result"
 msgstr ""
 
@@ -10989,7 +11013,7 @@ msgstr ""
 msgid "{method} cannot be asked for a preview"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/replay.py:121 packages/claudia-server/src/claudia_server/replay.py:135
+#: packages/claudia-server/src/claudia_server/replay.py:120 packages/claudia-server/src/claudia_server/replay.py:134
 msgid "{method} cannot be asked for an earlier step"
 msgstr ""
 
@@ -11077,7 +11101,7 @@ msgstr ""
 msgid "{name} is a value, not a name"
 msgstr ""
 
-#: packages/claudia-computes/src/claudia_computes/model.py:1218 packages/claudia-computes/src/claudia_computes/pivot_commands.py:80
+#: packages/claudia-computes/src/claudia_computes/model.py:1147 packages/claudia-computes/src/claudia_computes/pivot_commands.py:80
 msgid "{name} is already a name"
 msgstr ""
 
@@ -11113,11 +11137,11 @@ msgstr ""
 msgid "{name} reads the history, which is for the document's owners and editors"
 msgstr ""
 
-#: web/app/components/SheetGrid.vue:1303
+#: web/app/components/SheetGrid.vue:1306
 msgid "{name} · {purpose} — change what this column is for"
 msgstr ""
 
-#: web/app/components/Workspace.vue:794
+#: web/app/components/Workspace.vue:777
 msgid "{name}: {role}"
 msgstr ""
 
@@ -11181,7 +11205,7 @@ msgstr ""
 msgid "{n} min ago"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:546
+#: web/app/components/SidePanel.vue:545
 msgid "{n} newer changes by others"
 msgstr ""
 
@@ -11225,7 +11249,7 @@ msgstr ""
 msgid "{n} samples were drawn, there are too many combinations to run all."
 msgstr ""
 
-#: web/app/components/SidePanel.vue:349
+#: web/app/components/SidePanel.vue:348
 msgid "{n} things to point at. Use the arrow keys, then Enter."
 msgstr ""
 
@@ -11265,7 +11289,7 @@ msgstr ""
 msgid "{place} already holds this document, as {id}. It cannot be added a second time: open the one that is here."
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:1087
+#: packages/claudia-server/src/claudia_server/computes.py:1120
 msgid "{problem}"
 msgstr ""
 
@@ -11273,7 +11297,7 @@ msgstr ""
 msgid "{range} selected, {count} cells"
 msgstr ""
 
-#: web/app/components/SheetChartInsertDialog.vue:135
+#: web/app/components/SheetChartInsertDialog.vue:133
 msgid "{range} · {rows} rows · {purpose}"
 msgstr ""
 
@@ -11337,7 +11361,7 @@ msgstr ""
 msgid "{user} (you)"
 msgstr ""
 
-#: web/app/components/SlideCanvas.vue:650
+#: web/app/components/SlideCanvas.vue:656
 msgid "{user} is working on this"
 msgstr ""
 
@@ -11353,7 +11377,7 @@ msgstr ""
 msgid "{user} may now “{role}”."
 msgstr ""
 
-#: web/app/components/SlideCanvas.vue:650
+#: web/app/components/SlideCanvas.vue:656
 msgid "{user} selected this"
 msgstr ""
 
@@ -11373,11 +11397,11 @@ msgstr ""
 msgid "{what} is outside the paragraph"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:227
+#: packages/claudia-server/src/claudia_server/computes.py:225
 msgid "{what} must be a whole number from 0 to {last}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:326
+#: packages/claudia-server/src/claudia_server/computes.py:323
 msgid "{what} must be a whole number from {low} to {high}"
 msgstr ""
 
@@ -11409,39 +11433,39 @@ msgstr ""
 msgid "{what}, {n} to {m} times"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:836
+#: packages/claudia-server/src/claudia_server/computes.py:869
 msgid "{what}: anchor is {{sheet, row, col}} on a sheet of this document"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:851
+#: packages/claudia-server/src/claudia_server/computes.py:884
 msgid "{what}: give a range or an anchor (the cell of a SQL() formula), not both"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:820
+#: packages/claudia-server/src/claudia_server/computes.py:853
 msgid "{what}: range is {{sheet, row0, col0, row1, col1}}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:814
+#: packages/claudia-server/src/claudia_server/computes.py:847
 msgid "{what}: scope must be a sheet id or null"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:846
+#: packages/claudia-server/src/claudia_server/computes.py:879
 msgid "{what}: the definition is an object with {allowed}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:829
+#: packages/claudia-server/src/claudia_server/computes.py:862
 msgid "{what}: the range must not end before it starts"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:242
-msgid "{what}: this document does not know the diagram {diagram_id!r}"
+#: packages/claudia-server/src/claudia_server/computes.py:240
+msgid "{what}: this document does not know the chart {chart_id!r}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:824
+#: packages/claudia-server/src/claudia_server/computes.py:857
 msgid "{what}: this document does not know the sheet {sheet!r}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:1074 packages/claudia-server/src/claudia_server/computes.py:1083 packages/claudia-server/src/claudia_server/computes.py:866
+#: packages/claudia-server/src/claudia_server/computes.py:1107 packages/claudia-server/src/claudia_server/computes.py:1116 packages/claudia-server/src/claudia_server/computes.py:899
 msgid "{what}: {problem}"
 msgstr ""
 
@@ -11453,7 +11477,7 @@ msgstr ""
 msgid "{who} has been asked to take over {doc}. Until they accept, you are still the owner. You will become an editor the moment they do."
 msgstr ""
 
-#: web/app/components/SidePanel.vue:515
+#: web/app/components/SidePanel.vue:514
 msgid "{who} suggests going to {line}."
 msgstr ""
 
@@ -11465,7 +11489,7 @@ msgstr ""
 msgid "{width} × {height} px"
 msgstr ""
 
-#: web/app/components/SheetGrid.vue:1359
+#: web/app/components/SheetGrid.vue:1362
 msgid "· editing"
 msgstr ""
 
@@ -11541,15 +11565,15 @@ msgstr ""
 msgid "“{name}” is a built-in style and can only be hidden, not deleted"
 msgstr ""
 
-#: packages/claudia-computes/src/claudia_computes/commands.py:648
+#: packages/claudia-computes/src/claudia_computes/commands.py:657
 msgid "“{name}” is a style of another kind and cannot be put into the box of a cell"
 msgstr ""
 
-#: packages/claudia-computes/src/claudia_computes/commands.py:650
+#: packages/claudia-computes/src/claudia_computes/commands.py:659
 msgid "“{name}” is a style of another kind and cannot be put into the words of a cell"
 msgstr ""
 
-#: packages/claudia-composes/src/claudia_composes/model.py:1156
+#: packages/claudia-composes/src/claudia_composes/model.py:1159
 msgid "“{name}” is a style of another kind and cannot be put on a paragraph"
 msgstr ""
 
@@ -11589,22 +11613,22 @@ msgstr ""
 msgid "↑↓ choose · Tab to “Show as” · Enter puts it in · Esc closes"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:596
+#: web/app/components/SidePanel.vue:595
 msgid "↺ restore"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:544
+#: web/app/components/SidePanel.vue:543
 msgid "↺ restore this step"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:654
+#: web/app/components/SidePanel.vue:653
 msgid "▶ here"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:654
+#: web/app/components/SidePanel.vue:653
 msgid "▷ go here"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:595
+#: web/app/components/SidePanel.vue:594
 msgid "◆ saved: {label}"
 msgstr ""

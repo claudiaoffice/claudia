@@ -130,7 +130,7 @@ def test_a_short_formula_is_as_tall_as_the_body_text_with_its_proportions(app, l
 
 
 @pytest.mark.parametrize("app", ["composes", "computes", "creates"])
-def test_a_large_diagram_is_no_larger_than_420_by_240(app):
+def test_a_large_chart_is_no_larger_than_420_by_240(app):
     assert add_container(app, (1000, 1000))[3] == (240, 240)
 
 

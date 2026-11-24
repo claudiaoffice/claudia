@@ -54,7 +54,7 @@ PARAGRAPHS = "[data-testid=text] [data-paragraph]"
 ENTRIES = "ol.log > li.entry"
 TEXT_BOX_APPS = ("composes", "creates")  # a sheet has no text boxes
 SLIDE_TABS = "[role=tablist][aria-label=slides] [role=tab]"
-SHEET_TABS = "[role=tablist][aria-label=sheets] [role=tab]"
+SHEET_TABS = "[role=tablist][aria-label^=sheets] [role=tab]"  # "sheets", or "sheets and slides" since E6.31
 NAME_BOX = "input[aria-label=cell]"
 _documents = itertools.count(1)
 

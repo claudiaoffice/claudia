@@ -915,8 +915,8 @@ def _library_charts_through_libreoffice(to: str) -> bytes:
     first = ChartSpec(id="c1", kind="bar", range=whole, title="Sales", x_title="Region", y_title="Euro")
     second = ChartSpec(id="c2", kind="bar", range=whole, series_in="rows", legend=False)
     for spec, object_id, anchor in ((first, "o1", (6, 1)), (second, "o2", (6, 8))):
-        model.diagrams.define(spec)
-        body = ObjectBody(object_id, "diagram", 480, 300, "plain-image", ref=spec.id)
+        model.charts.define(spec)
+        body = ObjectBody(object_id, "chart", 480, 300, "plain-image", ref=spec.id)
         model.insert_object(VisualObject(body, CellAnchor(sheet_id, *anchor)))
     with tempfile.TemporaryDirectory() as folder:
         source = Path(folder) / "in" / f"charts.{to}"

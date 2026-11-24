@@ -129,7 +129,7 @@ def put_image(doc, object_id: str = "i1", author: str = "ana", asset: ImageAsset
     return doc.execute(steps[0] if len(steps) == 1 else Batch(tuple(steps)), author=author)
 
 
-# -- charts (E6.6): a ChartSpec plus either a tab or a floating diagram object, or both ------------------------
+# -- charts (E6.6): a ChartSpec and the chart object that shows it ----------------------------------------------
 def chart_spec(spec_id: str = "c1", *, sheet: str = S1, first=(0, 0), last=(2, 1), **changes) -> ChartSpec:
     """A minimal, valid bar chart over ``sheet``'s cells from ``first`` to ``last`` (row, col), inclusive."""
     range_ = RangeRef(CellRef(first[0], first[1], SheetId(sheet)), CellRef(last[0], last[1], SheetId(sheet)))
@@ -137,18 +137,18 @@ def chart_spec(spec_id: str = "c1", *, sheet: str = S1, first=(0, 0), last=(2, 1
     return ChartSpec(**{**fields, **changes})
 
 
-def diagram_object(object_id: str = "d1", sheet: str = S1, spec_id: str = "c1", **changes) -> SheetObject:
-    """A floating diagram object (E6.6) showing the definition ``spec_id`` names."""
+def chart_object(object_id: str = "d1", sheet: str = S1, spec_id: str = "c1", **changes) -> SheetObject:
+    """A floating chart object (E6.6) showing the definition ``spec_id`` names."""
     fields = {
         "id": object_id,
         "sheet": sheet,
-        "kind": "diagram",
+        "kind": "chart",
         "row": 2,
         "col": 2,
         "w": 400,
         "h": 200,
-        "style": "plain-image",  # a diagram carries its own colours, same as an image (plain-image's own purpose)
-        "diagram": spec_id,
+        "style": "plain-image",  # a chart carries its own colours, same as an image (plain-image's own purpose)
+        "chart": spec_id,
     }
     return build(**{**fields, **changes})
 
@@ -156,8 +156,8 @@ def diagram_object(object_id: str = "d1", sheet: str = S1, spec_id: str = "c1", 
 def put_chart_spec(doc, spec_id: str = "c1", author: str = "ana", **changes) -> ChartSpec:
     """Register a chart definition (``DefineAsset``), defining it first if the document does not have it.
 
-    Returns the spec — read it back with ``doc.model.diagrams[spec_id]``."""
+    Returns the spec — read it back with ``doc.model.charts[spec_id]``."""
     spec = chart_spec(spec_id, **changes)
-    if spec_id not in doc.model.diagrams:
-        doc.execute(DefineAsset("diagram", spec.to_data()), author=author)
+    if spec_id not in doc.model.charts:
+        doc.execute(DefineAsset("chart", spec.to_data()), author=author)
     return spec

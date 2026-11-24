@@ -5,6 +5,12 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+### Changed
+- The look and the OpenDocument elements of a text box or a shape come from `claudia_odf_io.boxes`, DrawingML's fills
+  and outlines from `claudia_opc_io.drawingml` (D1479); what is written and read does not change.
+- The docx and odt readers take what a drawing says of itself from `claudia_opc_io.drawingml` and the picture frame
+  from `claudia_odf_io.held_frame` (D1478); nothing a file reads as changes.
+
 ### Added
 - Names and descriptions in docx and odt (E1.13, D1311, D1318): **`Annotations`** (`names`, `comments`, `author`,
   `when`) is the new `annotations=` argument of `text_to_docx` and `text_to_odt`. A paragraph with a name in
