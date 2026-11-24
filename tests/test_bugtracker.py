@@ -52,3 +52,12 @@ def test_an_item_is_in_one_index_table_only():
     tables = _index()
     both = {row[0] for row in tables["Open"][1]} & {row[0] for row in tables["Fixed"][1]}
     assert not both, f"in Open and in Fixed: {sorted(both)}"
+
+
+def test_the_open_items_are_in_priority_order():
+    """The *Open* table says it is sorted by priority (P1, P2, P3, then items that wait for a decision without one)."""
+    rank = {"P1": 1, "P2": 2, "P3": 3, "—": 4}
+    _, rows = _index()["Open"]
+    priorities = [rank.get(row[1], 4) for row in rows]
+    late = [row[0] for row, before in zip(rows[1:], priorities, strict=False) if rank.get(row[1], 4) < before]
+    assert priorities == sorted(priorities), f"out of priority order: {late}"

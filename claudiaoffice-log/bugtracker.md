@@ -55,7 +55,6 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | UX-69 | P2 | UX / all apps | A viewer is not told she can only look: greyed entries, hidden controls and object gestures are silent (only Delete on a sheet's object says so) | open (scenario `@pending:UX-69`) | 2026-11-22 |  |
 | UX-70 | P2 | UX / all apps | What an export could not keep is never shown: the losses come back with the file and no client says them | **new, open** (read; size 2) | 2026-11-22 |  |
 | UX-71 | P2 | UX / computes | Text on a workbook's slide is drawn in the workbook's Body text (13 px), tiny on a 1600-unit slide | **needs decision** (measured; size 2) | 2026-11-22 |  |
-| UX-76 | P3 | UX / computes | The New sheet dialog proposes no name: the field is empty (placeholder "Forecast") and Add Sheet stays off until one is typed, though a new sheet is to get a name like "Sheet2" (E1.13) | open (scenario `@pending:UX-76`) | 2026-11-22 |  |
 | CODE-25 | P2 | Code / Export | A renamed object loses its name in pptx and odp without the export saying so (D450) | **new, open** |  |  |
 | CODE-31 | P2 | Code / i18n | The history speaks English to everybody: command labels and summaries are not translated | **new, open** |  |  |
 | CODE-45 | P2 | Code / Import | pptx placeholders (titles, body text) are not imported at all | **new, open** |  |  |
@@ -63,6 +62,8 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | PROC-30 | P2 | Process / desktop clients | The Neutralino (Windows, macOS) tests and the GTK client were not run for `object-interaction`: the generated menus were rebuilt and the manifest unit tests pass, nothing more | **new, open** |  |  |
 | PROC-37 | P2 | Process / scope | D1272 says an export's history and chat come back in with their authors as text; slice B imports the content only (`import_state` returns the state, the `history.jsonl` and `chat.jsonl` of an export are written but never read back) | **new, open** (size 2; needs the owner's decision: build it in slice C or log it) |  |  |
 | PROC-40 | P2 | Process / E2E | Four spec files (51 scenarios) run nowhere: no step code binds them and no scenario names a unit or e2e test (`names`, `requirements`, `objects-in-composes`, `pictures-in-files`) | **new, open** (measured; size 2) | 2026-11-20 |  |
+| UX-64 | P2 | UX / all apps | Dark mode: a part of the sidebar (History & Chat / Help) is not readable or has too little contrast; the exact symptom was not written down when it was seen (see entry) | **needs decision** (symptom to be re-stated; size 2) | 2026-11-22 |  |
+| UX-76 | P3 | UX / computes | The New sheet dialog proposes no name: the field is empty (placeholder "Forecast") and Add Sheet stays off until one is typed, though a new sheet is to get a name like "Sheet2" (E1.13) | open (scenario `@pending:UX-76`) | 2026-11-22 |  |
 | SEC-09 | P3 | Security | User names can be confusable (homoglyphs) | open (unverified) |  |  |
 | SEC-14 | P3 | Security / Privacy | `/api/swagger` loads its script from a CDN; the API description is public | **new, open** |  |  |
 | SEC-16 | P3 | Security | The LaTeX program setting accepts any executable on the server | **new, open** |  |  |
@@ -87,7 +88,6 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | UX-59 | P3 | UX / composes | Up from the second paragraph to the first failed once in four runs: a re-render of a paragraph just saved may undo a native caret move | **new, open** (measured once, cause a guess; size 3) | 2026-11-20 |  |
 | UX-60 | P3 | UX / composes | Dragging an object to another paragraph is "Moved an object" in the history; the mock names the object and the paragraph | **new, open** (divergence from the mock of D1352; size 3) | 2026-11-20 |  |
 | UX-63 | P3 | UX / all apps | The print preview says printing and saving a PDF are "recorded in the document's history"; they go into the exit record, which is not part of the history (glossary) | **new, open** (`web/app/components/PrintPreview.vue`, string in `po/`; size 3) | 2026-11-21 |  |
-| UX-64 | P2 | UX / all apps | Dark mode: a part of the sidebar (History & Chat / Help) is not readable or has too little contrast; the exact symptom was not written down when it was seen (see entry) | **needs decision** (symptom to be re-stated; size 2) | 2026-11-22 |  |
 | UX-65 | P3 | UX / composes | Search & replace panel, find-only state: the results list overflows its container and the "text" badge of a result is clipped at the panel edge | **new, open** (`web/app/components/SearchPanel.vue`; **measured** in the running app; size 3) | 2026-11-22 |  |
 | UX-66 | P3 | UX / composes | `StylesDialog.vue` hard-codes `#7a4710` for the text of its `.flag` pill instead of a colour token (`--apricot-dark`), so it does not follow the themes | **new, open** (`web/app/components/StylesDialog.vue`; **read**; size 3) | 2026-11-22 |  |
 | UX-67 | P3 | UX / a11y | The Heading and Numbering selects in the Styles dialog are unstyled native `<select>`s: they look unlike every other field and may diverge from BITV (focus, contrast, target size not tested) | **new, open** (`web/app/components/StyleSpec.vue`; **read**; size 3) | 2026-11-22 |  |
@@ -108,11 +108,11 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | CODE-39 | P3 | Code / web | `OpenDialog.vue` does five jobs in 1,615 lines | **new, open** |  |  |
 | CODE-41 | P3 | Code / Arch | Import cycles in computes are worked around with 29 function-level imports | **new, open** |  |  |
 | CODE-47 | P3 | Code / Import | Words of a docx with a font of their own are a `formatting` loss | **new, open** |  |  |
-| CODE-53 | P3 | Web | The failure text of a rendered container is clipped in a small frame and cannot be read in full | open |  |  |
+| CODE-53 | P3 | Code / web | The failure text of a rendered container is clipped in a small frame and cannot be read in full | open |  |  |
 | CODE-54 | P3 | Code / Render | A finished picture is kept without the fonts in its key, so it stays after a font of the same family and style is replaced | open |  |  |
 | CODE-56 | P3 | Code / computes | A new sheet can get the id of a removed sheet | **new, open** |  |  |
 | CODE-62 | P3 | Code / Linux client | A window that revives the shared server while the old one still holds the port starts it on a random port, not the remembered one | **new, open** |  |  |
-| CODE-63 | P3 | UX / composes | The Format ▸ Styles menu lists composes' built-in `contents-title` and `contents-1` to `contents-9` as "custom" styles | **new, open** (read) |  |  |
+| CODE-63 | P3 | Code / composes | The Format ▸ Styles menu lists composes' built-in `contents-title` and `contents-1` to `contents-9` as "custom" styles | **new, open** (read) |  |  |
 | CODE-66 | P3 | computes I/O | A picture added to an imported XLSX or ODS is not written into it: the patch of a kept file does not add pictures (reported as `object`) | **new, open** (D1233) |  |  |
 | CODE-68 | P3 | computes | Computes cannot make a text box or a shape, though a model can hold one (a file from another app) and an export reports it as `object` | **new, open** |  |  |
 | CODE-69 | P3 | Code / shared objects | A shape's text is a plain `str`, not the shared paragraph entity: no styles, no authorship runs, no per-host overflow policy | **new, open** (implementation note, shared object layer) |  |  |
@@ -1563,6 +1563,8 @@ its host (`keyOf`, `where`, `jump`, `scopeLabel`). Left: the panel's words ("Who
 Windows CI hunt, and `_replace` sleeps up to ~10 s on Windows on the event loop (with PERF-02). The CI cause was
 Controlled Folder Access. **Fix:** drop the diagnostic; move the retry off the loop with PERF-02.
 
+**Re-checked 2026-11-24 (bug eater triage):** the scan and the retry now live in `claudia_file_writer/atomic.py` (lines 56–95), not in `journal.py`; part of the execution-model work (A1 in `notes/bug-eater-queue.md`).
+
 ### CODE-20 · The image's build tool is not pinned · P3 · new, open
 `COPY --from=ghcr.io/astral-sh/uv:latest`: a new uv can change the image without a commit. **Fix:** pin a version (and
 digest), updated by Dependabot.
@@ -1942,6 +1944,8 @@ and the lines of the diagnostics under it, are cut off with no way to read the r
 the face shows the first line and the full message is in a tooltip and in the object's description, or in a popover
 opened with Enter; the message stays an alert for screen readers in full. Acceptance: a test that a 300-character message
 is reachable in full from the face (text in the DOM, not hidden from assistive technology).
+
+**Re-checked 2026-11-24 (bug eater triage):** the face is `ContainerFace.vue` now (`RenderedFace.vue` is gone); `.state{overflow:hidden}` and the diagnostics cut to three are still there.
 
 ### CODE-54 · A finished picture is kept without the fonts in its key · P3 · open
 **Read** (`RenderService.render`): the key of the cache of pictures has the source, settings and the tools, not the font
@@ -2546,7 +2550,7 @@ failed on `tools/transplant.py`, which also ran `zip` through the shell with an 
 without a shell (checked on a real file, an output path with a space). The number skips PROC-46 to PROC-48, which the
 range of `e2e-guard` names. Escaped because: test not run (the gate was not run before the design files were pushed).
 
-### UX-68 · A sheet or a chart tab cannot be deleted in computes · P2 · size 2 · new, open
+### UX-68 · A sheet or a slide cannot be deleted in computes · P2 · size 2 · new, open
 **Found** while drawing the mockups of E6.31 (slides in computes): the tab strip (`web/app/components/FooterBar.vue`)
 renames a tab on double-click and does nothing else, and no menu entry deletes a sheet or a chart tab. The model can
 (`RemoveSheet`, which refuses to orphan a chart that reads the sheet) and so can the server (`remove_chart`), but no
