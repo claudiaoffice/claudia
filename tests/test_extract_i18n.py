@@ -260,4 +260,4 @@ def test_moving_a_translated_text_to_another_line_leaves_the_template_as_it_was(
     before = extract_i18n.render_pot({"Save": ["web/a.vue:12", "web/a.vue:40", "web/b.ts:3"]})
     after = extract_i18n.render_pot({"Save": ["web/a.vue:15", "web/a.vue:41", "web/b.ts:9"]})
     assert before == after
-    assert "\n#: web/a.vue web/b.ts\nmsgid \"Save\"\n" in after
+    assert '\n#: web/a.vue web/b.ts\nmsgid "Save"\n' in after
