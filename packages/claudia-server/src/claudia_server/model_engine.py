@@ -21,8 +21,9 @@ from dataclasses import dataclass, replace
 
 from claudia_ai import Answerer, Message, Request, ToolCall, ToolSpec, Turn
 
+from .ai_guidance import Guidance
 from .assistant import AiTurn, Say, Task
-from .lens import Lens, cut
+from .lens import Lens, OutlineLens, cut
 from .protocol import MethodTable, RequestError
 
 MEMORY_TURNS = 6  # question and answer pairs remembered per person, for as long as the document stays loaded
@@ -94,10 +95,14 @@ class ModelEngine:
         *,
         memory: ConversationMemory | None = None,
         budget: Budget = Budget(),  # noqa: B008  (frozen)
+        guidance: Guidance = Guidance(),  # noqa: B008  (frozen)
     ):
         self._runner = runner
+        self._guidance = guidance
         self._tools = tools
-        self._lens = lens
+        # what a remote provider is first shown holds no word a person wrote (CODE-80): decided by the runner, so that
+        # nobody who builds an engine can forget it
+        self._lens: Lens = OutlineLens(lens) if runner.remote else lens
         self._memory = memory or ConversationMemory()
         self._budget = budget
 
@@ -111,7 +116,9 @@ class ModelEngine:
         can_write = any(t.kind != "look" for t in tools)
         offered = frozenset(t.name for t in tools if t.kind != "look")
         context = self._lens.orient(task.document, can_write=can_write, asker=task.sender, writes=offered)
-        request = Request(task.sender, task.text, context, tools, history)
+        skills = self._guidance.skills_for(offered)
+        persona = self._guidance.persona
+        request = Request(task.sender, task.text, context, tools, history, persona=persona, skills=skills)
         say = await self._converse(task, request)
         self._memory.remember(task.sender, task.text, say)
         return [Say(say)]
@@ -125,7 +132,7 @@ class ModelEngine:
         for number in range(1, budget.rounds + 1):
             turn = await self._runner.answer(replace(request, exchange=tuple(exchange)))
             if not turn.calls and not turn.problems:
-                return turn.say or "I have nothing to add."
+                return turn.say or self._nothing_said(done)
             if number == budget.rounds or used >= budget.calls:
                 break  # no round left to look at what these would do, or none was allowed: do not make them
             results, used = self._make(task, turn, used, done)
@@ -164,12 +171,21 @@ class ModelEngine:
         except RequestError as error:
             return f"failed: {error.message}"
 
+    @staticmethod
+    def _nothing_said(done: Counter[str]) -> str:
+        """What the asker reads when the model's last answer was empty: not a sentence that sounds like an answer."""
+        return f"I made these changes: {_made(done)}." if done else "I could not comply."
+
     def _stopped(self, turn: Turn, done: Counter[str], rounds: int) -> str:
         """What the asker is told when the model did not finish within its budget."""
-        made = ", ".join(f"{method} x{count}" for method, count in done.items())
         text = f"I stopped after {rounds} steps: that is my limit for one question. "
-        text += f"I made these changes before stopping: {made}." if made else "I changed nothing."
+        text += f"I made these changes before stopping: {_made(done)}." if done else "I changed nothing."
         return f"{text}\n\nWhere I was: {turn.say}" if turn.say else text
+
+
+def _made(done: Counter[str]) -> str:
+    """The changes a question made, as "set_cells x2, add_sheet x1"."""
+    return ", ".join(f"{method} x{count}" for method, count in done.items())
 
 
 def _short(params: dict) -> str:

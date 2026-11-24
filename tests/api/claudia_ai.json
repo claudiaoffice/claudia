@@ -1,5 +1,5 @@
 {
- "version": "0.3.0",
+ "version": "0.5.0",
  "Agent": {
   "class": [
    "object"
@@ -20,7 +20,9 @@
   "methods": {
    "answer": "(self, request: 'Request') -> 'Turn'"
   },
-  "properties": []
+  "properties": [
+   "remote"
+  ]
  },
  "CALL_LIMIT": {
   "value": "50"
@@ -79,7 +81,8 @@
    "close": "(self) -> 'None'"
   },
   "properties": [
-   "name"
+   "name",
+   "remote"
   ]
  },
  "ModelTimeout": {
@@ -112,7 +115,7 @@
   "class": [
    "object"
   ],
-  "init": "(asker: 'str', text: 'str', context: 'str' = '', tools: 'tuple[ToolSpec, ...]' = (), history: 'Sequence[Message]' = (), exchange: 'Sequence[Message]' = ()) -> None",
+  "init": "(asker: 'str', text: 'str', context: 'str' = '', tools: 'tuple[ToolSpec, ...]' = (), history: 'Sequence[Message]' = (), exchange: 'Sequence[Message]' = (), persona: 'str' = '', skills: 'str' = '') -> None",
   "methods": {},
   "properties": []
  },

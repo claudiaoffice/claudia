@@ -17,12 +17,39 @@ from typing import Any, Protocol
 from claudia_core import Document
 
 FENCE = "```"
+
+#: Said to a remote provider in place of the start of the document (CODE-80): it is shown how much there is, and has to
+#: look for what it needs, so that what leaves the server is what it asked to see.
+LOOK_FIRST = "Nothing a person wrote is shown here: look at what the question is about, with the requests below."
+
+#: The requests that read the product's own help, the same in every app (E7.2).
+HELP_METHODS = ("help_search", "help_topic")
+
 _FENCES = re.compile(r"`{3,}")
 
 
 def fence(text: str) -> str:
     """``text`` as a block of data: a fence round it, and no fence inside that could end it early."""
     return f"{FENCE}data\n{_FENCES.sub("'''", text)}\n{FENCE}"
+
+
+def look_first(start: str) -> str:
+    """The end of an outline: nothing is shown, so look, beginning with the request ``start``."""
+    return f"{LOOK_FIRST} Start with {start}."
+
+
+def show_help(method: str, result: Any) -> str:
+    """The answer of ``help_search`` or ``help_topic`` as text for the model. Help is written by the product, not by
+    the people who wrote the document, so unlike what comes out of a document it is not fenced as data (D1563). The
+    loop cuts a long topic like any result."""
+    if method == "help_search":
+        return "\n".join(f"- {topic['id']} — {topic['title']}" for topic in result) or "No help topic matches that."
+    return f"{result['title']}\n\n{result['body']}"
+
+
+def count(number: int, one: str, many: str) -> str:
+    """``1 sheet``, ``2 sheets``."""
+    return f"{number} {one if number == 1 else many}"
 
 
 def shorten(text: str, limit: int) -> str:
@@ -78,6 +105,18 @@ class Lens(Protocol):
         offered for her (``None``: no limit), so an example names one it may use."""
         ...
 
+    def outline(
+        self,
+        document: Document,
+        *,
+        can_write: bool,
+        asker: str | None = None,
+        writes: frozenset[str] | None = None,
+    ) -> str:
+        """The same start without anything a person wrote (D1568): how much there is and the ids, and that the model
+        has to look. What a remote provider is given in place of ``orient``."""
+        ...
+
     def show(self, method: str, params: dict, result: Any) -> str:
         """The answer of the read request ``method`` as text for the model."""
         ...
@@ -85,3 +124,36 @@ class Lens(Protocol):
     def recorder(self, document: Document) -> Recorder:
         """A context manager to hold round one write request; afterwards ``report`` says what it did."""
         ...
+
+
+class OutlineLens:
+    """A lens whose first message is its outline: what a remote provider is shown, so that it is sent what it looks at
+    and nothing before (CODE-80). Everything else is the lens's own."""
+
+    def __init__(self, lens: Lens):
+        self._lens = lens
+        self.look_methods = lens.look_methods
+        self.show = lens.show
+        self.recorder = lens.recorder
+
+    def orient(
+        self,
+        document: Document,
+        *,
+        can_write: bool,
+        asker: str | None = None,
+        writes: frozenset[str] | None = None,
+    ) -> str:
+        """The lens's outline."""
+        return self._lens.outline(document, can_write=can_write, asker=asker, writes=writes)
+
+    def outline(
+        self,
+        document: Document,
+        *,
+        can_write: bool,
+        asker: str | None = None,
+        writes: frozenset[str] | None = None,
+    ) -> str:
+        """The lens's outline (so that it is still a lens)."""
+        return self.orient(document, can_write=can_write, asker=asker, writes=writes)

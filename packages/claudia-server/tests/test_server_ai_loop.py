@@ -159,6 +159,41 @@ def test_text_in_a_cell_that_looks_like_an_order_arrives_as_fenced_data_it_canno
     scenario(test, FakeModel(script(commands(look()), "It says something odd.")))
 
 
+# -- an answer with nothing in it says so (CODE-82)
+def test_a_model_that_answers_with_nothing_is_not_dressed_up_as_an_answer():
+    async def test(hosts, model, runner):
+        ann = Person(hosts[0], ANN)
+        fill(ann, A1="1")
+        ask(ann, "why is B7 an error?")
+        await hosts[0].assistant.idle()
+        assert ann.said() == ["I could not comply."]
+
+    scenario(test, FakeModel(lambda messages: "  \n"))
+
+
+def test_a_model_that_changed_something_and_then_says_nothing_reports_what_it_changed():
+    async def test(hosts, model, runner):
+        ann = Person(hosts[0], ANN)
+        fill(ann, A1="1")
+        ask(ann, "fix B7")
+        await hosts[0].assistant.idle()
+        assert value(ann, 0, 1) == 52
+        assert ann.said() == ["I made these changes: set_cells x2."]
+
+    scenario(test, FakeModel(script(commands(set_cell(0, 1, "52")), commands(set_cell(0, 2, "7")), "")))
+
+
+def test_a_short_true_answer_is_shown_as_it_is():
+    async def test(hosts, model, runner):
+        ann = Person(hosts[0], ANN)
+        fill(ann, A1="1")
+        ask(ann, "fix B7")
+        await hosts[0].assistant.idle()
+        assert ann.said() == ["Done."]
+
+    scenario(test, FakeModel(lambda messages: "Done."))
+
+
 # -- budgets
 def test_a_model_that_never_stops_is_stopped_and_the_asker_is_told_what_was_done():
     async def test(hosts, model, runner):
@@ -180,7 +215,7 @@ def test_the_stop_says_which_changes_were_already_made():
         ask(ann, "keep typing")
         await hosts[0].assistant.idle()
         (said,) = ann.said()
-        assert "stopped" in said and "set_cells" in said and value(ann, 0, 1) == 5
+        assert "stopped" in said and "set_cells x1" in said and value(ann, 0, 1) == 5
 
     scenario(test, FakeModel(script(commands(set_cell(0, 1, "5")))), rounds=2)
 
