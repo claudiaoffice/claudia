@@ -80,7 +80,7 @@ export interface DialogModel {
 }
 
 export function consentDialog(view: ConsentView, role: string): DialogModel {
-  const mode = !view.offered ? 'no-remote' : role === 'owner' ? 'owner' : 'read-only'
+  const mode = modeOf(view, role)
   const owner = new Intl.ListFormat(currentLocale(), { style: 'long', type: 'conjunction' }).format(view.owners)
   const decided = view.by && view.at ? { who: view.by, time: clock(view.at) } : null
   const allowedLine = !decided
@@ -89,4 +89,11 @@ export function consentDialog(view: ConsentView, role: string): DialogModel {
       ? t('Allowed by {who}, {time} · for Claude (Anthropic)', decided)
       : t('Switched off by {who}, {time} · for Claude (Anthropic)', decided)
   return { mode, ownerLine: t('Only the owner can change this: {owner}.', { owner }), allowedLine }
+}
+
+/** An owner gets the check box where Claude is offered, and also where it is not but a consent given earlier still
+ * stands, so that she can withdraw it before the administrator switches Claude on again (UX-74). */
+function modeOf(view: ConsentView, role: string): DialogModel['mode'] {
+  if (role === 'owner' && (view.offered || view.allowed)) return 'owner'
+  return view.offered ? 'read-only' : 'no-remote'
 }
