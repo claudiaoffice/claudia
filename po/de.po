@@ -1327,7 +1327,7 @@ msgstr "Claude ist in diesem Dokument nicht erlaubt. Die Eigentümerin oder der 
 
 #: packages/claudia-server/src/claudia_server/admin_api.py
 msgid "Claude needs a provider key."
-msgstr "Claude braucht einen Anbieterschlüssel."
+msgstr "Claude braucht einen Anbieter-Schlüssel."
 
 #: web/app/components/OpenDialog.vue
 msgid "Claudia cannot open this file."
@@ -1889,7 +1889,7 @@ msgstr "Den zuletzt rückgängig gemachten Schritt wiederherstellen"
 msgid "Document"
 msgstr "Dokument"
 
-#: web/app/components/AdminAi.vue
+#: packages/claudia-server/src/claudia_server/admin_api.py web/app/components/AdminAi.vue
 msgid "Document content is sent to Anthropic when someone asks @ai."
 msgstr "Der Inhalt von Dokumenten wird an Anthropic gesendet, wenn jemand @ai fragt."
 
@@ -6665,7 +6665,7 @@ msgstr "Der Sekans eines Winkels im Bogenmaß (1 / COS)."
 msgid "The second, 0 to 59, of a time."
 msgstr "Die Sekunde, 0 bis 59, einer Uhrzeit."
 
-#: web/app/lib/open.ts
+#: web/app/lib/admin-api.ts web/app/lib/open.ts
 msgid "The server answered with an error ({status})."
 msgstr "Der Server hat mit einem Fehler geantwortet ({status})."
 
@@ -9985,6 +9985,10 @@ msgstr "Das ergäbe zu viele Absätze"
 msgid "the AI assistant is disabled for this server (it was started with --no-assistant)"
 msgstr "Der KI-Assistent ist auf diesem Server ausgeschaltet (er wurde mit --no-assistant gestartet)"
 
+#: packages/claudia-server/src/claudia_server/app.py
+msgid "the access secret needs at least {count} characters"
+msgstr "Der Zugangsschlüssel braucht mindestens {count} Zeichen"
+
 #: packages/claudia-server/src/claudia_server/admin_api.py
 msgid "the answer length must be at least 1"
 msgstr "Die Antwortlänge muss mindestens 1 sein"
@@ -10092,6 +10096,10 @@ msgstr "das Zellenende"
 #: web/app/components/SearchPanel.vue web/app/lib/search.ts
 msgid "the end of the text"
 msgstr "das Textende"
+
+#: packages/claudia-server/src/claudia_server/uploads.py
+msgid "the file is larger than {mb} MB"
+msgstr "Die Datei ist größer als {mb} MB"
 
 #: packages/claudia-server/src/claudia_server/app.py
 msgid "the file is no longer here: choose it again"
@@ -10299,7 +10307,7 @@ msgstr "Die Tabelle hat keine Zeile {id!r}"
 
 #: packages/claudia-server/src/claudia_server/kdf_policy.py
 msgid "the target must be a number of seconds from {low} to {high}"
-msgstr "Das Ziel muss eine Zahl von Sekunden zwischen {low} und {high} sein"
+msgstr "Das Ziel muss eine Zahl von Sekunden von {low} bis {high} sein"
 
 #: web/app/components/SearchPanel.vue web/app/components/TextEditor.vue web/app/lib/print/source.ts
 msgid "the text"
@@ -10417,6 +10425,14 @@ msgstr "In diesem Dokument gibt es nichts mit der ID {id!r}"
 msgid "these cells’ own style"
 msgstr "das eigene Format dieser Zellen"
 
+#: packages/claudia-server/src/claudia_server/uploads.py
+msgid "this Claudia export is damaged or from a newer version"
+msgstr "Dieser Claudia-Export ist beschädigt oder stammt aus einer neueren Version"
+
+#: packages/claudia-server/src/claudia_server/uploads.py
+msgid "this Claudia file is damaged or from a newer version"
+msgstr "Diese Claudia-Datei ist beschädigt oder stammt aus einer neueren Version"
+
 #: web/app/components/RedactionDialog.vue
 msgid "this computer"
 msgstr "diesem Computer"
@@ -10460,6 +10476,10 @@ msgstr "Dieses Dokument ist kein Text"
 #: packages/claudia-server/src/claudia_server/computes.py
 msgid "this document is not a workbook"
 msgstr "Dieses Dokument ist keine Arbeitsmappe"
+
+#: packages/claudia-server/src/claudia_server/uploads.py
+msgid "this is not a file Claudia can open"
+msgstr "Diese Datei kann Claudia nicht öffnen"
 
 #: packages/claudia-composes/src/claudia_composes/commands.py
 msgid "this is not the suggestion that is on the document"
@@ -10604,6 +10624,10 @@ msgstr "tobi"
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "today's date as a day number (the time of day is left out)."
 msgstr "das heutige Datum als Tageszahl (die Uhrzeit wird weggelassen)."
+
+#: packages/claudia-server/src/claudia_server/uploads.py
+msgid "too many files are waiting to be opened; try again in a few minutes"
+msgstr "Zu viele Dateien warten darauf, geöffnet zu werden; versuchen Sie es in ein paar Minuten erneut"
 
 #: packages/claudia-server/src/claudia_server/admin_fonts.py
 msgid "too many fonts are waiting to be added: at most {files} files or {mb} MB at once; close Add fonts… to let go of them"

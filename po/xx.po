@@ -1889,7 +1889,7 @@ msgstr "[Dô yôûr làst ûndôné stép àgàîn~~~~~~~~~~~~]"
 msgid "Document"
 msgstr "[Dôcûmént~~~]"
 
-#: web/app/components/AdminAi.vue
+#: packages/claudia-server/src/claudia_server/admin_api.py web/app/components/AdminAi.vue
 msgid "Document content is sent to Anthropic when someone asks @ai."
 msgstr "[Dôcûmént côntént îs sént tô Ànthrôpîc whén sôméôné àsks @àî.~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -6665,7 +6665,7 @@ msgstr "[Thé sécànt ôf àn ànglé în ràdîàns (1 / CÔS).~~~~~~~~~~~~~~~
 msgid "The second, 0 to 59, of a time."
 msgstr "[Thé sécônd, 0 tô 59, ôf à tîmé.~~~~~~~~~~~~]"
 
-#: web/app/lib/open.ts
+#: web/app/lib/admin-api.ts web/app/lib/open.ts
 msgid "The server answered with an error ({status})."
 msgstr "[Thé sérvér ànswéréd wîth àn érrôr ({status}).~~~~~~~~~~~~~~~~~~]"
 
@@ -9985,6 +9985,10 @@ msgstr "[thàt wôûld màké tôô màny pàràgràphs~~~~~~~~~~~~~~]"
 msgid "the AI assistant is disabled for this server (it was started with --no-assistant)"
 msgstr "[thé ÀÎ àssîstànt îs dîsàbléd fôr thîs sérvér (ît wàs stàrtéd wîth --nô-àssîstànt)~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
+#: packages/claudia-server/src/claudia_server/app.py
+msgid "the access secret needs at least {count} characters"
+msgstr "[thé àccéss sécrét nééds àt léàst {count} chàràctérs~~~~~~~~~~~~~~~~~~~~]"
+
 #: packages/claudia-server/src/claudia_server/admin_api.py
 msgid "the answer length must be at least 1"
 msgstr "[thé ànswér léngth mûst bé àt léàst 1~~~~~~~~~~~~~~]"
@@ -10092,6 +10096,10 @@ msgstr "[thé énd ôf thé céll~~~~~~~~]"
 #: web/app/components/SearchPanel.vue web/app/lib/search.ts
 msgid "the end of the text"
 msgstr "[thé énd ôf thé téxt~~~~~~~~]"
+
+#: packages/claudia-server/src/claudia_server/uploads.py
+msgid "the file is larger than {mb} MB"
+msgstr "[thé fîlé îs làrgér thàn {mb} MB~~~~~~~~~~~~]"
 
 #: packages/claudia-server/src/claudia_server/app.py
 msgid "the file is no longer here: choose it again"
@@ -10417,6 +10425,14 @@ msgstr "[théré îs nôthîng càlléd {îd!r} în thîs dôcûmént~~~~~~~~~~~
 msgid "these cells’ own style"
 msgstr "[thésé célls’ ôwn stylé~~~~~~~~~]"
 
+#: packages/claudia-server/src/claudia_server/uploads.py
+msgid "this Claudia export is damaged or from a newer version"
+msgstr "[thîs Clàûdîà éxpôrt îs dàmàgéd ôr frôm à néwér vérsîôn~~~~~~~~~~~~~~~~~~~~~~]"
+
+#: packages/claudia-server/src/claudia_server/uploads.py
+msgid "this Claudia file is damaged or from a newer version"
+msgstr "[thîs Clàûdîà fîlé îs dàmàgéd ôr frôm à néwér vérsîôn~~~~~~~~~~~~~~~~~~~~~]"
+
 #: web/app/components/RedactionDialog.vue
 msgid "this computer"
 msgstr "[thîs cômpûtér~~~~~]"
@@ -10460,6 +10476,10 @@ msgstr "[thîs dôcûmént îs nôt à téxt~~~~~~~~~~~]"
 #: packages/claudia-server/src/claudia_server/computes.py
 msgid "this document is not a workbook"
 msgstr "[thîs dôcûmént îs nôt à wôrkbôôk~~~~~~~~~~~~]"
+
+#: packages/claudia-server/src/claudia_server/uploads.py
+msgid "this is not a file Claudia can open"
+msgstr "[thîs îs nôt à fîlé Clàûdîà càn ôpén~~~~~~~~~~~~~~]"
 
 #: packages/claudia-composes/src/claudia_composes/commands.py
 msgid "this is not the suggestion that is on the document"
@@ -10604,6 +10624,10 @@ msgstr "[tôbî~~]"
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "today's date as a day number (the time of day is left out)."
 msgstr "[tôdày's dàté às à dày nûmbér (thé tîmé ôf dày îs léft ôût).~~~~~~~~~~~~~~~~~~~~~~~~]"
+
+#: packages/claudia-server/src/claudia_server/uploads.py
+msgid "too many files are waiting to be opened; try again in a few minutes"
+msgstr "[tôô màny fîlés àré wàîtîng tô bé ôpénéd; try àgàîn în à féw mînûtés~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
 #: packages/claudia-server/src/claudia_server/admin_fonts.py
 msgid "too many fonts are waiting to be added: at most {files} files or {mb} MB at once; close Add fonts… to let go of them"

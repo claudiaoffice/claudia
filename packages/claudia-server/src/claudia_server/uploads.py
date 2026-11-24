@@ -31,6 +31,7 @@ from fastapi import HTTPException, Request
 from claudia_document_file import DocumentFileError, read_manifest
 
 from .formats import CLAUDIA, CLAUDIA_EXPORT, FORMATS, export_made, file_details, sniff
+from .i18n import msg
 
 MAX_UPLOAD_BYTES = 64 * 1024 * 1024
 DEFAULT_MOST = 16
@@ -40,7 +41,8 @@ _ID_CHARS = re.compile(r"[^A-Za-z0-9_-]+")
 
 
 class UploadRefused(Exception):
-    """The upload cannot be taken: ``status`` is the HTTP status to answer with, ``message`` English for people."""
+    """The upload cannot be taken: ``status`` is the HTTP status to answer with, ``message`` the sentence for people (a
+    message of the server, said in the language the request asks for: D2003)."""
 
     def __init__(self, status: int, message: str):
         super().__init__(message)
@@ -84,12 +86,12 @@ async def read_body(request: Request, most: int) -> bytes:
     """The request's body, refused with 413 past ``most`` bytes (before reading it, when it says how long it is)."""
     declared = request.headers.get("content-length")
     if declared is not None and declared.isdigit() and int(declared) > most:
-        raise HTTPException(413, f"the file is larger than {most // (1024 * 1024)} MB")
+        raise HTTPException(413, msg("the file is larger than {mb} MB", mb=most // (1024 * 1024)))
     chunks, size = [], 0
     async for chunk in request.stream():
         size += len(chunk)
         if size > most:
-            raise HTTPException(413, f"the file is larger than {most // (1024 * 1024)} MB")
+            raise HTTPException(413, msg("the file is larger than {mb} MB", mb=most // (1024 * 1024)))
         chunks.append(chunk)
     return b"".join(chunks)
 
@@ -144,24 +146,24 @@ class UploadDesk:
         if len(self._held) >= self._most or sum(u.address == address for u in self._held.values()) >= (
             self._most_per_address
         ):
-            raise UploadRefused(503, "too many files are waiting to be opened; try again in a few minutes")
+            raise UploadRefused(503, msg("too many files are waiting to be opened; try again in a few minutes"))
 
     def put(self, address: str, name: str, data: bytes) -> Upload:
         """Hold ``data``. ``UploadRefused`` for a file that is too large, of no kind Claudia opens, or a full desk."""
         if len(data) > self.max_bytes:
-            raise UploadRefused(413, f"the file is larger than {self.max_bytes // (1024 * 1024)} MB")
+            raise UploadRefused(413, msg("the file is larger than {mb} MB", mb=self.max_bytes // (1024 * 1024)))
         self.room_for(address)
         try:
             kind = sniff(data)
         except ValueError as error:
-            raise UploadRefused(415, "this is not a file Claudia can open") from error
+            raise UploadRefused(415, msg("this is not a file Claudia can open")) from error
         uid = ""
         details: tuple[str, tuple[str, ...]] = ("", ())
         if kind.fmt == CLAUDIA:
             app, doc_id, uid, details = _claudia_manifest(data)
         elif kind.fmt == CLAUDIA_EXPORT:
             if kind.app is None:
-                raise UploadRefused(415, "this Claudia export is damaged or from a newer version")
+                raise UploadRefused(415, msg("this Claudia export is damaged or from a newer version"))
             app, doc_id = kind.app, id_from_name(name.removesuffix(".zip").removesuffix(".claudia-export"))
         else:
             app, doc_id, details = FORMATS[kind.fmt][0], id_from_name(name), file_details(kind.fmt, data)
@@ -197,5 +199,5 @@ def _claudia_manifest(data: bytes) -> tuple[str, str, str, tuple[str, tuple[str,
         try:
             manifest = read_manifest(path)
         except DocumentFileError as error:
-            raise UploadRefused(415, "this Claudia file is damaged or from a newer version") from error
+            raise UploadRefused(415, msg("this Claudia file is damaged or from a newer version")) from error
     return manifest.app, manifest.name, manifest.uid, (manifest.description, manifest.tags)

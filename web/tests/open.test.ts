@@ -318,6 +318,17 @@ describe('sendFile and placeUpload', () => {
     const conflict = (async () => new Response(JSON.stringify({ detail: 'plan is here already' }), { status: 409 })) as unknown as typeof fetch
     expect(await placeUpload('http://h', 't', conflict)).toEqual({ error: 'plan is here already' })
   })
+  it('asks the server to answer in the App Language of the page (CODE-92)', async () => {
+    sendFile('http://h', file, () => {}, makeXhr)
+    expect(FakeXhr.last!.headers['accept-language']).toBe('en')
+    let seen: Record<string, string> = {}
+    const placed = (async (_url: string, init?: RequestInit) => {
+      seen = (init?.headers as Record<string, string>) ?? {}
+      return new Response(JSON.stringify({ app: 'computes', id: 'plan' }), { status: 200 })
+    }) as unknown as typeof fetch
+    await placeUpload('http://h', 't', placed)
+    expect(seen['accept-language']).toBe('en')
+  })
   it('stops when asked, and then answers nothing to show', async () => {
     const sending = sendFile('http://h', file, () => {}, makeXhr)
     sending.abort()

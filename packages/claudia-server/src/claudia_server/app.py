@@ -259,7 +259,7 @@ class Gateway:
         login_throttle: LoginThrottle | None = None,
     ):
         if access_secret is not None and len(access_secret) < MIN_ACCESS_SECRET:
-            raise ValueError(f"the access secret needs at least {MIN_ACCESS_SECRET} characters")
+            raise ValueError(msg("the access secret needs at least {count} characters", count=MIN_ACCESS_SECRET))
         self.suite = suite
         self.allowed = allowed
         self.uploads = UploadDesk()  # files brought to become documents (D440)
@@ -297,7 +297,7 @@ class Gateway:
         anyone may then make documents or read the list. Takes effect for the next request; nobody already let in
         is affected. ``ValueError`` for a secret shorter than ``MIN_ACCESS_SECRET``."""
         if access_secret is not None and len(access_secret) < MIN_ACCESS_SECRET:
-            raise ValueError(f"the access secret needs at least {MIN_ACCESS_SECRET} characters")
+            raise ValueError(msg("the access secret needs at least {count} characters", count=MIN_ACCESS_SECRET))
         self._secret = None if access_secret is None else access_secret.encode()
 
     async def _verify(self, module: Module, doc_id: str, credentials: Credentials) -> Account | None:

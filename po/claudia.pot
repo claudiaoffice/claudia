@@ -1889,7 +1889,7 @@ msgstr ""
 msgid "Document"
 msgstr ""
 
-#: web/app/components/AdminAi.vue
+#: packages/claudia-server/src/claudia_server/admin_api.py web/app/components/AdminAi.vue
 msgid "Document content is sent to Anthropic when someone asks @ai."
 msgstr ""
 
@@ -6665,7 +6665,7 @@ msgstr ""
 msgid "The second, 0 to 59, of a time."
 msgstr ""
 
-#: web/app/lib/open.ts
+#: web/app/lib/admin-api.ts web/app/lib/open.ts
 msgid "The server answered with an error ({status})."
 msgstr ""
 
@@ -9985,6 +9985,10 @@ msgstr ""
 msgid "the AI assistant is disabled for this server (it was started with --no-assistant)"
 msgstr ""
 
+#: packages/claudia-server/src/claudia_server/app.py
+msgid "the access secret needs at least {count} characters"
+msgstr ""
+
 #: packages/claudia-server/src/claudia_server/admin_api.py
 msgid "the answer length must be at least 1"
 msgstr ""
@@ -10091,6 +10095,10 @@ msgstr ""
 
 #: web/app/components/SearchPanel.vue web/app/lib/search.ts
 msgid "the end of the text"
+msgstr ""
+
+#: packages/claudia-server/src/claudia_server/uploads.py
+msgid "the file is larger than {mb} MB"
 msgstr ""
 
 #: packages/claudia-server/src/claudia_server/app.py
@@ -10417,6 +10425,14 @@ msgstr ""
 msgid "these cells’ own style"
 msgstr ""
 
+#: packages/claudia-server/src/claudia_server/uploads.py
+msgid "this Claudia export is damaged or from a newer version"
+msgstr ""
+
+#: packages/claudia-server/src/claudia_server/uploads.py
+msgid "this Claudia file is damaged or from a newer version"
+msgstr ""
+
 #: web/app/components/RedactionDialog.vue
 msgid "this computer"
 msgstr ""
@@ -10459,6 +10475,10 @@ msgstr ""
 
 #: packages/claudia-server/src/claudia_server/computes.py
 msgid "this document is not a workbook"
+msgstr ""
+
+#: packages/claudia-server/src/claudia_server/uploads.py
+msgid "this is not a file Claudia can open"
 msgstr ""
 
 #: packages/claudia-composes/src/claudia_composes/commands.py
@@ -10603,6 +10623,10 @@ msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "today's date as a day number (the time of day is left out)."
+msgstr ""
+
+#: packages/claudia-server/src/claudia_server/uploads.py
+msgid "too many files are waiting to be opened; try again in a few minutes"
 msgstr ""
 
 #: packages/claudia-server/src/claudia_server/admin_fonts.py

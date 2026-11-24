@@ -5,6 +5,11 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+### Changed
+- The refusals of the HTTP routes (the server settings and the uploads) are said in the first language of
+  `Accept-Language` when they are the server's own messages; a refusal with more fields is a `Refused` (`retry_after`,
+  `reason` as before); `message_of` keeps the message of a `ValueError(msg(...))` (CODE-92, D2003).
+
 ## [0.45.0] - 2026-11-24
 
 ### Added
@@ -30,9 +35,6 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
   replaced at the next start, so a pinned fingerprint changes once (SEC-06, D2001).
 - `PUT /api/admin/settings/typeset` keeps a program only when it names itself as XeTeX or pdftocairo, run once in the
   typesetter's sandbox; otherwise 400 with a sentence (SEC-16, D2002).
-- The refusals of the HTTP routes (the server settings above all) are said in the first language of `Accept-Language`
-  when they are the server's own messages; a refusal with more fields is a `Refused` (`retry_after`, `reason` as before);
-  `message_of` keeps the message of a `ValueError(msg(...))` (CODE-92, D2003).
 - computes' `export_office` writes a slide as a tab of its own with its objects where they were, and no longer reports
   `slide` among the losses (E6.31 step 5, D1477 to D1479; `claudia-computes-io`).
 - **Breaking** — the chart names of E1.18 (D1476): computes' `diagrams`, `define_diagram`, `update_diagram` and

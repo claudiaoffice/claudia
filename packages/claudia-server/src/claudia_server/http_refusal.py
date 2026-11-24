@@ -8,19 +8,23 @@ of a failure) is a :class:`Refused`.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exception_handlers import http_exception_handler
 from fastapi.responses import JSONResponse, Response
+from fastapi.utils import is_body_allowed_for_status_code
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from .i18n import Message, localized
 from .protocol import normalize_locale
 
+__all__ = ["Refused", "install", "request_locale"]
+
 
 class Refused(HTTPException):
-    """A refusal with more in its answer than ``detail``: each of ``extra`` is a field of the JSON beside it."""
+    """A refusal with more in its answer than ``detail``: each of ``extra`` is a field of the JSON beside it (a field
+    named ``detail`` cannot replace the sentence)."""
 
     def __init__(self, status_code: int, detail: str, *, headers: dict[str, str] | None = None, **extra: Any) -> None:
         super().__init__(status_code, detail, headers)
@@ -28,18 +32,19 @@ class Refused(HTTPException):
 
 
 def request_locale(request: Request) -> str:
-    """The language a request asks to be answered in: the first of its ``Accept-Language``, else English."""
+    """The language a request asks to be answered in: the first tag of its ``Accept-Language``, else English. The
+    weights of a browser's list are not read: claudia's pages send exactly one tag, their App Language."""
     first = request.headers.get("accept-language", "").split(",")[0].split(";")[0].strip()
     return normalize_locale(first)
 
 
 async def _answer(request: Request, error: Exception) -> Response:
-    assert isinstance(error, StarletteHTTPException)  # (registered for exactly this class)
-    extra = getattr(error, "extra", {})
-    if not isinstance(error.detail, Message) and not extra:
-        return await http_exception_handler(request, error)
-    detail = localized(error.detail, request_locale(request))
-    return JSONResponse({"detail": detail, **extra}, status_code=error.status_code, headers=error.headers)
+    refusal = cast(StarletteHTTPException, error)  # (registered for exactly this class)
+    extra = refusal.extra if isinstance(refusal, Refused) else {}
+    if not (isinstance(refusal.detail, Message) or extra) or not is_body_allowed_for_status_code(refusal.status_code):
+        return await http_exception_handler(request, refusal)
+    detail = localized(refusal.detail, request_locale(request))
+    return JSONResponse({**extra, "detail": detail}, status_code=refusal.status_code, headers=refusal.headers)
 
 
 def install(app: FastAPI) -> None:

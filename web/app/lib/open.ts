@@ -7,7 +7,7 @@ import { Session } from './session'
 import { SlideSession } from './slide-session'
 import { TextSession } from './text-session'
 
-import { translate as t } from './i18n'
+import { languageNow, translate as t } from './i18n'
 export type AnySession = Session | TextSession | SlideSession
 
 /** What `/api/docs` answers: the app this server serves (`null` on a server of several, D430), the apps it hosts,
@@ -288,6 +288,7 @@ export function sendFile(
     xhr.onabort = () => resolve({ cancelled: true })
   })
   xhr.open('POST', `${origin}/api/uploads`)
+  xhr.setRequestHeader('accept-language', languageNow()) // a refusal comes back in the page's language (D2003)
   xhr.setRequestHeader('content-type', 'application/octet-stream')
   xhr.setRequestHeader('x-claudia-name', encodeURIComponent(file.name))
   xhr.send(file)
@@ -312,7 +313,10 @@ function answerOf(status: number, text: string): Uploaded | { error: string } {
 export async function placeUpload(origin: string, token: string, fetchImpl: typeof fetch = fetch): Promise<{ app: string; id: string } | { error: string }> {
   let response: Response
   try {
-    response = await fetchImpl(`${origin}/api/uploads/${encodeURIComponent(token)}/place`, { method: 'POST' })
+    response = await fetchImpl(`${origin}/api/uploads/${encodeURIComponent(token)}/place`, {
+      method: 'POST',
+      headers: { 'accept-language': languageNow() },
+    })
   } catch {
     return { error: t('The server cannot be reached.') }
   }

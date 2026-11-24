@@ -7,7 +7,7 @@
 // document socket: one less mapping layer, and the tests can compare directly against what the server returns.
 
 import type { CheckAnswer, FontsPage, MayGo } from './admin-fonts'
-import { languageNow } from './i18n'
+import { languageNow, translate as t } from './i18n'
 
 export class AdminApiError extends Error {
   constructor(
@@ -172,7 +172,7 @@ export function createAdminApi(fetchImpl: typeof fetch = fetch, language: () => 
       const wait = (parsed as { retry_after?: unknown })?.retry_after
       throw new AdminApiError(
         response.status,
-        typeof detail === 'string' ? detail : `request failed (${response.status})`,
+        typeof detail === 'string' ? detail : t('The server answered with an error ({status}).', { status: response.status }),
         typeof wait === 'number' ? wait : undefined,
         typeof (parsed as { reason?: unknown })?.reason === 'string' ? (parsed as { reason: string }).reason : undefined,
       )

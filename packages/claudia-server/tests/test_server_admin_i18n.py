@@ -86,3 +86,27 @@ def test_a_language_without_a_catalog_is_answered_in_english(tmp_path):
             "/api/admin/login", json={"name": "tobi", "password": "nope"}, headers={"Accept-Language": "fi"}
         )
     assert answer.json()["detail"] == "wrong name or password"
+
+
+def test_a_file_that_cannot_be_opened_is_refused_in_german(tmp_path):
+    """The same rule for every HTTP route (D2003): an upload's refusal is the server's own sentence."""
+    app, _, _ = serve(state_dir=tmp_path)
+    with TestClient(app) as client:
+        answer = client.post(
+            "/api/uploads", content=b"not a document", headers={**GERMAN, "x-claudia-name": "notes.xlsx"}
+        )
+    assert answer.status_code == 415
+    assert answer.json()["detail"] == "Diese Datei kann Claudia nicht öffnen"
+
+
+def test_the_sentence_to_confirm_for_claude_is_said_in_german_as_a_whole(tmp_path):
+    app, _, _ = serve(state_dir=tmp_path)
+    with TestClient(app) as client:
+        headers = {**_first_admin(client), **GERMAN}
+        answer = client.put(
+            "/api/admin/settings/ai", json={"provider": "claude", "claude": {"key": "sk-ant-x"}}, headers=headers
+        )
+    assert answer.status_code == 400
+    assert answer.json()["detail"] == (
+        "Bestätigen Sie zuerst: Der Inhalt von Dokumenten wird an Anthropic gesendet, wenn jemand @ai fragt."
+    )

@@ -111,7 +111,7 @@ describe('createAdminApi', () => {
   it('falls back to a generic message when the error body has no usable detail', async () => {
     const fetchImpl = fakeFetch(() => ({ status: 500, body: null }))
     const api = createAdminApi(fetchImpl)
-    await expect(api.login('tobi', 'nope')).rejects.toThrow('request failed (500)')
+    await expect(api.login('tobi', 'nope')).rejects.toThrow('The server answered with an error (500).')
   })
 
   it('still raises cleanly when the error response body is not JSON at all', async () => {

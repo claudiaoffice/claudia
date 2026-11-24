@@ -84,7 +84,7 @@ class AiRefused(ValueError):
         self.reason = reason
 
 
-APPROVAL_SENTENCE = "Document content is sent to Anthropic when someone asks @ai."
+APPROVAL_SENTENCE = msg("Document content is sent to Anthropic when someone asks @ai.")
 TEST_QUESTION = [{"role": "user", "content": "Answer with the single word: ok."}]
 
 
