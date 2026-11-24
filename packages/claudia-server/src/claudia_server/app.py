@@ -167,7 +167,7 @@ a document here.</p>
 <h2>Use it from the desktop app</h2>
 <p>Connect to this address (HOST:PORT is what your browser's address bar shows) and give the document, your name and
 your password.</p>
-<p><a href="/api/health">/api/health</a><!--api-docs--></p>
+<p><a href="/api/health">/api/health</a><!--more-links--></p>
 </body></html>
 """
 
@@ -813,7 +813,8 @@ def create_app(
     # The addresses with the app (D431) come after every fixed /api/<word>/... route, so that none of those is read as
     # the name of an app.
     _app_routes(app, suite, gateway, list_documents)
-    _web_routes(app, web_dir, api_docs=api_docs)
+    api_docs_link = f' &middot; <a href="{API_DOCS}">API description</a>' if api_docs else ""
+    _web_routes(app, web_dir, more_links=api_docs_link)
     return app
 
 
@@ -975,9 +976,10 @@ def _app_routes(app: FastAPI, suite: Suite, gateway: Gateway, list_documents: bo
         await gateway.serve(websocket, doc_id, app_name)
 
 
-def _web_routes(app: FastAPI, web_dir: str | Path | None, *, api_docs: bool) -> None:
+def _web_routes(app: FastAPI, web_dir: str | Path | None, *, more_links: str) -> None:
     """The web app, served from the same address: the page and the WebSocket then share an origin, so no allowed
-    origin is needed. Mounted last so /api/... wins. Without one, / says what this server is."""
+    origin is needed. Mounted last so /api/... wins. Without one, / says what this server is, with ``more_links``
+    (HTML) after its link to the health check."""
     if web_dir is not None:
         directory_path = Path(web_dir)
         if not (directory_path / "index.html").is_file():
@@ -986,8 +988,7 @@ def _web_routes(app: FastAPI, web_dir: str | Path | None, *, api_docs: bool) -> 
             )
         app.mount("/", SinglePageApp(directory=directory_path, html=True), name="web")
     else:
-        api_docs_link = f' &middot; <a href="{API_DOCS}">API description</a>' if api_docs else ""
-        landing_page = _LANDING.replace("<!--api-docs-->", api_docs_link)
+        landing_page = _LANDING.replace("<!--more-links-->", more_links)
 
         @app.get("/", include_in_schema=False, response_class=HTMLResponse)
         async def landing():
