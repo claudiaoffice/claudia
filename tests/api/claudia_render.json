@@ -1,5 +1,5 @@
 {
- "version": "0.2.0",
+ "version": "0.3.0",
  "API_VERSION": {
   "value": "1"
  },
@@ -62,6 +62,7 @@
   ],
   "init": "(manifest: 'Manifest', catalogue: 'Callable[[], Catalogue]', directory: 'str | Path') -> 'None'",
   "methods": {
+   "cache_token": "(self) -> 'str'",
    "render": "(self, request: 'RenderRequest', tools: 'Mapping[str, ResolvedTool]', limits: 'Limits') -> 'RenderResult'"
   },
   "properties": []
@@ -118,6 +119,7 @@
   ],
   "init": "()",
   "methods": {
+   "cache_token": "(self) -> 'str'",
    "render": "(self, request: 'RenderRequest', tools: 'Mapping[str, ResolvedTool]', limits: 'Limits') -> 'RenderResult'"
   },
   "properties": []

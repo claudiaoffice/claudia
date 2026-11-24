@@ -51,3 +51,8 @@ class Plugin(ABC):
     async def render(self, request: RenderRequest, tools: Mapping[str, ResolvedTool], limits: Limits) -> RenderResult:
         """Turn ``request`` into a picture using ``tools`` (the ones the manifest requires, found and tried) within
         ``limits``; raise `RenderFailed` if no picture can be made."""
+
+    def cache_token(self) -> str:
+        """What else the picture depends on besides the text, the settings and the tools, such as the fonts it is drawn
+        with; part of the key under which the service keeps a picture (CODE-54). Empty when there is nothing else."""
+        return ""

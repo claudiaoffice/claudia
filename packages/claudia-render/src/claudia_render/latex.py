@@ -55,6 +55,10 @@ class LatexPlugin(Plugin):
             )
         return self._typesetters[key]
 
+    def cache_token(self) -> str:
+        """The digest of the font catalogue a formula is set with now: a replaced font draws the formula again."""
+        return self._catalogue().digest
+
     async def render(self, request: RenderRequest, tools: Mapping[str, ResolvedTool], limits: Limits) -> RenderResult:
         """Typeset ``request``; TeX's own complaint comes back as one diagnostic with the line of the text."""
         try:

@@ -86,7 +86,17 @@ class RenderService:
         renderer = f"{kind} {manifest.version} | " + " | ".join(identities)
         key = hashlib.sha256(
             json.dumps(
-                [SERVICE_VERSION, manifest.api, kind, manifest.version, source, settings, identities], sort_keys=True
+                [
+                    SERVICE_VERSION,
+                    manifest.api,
+                    kind,
+                    manifest.version,
+                    source,
+                    settings,
+                    identities,
+                    plugin.cache_token(),
+                ],
+                sort_keys=True,
             ).encode()
         ).hexdigest()
         kept = self._cache.get(key)
