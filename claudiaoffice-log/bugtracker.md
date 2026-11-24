@@ -2813,3 +2813,16 @@ choose…".
 **Found** in the screenshot of Change theme: the notice for an imported file came up after a presentation was made from
 a template, though nobody gave a file. **Fix.** `OpenDialog` announces an import only when the person gave a file.
 **Test:** `test_templates.py`, "When I start a new presentation from it" fails when the page says anything about a file.
+
+## Round of 2026-11-24 (reported by the owner on the branch `e10-4-templates-and-layouts`)
+
+### UX-76 · Keys typed in Name & describe… moved and deleted the text box behind the dialog · P1 · size 1 · fixed 2026-11-24
+**Measured** in a real browser, in creates. A text box on a slide, not selected; right click, Name & describe…; with the
+cursor in the Name field the arrow keys moved the text box (about 6 px a key), and Backspace deleted it while the dialog
+stayed open; Apply then said that there was nothing called by the object's internal name. **Cause.** The slide's key
+handler lets keys through only from an element with `role="dialog"`; the dialog is a native `<dialog>` without that
+attribute, drawn inside the slide's element, so every key bubbled up. The same was true of Image properties on a slide.
+**Fix.** `keysAreTheirs` (D1541). The grid of computes was checked and is not affected: its dialogs are outside its
+keyboard area. **Tests:** `key-owner.test.ts`; `describe-creates.cjs` (the scenario "The keys typed in the dialog belong
+to the dialog…" in `names.feature`); `describe.cjs` for computes.
+

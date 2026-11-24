@@ -13,6 +13,7 @@ import { CORNERS, GRID_SIZE, HANDLES, SLIDE_BOUNDS, SLIDE_H, SLIDE_W, besideRect
 import { gridOf } from '~/lib/object-gestures'
 import { useObjectInteraction } from '~/lib/object-interaction'
 import { objectName } from '~/lib/descriptions'
+import { keysAreTheirs } from '~/lib/key-owner'
 import { useNameAndDescribe } from '~/lib/use-name-and-describe'
 import { canTurn, degreesText, moveTurned, quarterTurn, stepTurn, SHIFT_STEP } from '~/lib/turning'
 import { imageDataUrl } from '~/lib/images'
@@ -542,7 +543,7 @@ watch(
 async function onKey(event: KeyboardEvent) {
   const o = selected.value
   if (editing.value || containerEditing.value) return
-  if ((event.target as HTMLElement).closest('[role=dialog]')) return // a popover on the slide (Rotate by…) has its own keys: Enter submits, Backspace edits the number
+  if (keysAreTheirs(event.target as HTMLElement)) return // a dialog or a popover on the slide (Name & describe…, Rotate by…) has its own keys: Backspace edits the name, the arrows move its cursor (UX-76)
   if (event.key === 'Escape') {
     if (cancelTurn()) return
     return void session.select(null)

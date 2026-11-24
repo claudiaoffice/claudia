@@ -59,6 +59,16 @@ Feature: A person can point at anything by its name, change the name, describe i
     When I press the right button on it and choose "Name & describe…"
     Then I see the same dialog as from the Edit menu, with the name field
 
+  # Found by the owner on 2026-11-24 (UX-76): the keys typed in the dialog went to the object behind it.
+  @core @app:creates @e2e:describe-creates
+  Scenario: The keys typed in the dialog belong to the dialog, not to the object behind it
+    Given a text box is on the slide, not selected
+    And I opened Name & describe… from its right-click menu
+    When I press the arrow keys and Backspace with the cursor in the name field
+    Then the cursor moves and the name loses its last character
+    And the text box has not moved and has not been deleted
+    And the dialog is still open, and saving a new name gives the text box that name
+
   @core @app:composes @app:computes @app:creates @pending:e1.13
   Scenario: A name that is taken is refused in words
     Given a text called "Intro" and a picture

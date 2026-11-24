@@ -1981,7 +1981,7 @@ msgstr "Punktdiagramm von {n} Ergebnissen, von {low} bis {high}, Median {median}
 msgid "Double-click to rename"
 msgstr "Doppelklick zum Umbenennen"
 
-#: web/app/components/SlideCanvas.vue:625
+#: web/app/components/SlideCanvas.vue:626
 msgid "Double-click to type"
 msgstr "Doppelklick zum Schreiben"
 
@@ -3945,7 +3945,7 @@ msgstr "Nummern"
 msgid "Object in paragraph {n}"
 msgstr "Objekt in Absatz {n}"
 
-#: web/app/components/ContextMenu.vue:31 web/app/components/ContextMenu.vue:32 web/app/components/SheetGrid.vue:1390 web/app/components/SlideCanvas.vue:664 web/app/components/TextObjectMenu.vue:173
+#: web/app/components/ContextMenu.vue:31 web/app/components/ContextMenu.vue:32 web/app/components/SheetGrid.vue:1390 web/app/components/SlideCanvas.vue:665 web/app/components/TextObjectMenu.vue:173
 msgid "Object menu"
 msgstr "Objektmenü"
 
@@ -7637,7 +7637,7 @@ msgstr "Das ausgewählte Objekt auf einen Winkel in ganzen Grad drehen"
 msgid "Turn: drag, or arrow keys (Shift for 15°)"
 msgstr "Drehen: ziehen oder Pfeiltasten (mit Umschalt in 15°-Schritten)"
 
-#: web/app/components/RotatePopover.vue:102 web/app/components/SheetGrid.vue:570 web/app/components/SheetGrid.vue:578 web/app/components/SheetGrid.vue:587 web/app/components/SheetGrid.vue:605 web/app/components/SlideCanvas.vue:286 web/app/components/SlideCanvas.vue:315 web/app/components/SlideCanvas.vue:323 web/app/components/SlideCanvas.vue:344 web/app/components/TextObjectLayer.vue:350 web/app/components/TextObjectLayer.vue:354 web/app/components/TextObjectMenu.vue:112
+#: web/app/components/RotatePopover.vue:102 web/app/components/SheetGrid.vue:570 web/app/components/SheetGrid.vue:578 web/app/components/SheetGrid.vue:587 web/app/components/SheetGrid.vue:605 web/app/components/SlideCanvas.vue:287 web/app/components/SlideCanvas.vue:316 web/app/components/SlideCanvas.vue:324 web/app/components/SlideCanvas.vue:345 web/app/components/TextObjectLayer.vue:350 web/app/components/TextObjectLayer.vue:354 web/app/components/TextObjectMenu.vue:112
 msgid "Turned to {degrees}"
 msgstr "Gedreht auf {degrees}"
 
@@ -8165,7 +8165,7 @@ msgstr "Sie werden Eigentümer des neuen Dokuments. Niemand sonst erhält Zugrif
 msgid "You can change it anyway — this is a warning, not a refusal."
 msgstr "Sie können es trotzdem ändern – das ist eine Warnung, keine Ablehnung."
 
-#: web/app/components/SheetGrid.vue:456 web/app/components/SheetGrid.vue:585 web/app/components/SheetGrid.vue:595 web/app/components/SlideCanvas.vue:322 web/app/components/SlideCanvas.vue:331 web/app/components/SlideCanvas.vue:462 web/app/components/SlideCanvas.vue:485 web/app/components/TextObjectLayer.vue:255 web/app/components/TextObjectMenu.vue:110 web/app/components/TextObjectMenu.vue:118 web/app/components/TextWorkspace.vue:265 web/app/components/Workspace.vue:300 web/app/components/Workspace.vue:357 web/app/components/Workspace.vue:408 web/app/components/Workspace.vue:490 web/app/components/Workspace.vue:550 web/app/components/Workspace.vue:556 web/app/components/Workspace.vue:638 web/app/components/Workspace.vue:807 web/app/components/Workspace.vue:861 web/app/components/Workspace.vue:981 web/app/lib/base-session.ts:1208 web/app/lib/base-session.ts:1244
+#: web/app/components/SheetGrid.vue:456 web/app/components/SheetGrid.vue:585 web/app/components/SheetGrid.vue:595 web/app/components/SlideCanvas.vue:323 web/app/components/SlideCanvas.vue:332 web/app/components/SlideCanvas.vue:463 web/app/components/SlideCanvas.vue:486 web/app/components/TextObjectLayer.vue:255 web/app/components/TextObjectMenu.vue:110 web/app/components/TextObjectMenu.vue:118 web/app/components/TextWorkspace.vue:265 web/app/components/Workspace.vue:300 web/app/components/Workspace.vue:357 web/app/components/Workspace.vue:408 web/app/components/Workspace.vue:490 web/app/components/Workspace.vue:550 web/app/components/Workspace.vue:556 web/app/components/Workspace.vue:638 web/app/components/Workspace.vue:807 web/app/components/Workspace.vue:861 web/app/components/Workspace.vue:981 web/app/lib/base-session.ts:1208 web/app/lib/base-session.ts:1244
 msgid "You can only look at this document."
 msgstr "Sie können dieses Dokument nur ansehen."
 
@@ -10021,7 +10021,7 @@ msgstr "Größe"
 msgid "skipped"
 msgstr "übersprungen"
 
-#: web/app/components/SlideCanvas.vue:579
+#: web/app/components/SlideCanvas.vue:580
 msgid "slide"
 msgstr "Folie"
 
@@ -10129,7 +10129,7 @@ msgstr "Textfeld"
 msgid "text cannot be joined into a table of contents"
 msgstr "Text kann nicht mit einem Inhaltsverzeichnis verbunden werden"
 
-#: web/app/components/SlideCanvas.vue:633 web/app/components/TextObjectLayer.vue:425
+#: web/app/components/SlideCanvas.vue:634 web/app/components/TextObjectLayer.vue:425
 msgid "text of the object"
 msgstr "Text des Objekts"
 
@@ -11689,7 +11689,7 @@ msgstr "{type}-Container: {words}"
 msgid "{user} (you)"
 msgstr "{user} (Sie)"
 
-#: web/app/components/SlideCanvas.vue:650
+#: web/app/components/SlideCanvas.vue:651
 msgid "{user} is working on this"
 msgstr "{user} arbeitet daran"
 
@@ -11705,7 +11705,7 @@ msgstr "{user} hat dieses Dokument verlassen."
 msgid "{user} may now “{role}”."
 msgstr "{user} darf jetzt „{role}“."
 
-#: web/app/components/SlideCanvas.vue:650
+#: web/app/components/SlideCanvas.vue:651
 msgid "{user} selected this"
 msgstr "{user} hat dies ausgewählt"
 

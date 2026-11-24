@@ -227,3 +227,21 @@ The cards are native radio buttons in a fieldset with a legend; the dialogs are 
 text label; the preview is plain text. Not measured: contrast of the selected card, a screen reader's reading of the
 card meta ("4 layouts · English"), focus order in the dialogs. These are checked in the BITV round, not here.
 
+
+# Patch 4 — UX-76: keys typed in a dialog on the slide (D1541)
+
+Reported by the owner on 2026-11-24, reproduced first (UX-76, size 1) and fixed on this branch. Seams chosen: the E2E
+script `describe-creates.cjs` (what a person sees: nothing moves, nothing is deleted, the name is edited and saved) and
+one pure function, `keysAreTheirs`, in vitest. Red before green: the script failed at "the arrow keys moved the text box
+behind the dialog" and then at Backspace.
+
+* `lib/key-owner.ts` — `keysAreTheirs(target)`: a field that is typed into, or anything inside a `<dialog>` or
+  `[role=dialog]`. `SlideCanvas.onKey` returns early for it.
+* `names.feature` — one scenario, `@core @app:creates @e2e:describe-creates`.
+* `describe.cjs` (computes) — a check that Backspace and an arrow in the name field leave the picture alone (it passed
+  before the fix: not affected).
+
+Assumption: the other dialogs drawn inside the slide (Image properties) are covered by the same rule; they were not
+driven one by one. Could not be run: Safari and a real Mac keyboard (the report said "on a Mac"); the key events are the
+same in Chromium, which is what was driven.
+
