@@ -1103,7 +1103,7 @@
   "Previous slide": "Vorherige Folie",
   "Print": "Drucken",
   "Print preview": "Druckvorschau",
-  "Printing and saving a PDF are recorded in the document's history: who, when and how many pages. It is written when the file is saved or the page is sent, not when the preview opens.": "Drucken und das Speichern als PDF werden im Verlauf des Dokuments festgehalten: wer, wann und wie viele Seiten. Es wird geschrieben, wenn die Datei gespeichert oder die Seite gesendet wird, nicht wenn die Vorschau geöffnet wird.",
+  "Printing and saving a PDF are recorded in the document's exit record: who, when and how many pages. It is written when the file is saved or the page is sent, not when the preview opens.": "Drucken und das Speichern als PDF werden im Ausgangsverzeichnis des Dokuments festgehalten: wer, wann und wie viele Seiten. Es wird geschrieben, wenn die Datei gespeichert oder die Seite gesendet wird, nicht wenn die Vorschau geöffnet wird.",
   "Print…": "Drucken…",
   "Provider key": "Anbieter-Schlüssel",
   "Put a diagram written in Mermaid here": "Hier ein in Mermaid geschriebenes Diagramm einfügen",

@@ -4422,8 +4422,8 @@ msgid "Print preview"
 msgstr "[Prînt prévîéw~~~~~]"
 
 #: web/app/components/PrintPreview.vue
-msgid "Printing and saving a PDF are recorded in the document's history: who, when and how many pages. It is written when the file is saved or the page is sent, not when the preview opens."
-msgstr "[Prîntîng ànd sàvîng à PDF àré récôrdéd în thé dôcûmént's hîstôry: whô, whén ànd hôw màny pàgés. Ît îs wrîttén whén thé fîlé îs sàvéd ôr thé pàgé îs sént, nôt whén thé prévîéw ôpéns.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+msgid "Printing and saving a PDF are recorded in the document's exit record: who, when and how many pages. It is written when the file is saved or the page is sent, not when the preview opens."
+msgstr "[Prîntîng ànd sàvîng à PDF àré récôrdéd în thé dôcûmént's éxît récôrd: whô, whén ànd hôw màny pàgés. Ît îs wrîttén whén thé fîlé îs sàvéd ôr thé pàgé îs sént, nôt whén thé prévîéw ôpéns.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/PrintPreview.vue web/app/lib/document-menus.ts web/app/lib/print/use-print.ts
 msgid "Print…"
