@@ -9,20 +9,12 @@ import { safeStorage } from './storage'
 const KEY = 'claudia.grid'
 
 export function readStoredGrid(storage: Pick<Storage, 'getItem'> = safeStorage()): boolean {
-  try {
-    const value = storage.getItem(KEY)
-    return value === null ? true : value === 'on'
-  } catch {
-    return true
-  }
+  const value = storage.getItem(KEY)
+  return value === null ? true : value === 'on'
 }
 
 export function storeGrid(shown: boolean, storage: Pick<Storage, 'setItem'> = safeStorage()): void {
-  try {
-    storage.setItem(KEY, shown ? 'on' : 'off')
-  } catch {
-    /* private window: nothing to remember, the choice still applies for this visit */
-  }
+  storage.setItem(KEY, shown ? 'on' : 'off')
 }
 
 // ------------------------------------------------------------------------------------------------------- Vue wiring

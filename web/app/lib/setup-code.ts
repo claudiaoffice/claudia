@@ -47,7 +47,6 @@ export function takeCodeFromAddress(
 
 // ------------------------------------------------------------------------------------------------------ remembering
 
-let inMemory: GivenCode | null = null
 const listeners = new Set<(given: GivenCode) => void>()
 
 function isGiven(value: unknown): value is GivenCode {
@@ -56,37 +55,27 @@ function isGiven(value: unknown): value is GivenCode {
 }
 
 /** Keep `code` for this tab, and tell a page that waits for one (`onSetupCode`). */
-export function rememberSetupCode(code: string, from: CodeSource, store: Store | null = safeSessionStorage()): void {
+export function rememberSetupCode(code: string, from: CodeSource, store: Store = safeSessionStorage()): void {
   const given = { code, from }
-  inMemory = given
-  try {
-    store?.setItem(KEY, JSON.stringify(given))
-  } catch {
-    /* a private window: `inMemory` holds it for this page */
-  }
+  store.setItem(KEY, JSON.stringify(given))
   for (const listener of listeners) listener(given)
 }
 
 /** The code this tab was given, or `null`. */
-export function rememberedSetupCode(store: Store | null = safeSessionStorage()): GivenCode | null {
+export function rememberedSetupCode(store: Store = safeSessionStorage()): GivenCode | null {
+  const raw = store.getItem(KEY)
+  if (raw === null) return null
   try {
-    const raw = store?.getItem(KEY)
-    if (raw == null) return store ? null : inMemory
     const value: unknown = JSON.parse(raw)
     return isGiven(value) ? value : null
   } catch {
-    return inMemory
+    return null // not JSON: not a code this page kept
   }
 }
 
 /** Drop the code (an administrator exists now, or the person chose to type another). */
-export function forgetSetupCode(store: Store | null = safeSessionStorage()): void {
-  inMemory = null
-  try {
-    store?.removeItem(KEY)
-  } catch {
-    /* nothing to forget */
-  }
+export function forgetSetupCode(store: Store = safeSessionStorage()): void {
+  store.removeItem(KEY)
 }
 
 /** Be told when a code arrives (the desktop app's welcome may come after the page has drawn); returns a remover. */

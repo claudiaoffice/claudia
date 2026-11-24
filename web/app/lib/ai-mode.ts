@@ -18,17 +18,9 @@ export function aiModeKey(host: string, doc: string): string {
 
 /** The stored choice for this document, or *suggest*. Anything else in the storage counts as no choice. */
 export function readAiMode(host: string, doc: string, storage: ModeStorage = safeStorage()): AiMode {
-  try {
-    return storage.getItem(aiModeKey(host, doc)) === 'act' ? 'act' : DEFAULT_AI_MODE
-  } catch {
-    return DEFAULT_AI_MODE
-  }
+  return storage.getItem(aiModeKey(host, doc)) === 'act' ? 'act' : DEFAULT_AI_MODE
 }
 
 export function storeAiMode(host: string, doc: string, mode: AiMode, storage: ModeStorage = safeStorage()): void {
-  try {
-    storage.setItem(aiModeKey(host, doc), mode)
-  } catch {
-    /* private window: the choice still holds for this visit */
-  }
+  storage.setItem(aiModeKey(host, doc), mode)
 }

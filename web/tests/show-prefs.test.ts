@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 import { readStoredNotes, storeNotes } from '~/lib/show-prefs'
+import { forgetBrowser, refuseEveryCall } from './refusing-browser'
 
 const memory = () => {
   const map = new Map<string, string>()
@@ -7,6 +8,8 @@ const memory = () => {
 }
 
 describe('whether the speaker notes are shown', () => {
+  afterEach(forgetBrowser)
+
   it('shows them until told not to', () => {
     expect(readStoredNotes(memory())).toBe(true)
   })
@@ -18,8 +21,8 @@ describe('whether the speaker notes are shown', () => {
     expect(readStoredNotes(storage)).toBe(true)
   })
   it('does not mind a browser that will not remember', () => {
-    const refusing = { getItem: () => { throw new Error('denied') }, setItem: () => { throw new Error('denied') } }
-    expect(readStoredNotes(refusing)).toBe(true)
-    expect(() => storeNotes(false, refusing)).not.toThrow()
+    refuseEveryCall()
+    expect(readStoredNotes()).toBe(true)
+    expect(() => storeNotes(false)).not.toThrow()
   })
 })

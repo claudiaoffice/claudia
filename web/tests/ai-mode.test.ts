@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 import { DEFAULT_AI_MODE, aiModeKey, readAiMode, storeAiMode } from '~/lib/ai-mode'
+import { forgetBrowser, refuseEveryCall } from './refusing-browser'
 
 function memoryStorage() {
   const map = new Map<string, string>()
@@ -7,6 +8,8 @@ function memoryStorage() {
 }
 
 describe('the AI mode (D262)', () => {
+  afterEach(forgetBrowser)
+
   it('is suggest for somebody who never chose', () => {
     expect(DEFAULT_AI_MODE).toBe('suggest')
     expect(readAiMode('127.0.0.1:8420', 'plan', memoryStorage())).toBe('suggest')
@@ -37,16 +40,10 @@ describe('the AI mode (D262)', () => {
     expect(aiModeKey('a:1', 'b')).not.toBe(aiModeKey('a', '1:b'))
   })
 
-  it('still works when the browser will not store anything', () => {
-    const refusing = {
-      getItem: () => {
-        throw new Error('denied')
-      },
-      setItem: () => {
-        throw new Error('denied')
-      },
-    }
-    expect(readAiMode('h', 'plan', refusing)).toBe('suggest')
-    expect(() => storeAiMode('h', 'plan', 'act', refusing)).not.toThrow()
+  it('still works when the browser will not store anything, and holds the choice for the page', () => {
+    refuseEveryCall()
+    expect(readAiMode('h', 'refused')).toBe('suggest')
+    expect(() => storeAiMode('h', 'refused', 'act')).not.toThrow()
+    expect(readAiMode('h', 'refused')).toBe('act')
   })
 })

@@ -12,27 +12,15 @@ import { safeSessionStorage } from './storage'
 const KEY = 'claudia.admin.token'
 
 export function readToken(storage: Pick<Storage, 'getItem'> = safeSessionStorage()): string | null {
-  try {
-    return storage.getItem(KEY)
-  } catch {
-    return null
-  }
+  return storage.getItem(KEY)
 }
 
 export function storeToken(token: string, storage: Pick<Storage, 'setItem'> = safeSessionStorage()): void {
-  try {
-    storage.setItem(KEY, token)
-  } catch {
-    /* private window, or storage full: the sign-in still works for the rest of this visit */
-  }
+  storage.setItem(KEY, token)
 }
 
 export function clearToken(storage: Pick<Storage, 'removeItem'> = safeSessionStorage()): void {
-  try {
-    storage.removeItem(KEY)
-  } catch {
-    /* nothing to clear */
-  }
+  storage.removeItem(KEY)
 }
 
 /** Why naming the first administrator was refused (D1371): a wrong setup code, too many tries, somebody faster, or

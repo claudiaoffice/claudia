@@ -9,20 +9,12 @@ const KEY = 'claudia.theme'
 const CHOICES: readonly ThemeChoice[] = ['light', 'dark', 'system']
 
 export function readStoredTheme(storage: Pick<Storage, 'getItem'> = safeStorage()): ThemeChoice {
-  try {
-    const value = storage.getItem(KEY)
-    return (CHOICES as readonly string[]).includes(value ?? '') ? (value as ThemeChoice) : 'system'
-  } catch {
-    return 'system'
-  }
+  const value = storage.getItem(KEY)
+  return (CHOICES as readonly string[]).includes(value ?? '') ? (value as ThemeChoice) : 'system'
 }
 
 export function storeTheme(choice: ThemeChoice, storage: Pick<Storage, 'setItem'> = safeStorage()): void {
-  try {
-    storage.setItem(KEY, choice)
-  } catch {
-    /* private window: nothing to remember, the choice still applies for this visit */
-  }
+  storage.setItem(KEY, choice)
 }
 
 /** What `choice` resolves to right now, given whether the system is in dark mode. */

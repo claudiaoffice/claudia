@@ -7,20 +7,12 @@ import { safeStorage } from './storage'
 const KEY = 'claudia.notes'
 
 export function readStoredNotes(storage: Pick<Storage, 'getItem'> = safeStorage()): boolean {
-  try {
-    const value = storage.getItem(KEY)
-    return value === null ? true : value === 'on'
-  } catch {
-    return true
-  }
+  const value = storage.getItem(KEY)
+  return value === null ? true : value === 'on'
 }
 
 export function storeNotes(shown: boolean, storage: Pick<Storage, 'setItem'> = safeStorage()): void {
-  try {
-    storage.setItem(KEY, shown ? 'on' : 'off')
-  } catch {
-    /* private window: the choice still applies for this visit */
-  }
+  storage.setItem(KEY, shown ? 'on' : 'off')
 }
 
 /** The View menu's "Speaker notes" checkbox. */

@@ -4,7 +4,8 @@ import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { afterEach, describe, expect, it } from 'vitest'
-import { remember, remembered, safeSessionStorage, safeStorage } from '~/lib/storage'
+import { remember, remembered, rememberedText, safeSessionStorage, safeStorage } from '~/lib/storage'
+import { forgetBrowser, refuseEveryCall } from './refusing-browser'
 
 const APP = fileURLToPath(new URL('../app', import.meta.url))
 
@@ -46,10 +47,7 @@ function refuseStorage() {
 }
 
 describe('safeStorage, where the browser has no storage or refuses it', () => {
-  afterEach(() => {
-    delete (globalThis as Record<string, unknown>).localStorage
-    delete (globalThis as Record<string, unknown>).sessionStorage
-  })
+  afterEach(forgetBrowser)
 
   it('without any storage, a key nobody set reads as null and nothing throws', () => {
     expect(() => safeStorage().setItem('claudia.test.absent', 'x')).not.toThrow()
@@ -71,10 +69,45 @@ describe('safeStorage, where the browser has no storage or refuses it', () => {
   })
 })
 
-describe('remembered', () => {
-  afterEach(() => {
-    delete (globalThis as Record<string, unknown>).localStorage
+describe('safeStorage, where the browser storage refuses a call', () => {
+  afterEach(forgetBrowser)
+
+  it('nothing throws, and what was written holds for the rest of the page until it is removed', () => {
+    refuseEveryCall()
+    for (const store of [safeStorage(), safeSessionStorage()]) {
+      expect(() => store.setItem('claudia.test.refused', 'kept')).not.toThrow()
+      expect(store.getItem('claudia.test.refused')).toBe('kept')
+      expect(() => store.removeItem('claudia.test.refused')).not.toThrow()
+      expect(store.getItem('claudia.test.refused')).toBeNull()
+    }
   })
+
+  it('a write the browser takes again wins over what the page held while it refused', () => {
+    refuseEveryCall()
+    safeStorage().setItem('claudia.test.later', 'held')
+    const kept = new Map<string, string>()
+    ;(globalThis as Record<string, unknown>).localStorage = {
+      getItem: (k: string) => kept.get(k) ?? null,
+      setItem: (k: string, v: string) => void kept.set(k, v),
+      removeItem: (k: string) => void kept.delete(k),
+    }
+    safeStorage().setItem('claudia.test.later', 'stored')
+    expect(kept.get('claudia.test.later')).toBe('stored')
+    kept.set('claudia.test.later', 'from another tab')
+    expect(safeStorage().getItem('claudia.test.later')).toBe('from another tab')
+  })
+})
+
+describe('rememberedText', () => {
+  it('reads the text kept under a key, and an empty text for a key nobody set', () => {
+    remember('claudia.test.user', 'Ada')
+    expect(rememberedText('claudia.test.user')).toBe('Ada')
+    expect(rememberedText('claudia.test.nobody')).toBe('')
+  })
+})
+
+describe('remembered', () => {
+  afterEach(forgetBrowser)
 
   it('gives the fallback for a key nobody set, and for a value that is not allowed', () => {
     expect(remembered('claudia.test.unset', ['on', 'off'], 'off')).toBe('off')

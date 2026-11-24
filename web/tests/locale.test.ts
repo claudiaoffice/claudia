@@ -1,5 +1,6 @@
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { clearLocale, currentLocale, detectLocale, isLocaleTag, setLocale, storedLocale } from '~/lib/locale'
+import { forgetBrowser, refuseEveryCall } from './refusing-browser'
 
 function fakeStorage(initial: Record<string, string> = {}) {
   const data = { ...initial }
@@ -40,6 +41,8 @@ describe('detectLocale', () => {
 })
 
 describe('stored/set/clearLocale', () => {
+  afterEach(forgetBrowser)
+
   it('round-trips an override through the given storage', () => {
     const store = fakeStorage()
     expect(storedLocale(store)).toBeNull()
@@ -55,12 +58,8 @@ describe('stored/set/clearLocale', () => {
     expect(storedLocale(fakeStorage({ 'claudia:locale': 'nope!' }))).toBeNull()
   })
   it('treats a storage read that throws as no override, not an error', () => {
-    const angry = {
-      getItem: () => {
-        throw new Error('blocked')
-      },
-    }
-    expect(storedLocale(angry)).toBeNull()
+    refuseEveryCall()
+    expect(storedLocale()).toBeNull()
   })
   it('works with no storage available at all (outside a browser)', () => {
     expect(storedLocale(undefined)).toBeNull()
@@ -75,12 +74,13 @@ describe('currentLocale', () => {
 })
 
 describe('setLocale swallows a storage failure on write', () => {
-  it('does not throw even if the underlying storage does', () => {
-    const angry = {
-      setItem: () => {
-        throw new Error('full')
-      },
-    }
-    expect(() => setLocale('de', angry)).not.toThrow()
+  afterEach(forgetBrowser)
+
+  it('does not throw even if the underlying storage does, and the override holds for the page', () => {
+    refuseEveryCall()
+    expect(() => setLocale('de')).not.toThrow()
+    expect(storedLocale()).toBe('de')
+    clearLocale()
+    expect(storedLocale()).toBeNull()
   })
 })

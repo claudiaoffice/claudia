@@ -35,11 +35,7 @@ export function isBookmark(value: unknown): value is Bookmark {
 }
 
 function save(bookmarks: Bookmark[], storage: Pick<Storage, 'setItem'> = safeStorage()): void {
-  try {
-    storage.setItem(KEY, JSON.stringify(bookmarks))
-  } catch {
-    /* private window, or storage full: the bookmark still works for the rest of this visit */
-  }
+  storage.setItem(KEY, JSON.stringify(bookmarks))
 }
 
 /** `bookmarks` with `origin` added, or its label refreshed with `defaultLabel` — unless a person already renamed it

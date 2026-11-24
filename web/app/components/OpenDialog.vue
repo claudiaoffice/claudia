@@ -13,7 +13,7 @@ import { createShellBridge, detectHandler, detectParentSink, isApp, type ShellBr
 import { LANGUAGES, useI18n } from '~/lib/i18n'
 import { useLoginWait } from '~/lib/login-wait'
 import { useTheme } from '~/lib/theme'
-import { remember, safeStorage } from '~/lib/storage'
+import { remember, rememberedText } from '~/lib/storage'
 import Modal from './Modal.vue'
 
 const { t, locale, choose: chooseLanguage } = useI18n()
@@ -359,8 +359,8 @@ onBeforeUnmount(() => releasePresence?.())
 
 onMounted(async () => {
   if (props.pickFile) chooseFile()
-  user.value = safeStorage().getItem('claudia.user') ?? ''
-  if (!doc.value && !props.startFresh) doc.value = safeStorage().getItem('claudia.doc') ?? ''
+  user.value = rememberedText('claudia.user')
+  if (!doc.value && !props.startFresh) doc.value = rememberedText('claudia.doc')
   if (props.startFresh) docField.value?.focus()
   listed = loadServer()
   await listed

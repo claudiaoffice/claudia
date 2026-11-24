@@ -28,36 +28,21 @@ export function detectLocale(nav?: Pick<Navigator, 'language'>): string {
 /** The override the person picked for themselves, if any and still well-formed; `null` otherwise. No storage to
  *  read from (no browser, or reading it throws — private browsing, a blocked origin) is "no override", not an
  *  error here. */
-export function storedLocale(given?: Pick<Storage, 'getItem'>): string | null {
-  const s = given ?? safeStorage()
-  try {
-    const value = s.getItem(STORAGE_KEY)
-    return value !== null && isLocaleTag(value) ? value : null
-  } catch {
-    return null
-  }
+export function storedLocale(given: Pick<Storage, 'getItem'> = safeStorage()): string | null {
+  const value = given.getItem(STORAGE_KEY)
+  return value !== null && isLocaleTag(value) ? value : null
 }
 
 /** Remember an override for next time. Throws only if `locale` is not a usable tag; no storage to write to, or a
- *  write that fails, is swallowed (the same as `storedLocale` finding nothing). */
-export function setLocale(locale: string, given?: Pick<Storage, 'setItem'>): void {
+ *  write that fails, is no error (`safeStorage` holds it for this page). */
+export function setLocale(locale: string, given: Pick<Storage, 'setItem'> = safeStorage()): void {
   if (!isLocaleTag(locale)) throw new Error(`not a locale tag: ${locale}`)
-  const s = given ?? safeStorage()
-  try {
-    s.setItem(STORAGE_KEY, locale)
-  } catch {
-    // ignored: see above
-  }
+  given.setItem(STORAGE_KEY, locale)
 }
 
 /** Forget the override, back to following the OS/browser locale. */
-export function clearLocale(given?: Pick<Storage, 'removeItem'>): void {
-  const s = given ?? safeStorage()
-  try {
-    s.removeItem(STORAGE_KEY)
-  } catch {
-    // ignored, as in setLocale
-  }
+export function clearLocale(given: Pick<Storage, 'removeItem'> = safeStorage()): void {
+  given.removeItem(STORAGE_KEY)
 }
 
 /** What to use right now: the person's own override if they set one, else the OS/browser locale, else the
