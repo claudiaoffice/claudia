@@ -64,3 +64,13 @@ def test_only_text_properties_are_read():
         ),
     )
     assert custom_properties(parts) == {"a": "1"}
+
+
+def test_a_package_that_declares_the_part_already_is_not_given_a_second_declaration():
+    parts = a_fresh_xlsx()
+    set_custom_properties(parts, {"a": "1"})
+    del parts[CUSTOM_PART]  # (a program dropped the part and kept what pointed at it)
+    set_custom_properties(parts, {"b": "2"})
+    assert custom_properties(parts) == {"b": "2"}
+    assert parts["[Content_Types].xml"].count(b"/docProps/custom.xml") == 1
+    assert parts["_rels/.rels"].count(b"docProps/custom.xml") == 1
