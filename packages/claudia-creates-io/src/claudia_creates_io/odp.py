@@ -939,8 +939,8 @@ class _Writer:
         graphic = self.looks.graphic(look(self.model, body.style), over, self.pt_per_unit)
         definition = self.model.shapes.get(body.shape) if body.shape else None
         shape_id = definition.id if definition else "rectangle"
-        if body.kind == "diagram":  # pragma: no cover - the presentation app has no diagram objects yet (E6.6)
-            self.losses.add("diagram")
+        if body.kind == "chart":  # pragma: no cover - the presentation app has no chart objects yet (E6.6)
+            self.losses.add("chart")
         attributes = {"draw:style-name": graphic, **placing}
         if shape_id == "circle":
             element = _el("draw", "ellipse", attributes)
@@ -1122,11 +1122,11 @@ def slides_to_odp(model: SlideModel, *, info: DocumentInfo | None = None, raster
 
 def odp_export_losses(model: SlideModel, *, rasterised: bool = False) -> tuple[Loss, ...]:
     """What :func:`slides_to_odp` cannot put into the file for ``model``, each as a code with how many: ``"authorship"``
-    (who wrote which words of an object: an odp does not keep it), a ``"diagram"`` (written as a rectangle), an
+    (who wrote which words of an object: an odp does not keep it), a ``"chart"`` (written as a rectangle), an
     ``"image-missing"`` (an image the document has no picture for), ``"rendering-pending"`` (a container
     nothing has been drawn for yet: it is left out, and says so here), ``"svg-picture"`` (a container
     written as the SVG itself, because nothing could draw it as a PNG: programs other than PowerPoint may leave out
-    colours or text of a diagram; none with ``rasterised``) and ``"decorative"`` (an object marked as
+    colours or text of a chart; none with ``rasterised``) and ``"decorative"`` (an object marked as
     decoration: ODF 1.3 has no attribute for it, so a reader of the file sees an object nobody described); for notes
     ``"notes-link"``, ``"notes-image"``, ``"notes-code"`` and ``"notes-quote"`` (how many slides use what the file shows
     only as plain words), and ``"planned-time"`` (how many slides have a planned time, which an odp has no place for,
@@ -1144,8 +1144,8 @@ def odp_export_losses(model: SlideModel, *, rasterised: bool = False) -> tuple[L
     if decorative:
         losses.add("decorative", count=decorative)
     for obj in model.objects.values():  # pragma: no cover - neither can be in a presentation yet (see above)
-        if obj.body.kind == "diagram":
-            losses.add("diagram")
+        if obj.body.kind == "chart":
+            losses.add("chart")
         elif obj.body.kind == "image" and obj.body.image not in model.images:
             losses.add("image-missing")
     pending = sum(

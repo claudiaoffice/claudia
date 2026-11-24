@@ -156,7 +156,7 @@ def test_a_text_box_starts_with_its_words_in_the_body_style(paper):
     [
         {"kind": "image"},
         {"kind": "container"},
-        {"kind": "diagram"},
+        {"kind": "chart"},
         {"kind": "shape"},
         {"kind": "shape", "shape": "no-such-shape"},
         {"kind": "triangle"},

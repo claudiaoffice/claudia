@@ -58,7 +58,7 @@ def facets(model: WorkbookModel) -> dict[str, object]:
             *(("container", each) for each in data["containers"]),
         ],
         "objects": [
-            *(each for each in data["objects"] if each["kind"] != "diagram" and each["kind"] not in PICTURE_KINDS),
+            *(each for each in data["objects"] if each["kind"] != "chart" and each["kind"] not in PICTURE_KINDS),
             *(("shape", each) for each in data["shapes"]),
         ],
     }
@@ -72,11 +72,11 @@ def _pivots(model: WorkbookModel) -> dict[str, object]:
 
 def _charts(data: dict) -> dict[str, object]:
     """The charts a workbook shows, each with the definition it draws: a chart on a sheet or a slide."""
-    definitions = {each["id"]: each for each in data["diagrams"]}
+    definitions = {each["id"]: each for each in data["charts"]}
     return {
         f"object {each['id']}": (each, definitions.get(each["ref"]))
         for each in data["objects"]
-        if each["kind"] == "diagram"
+        if each["kind"] == "chart"
     }
 
 

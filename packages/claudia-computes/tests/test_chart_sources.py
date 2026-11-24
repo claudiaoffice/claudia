@@ -17,7 +17,7 @@ def sourced(spec_id="c1", source="Sales", scope=None, **changes) -> ChartSpec:
 
 
 def draw(doc, spec: ChartSpec) -> dict:
-    doc.execute(DefineAsset("diagram", spec.to_data()), author="ana")
+    doc.execute(DefineAsset("chart", spec.to_data()), author="ana")
     return doc.model.chart_figure(spec.id)
 
 
@@ -74,9 +74,9 @@ def test_a_name_without_cells_draws_an_empty_chart_instead_of_failing(sales):
 
 def test_a_source_must_name_something_this_document_has(sales):
     with pytest.raises(ValueError, match="no name “Nope”"):
-        sales.model.diagram_from_data(sourced(source="Nope").to_data())
+        sales.model.chart_from_data(sourced(source="Nope").to_data())
     with pytest.raises(ValueError, match="does not know the sheet"):
-        sales.model.diagram_from_data(sourced(scope=SheetId("zz")).to_data())
+        sales.model.chart_from_data(sourced(scope=SheetId("zz")).to_data())
 
 
 def test_a_sheet_scoped_source_is_found_by_its_scope(sales):
@@ -84,7 +84,7 @@ def test_a_sheet_scoped_source_is_found_by_its_scope(sales):
     figure = draw(sales, sourced(source="Local", scope=SheetId(S1)))
     assert [trace["name"] for trace in figure["data"]] == ["Units"]
     with pytest.raises(ValueError, match="no name “Local”"):
-        sales.model.diagram_from_data(sourced(source="Local").to_data())  # not a workbook-wide name
+        sales.model.chart_from_data(sourced(source="Local").to_data())  # not a workbook-wide name
 
 
 def test_a_named_range_without_a_header_row_reads_its_first_row_as_data(sales):
@@ -95,7 +95,7 @@ def test_a_named_range_without_a_header_row_reads_its_first_row_as_data(sales):
 
 def test_a_source_survives_the_log_and_may_replace_a_range(sales):
     draw(sales, sourced())
-    sales.execute(UpdateAsset("diagram", "c1", sourced().to_data()), author="ana")
+    sales.execute(UpdateAsset("chart", "c1", sourced().to_data()), author="ana")
     again = reopen(sales)
     assert again.model.chart_figure("c1") == sales.model.chart_figure("c1")
     assert sales.model.charts_reading(SheetId(S1)) == []  # a name, not a sheet, is what it reads

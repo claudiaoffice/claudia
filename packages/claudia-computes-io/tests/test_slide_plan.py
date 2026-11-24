@@ -1,6 +1,6 @@
 """A workbook's slides in ods and xlsx (E6.31 step 2, D1473): neither format has slides, so a slide is written as a
 sheet of its own in its place among the sheets, with its objects on it, scaled from the slide's 1600 × 900 units to
-the size a chart tab is written at, and the export says so. Read back, what was a slide is a sheet."""
+720 × 432, and the export says so. Read back, what was a slide is a sheet."""
 
 from __future__ import annotations
 
@@ -43,8 +43,8 @@ def with_a_slide(name: str = "Sales chart", *, at: int = 1) -> WorkbookModel:
     model = a_workbook()
     model.add_slide(Slide("p1", name), at)
     model.add_sheet(Sheet("s2", "Costs"), None)
-    model.diagrams.define(ChartSpec(id="c1", kind="bar", range=a_range()))
-    chart = ObjectBody("o1", "diagram", 1200, 700, "plain-image", ref="c1")
+    model.charts.define(ChartSpec(id="c1", kind="bar", range=a_range()))
+    chart = ObjectBody("o1", "chart", 1200, 700, "plain-image", ref="c1")
     model.insert_object(VisualObject(chart, SlideAnchor("p1", 200, 100)))
     asset = a_png()
     model.images.define(asset)
@@ -65,7 +65,7 @@ def test_a_slide_becomes_a_sheet_in_its_place_with_its_chart_on_it(fmt):
         assert problems(data) == []
     again = read(data)
     assert tab_names(again) == [("sheet", "Data"), ("sheet", "Sales chart"), ("sheet", "Costs")]
-    assert [obj.body.kind for obj in again.objects_on(again.tabs[1].id)] == ["diagram"]  # (pictures are not read yet)
+    assert [obj.body.kind for obj in again.objects_on(again.tabs[1].id)] == ["chart"]  # (pictures are not read yet)
 
 
 def test_the_chart_and_the_picture_of_a_slide_are_written_on_the_sheet_it_becomes():
@@ -86,7 +86,7 @@ def test_downloading_says_that_a_slide_became_a_sheet(fmt):
 
 def test_the_objects_of_a_slide_hang_at_the_cell_nearest_to_where_they_are_scaled_to_a_chart_tab():
     sheets = with_slides_as_sheets(with_a_slide())
-    assert SLIDE_SCALE == 0.45  # 1600 × 900 into the 720 × 432 of a chart tab, keeping the proportions
+    assert SLIDE_SCALE == 0.45  # 1600 × 900 into 720 × 432, keeping the proportions
     picture = sheets.get_object("o2")
     assert (picture.body.w, picture.body.h) == (180, 90)
     # (800, 450) on the slide is (360, 202.5) px on the sheet: the corner of the cell E9, at (384, 208)

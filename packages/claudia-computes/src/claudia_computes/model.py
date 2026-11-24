@@ -429,7 +429,7 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor | SlideAnchor]):
     # 3: the workbook also carries images and objects anchored to cells (E6.17)
     # 4: objects are a shared body plus a CellAnchor, and the workbook carries a style book (E10.16)
     # 5: the workbook carries its own colour palette (D200)
-    # 6: the workbook carries diagram definitions and chart tabs, either of which may show one (E6.6)
+    # 6: the workbook carries chart definitions and chart tabs (E6.6)
     # 7: the workbook carries names: named ranges, tables and query results (E6.5, D600)
     # 8: the workbook carries the seed and draw number of its random numbers (E6.22, D291)
     # 9: object bodies carry a description
@@ -438,7 +438,8 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor | SlideAnchor]):
     # 12: how it is printed, and its language (E6.19, D1001)
     # 13: names have ids (D552)
     state_schema: ClassVar[int] = (
-        18  # 18: no chart tabs, a chart is an object on a sheet or a slide (E6.31 step 3, D1475); 17: tabs, one order
+        19  # 19: the definitions of the charts are stored under ``charts`` and the object kind is ``chart`` (D1476);
+        # 18: no chart tabs, a chart is an object on a sheet or a slide (E6.31 step 3, D1475); 17: tabs, one order
         # of sheets and slides, and the slides as records (E6.31, D1471); 16: sheets, chart tabs and named ranges may
         # have descriptions (D1317); 15: an object body has one ``ref``; 14: the workbook carries its pivot tables
     )
@@ -522,7 +523,7 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor | SlideAnchor]):
             "tabs": [tab.to_data() for tab in self.tabs],
             "styles": self.styles.to_data(),
             "palette": self.palette.to_data(),
-            **self.assets_to_data(),  # images, shapes, diagrams, containers, tables (D1431)
+            **self.assets_to_data(),  # images, shapes, charts, containers, tables (D1431)
             "objects": self.objects_to_data(),
             "names": self.names.to_data(),
             "descriptions": dict(self.thing_descriptions),
@@ -567,7 +568,7 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor | SlideAnchor]):
 
     # -- redaction (D720, D723) -----------------------------------------------------
     @classmethod
-    def blank_diagram(cls, definition: dict) -> dict:
+    def blank_chart(cls, definition: dict) -> dict:
         """A chart's definition without its titles: what it reads and how stay, so the chart still draws (D720)."""
         spec = ChartSpec.from_data(definition)
         return replace(spec, title="", x_title="", y_title="").to_data()
@@ -643,7 +644,7 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor | SlideAnchor]):
         """A chart moves from a sheet to a slide ("Move to Slide", E6.31 A4), and back when that is undone; nothing
         else changes its holder, and nothing moves from one sheet to another or from one slide to another, so a slide
         loses an object only when it is taken away (and goes with its last one)."""
-        return obj.body.diagram is not None and type(obj.anchor) is not type(new)
+        return obj.body.chart is not None and type(obj.anchor) is not type(new)
 
     def check_anchor(self, anchor: CellAnchor | SlideAnchor, body: ObjectBody) -> None:
         """An object on a sheet hangs at a cell of it, and its size is not bounded (a sheet has no edge to fall off);
@@ -670,7 +671,7 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor | SlideAnchor]):
         """What is left of a slide to the right of a new object (D1332); a sheet sets no limit."""
         return room_on_slide(anchor) if isinstance(anchor, SlideAnchor) else None
 
-    def diagram_from_data(self, data: dict) -> ChartSpec:
+    def chart_from_data(self, data: dict) -> ChartSpec:
         """Read a chart definition; ``ValueError`` if the data is not one, or its range does not fit a sheet
         this workbook actually has (:class:`~claudia_computes.ChartSpec` alone cannot know that)."""
         spec = ChartSpec.from_data(data)
@@ -688,15 +689,15 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor | SlideAnchor]):
         return spec
 
     def charts_reading(self, sheet_id: SheetId) -> list[str]:
-        """Ids of the diagram definitions whose range names ``sheet_id`` (E6.6): what ``RemoveSheet`` refuses
+        """Ids of the chart definitions whose range names ``sheet_id`` (E6.6): what ``RemoveSheet`` refuses
         to orphan, the same way it refuses to orphan a formula elsewhere were there no ``#REF!`` for that.
 
-        ``self.diagrams`` is typed by the shared :class:`~claudia_core.ObjectModel` as holding the
-        app-agnostic :class:`~claudia_core.DiagramDefinition`; every value in it is in fact a ``ChartSpec``,
-        since :meth:`diagram_from_data` is the only thing that ever puts one there."""
+        ``self.charts`` is typed by the shared :class:`~claudia_core.ObjectModel` as holding the
+        app-agnostic :class:`~claudia_core.ChartDefinition`; every value in it is in fact a ``ChartSpec``,
+        since :meth:`chart_from_data` is the only thing that ever puts one there."""
         return sorted(
             spec.id
-            for spec in map(_chart_spec, self.diagrams.values())
+            for spec in map(_chart_spec, self.charts.values())
             if spec.range is not None and spec.range.sheet == sheet_id
         )
 
@@ -857,9 +858,9 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor | SlideAnchor]):
             return self.slides.rename(thing_id, name)
         return super().set_thing_name(thing_id, name)
 
-    def chart_figure(self, diagram_id: str) -> dict:
-        """The Plotly figure (``{"data": [...], "layout": {...}}``) a diagram draws right now, read live off its
-        sheet (E6.6); ``ValueError`` if ``diagram_id`` names no diagram this workbook knows.
+    def chart_figure(self, chart_id: str) -> dict:
+        """The Plotly figure (``{"data": [...], "layout": {...}}``) a chart draws right now, read live off its
+        sheet (E6.6); ``ValueError`` if ``chart_id`` names no chart this workbook knows.
 
         **The header convention:** the range's first column always names each category when ``series_in`` is
         "columns" (the other way around for "rows") — read by the range's own shape, same as it always has been.
@@ -872,9 +873,9 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor | SlideAnchor]):
         give has no room to be both the header and the data, so it is read as data only regardless of the
         setting, with generated names ("Series 1", "1", "2", …) — this keeps a 1-row or 1-column range usable
         rather than adding a minimum-size rule charts.py's range check does not have today. A text cell inside
-        the numeric data block plots as 0 rather than failing the whole chart; :meth:`diagram_from_data` already
+        the numeric data block plots as 0 rather than failing the whole chart; :meth:`chart_from_data` already
         guarantees the range fits a sheet this document has."""
-        spec = _chart_spec(self.diagrams[diagram_id])
+        spec = _chart_spec(self.charts[chart_id])
         window = self._chart_window(spec)
         if window is None:  # the named result is gone (or has no table right now): an empty chart, not an error
             return figure_of(spec, [], [])
@@ -925,11 +926,11 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor | SlideAnchor]):
             ]
         return figure_of(spec, categories, series)
 
-    def chart_cells(self, diagram_id: str) -> tuple[RangeRef, bool] | None:
-        """The cells a diagram reads right now, as a range that names its sheet, and whether its first row is a header
+    def chart_cells(self, chart_id: str) -> tuple[RangeRef, bool] | None:
+        """The cells a chart reads right now, as a range that names its sheet, and whether its first row is a header
         row; ``None`` when a named source has no cells at the moment. A named source answers with the range it is
         today, so a file that cannot follow a name (D462) can hold the chart as it looks now."""
-        window = self._chart_window(_chart_spec(self.diagrams[diagram_id]))
+        window = self._chart_window(_chart_spec(self.charts[chart_id]))
         if window is None:
             return None
         sheet, first, last, header_row = window
@@ -1411,7 +1412,7 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor | SlideAnchor]):
 
 
 def _chart_spec(definition: object) -> ChartSpec:
-    """A stored diagram definition as the :class:`~claudia_computes.ChartSpec` it always is here: the shared
-    object model types ``diagrams`` as the app-agnostic definition, and :meth:`~WorkbookModel.diagram_from_data`
+    """A stored chart definition as the :class:`~claudia_computes.ChartSpec` it always is here: the shared
+    object model types ``charts`` as the app-agnostic definition, and :meth:`~WorkbookModel.chart_from_data`
     is the only thing that puts one there."""
     return cast(ChartSpec, definition)

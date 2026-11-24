@@ -4,7 +4,7 @@ import { contextMenuItems, type MenuSubject } from '~/lib/object-menu'
 const text = (extra: Partial<MenuSubject> = {}): MenuSubject => ({ kind: 'text', snap: true, ...extra })
 const shape = (extra: Partial<MenuSubject> = {}): MenuSubject => text({ kind: 'shape', ...extra })
 const image = (extra: Partial<MenuSubject> = {}): MenuSubject => text({ kind: 'image', ...extra })
-const chart = (extra: Partial<MenuSubject> = {}): MenuSubject => text({ kind: 'diagram', ...extra })
+const chart = (extra: Partial<MenuSubject> = {}): MenuSubject => text({ kind: 'chart', ...extra })
 const container = (extra: Partial<MenuSubject> = {}): MenuSubject => text({ kind: 'container', ...extra })
 
 const actions = () => ({

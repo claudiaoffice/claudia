@@ -268,7 +268,7 @@ def test_a_round_trip_keeps_the_deck():
 
 def test_export_losses_name_what_the_file_cannot_hold():
     losses = odp_export_losses(a_deck())
-    assert {loss.kind for loss in losses} <= {"authorship", "diagram"}
+    assert {loss.kind for loss in losses} <= {"authorship", "chart"}
 
 
 # -- import --------------------------------------------------------------------------------------------------------

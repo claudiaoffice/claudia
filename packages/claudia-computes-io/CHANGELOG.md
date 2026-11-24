@@ -9,6 +9,9 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 - The chart tab (E6.31 step 3, D1475): `xlsx_charts.written_charts(model)` gives the charts of the sheets only, the ods
   writer and the patches write and keep no chart sheet, and the loss `chart`/`tab` is gone.
 
+### Changed
+- A chart is an object of the kind `chart` (D1476) in what is written and read back.
+
 ### Added
 - A workbook's slides in xlsx and ods (E6.31 step 2, D1473, `slide_plan`): each is written as a sheet without cells in
   its place among the sheets, its objects scaled from 1600 × 900 to 720 × 432 (`slide_plan.SHEET_SIZE`) and hung at the

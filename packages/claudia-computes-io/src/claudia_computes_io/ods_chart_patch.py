@@ -41,8 +41,8 @@ _FOLDER = re.compile(r"Object (\d+)/")
 
 
 def _definition(model: WorkbookModel, obj: VisualObject) -> ChartSpec:
-    assert obj.body.diagram is not None  # (the caller picks diagram objects)
-    spec = model.diagrams[obj.body.diagram]
+    assert obj.body.chart is not None  # (the caller picks chart objects)
+    spec = model.charts[obj.body.chart]
     assert isinstance(spec, ChartSpec)
     return spec
 
@@ -86,8 +86,8 @@ class ChartPatch:
         for chart in self.charts:
             if chart.sheet in gone:  # (the sheet is taken out of the file with its frames)
                 self._forget(chart)
-        old = {obj.id: obj for obj in self.baseline.objects.values() if obj.body.diagram is not None}
-        new = {obj.id: obj for obj in self.current.objects.values() if obj.body.diagram is not None}
+        old = {obj.id: obj for obj in self.baseline.objects.values() if obj.body.chart is not None}
+        new = {obj.id: obj for obj in self.current.objects.values() if obj.body.chart is not None}
         for object_id, was in old.items():
             file = self.by_object[object_id]
             if file.sheet in gone:

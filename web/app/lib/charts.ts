@@ -1,5 +1,5 @@
-// Charts (E6.6): a diagram definition (`claudia_computes.ChartSpec`) shown by a chart, an object on a sheet or a slide
-// (E6.31, D1475) — the client half of the shared object layer's `diagram` kind (`lib/objects.ts`). Plotly itself (the chart library, D33/D42) is only loaded by the
+// Charts (E6.6): a chart definition (`claudia_computes.ChartSpec`) shown by a chart, an object on a sheet or a slide
+// (E6.31, D1475) — the client half of the shared object layer's `chart` kind (`lib/objects.ts`). Plotly itself (the chart library, D33/D42) is only loaded by the
 // component that actually draws a figure; this module is just the wire shapes and the range-building helper,
 // so it costs nothing to import from code that only lists or edits definitions.
 
@@ -15,13 +15,13 @@ export interface ChartRange {
   last: ChartCellRef
 }
 
-/** A cell range as `insertChart`/`updateDiagram` want it, from two corners in any order. */
+/** A cell range as `insertChart`/`updateChart` want it, from two corners in any order. */
 export function chartRange(sheet: string, r0: number, c0: number, r1: number, c1: number): ChartRange {
   const ref = (row: number, col: number): ChartCellRef => ({ row, col, sheet })
   return { first: ref(Math.min(r0, r1), Math.min(c0, c1)), last: ref(Math.max(r0, r1), Math.max(c0, c1)) }
 }
 
-/** The fields a person edits in the insert/properties dialog; `insertChart`/`updateDiagram` add `kind` (bar
+/** The fields a person edits in the insert/properties dialog; `insertChart`/`updateChart` add `kind` (bar
  * only so far, E6.6) and send this straight on — the id and format are the server's to assign (`computes.py`). */
 export interface ChartDraft {
   /** The cells to draw — or, instead, `source` names a table or query result to follow (E6.5): one of the two. */
@@ -45,8 +45,8 @@ export interface ChartDraft {
   gridlines: boolean
 }
 
-/** A chart definition as the server stores and sends it (`diagrams`, the `diagram` event) — a `ChartDraft` plus
- * the id and format it was given. Not itself placed anywhere: a chart object (`ObjectBody.diagram`) shows it. */
+/** A chart definition as the server stores and sends it (`charts`, the `chart` event) — a `ChartDraft` plus
+ * the id and format it was given. Not itself placed anywhere: a chart object (`ObjectBody.chart`) shows it. */
 export interface ChartSpec extends ChartDraft {
   format: number
   id: string
@@ -65,12 +65,12 @@ export interface ChartFigure {
 /** Where a chart view gets its figure (computes' session): the one at hand, and asking for it. */
 export interface ChartFigures {
   /** The cached figure of a definition, or `null` while it has not come yet. */
-  figureOf(diagramId: string): ChartFigure | null
+  figureOf(chartId: string): ChartFigure | null
   /** Ask for a definition's figure, unless it is at hand; with `force`, ask again. */
-  ensureFigure(diagramId: string, force?: boolean): Promise<void>
+  ensureFigure(chartId: string, force?: boolean): Promise<void>
 }
 
-/** Whether a sheet's changed positions could change a diagram's own figure: same sheet, and at least one
+/** Whether a sheet's changed positions could change a chart's own figure: same sheet, and at least one
  * position inside its range. Used to decide whether a `cells` push event invalidates a cached figure (session's
  * own `onAppEvent`), mirroring how `claudia_server.computes`'s `chart_figure` docstring tells a client when to
  * ask again. */

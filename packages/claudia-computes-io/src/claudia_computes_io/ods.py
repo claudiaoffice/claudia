@@ -627,8 +627,8 @@ def _model_of(
         model.names.put(named)
     for chart in _held_charts(tables, parts):
         if chart.held is not None:
-            model.diagrams.define(chart.spec)
-            body = ObjectBody(chart.object_id, "diagram", chart.width, chart.height, "plain-image", ref=chart.spec_id)
+            model.charts.define(chart.spec)
+            body = ObjectBody(chart.object_id, "chart", chart.width, chart.height, "plain-image", ref=chart.spec_id)
             if chart.description:
                 body = replace(body, description=chart.description)
             model.insert_object(VisualObject(body, CellAnchor(chart.sheet, chart.row, chart.col)))
@@ -1079,7 +1079,7 @@ class _Patch:
         ] or any(self._differs(table) for table in self.tables):
             raise UnsupportedEdit("the baseline is not the workbook this file holds")
         if sorted(chart.object_id for chart in self.charts if chart.held is not None) != sorted(
-            obj.id for obj in self.baseline.objects.values() if obj.body.diagram is not None
+            obj.id for obj in self.baseline.objects.values() if obj.body.chart is not None
         ):
             raise UnsupportedEdit("the baseline is not the workbook this file holds")
         kept = [sheet_id for sheet_id in self.current.sheets if sheet_id in self.baseline.sheets]

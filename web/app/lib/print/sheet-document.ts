@@ -46,7 +46,7 @@ export function chartSizes(session: Session, request: SheetRequest): Map<string,
   const sizes = new Map<string, [number, number]>()
   for (const { kind, id } of printedIds(session, request)) {
     const objects = kind === 'slide' ? session.slideObjects(id) : session.sheetObjects(id)
-    for (const o of objects) if (o.kind === 'diagram' && o.ref && !sizes.has(o.ref)) sizes.set(o.ref, [o.w, o.h])
+    for (const o of objects) if (o.kind === 'chart' && o.ref && !sizes.has(o.ref)) sizes.set(o.ref, [o.w, o.h])
   }
   return sizes
 }
@@ -136,7 +136,7 @@ function picturesOf(session: Session, sheet: string, pictures: ReadonlyMap<strin
   return session.sheetObjects(sheet).flatMap((o): SheetPicture[] => {
     const anchor = { kind: 'cell' as const, row: o.anchor.row, col: o.anchor.col }
     const base = { id: o.id, kind: o.kind, w: o.w, h: o.h, style: o.style, paragraph: o.paragraph ? { style: o.paragraph.style, text: o.paragraph.text } : null, shape: pointer(o, 'shape'), image: pointer(o, 'image'), rotation: o.rotation, anchor }
-    if (o.kind === 'diagram') return [{ ...base, kind: 'diagram', image: o.ref && pictures.has(o.ref) ? chartImage(o.ref) : null }]
+    if (o.kind === 'chart') return [{ ...base, kind: 'chart', image: o.ref && pictures.has(o.ref) ? chartImage(o.ref) : null }]
     // a container (D390) is the layout's to print: as the picture it shows, or not at all
     return [base as SheetPicture]
   })
@@ -147,7 +147,7 @@ function picturesOf(session: Session, sheet: string, pictures: ReadonlyMap<strin
 function slideObjectsOf(session: Session, slide: string, pictures: ReadonlyMap<string, string>): LayoutSlideObject[] {
   const containers = session.state.containers
   return session.slideObjects(slide).map((o) => {
-    const image = o.kind === 'diagram' ? (o.ref && pictures.has(o.ref) ? chartImage(o.ref) : null) : (pointer(o, 'image') ?? pictureOf(containers[pointer(o, 'container') ?? '']))
+    const image = o.kind === 'chart' ? (o.ref && pictures.has(o.ref) ? chartImage(o.ref) : null) : (pointer(o, 'image') ?? pictureOf(containers[pointer(o, 'container') ?? '']))
     return { ...o, shape: pointer(o, 'shape'), image } as LayoutSlideObject
   })
 }

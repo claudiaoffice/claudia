@@ -49,7 +49,7 @@ VIEW_READS = frozenset(
         "tabs",
         "cells",
         "sizes",
-        "diagrams",
+        "charts",
         "chart_figure",
         "names",
         "number_formats",

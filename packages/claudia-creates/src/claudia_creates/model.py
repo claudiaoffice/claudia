@@ -179,7 +179,7 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
             "times": dict(self.times),
             "styles": self.styles.to_data(),
             "palette": self.palette.to_data(),
-            **self.assets_to_data(),  # images, shapes, diagrams, containers, tables (D1431)
+            **self.assets_to_data(),  # images, shapes, charts, containers, tables (D1431)
             "objects": self.objects_to_data(),
             "print_setup": self.print_setup.to_data(),
             "language": self.language,

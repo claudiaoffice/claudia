@@ -274,8 +274,8 @@ def _model_of(package: Package) -> tuple[WorkbookModel, tuple[Loss, ...]]:
         model.names.put(named)
     for chart in file_charts(package)[0]:
         if chart.held is not None:
-            model.diagrams.define(chart.spec)
-            body = ObjectBody(chart.object_id, "diagram", chart.width, chart.height, "plain-image", ref=chart.spec_id)
+            model.charts.define(chart.spec)
+            body = ObjectBody(chart.object_id, "chart", chart.width, chart.height, "plain-image", ref=chart.spec_id)
             if chart.description:
                 body = replace(body, description=chart.description)
             model.insert_object(VisualObject(body, CellAnchor(chart.sheet, chart.row, chart.col)))

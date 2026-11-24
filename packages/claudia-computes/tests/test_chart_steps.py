@@ -52,8 +52,8 @@ def test_a_chart_on_a_new_slide_comes_right_after_the_tab_and_fills_the_frame(do
     assert doc.model.thing_name("p1") == "Slide 1"
     assert doc.model.thing_name("o1") == "Sales"
     assert frame(doc, "o1") == (SlideAnchor("p1", 0, 0), SLIDE_WIDTH, SLIDE_HEIGHT)
-    assert doc.model.get_object("o1").body.diagram == "c1"
-    assert "c1" in doc.model.diagrams
+    assert doc.model.get_object("o1").body.chart == "c1"
+    assert "c1" in doc.model.charts
 
 
 def test_one_undo_takes_the_slide_its_chart_and_the_definition_away(doc):
@@ -62,7 +62,7 @@ def test_one_undo_takes_the_slide_its_chart_and_the_definition_away(doc):
     doc.undo("ana")
     assert tabs(doc) == [("sheet", "s1")]
     assert "o1" not in doc.model.objects
-    assert "c1" not in doc.model.diagrams
+    assert "c1" not in doc.model.charts
 
 
 # -- a chart on the slide shown, or on a sheet ------------------------------------------------------------------------
@@ -77,14 +77,14 @@ def test_a_second_chart_on_a_slide_takes_half_the_frame_in_its_middle(doc):
         SLIDE_WIDTH // 2,
         SLIDE_HEIGHT // 2,
     )
-    assert doc.model.get_object("o2").body.diagram == "c2"
+    assert doc.model.get_object("o2").body.chart == "c2"
 
 
 def test_a_chart_on_a_sheet_is_one_step_with_its_definition(doc):
     a_chart_on_the_sheet(doc)
     assert frame(doc, "o1") == (CellAnchor(SheetId(S1), 4, 2), 480, 300)
     doc.undo("ana")
-    assert "o1" not in doc.model.objects and "c1" not in doc.model.diagrams
+    assert "o1" not in doc.model.objects and "c1" not in doc.model.charts
 
 
 # -- Move to Slide ----------------------------------------------------------------------------------------------------
@@ -131,7 +131,7 @@ def test_removing_the_only_chart_of_a_slide_takes_the_slide_and_the_definition_a
     )
     doc.execute(chart_steps.removal(doc.model, ["o1"]), author="ana")
     assert tabs(doc) == [("sheet", "s1")]
-    assert "c1" not in doc.model.diagrams
+    assert "c1" not in doc.model.charts
     doc.undo("ana")
     assert tabs(doc) == [("sheet", "s1"), ("slide", "p1")]
     assert frame(doc, "o1") == (SlideAnchor("p1", 0, 0), SLIDE_WIDTH, SLIDE_HEIGHT)
@@ -153,7 +153,7 @@ def test_removing_a_chart_on_a_sheet_keeps_the_sheet(doc):
     a_chart_on_the_sheet(doc)
     doc.execute(chart_steps.removal(doc.model, ["o1"]), author="ana")
     assert tabs(doc) == [("sheet", "s1")]
-    assert "c1" not in doc.model.diagrams
+    assert "c1" not in doc.model.charts
 
 
 # -- a slide is not made or taken by hand -----------------------------------------------------------------------------
@@ -178,5 +178,9 @@ def test_a_workbook_stores_no_chart_tabs_and_its_charts_survive_a_snapshot(doc):
         chart_steps.as_new_slide(doc.model, new_chart(), slide_id="p1", slide_name="Slide 1", after=S1), author="ana"
     )
     state = doc.model.serialize()
-    assert "charts" not in state
+    # "charts" holds the charts' definitions (D1476), the object is of the kind "chart"; no tab is a chart
+    assert [spec["id"] for spec in state["charts"]] == ["c1"]
+    assert doc.model.get_object("o1").body.kind == "chart"
+    assert "diagrams" not in state
+    assert {tab.kind for tab in doc.model.tabs} == {"sheet", "slide"}
     assert WorkbookModel.restore(state).serialize() == state

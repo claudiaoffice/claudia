@@ -136,10 +136,10 @@ def chart_losses(model: WorkbookModel) -> list[str]:
     has the cells the name is now), ``rotation`` (a chart in a file stands upright) and ``empty`` (a chart that reads
     nothing is not written)."""
     lost: list[str] = []
-    shown = [obj.body.diagram for obj in model.objects.values() if obj.body.diagram is not None]
-    lost.extend("rotation" for obj in model.objects.values() if obj.body.diagram is not None and obj.body.rotation)
+    shown = [obj.body.chart for obj in model.objects.values() if obj.body.chart is not None]
+    lost.extend("rotation" for obj in model.objects.values() if obj.body.chart is not None and obj.body.rotation)
     for spec_id in shown:
-        spec = model.diagrams.get(spec_id)
+        spec = model.charts.get(spec_id)
         if not isinstance(spec, ChartSpec) or model.chart_cells(spec_id) is None:
             lost.append("empty")
             continue

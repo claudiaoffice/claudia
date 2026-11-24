@@ -2,8 +2,8 @@
 
 ``computes_methods`` is ``core_methods`` plus ``sheets``, ``cells``, ``set_cells``, ``add_sheet``, ``structure``,
 ``sizes``, ``resize_lines``, ``objects``, ``images``, ``styles``, ``add_image``, ``move_object``, ``resize_object``,
-``rotate_object``, ``remove_object``, ``diagrams``, ``chart_figure``, ``define_diagram``, ``update_diagram``,
-``forget_diagram``, ``insert_chart``, ``move_to_slide``, for named ranges, tables and queries (E6.5) ``names``,
+``rotate_object``, ``remove_object``, ``charts``, ``chart_figure``, ``define_chart``, ``update_chart``,
+``forget_chart``, ``insert_chart``, ``move_to_slide``, for named ranges, tables and queries (E6.5) ``names``,
 ``define_name``, ``rename_name``, ``remove_name``, ``sql_preview`` and ``define_sql``, for pivot tables (E6.30)
 ``pivots``, ``define_pivot``, ``update_pivot``, ``delete_pivot``, ``pivot_sql`` and ``pivot_to_sql``, and for search and
 replace (E6.20) ``search_find``, ``search_preview`` and ``search_replace`` (:mod:`claudia_server.computes_search`), and
@@ -37,7 +37,7 @@ image, rotation, snap — travels the wire identically in all three apps, and on
 anchor nor the size ever changes because of ``structure`` or ``resize_lines`` — only ``move_object`` (dragging it
 to another cell) moves it, and ``resize_object`` resizes it (E6.17).
 
-A chart (E6.6) is a ``"diagram"`` object on a sheet or a slide with a :class:`~claudia_computes.ChartSpec`
+A chart (E6.6) is a ``"chart"`` object on a sheet or a slide with a :class:`~claudia_computes.ChartSpec`
 *definition* of its own — a cell range plus how to read it and its titles (E6.31, D1475). ``insert_chart`` makes
 both in one step, on a new slide, on the slide shown or on a sheet; ``move_to_slide`` puts a chart of a sheet on a
 new slide; ``remove_object`` lets a chart's definition go with it, and a slide with its last object
@@ -45,7 +45,7 @@ new slide; ``remove_object`` lets a chart's definition go with it, and a slide w
 than the client making them up; ``chart_figure`` turns a definition plus its sheet's
 *live* cells into the Plotly figure (``{"data": [...], "layout": {...}}``) both clients draw unchanged — a
 client asks for it again after any ``cells`` push event whose ``sheet``/``positions`` could touch the chart's
-own range; move/resize/rotate/remove already work on a diagram object with no code of their own (E10.16's
+own range; move/resize/rotate/remove already work on a chart object with no code of their own (E10.16's
 generic object commands do not care what kind an object is).
 """
 
@@ -133,7 +133,7 @@ from claudia_core import (
     clean_name,
     name_problem,
 )
-from claudia_core.asset_store import DIAGRAM
+from claudia_core.asset_store import CHART
 from claudia_core.slides import SlideAnchor
 from claudia_creates import ShapeLibrary
 
@@ -233,11 +233,11 @@ def _fresh_range_id(workbook: WorkbookModel) -> str:
     return fresh_id("r", {thing for _kind, thing, _name in workbook.named_things()})
 
 
-def _diagram_definition(workbook: WorkbookModel, diagram_id: str, what: str) -> None:
-    if diagram_id not in workbook.diagrams:
+def _chart_definition(workbook: WorkbookModel, chart_id: str, what: str) -> None:
+    if chart_id not in workbook.charts:
         raise RequestError(
             "command_error",
-            msg("{what}: this document does not know the diagram {diagram_id!r}", what=what, diagram_id=diagram_id),
+            msg("{what}: this document does not know the chart {chart_id!r}", what=what, chart_id=chart_id),
         )
 
 
@@ -669,57 +669,57 @@ def _objects(ctx, *, sheet):
     return {"revision": current_revision(ctx), "sheet": sheet, "objects": objects}
 
 
-@computes_methods.method("diagrams")
-def _diagrams(ctx):
+@computes_methods.method("charts")
+def _charts(ctx):
     """The chart definitions this document knows (E6.6), each as `{format, id, kind, range, series_in, title,
     x_title, y_title, legend, gridlines}` — a chart that reads a named table or result has `source` and
     `source_scope` (a sheet id, or null for a workbook-wide name) where `range` would be (E6.5) — what a chart
-    tab or a floating diagram object may show. `range` is `{first, last}`, each a cell reference naming its own
+    shows. `range` is `{first, last}`, each a cell reference naming its own
     sheet; a definition is not itself placed anywhere."""
-    return [spec.to_data() for spec in _workbook(ctx).diagrams.values()]
+    return [spec.to_data() for spec in _workbook(ctx).charts.values()]
 
 
-@computes_methods.method("chart_figure", "diagram:str")
-def _chart_figure(ctx, *, diagram):
-    """A diagram's Plotly figure, read live off the sheet its range names, as `{revision, figure}` — the same
+@computes_methods.method("chart_figure", "chart:str")
+def _chart_figure(ctx, *, chart):
+    """A chart's Plotly figure, read live off the sheet its range names, as `{revision, figure}` — the same
     `figure` for every client, computed once here rather than twice (`e0-3-web-surface-notes.md`). Ask again
-    after any `cells` push event whose `sheet`/`positions` might overlap the diagram's own range; this server
+    after any `cells` push event whose `sheet`/`positions` might overlap the chart's own range; this server
     does not push a fresh figure on its own, since working out which charts are even open to a given client is
     the client's business, not this document's."""
     workbook = _workbook(ctx)
-    _diagram_definition(workbook, diagram, "chart_figure")
-    return {"revision": current_revision(ctx), "figure": workbook.chart_figure(diagram)}
+    _chart_definition(workbook, chart, "chart_figure")
+    return {"revision": current_revision(ctx), "figure": workbook.chart_figure(chart)}
 
 
-@computes_methods.method("define_diagram", "definition:dict base:revision?", write=True)
-def _define_diagram(ctx, *, definition, base):
+@computes_methods.method("define_chart", "definition:dict base:revision?", write=True)
+def _define_chart(ctx, *, definition, base):
     """Take a new chart definition into the document: `definition` is `{kind, range, series_in, title, x_title,
     y_title, legend, gridlines}` (E6.6); give `source` (and `source_scope`) instead of `range` to draw a named
     table or `SQL()` result that the chart then follows as it grows or moves (E6.5) — the id and format are this
     server's to assign, not the client's, so neither is sent. Returns the new definition's id and the revision.
     A chart is made with its definition in one step by `insert_chart`; this is for a definition shown nowhere yet."""
     if "id" in definition or "format" in definition:
-        raise RequestError("bad_request", msg("define_diagram: id and format are assigned by the server"))
+        raise RequestError("bad_request", msg("define_chart: id and format are assigned by the server"))
     workbook = _workbook(ctx)
-    diagram_id = fresh_id("g", workbook.diagrams)
-    command = DefineAsset(DIAGRAM.name, {**definition, "id": diagram_id, "format": 1})
-    return done(ctx, command, base, diagram=diagram_id)
+    chart_id = fresh_id("g", workbook.charts)
+    command = DefineAsset(CHART.name, {**definition, "id": chart_id, "format": 1})
+    return done(ctx, command, base, chart=chart_id)
 
 
-@computes_methods.method("update_diagram", "id:str definition:dict base:revision?", write=True)
-def _update_diagram(ctx, *, id, definition, base):
+@computes_methods.method("update_chart", "id:str definition:dict base:revision?", write=True)
+def _update_chart(ctx, *, id, definition, base):
     """Redefine a chart in place (E6.6): what a chart already showing `id` updates to, with nothing to re-place. Same
-    shape as `define_diagram`'s `definition`; the id and format are unchanged."""
-    _diagram_definition(_workbook(ctx), id, "update_diagram")
-    command = UpdateAsset(DIAGRAM.name, id, {**definition, "id": id, "format": 1})
+    shape as `define_chart`'s `definition`; the id and format are unchanged."""
+    _chart_definition(_workbook(ctx), id, "update_chart")
+    command = UpdateAsset(CHART.name, id, {**definition, "id": id, "format": 1})
     return done(ctx, command, base)
 
 
-@computes_methods.method("forget_diagram", "id:str base:revision?", write=True)
-def _forget_diagram(ctx, *, id, base):
+@computes_methods.method("forget_chart", "id:str base:revision?", write=True)
+def _forget_chart(ctx, *, id, base):
     """Let a chart definition go. Refused while a chart still shows it; `remove_object` on a chart lets its definition
     go with it."""
-    return done(ctx, ForgetAsset(DIAGRAM.name, id), base)
+    return done(ctx, ForgetAsset(CHART.name, id), base)
 
 
 #: What a chart may be shown as, and the keys of its place: a tab to put a new slide after, the slide shown, or a cell
@@ -761,18 +761,18 @@ def _new_slide(ctx: Context, workbook: WorkbookModel) -> tuple[str, str]:
 @computes_methods.method("insert_chart", "definition:dict show_as:str place:dict name:str? base:revision?", write=True)
 def _insert_chart(ctx, *, definition, show_as, place, name, base):
     """Make a chart with a definition of its own, in one step of the history (E6.31, D1475). `definition` is as for
-    `define_diagram`. `show_as` is `slide` (a new slide right after the tab `place.after`, the chart filling its
+    `define_chart`. `show_as` is `slide` (a new slide right after the tab `place.after`, the chart filling its
     frame), `on_slide` (on the slide `place.slide`, half the frame in its middle) or `sheet` (floating on
     `place.sheet` at `row`, `col`, `w` by `h` pixels). A new slide is the next free "Slide n" in the language of the
-    request; the chart is called `name`, or the next free "Chart n". Returns `{object, slide, diagram, revision}`
+    request; the chart is called `name`, or the next free "Chart n". Returns `{object, slide, chart, revision}`
     (`slide` is `null` for a chart on a sheet). `command_error` for a name another thing has, `bad_request` for a
     place that does not fit `show_as`."""
     if "id" in definition or "format" in definition:
         raise RequestError("bad_request", msg("insert_chart: id and format are assigned by the server"))
     workbook = _workbook(ctx)
     _check_place(workbook, show_as, place)
-    chosen = clean_name(name or "") or default_name(ctx, "diagram")
-    chart = NewChart(fresh_id("g", workbook.diagrams), fresh_id("o", workbook.objects), chosen, definition)
+    chosen = clean_name(name or "") or default_name(ctx, "chart")
+    chart = NewChart(fresh_id("g", workbook.charts), fresh_id("o", workbook.objects), chosen, definition)
     slide: str | None = None
     if show_as == "slide":
         slide, slide_name = _new_slide(ctx, workbook)
@@ -783,7 +783,7 @@ def _insert_chart(ctx, *, definition, show_as, place, name, base):
     else:
         anchor = CellAnchor(SheetId(place["sheet"]), place["row"], place["col"])
         step = chart_steps.on_sheet(workbook, chart, anchor, place["w"], place["h"])
-    return done(ctx, step, base, object=chart.object_id, slide=slide, diagram=chart.spec_id)
+    return done(ctx, step, base, object=chart.object_id, slide=slide, chart=chart.spec_id)
 
 
 @computes_methods.method("move_to_slide", "object:str base:revision?", write=True)

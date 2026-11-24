@@ -1,6 +1,6 @@
 """Commands of the computes model: sheets, slides, cell contents, structural edits, row and column sizes.
 
-Everything about floating objects — images, shapes, text boxes, diagrams: define, forget, add, remove, move,
+Everything about floating objects — images, shapes, text boxes, charts: define, forget, add, remove, move,
 resize, rotate, retext, snap — is shared with composes and creates and lives in :mod:`claudia_core.objects`
 (E10.16); a chart's definition (a :class:`~claudia_computes.ChartSpec`) is managed by the shared
 ``DefineAsset``/``UpdateAsset``/``ForgetAsset`` (E6.6, D1431), and what a step with a chart takes along is decided in
@@ -123,7 +123,7 @@ def _check_position(row: int, col: int) -> None:
 class AddSheet(Command):
     """Add a sheet. Its name must be free in the whole document, not only among the sheets (D550). ``legacy_names`` is
     set for what a log wrote before names were shared: it keeps the old rule (no second sheet of that name), so an old
-    document replays, even one that has a sheet and a chart tab of one name."""
+    document replays, even one that has a sheet and a slide of one name."""
 
     kind: ClassVar[str] = "computes.AddSheet"
     schema: ClassVar[int] = 3  # 2: names are shared with chart tabs and objects (D550); 3: and named ranges (D552)
@@ -188,7 +188,7 @@ class RemoveSheet(Command):
         sheet = model.sheet(self.id)
         blocking = model.charts_reading(self.id)
         if blocking:
-            # A diagram's range is frozen at the cells it names (E6.6, same policy as an object's anchor) — it
+            # A chart's range is frozen at the cells it names (E6.6, same policy as an object's anchor) — it
             # does not follow the sheet elsewhere the way a formula reference would, so removing the sheet
             # would leave it pointing nowhere. Refusing is the same answer ``forget_shape``/``forget_image``
             # give while something still uses them.

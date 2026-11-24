@@ -111,8 +111,8 @@ function server(link: FakeLink, extra: Record<string, (p: any) => any> = {}) {
     ],
     style_model: () => ({ ...STYLE_MODEL, facets: { box: ['background', 'border', 'padding'], text: ['font-family', 'font-size', 'font-weight', 'color'] } }),
     palette: () => ({ type: 'palette', roles: [], readings: [] }),
-    objects: (p: any) => ({ revision: 'main:3', sheet: p.sheet, objects: p.sheet === 's1' ? [OBJECT('o1'), OBJECT('o2', { kind: 'diagram', ref: 'd1', w: 300, h: 200 })] : [] }),
-    diagrams: () => [{ id: 'd1', format: 1, kind: 'bar' }],
+    objects: (p: any) => ({ revision: 'main:3', sheet: p.sheet, objects: p.sheet === 's1' ? [OBJECT('o1'), OBJECT('o2', { kind: 'chart', ref: 'd1', w: 300, h: 200 })] : [] }),
+    charts: () => [{ id: 'd1', format: 1, kind: 'bar' }],
     names: () => ({ revision: 'main:3', names: [{ name: 'Rents', scope: null, kind: 'range', purpose: 'input', column_purposes: [], sheet: 's1', sheet_name: 'Budget', region: { sheet: 's1', row0: 1, col0: 1, row1: 1, col1: 1 } }] }),
     random_state: () => ({ seed: 0, draw: 0 }),
     number_formats: () => FORMATS,
@@ -272,7 +272,7 @@ describe('the workbook as the layout library reads it', () => {
     expect(sheet.area).toBeNull()
     expect(sheet.objects.map((o) => [o.id, o.kind, o.image, o.anchor])).toEqual([
       ['o1', 'image', 'pic', { kind: 'cell', row: 2, col: 1 }],
-      ['o2', 'diagram', 'chart:d1', { kind: 'cell', row: 2, col: 1 }],
+      ['o2', 'chart', 'chart:d1', { kind: 'cell', row: 2, col: 1 }],
     ])
     expect(doc.images.find((i) => i.id === 'chart:d1')).toEqual({ id: 'chart:d1', format: 'svg', svg: '<svg/>' })
     expect(doc.images.find((i) => i.id === 'pic')).toEqual({ id: 'pic', format: 'gif' })
@@ -451,7 +451,7 @@ describe('a slide among the sheets', () => {
       { kind: 'slide', id: 'p1', name: 'Sales chart' },
       { kind: 'sheet', id: 's2', name: 'Plan' },
     ],
-    slide: () => ({ revision: 'main:3', slide: 'p1', objects: [ON_SLIDE('o9'), ON_SLIDE('o8', { kind: 'diagram', ref: 'd1', w: 800, h: 450 })] }),
+    slide: () => ({ revision: 'main:3', slide: 'p1', objects: [ON_SLIDE('o9'), ON_SLIDE('o8', { kind: 'chart', ref: 'd1', w: 800, h: 450 })] }),
   }
 
   it('prints the slide that is shown, and in the whole workbook between the sheets as the tabs have it', async () => {

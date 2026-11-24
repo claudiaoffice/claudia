@@ -33,7 +33,7 @@ _KIND_LABELS = {
     "text": msg("Text box"),
     "shape": msg("Shape"),
     "image": msg("Picture"),
-    "diagram": msg("Chart"),
+    "chart": msg("Chart"),
     "container": msg("Container"),
     "table": msg("Table"),
     "slide": msg("Slide"),
@@ -272,7 +272,7 @@ def _name_and_describe(
 
 
 def _free_name(ctx: Context, *, kind: str) -> dict:
-    """The name a new thing of `kind` (`text`, `shape`, `image`, `diagram`, `container`, `table`, `slide`) gets
+    """The name a new thing of `kind` (`text`, `shape`, `image`, `chart`, `container`, `table`, `slide`) gets
     when it is not given one: the first free "<what it is> <n>" in the language of the request, as `{name}`. A
     dialog shows it before the thing is made (E6.31, D1475). `bad_request` for another kind."""
     if kind not in _KIND_LABELS or kind == "paragraph":

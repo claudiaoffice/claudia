@@ -18,7 +18,7 @@ export const STYLE_MODEL = {
       { name: 'label', reads: ['text', 'paragraph'], kind: 'paragraph', takes: ['paragraph'] },
     ],
     image: [{ name: 'box', reads: [], kind: 'box', takes: ['box'] }],
-    diagram: [{ name: 'box', reads: ['box'], kind: 'box', takes: ['paragraph', 'box'] }],
+    chart: [{ name: 'box', reads: ['box'], kind: 'box', takes: ['paragraph', 'box'] }],
     cell: [
       { name: 'box', reads: ['box'], kind: 'box', takes: ['paragraph', 'box'] },
       { name: 'words', reads: ['text', 'paragraph'], kind: 'paragraph', takes: ['paragraph'] },

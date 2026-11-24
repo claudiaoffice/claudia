@@ -522,7 +522,7 @@ export function layoutText(doc: TextDocument, fonts: FontSet, resolver: FontReso
     if (o.kind === 'table') continue // in the flow, above
     const at = placed.get(o.id) ?? standing(o, { flow, blocks })
     if (!at) continue
-    const group = drawObject(o, { x: at.x, y: at.y, w: at.w, h: at.h }, { fonts, resolver, styles: sheet, shapes, images, notes, embedded, paragraphOptions, diagramNote: 'charts cannot be printed from a text yet' })
+    const group = drawObject(o, { x: at.x, y: at.y, w: at.w, h: at.h }, { fonts, resolver, styles: sheet, shapes, images, notes, embedded, paragraphOptions, chartNote: 'charts cannot be printed from a text yet' })
     if (!group) continue
     for (const it of walk(group.items)) if (it.kind === 'image' && !usedImages.includes(it.image)) usedImages.push(it.image)
     // behind the text it is drawn first, so the words lie over it

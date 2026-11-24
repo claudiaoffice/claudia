@@ -53,10 +53,10 @@ export interface ObjectBody {
    * (D178). What its *words* look like comes from the paragraph's own style instead. */
   style: string
   /** The words in it: a paragraph, the same entity composes uses (E10.17, D181), with its own style and the
-   * runs saying who wrote which part. `null` for an image or a diagram, neither of which carries text. */
+   * runs saying who wrote which part. `null` for an image or a chart, neither of which carries text. */
   paragraph: Paragraph | null
   /** The id of the definition the kind points at, in the document's own table for that kind: the outline of a
-   * `shape`, the asset of an `image`, the `ChartSpec` of a `diagram` (E6.6, `lib/charts.ts`), the
+   * `shape`, the asset of an `image`, the `ChartSpec` of a `chart` (E6.6, `lib/charts.ts`), the
    * definition of a `container` (D390, `containers` on the wire) or the table definition of a `table`
    * (D1201). `null` for a text box. A container's picture is its definition's own. Read it with
    * `pointer(object, kind)`, which is `null` unless the object is of that kind. */
@@ -100,7 +100,7 @@ export interface Paragraph {
   fields?: RefField[]
 }
 
-/** The id of the definition `body` points at if it is of `kind` (an image's asset, a diagram's chart spec, a table's
+/** The id of the definition `body` points at if it is of `kind` (an image's asset, a chart's definition, a table's
  * definition …), else `null`: the one `ref` field serves every kind, and the kind says what it is. */
 export function pointer(body: Pick<ObjectBody, 'kind' | 'ref'>, kind: ObjectKind): string | null {
   return body.kind === kind ? body.ref : null

@@ -65,7 +65,7 @@ export function contextMenuItems(o: MenuSubject, readonly: boolean, actions: Obj
 
   const top: MenuItem[] = [{ label: t('Name & describe…'), hint: hintOf('format.describe'), action: actions.describe, disabled: readonly }]
   // A picture has no text to write and a chart has none either: the entry is left off rather than shown disabled.
-  if (!picture && o.kind !== 'diagram' && app.edit !== false) top.push({ label: t('Edit text'), hint: t('Enter'), action: actions.edit, disabled: readonly })
+  if (!picture && o.kind !== 'chart' && app.edit !== false) top.push({ label: t('Edit text'), hint: t('Enter'), action: actions.edit, disabled: readonly })
   top.push({ label: t('Style…'), hint: hintOf('format.apply-style'), action: actions.style, disabled: readonly })
   if (canTurn(o.kind)) top.push({ label: t('Rotate by…'), hint: hintOf('format.rotate-by'), action: actions.rotateBy, disabled: readonly })
   if (app.wrap !== undefined && actions.setWrap) {
@@ -82,7 +82,7 @@ export function contextMenuItems(o: MenuSubject, readonly: boolean, actions: Obj
     })
   }
   // no key yet: it waits for the menu rework (owner, 2026-11-23; `claudia-menus`, Context menus row 25)
-  if (o.kind === 'diagram' && actions.moveToSlide) top.push({ label: t('Move to Slide'), action: actions.moveToSlide, disabled: readonly })
+  if (o.kind === 'chart' && actions.moveToSlide) top.push({ label: t('Move to Slide'), action: actions.moveToSlide, disabled: readonly })
   groups.push(top)
 
   // Cut/Copy: the very same `cutSelection`/`copySelection` the Edit menu's own items call. Copy only reads.

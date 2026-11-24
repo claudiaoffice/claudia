@@ -1,6 +1,6 @@
 """What a name is, for everything in a document that can be pointed at (D550, D551).
 
-One rule for all of it: objects, slides, sheets and chart tabs share one namespace, compared without regard to
+One rule for all of it: objects, slides and sheets share one namespace, compared without regard to
 capitals or runs of spaces, and a thing that has no name yet is given the first free "<Kind> <n>"."""
 
 import pytest

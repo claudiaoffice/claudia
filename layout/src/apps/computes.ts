@@ -364,7 +364,7 @@ interface SheetPlan {
 
 /** What a client's chart or picture is, for the shared object code, on a sheet or a slide: a chart with a picture is
  * drawn as that picture. */
-const asDrawn = <O extends VisualObject>(o: O): O => (o.kind === 'diagram' && o.image ? { ...o, kind: 'image' } : o)
+const asDrawn = <O extends VisualObject>(o: O): O => (o.kind === 'chart' && o.image ? { ...o, kind: 'image' } : o)
 
 /** The SHA-256 of every font file laying out `doc` needs, as `resolver` picks them. */
 export function sheetFontsNeeded(doc: SheetDocument, resolver: FontResolver): string[] {
@@ -401,7 +401,7 @@ export function layoutSheet(doc: SheetDocument, fonts: FontSet, resolver: FontRe
     notes,
     embedded,
     paragraphOptions: {},
-    diagramNote: 'the chart has no picture to print',
+    chartNote: 'the chart has no picture to print',
   }
   const base = styles.paragraph(DEFAULT_STYLE)
   const page = doc.page

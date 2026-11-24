@@ -166,7 +166,7 @@ describe('resizeTurned', () => {
 describe('what turns', () => {
   it('turns everything but a chart and a table (D1021, D1224)', () => {
     expect(['text', 'shape', 'image', 'container'].every(canTurn)).toBe(true)
-    expect(canTurn('diagram')).toBe(false)
+    expect(canTurn('chart')).toBe(false)
     expect(canTurn('table')).toBe(false)
   })
   it('says a turn in degrees', () => {

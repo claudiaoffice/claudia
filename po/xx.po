@@ -357,7 +357,7 @@ msgstr "[À lîst ûsés thîs schémé~~~~~~~~~]"
 msgid "A name like this exists already and will point here."
 msgstr "[À nàmé lîké thîs éxîsts àlréàdy ànd wîll pôînt héré.~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-computes/src/claudia_computes/model.py:853
+#: packages/claudia-computes/src/claudia_computes/model.py:854
 msgid "A named range is renamed in the list of names, which also changes the formulas that use it"
 msgstr "[À nàméd ràngé îs rénàméd în thé lîst ôf nàmés, whîch àlsô chàngés thé fôrmûlàs thàt ûsé ît~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -7017,7 +7017,7 @@ msgstr "[Théré îs àlréàdy à héàdîng càlléd “{name}”~~~~~~~~~~~~~
 msgid "There is already a list item called “{name}”"
 msgstr "[Théré îs àlréàdy à lîst îtém càlléd “{name}”~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-computes/src/claudia_computes/model.py:452
+#: packages/claudia-computes/src/claudia_computes/model.py:453
 msgid "There is already a named range called “{name}”"
 msgstr "[Théré îs àlréàdy à nàméd ràngé càlléd “{name}”~~~~~~~~~~~~~~~~~~]"
 
@@ -7033,11 +7033,11 @@ msgstr "[Théré îs àlréàdy à pîctûré càlléd “{name}”~~~~~~~~~~~~~
 msgid "There is already a shape called “{name}”"
 msgstr "[Théré îs àlréàdy à shàpé càlléd “{name}”~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-computes/src/claudia_computes/commands.py:147 packages/claudia-computes/src/claudia_computes/model.py:450
+#: packages/claudia-computes/src/claudia_computes/commands.py:147 packages/claudia-computes/src/claudia_computes/model.py:451
 msgid "There is already a sheet called “{name}”"
 msgstr "[Théré îs àlréàdy à shéét càlléd “{name}”~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-computes/src/claudia_computes/model.py:451 packages/claudia-creates/src/claudia_creates/model.py:106
+#: packages/claudia-computes/src/claudia_computes/model.py:452 packages/claudia-creates/src/claudia_creates/model.py:106
 msgid "There is already a slide called “{name}”"
 msgstr "[Théré îs àlréàdy à slîdé càlléd “{name}”~~~~~~~~~~~~~~~~]"
 
@@ -8049,7 +8049,7 @@ msgstr "[à Clàûdîà fîlé gôés în às ît îs, nôt às à néw dôcûm�
 msgid "a cell reference"
 msgstr "[à céll référéncé~~~~~~]"
 
-#: packages/claudia-computes/src/claudia_computes/model.py:687
+#: packages/claudia-computes/src/claudia_computes/model.py:688
 msgid "a chart's range must be inside the sheet"
 msgstr "[à chàrt's ràngé mûst bé însîdé thé shéét~~~~~~~~~~~~~~~~]"
 
@@ -8213,11 +8213,11 @@ msgstr "[à séléctîôn hôlds àt môst {limit} ôbjécts~~~~~~~~~~~~~~~~]"
 msgid "a sheet holds at most {limit} style ranges"
 msgstr "[à shéét hôlds àt môst {limit} stylé ràngés~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-computes/src/claudia_computes/model.py:830
+#: packages/claudia-computes/src/claudia_computes/model.py:831
 msgid "a sheet needs a name"
 msgstr "[à shéét nééds à nàmé~~~~~~~~]"
 
-#: packages/claudia-computes/src/claudia_computes/commands.py:274 packages/claudia-computes/src/claudia_computes/model.py:856
+#: packages/claudia-computes/src/claudia_computes/commands.py:274 packages/claudia-computes/src/claudia_computes/model.py:857
 msgid "a slide needs a name"
 msgstr "[à slîdé nééds à nàmé~~~~~~~~]"
 
@@ -8269,7 +8269,7 @@ msgstr "[à tàblé kééps àt léàst ôné côlûmn~~~~~~~~~~~~~]"
 msgid "a table keeps at least one row"
 msgstr "[à tàblé kééps àt léàst ôné rôw~~~~~~~~~~~~]"
 
-#: packages/claudia-computes/src/claudia_computes/model.py:1043
+#: packages/claudia-computes/src/claudia_computes/model.py:1044
 msgid "a table needs a header row"
 msgstr "[à tàblé nééds à héàdér rôw~~~~~~~~~~]"
 
@@ -8662,8 +8662,8 @@ msgid "count must be from 1 to {limit}"
 msgstr "[côûnt mûst bé frôm 1 tô {limit}~~~~~~~~~~~~]"
 
 #: packages/claudia-server/src/claudia_server/computes.py:702
-msgid "define_diagram: id and format are assigned by the server"
-msgstr "[défîné_dîàgràm: îd ànd fôrmàt àré àssîgnéd by thé sérvér~~~~~~~~~~~~~~~~~~~~~~]"
+msgid "define_chart: id and format are assigned by the server"
+msgstr "[défîné_chàrt: îd ànd fôrmàt àré àssîgnéd by thé sérvér~~~~~~~~~~~~~~~~~~~~~~]"
 
 #: packages/claudia-server/src/claudia_server/computes.py:1150
 msgid "define_pivot: give the sheet it starts on or new_sheet, not both"
@@ -9849,11 +9849,11 @@ msgstr "[stàrt wîth “{text}”~~~~~~~~]"
 msgid "stopped at its next step"
 msgstr "[stôppéd àt îts néxt stép~~~~~~~~~~]"
 
-#: packages/claudia-computes/src/claudia_computes/model.py:1302
+#: packages/claudia-computes/src/claudia_computes/model.py:1303
 msgid "structural edit is outside the sheet"
 msgstr "[strûctûràl édît îs ôûtsîdé thé shéét~~~~~~~~~~~~~~]"
 
-#: packages/claudia-computes/src/claudia_computes/model.py:1320
+#: packages/claudia-computes/src/claudia_computes/model.py:1321
 msgid "structural edit would push cells off the sheet"
 msgstr "[strûctûràl édît wôûld pûsh célls ôff thé shéét~~~~~~~~~~~~~~~~~~]"
 
@@ -9973,7 +9973,7 @@ msgstr "[thé célls ``rôws`` dôwn ànd ``côlûmns`` àcrôss frôm thé réf
 msgid "the cells are more than the table's rows and cols"
 msgstr "[thé célls àré môré thàn thé tàblé's rôws ànd côls~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-computes/src/claudia_computes/model.py:1041
+#: packages/claudia-computes/src/claudia_computes/model.py:1042
 msgid "the cells of a name must be inside the sheet"
 msgstr "[thé célls ôf à nàmé mûst bé însîdé thé shéét~~~~~~~~~~~~~~~~~~]"
 
@@ -10273,7 +10273,7 @@ msgstr "[théré îs nô chàt méssàgé ôf thàt nûmbér fôr yôû~~~~~~~~~
 msgid "there is no earlier list of this kind to continue"
 msgstr "[théré îs nô éàrlîér lîst ôf thîs kînd tô côntînûé~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-computes/src/claudia_computes/model.py:1140
+#: packages/claudia-computes/src/claudia_computes/model.py:1141
 msgid "there is no name “{old}”"
 msgstr "[théré îs nô nàmé “{old}”~~~~~~~~~~]"
 
@@ -10337,7 +10337,7 @@ msgstr "[thîs dôcûmént hàs nô côntàînér wîth thé îd {îd!r}~~~~~~~~
 msgid "this document has no lists"
 msgstr "[thîs dôcûmént hàs nô lîsts~~~~~~~~~~]"
 
-#: packages/claudia-computes/src/claudia_computes/model.py:681
+#: packages/claudia-computes/src/claudia_computes/model.py:682
 msgid "this document has no name “{source}” to draw a chart from"
 msgstr "[thîs dôcûmént hàs nô nàmé “{source}” tô dràw à chàrt frôm~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -10717,7 +10717,7 @@ msgstr "[{caption}: màrk thé téxt bôx by whàt ît îs fôr~~~~~~~~~~~~~~~~~
 msgid "{cell} (no table right now)"
 msgstr "[{cell} (nô tàblé rîght nôw)~~~~~~~~~~~]"
 
-#: packages/claudia-computes/src/claudia_computes/model.py:1270
+#: packages/claudia-computes/src/claudia_computes/model.py:1271
 msgid "{cell} shows the result of the formula in {owner} (SQL(), SORT() ...): change that formula, not its result"
 msgstr "[{cell} shôws thé résûlt ôf thé fôrmûlà în {owner} (SQL(), SÔRT() ...): chàngé thàt fôrmûlà, nôt îts résûlt~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -11093,7 +11093,7 @@ msgstr "[{name} îs à pîvôt tàblé: délété thé pîvôt, nôt îts nàmé
 msgid "{name} is a value, not a name"
 msgstr "[{name} îs à vàlûé, nôt à nàmé~~~~~~~~~~~~]"
 
-#: packages/claudia-computes/src/claudia_computes/model.py:1146 packages/claudia-computes/src/claudia_computes/pivot_commands.py:80
+#: packages/claudia-computes/src/claudia_computes/model.py:1147 packages/claudia-computes/src/claudia_computes/pivot_commands.py:80
 msgid "{name} is already a name"
 msgstr "[{name} îs àlréàdy à nàmé~~~~~~~~~~]"
 
@@ -11450,8 +11450,8 @@ msgid "{what}: the range must not end before it starts"
 msgstr "[{what}: thé ràngé mûst nôt énd béfôré ît stàrts~~~~~~~~~~~~~~~~~~~]"
 
 #: packages/claudia-server/src/claudia_server/computes.py:240
-msgid "{what}: this document does not know the diagram {diagram_id!r}"
-msgstr "[{what}: thîs dôcûmént dôés nôt knôw thé dîàgràm {dîàgràm_îd!r}~~~~~~~~~~~~~~~~~~~~~~~~~]"
+msgid "{what}: this document does not know the chart {chart_id!r}"
+msgstr "[{what}: thîs dôcûmént dôés nôt knôw thé chàrt {chàrt_îd!r}~~~~~~~~~~~~~~~~~~~~~~~]"
 
 #: packages/claudia-server/src/claudia_server/computes.py:855
 msgid "{what}: this document does not know the sheet {sheet!r}"

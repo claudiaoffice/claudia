@@ -183,3 +183,22 @@ English: only a wrong client fails them.
 
 E7.11 had taken the ID CODE-79 for a bug of its own (and E7.2 reserves CODE-80 to CODE-82), so the bug of a slide's
 text box is CODE-83; the commit that fixed it still says CODE-79 in its message.
+
+## Step 4 · The chart names of E1.18 (D1476), 2026-11-24
+
+- **How.** A script renamed `diagram`/`Diagram`/`DIAGRAM` to `chart`/`Chart`/`CHART` in the files where the word names
+  a chart, line by line, leaving every line that speaks of a Mermaid diagram, a formula or a picture drawn from text,
+  and never touching "Diagramm" (German for a chart). Left out as whole files: what speaks of a container's diagram
+  (`claudia-render`, `claudia-typeset`, `rasterise`, `raster`, `sizing`, the core's `containers`, `ContainerEditor`,
+  the GTK client's manifest), Word's drawings in `docx`, the style sheet of a diagram in `pptx`, the specs whose
+  "diagram" is a container's (`new-object-sizes.feature`, the invariants of composes), the glossary, the vision, the
+  history, the catalogs (regenerated) and the API snapshots (regenerated). Every remaining "diagram" in the code was
+  read afterwards; the prose the script left odd ("a chart's chart spec", lines of the chart tabs that step 3 missed)
+  was written by hand.
+- **Kept on purpose:** `diagram` among the legacy pointer fields of an object body (`_LEGACY_POINTERS`,
+  `testing.body_before_ref`), the name old bodies were written with, as `rendered`. An old body of the kind `chart`
+  never existed, so the tests of old bodies use the kinds that still read (shape, image, table).
+- **Stored names change outright:** computes' state schema 19 stores the definitions under `charts`; nothing reads a
+  state, log or file with the old names (D1430, E1.16). The test of step 3 that said "no `charts` in the state" says
+  what `charts` holds now; the old wire names (`diagrams`, `define_diagram`, `add_diagram_object`) are among the
+  methods the server does not know.

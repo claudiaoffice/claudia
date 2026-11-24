@@ -1,6 +1,6 @@
 """The asset store (D1431): what objects show that the document keeps once, by id.
 
-An *asset* is an image, a shape's outline, a chart's definition (``diagram``), a container's definition
+An *asset* is an image, a shape's outline, a chart's definition (``chart``), a container's definition
 (``container``) or a table. Objects point at one by id (``ObjectBody.ref``), so several objects can show the same
 one. "Asset" is a word of the code only; people never see it.
 
@@ -69,14 +69,14 @@ IMAGE = AssetKind(
     event_key="asset",
 )
 SHAPE = AssetKind("shape", "shape", "shape", lambda _model, data: ShapeDefinition.from_data(data))
-DIAGRAM = AssetKind(
-    "diagram",
-    "diagram",
-    "diagram",
-    lambda model, data: model.diagram_from_data(data),
+CHART = AssetKind(
+    "chart",
+    "chart",
+    "chart",
+    lambda model, data: model.chart_from_data(data),
     editable=True,
     # only the app knows what in a chart is anybody's words: without its model nothing is taken away
-    blank=lambda model, data: data if model is None else model.blank_diagram(data),
+    blank=lambda model, data: data if model is None else model.blank_chart(data),
 )
 CONTAINER = AssetKind(
     "container",
@@ -98,7 +98,7 @@ TABLE = AssetKind(
 )
 
 #: Every kind, in the order a stored document is read back: a container's picture is an image, so images come first.
-ASSET_KINDS: tuple[AssetKind, ...] = (TABLE, SHAPE, IMAGE, DIAGRAM, CONTAINER)
+ASSET_KINDS: tuple[AssetKind, ...] = (TABLE, SHAPE, IMAGE, CHART, CONTAINER)
 KIND_BY_NAME: Mapping[str, AssetKind] = {kind.name: kind for kind in ASSET_KINDS}
 KIND_BY_OBJECT: Mapping[str, AssetKind] = {kind.object_kind: kind for kind in ASSET_KINDS}
 

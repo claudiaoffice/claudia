@@ -132,7 +132,7 @@ function server(link: FakeLink) {
     ping: () => ({ revision: 'main:3', branch: 'main' }),
     sizes: () => ({ revision: 'main:3', rows: [[3, 52]], cols: [] }),
     resize_lines: () => ({ revision: 'main:4' }),
-    diagrams: () => [],
+    charts: () => [],
     charts: () => [],
     names: () => ({ revision: 'main:3', names: [] }),
     pivots: () => ({ revision: 'main:3', pivots: [] }),
@@ -1427,7 +1427,7 @@ describe('names, tables and queries (E6.5)', () => {
   it('asks again for the figure of a chart that reads a name when any cell changes', async () => {
     const { session, link } = await opened()
     link.handlers.chart_figure = () => ({ revision: 'main:3', figure: { data: [], layout: {} } })
-    link.push('diagram', { id: 'c1', definition: { format: 1, id: 'c1', kind: 'bar', source: 'Sales', source_scope: null } })
+    link.push('chart', { id: 'c1', definition: { format: 1, id: 'c1', kind: 'bar', source: 'Sales', source_scope: null } })
     await session.ensureFigure('c1')
     expect(session.figureOf('c1')).not.toBeNull()
     link.push('cells', { sheet: 's2', positions: [[40, 40]], cells: [] })
@@ -1986,7 +1986,7 @@ describe('a chart becomes a slide (E6.31, D1475)', () => {
 
   it('makes a chart as a new slide after the tab shown, on the slide shown or on the sheet shown, in one call', async () => {
     const { session, link } = await opened()
-    link.handlers.insert_chart = (p: any) => ({ revision: 'main:4', object: 'o9', slide: p.show_as === 'sheet' ? null : 'p1', diagram: 'g1' })
+    link.handlers.insert_chart = (p: any) => ({ revision: 'main:4', object: 'o9', slide: p.show_as === 'sheet' ? null : 'p1', chart: 'g1' })
     expect(await session.insertChart(DRAFT, 'slide', 'Sales')).toEqual({ object: 'o9', slide: 'p1' })
     expect(link.last('insert_chart')).toMatchObject({ definition: { kind: 'bar', ...DRAFT }, show_as: 'slide', place: { after: 's1' }, name: 'Sales' })
     session.state.activeSlide = 'p1'
@@ -2017,11 +2017,11 @@ describe('a chart becomes a slide (E6.31, D1475)', () => {
 
   it('asks the server for the next free name, and has none from an older one', async () => {
     const { session, link } = await opened()
-    link.handlers.free_name = (p: any) => ({ name: p.kind === 'diagram' ? 'Chart 2' : '?' })
-    expect(await session.freeName('diagram')).toBe('Chart 2')
+    link.handlers.free_name = (p: any) => ({ name: p.kind === 'chart' ? 'Chart 2' : '?' })
+    expect(await session.freeName('chart')).toBe('Chart 2')
     link.handlers.free_name = () => {
       throw new ProtocolError('unknown_method', 'free_name')
     }
-    expect(await session.freeName('diagram')).toBeNull()
+    expect(await session.freeName('chart')).toBeNull()
   })
 })

@@ -389,7 +389,7 @@ describe('a sheet on pages', () => {
       expect(circles(out.list.pages[0]!)).toHaveLength(0)
     })
     it('draws a chart from the picture the client made of it, and says when it has none', () => {
-      const chart = { ...picture(1, 1), kind: 'diagram' as const }
+      const chart = { ...picture(1, 1), kind: 'chart' as const }
       const drawn = layoutSheet(book([sheet(table(3, 3), {}, { objects: [chart] })], {}, { images: [{ id: 'i1', format: 'svg', svg }] }), fonts, resolver)
       expect(circles(drawn.list.pages[0]!)).toHaveLength(1)
       const missing = layoutSheet(book([sheet(table(3, 3), {}, { objects: [{ ...chart, image: null }] })]), fonts, resolver)
@@ -418,7 +418,7 @@ describe('a sheet on pages', () => {
       expect(said(out.list.pages[1]!)).toBe('Sales chart 2 / 2')
     })
     it('draws a chart on it as its picture, and says so when it has none (E6.31 step 3)', () => {
-      const chart = { ...onSlide(0, 0, 1600, 900), kind: 'diagram' as const }
+      const chart = { ...onSlide(0, 0, 1600, 900), kind: 'chart' as const }
       const drawn = layoutSheet(book([slide({ objects: [chart] })], {}, { images: [{ id: 'i1', format: 'svg', svg }] }), fonts, resolver)
       expect(drawn.notes).toEqual([])
       const group = drawn.list.pages[0]!.items.find((i): i is GroupItem => i.kind === 'group')!

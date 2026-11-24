@@ -163,8 +163,8 @@ class Drawings:
 
 # ------------------------------------------------------------------------------------------------ a kept file
 def _definition(model: WorkbookModel, obj: VisualObject) -> ChartSpec:
-    assert obj.body.diagram is not None  # (the caller picks diagram objects)
-    spec = model.diagrams[obj.body.diagram]
+    assert obj.body.chart is not None  # (the caller picks chart objects)
+    spec = model.charts[obj.body.chart]
     assert isinstance(spec, ChartSpec)
     return spec
 
@@ -198,8 +198,8 @@ class ChartPatch:
 
     def run(self) -> bool:
         """Put the changes of the charts into the file; whether there were any."""
-        old = {obj.id: obj for obj in self.baseline.objects.values() if obj.body.diagram is not None}
-        new = {obj.id: obj for obj in self.current.objects.values() if obj.body.diagram is not None}
+        old = {obj.id: obj for obj in self.baseline.objects.values() if obj.body.chart is not None}
+        new = {obj.id: obj for obj in self.current.objects.values() if obj.body.chart is not None}
         if sorted(old) != sorted(self.by_object):
             raise UnsupportedEdit("the baseline does not know the charts of the file")
         for object_id, was in old.items():

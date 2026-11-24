@@ -1,9 +1,9 @@
-"""Chart definitions: what a diagram draws, in computes' own terms (E6.6).
+"""Chart definitions: what a chart draws, in computes' own terms (E6.6).
 
-A :class:`ChartSpec` is computes' :class:`~claudia_core.DiagramDefinition` — the data a chart is drawn from, kept
-apart from where it is shown. A chart is an object on a sheet or a slide (``ObjectBody.diagram``) with a ``ChartSpec``
+A :class:`ChartSpec` is computes' :class:`~claudia_core.ChartDefinition` — the data a chart is drawn from, kept
+apart from where it is shown. A chart is an object on a sheet or a slide (``ObjectBody.chart``) with a ``ChartSpec``
 of its own (E6.31, D1475). The kernel never looks inside a ``ChartSpec``; it is read back only
-through :meth:`~claudia_computes.WorkbookModel.diagram_from_data`, the one door this module's data enters through.
+through :meth:`~claudia_computes.WorkbookModel.chart_from_data`, the one door this module's data enters through.
 
 Deliberately minimal for the first chart kind, the bar chart (E6.6's starting scope): ``kind`` is a plain string
 and every other field is generic, so a line, pie or scatter chart can join ``CHART_KINDS`` later without changing
@@ -135,10 +135,10 @@ def _check_source_scope(value: object) -> SheetId | None:
 @dataclass(frozen=True)
 class ChartSpec:
     """What one chart draws: a range of cells and how to read it, plus its titles and whether it carries a
-    legend or gridlines. computes' :class:`~claudia_core.DiagramDefinition` (E6.6).
+    legend or gridlines. computes' :class:`~claudia_core.ChartDefinition` (E6.6).
 
     Build one from stored or wire data with :meth:`from_data`, which refuses anything the format does not
-    allow; :meth:`~claudia_computes.WorkbookModel.diagram_from_data` additionally checks that ``range`` fits a
+    allow; :meth:`~claudia_computes.WorkbookModel.chart_from_data` additionally checks that ``range`` fits a
     sheet this document actually has, which this class alone cannot know."""
 
     def __post_init__(self) -> None:
@@ -192,7 +192,7 @@ class ChartSpec:
     def from_data(cls, data: object) -> ChartSpec:
         """Read the plain-data form; raises :class:`ChartError` naming the first thing that is wrong. Does not
         know whether ``range`` names a sheet this document has — that is
-        :meth:`~claudia_computes.WorkbookModel.diagram_from_data`'s business, the one door this data enters
+        :meth:`~claudia_computes.WorkbookModel.chart_from_data`'s business, the one door this data enters
         through."""
         if not isinstance(data, dict):
             raise ChartError("a chart definition is one JSON object")

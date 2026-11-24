@@ -30,7 +30,7 @@ const emit = defineEmits<{ close: []; inserted: [made: { object: string; slide: 
 const onSlide = computed(() => props.slide !== '')
 const name = ref('')
 onMounted(async () => {
-  const free = await props.session.freeName('diagram')
+  const free = await props.session.freeName('chart')
   if (!name.value) name.value = free ?? t('Chart')
 })
 // Where the chart reads from (E6.5, mock 6): the cells that are selected, or the table or query result of a name — which

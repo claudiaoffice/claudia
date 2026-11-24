@@ -515,7 +515,7 @@ class TextModel(DocumentModel, ObjectModel[ParagraphAnchor]):
             "lists": self.lists.to_data(),
             "schemes": self.schemes.to_data(),
             "suggestions": [self.suggestion_data(s, with_state=True) for s in self.suggestions.values()],
-            **self.assets_to_data(),  # images, shapes, diagrams, containers, tables (D1431)
+            **self.assets_to_data(),  # images, shapes, charts, containers, tables (D1431)
             "objects": self.objects_to_data(),
             "names": dict(self.paragraph_names),
             "descriptions": dict(self.paragraph_descriptions),

@@ -27,7 +27,7 @@ from claudia_core import (
     ResizeObject,
     SlideAnchor,
 )
-from claudia_core.asset_store import DIAGRAM
+from claudia_core.asset_store import CHART
 
 from .commands import AddSlide, RemoveSlide
 from .model import CellAnchor, WorkbookModel
@@ -48,8 +48,8 @@ class NewChart:
 
     def made(self, anchor: dict, w: int, h: int) -> tuple[Command, Command]:
         """Its definition and its object at ``anchor``, ``w`` by ``h``."""
-        body = ObjectBody(self.object_id, "diagram", w, h, CHART_STYLE, ref=self.spec_id, name=self.name)
-        definition = DefineAsset(DIAGRAM.name, {**self.definition, "id": self.spec_id, "format": 1})
+        body = ObjectBody(self.object_id, "chart", w, h, CHART_STYLE, ref=self.spec_id, name=self.name)
+        definition = DefineAsset(CHART.name, {**self.definition, "id": self.spec_id, "format": 1})
         return definition, AddObject(body, anchor)
 
 
@@ -80,7 +80,7 @@ def to_new_slide(model: WorkbookModel, object_id: str, *, slide_id: str, slide_n
     filling the frame. The chart keeps its name and its definition. Undo puts it back; the slide goes with the undo
     while it is empty, and stays when a colleague has put something on it."""
     obj = model.get_object(object_id)
-    if obj.body.diagram is None or not isinstance(obj.anchor, CellAnchor):
+    if obj.body.chart is None or not isinstance(obj.anchor, CellAnchor):
         raise Refusal("Only a chart on a sheet moves to a slide.")
     at = SlideAnchor(slide_id, 0, 0).to_data()
     return Batch(
@@ -101,9 +101,9 @@ def removal(model: WorkbookModel, object_ids: Iterable[str]) -> Batch:
     objects = [model.get_object(object_id) for object_id in ids]
     steps: list[Command] = [RemoveObject(object_id) for object_id in ids]
     for obj in objects:
-        spec = obj.body.diagram
-        if spec is not None and set(model.users_of(DIAGRAM, spec)) <= gone:
-            steps.append(ForgetAsset(DIAGRAM.name, spec))
+        spec = obj.body.chart
+        if spec is not None and set(model.users_of(CHART, spec)) <= gone:
+            steps.append(ForgetAsset(CHART.name, spec))
     holders = dict.fromkeys(obj.holder for obj in objects if obj.holder in model.slides)
     steps += [RemoveSlide(slide) for slide in holders if set(model.stack_of(slide)) <= gone]
     return Batch(tuple(steps), "Delete")

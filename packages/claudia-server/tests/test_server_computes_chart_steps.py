@@ -63,7 +63,7 @@ def test_one_undo_takes_the_slide_the_chart_and_its_definition_away(book):
     as_slide(book)
     book.undo("ann")
     assert tab_names(book) == [("sheet", "Sheet1"), ("sheet", "Costs")]
-    assert call(book, "diagrams") == []
+    assert call(book, "charts") == []
 
 
 def test_a_second_chart_goes_on_the_slide_shown(book):
@@ -84,20 +84,20 @@ def test_a_chart_floats_on_a_sheet_with_a_definition_of_its_own(book):
     first, second = on_sheet(book, "One"), on_sheet(book, "Two")
     objects = {o["id"]: o for o in call(book, "objects", {"sheet": "s1"})["objects"]}
     assert objects[first["object"]]["ref"] != objects[second["object"]]["ref"]
-    assert len(call(book, "diagrams")) == 2
+    assert len(call(book, "charts")) == 2
 
 
 def test_without_a_name_the_chart_is_the_next_free_chart_n(book):
     made = call(book, "insert_chart", {"definition": BAR, "show_as": "slide", "place": {"after": "s1"}})
     assert call(book, "thing_details", {"id": made["object"]})["name"] == "Chart 1"
-    assert call(book, "free_name", {"kind": "diagram"}) == {"name": "Chart 2"}
-    assert call(book, "free_name", {"kind": "diagram"}, locale="de") == {"name": "Diagramm 1"}  # (another word)
+    assert call(book, "free_name", {"kind": "chart"}) == {"name": "Chart 2"}
+    assert call(book, "free_name", {"kind": "chart"}, locale="de") == {"name": "Diagramm 1"}  # (another word)
 
 
 def test_a_name_another_thing_has_is_refused_and_nothing_is_made(book):
     with pytest.raises(RequestError, match="There is already a sheet called “Costs”"):
         as_slide(book, name="costs")
-    assert len(tab_names(book)) == 2 and call(book, "diagrams") == []
+    assert len(tab_names(book)) == 2 and call(book, "charts") == []
 
 
 @pytest.mark.parametrize(
@@ -152,7 +152,7 @@ def test_removing_the_last_chart_of_a_slide_takes_the_slide_and_the_definition_a
     made = as_slide(book)
     call(book, "remove_object", {"id": made["object"]})
     assert tab_names(book) == [("sheet", "Sheet1"), ("sheet", "Costs")]
-    assert call(book, "diagrams") == []
+    assert call(book, "charts") == []
     book.undo("ann")
     assert ("slide", "Slide 1") in tab_names(book)
 
@@ -160,11 +160,11 @@ def test_removing_the_last_chart_of_a_slide_takes_the_slide_and_the_definition_a
 def test_removing_a_chart_on_a_sheet_forgets_its_definition(book):
     made = on_sheet(book)
     call(book, "remove_object", {"id": made["object"]})
-    assert call(book, "diagrams") == []
+    assert call(book, "charts") == []
 
 
-# -- the chart tab is gone --------------------------------------------------------------------------------------------
-@pytest.mark.parametrize("method", ["add_chart", "remove_chart", "charts", "add_diagram_object"])
-def test_the_methods_of_the_chart_tab_are_gone(book, method):
+# -- the chart tab and the old chart names are gone (D1475, D1476) --------------------------------------------------
+@pytest.mark.parametrize("method", ["add_chart", "remove_chart", "add_diagram_object", "define_diagram", "diagrams"])
+def test_the_methods_of_the_chart_tab_and_the_old_chart_names_are_gone(book, method):
     with pytest.raises(RequestError, match="unknown|method"):
         call(book, method, {})

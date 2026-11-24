@@ -108,7 +108,7 @@ class Command(ABC):
         return tombstone(self)
 
     def redacted_in(self, model: type[DocumentModel]) -> Command:
-        """:meth:`redacted` for a command whose content only the app can blank (an import, a diagram): ``model`` is
+        """:meth:`redacted` for a command whose content only the app can blank (an import, a chart): ``model`` is
         the class of the document's model. Everything else ignores it."""
         return self.redacted()
 

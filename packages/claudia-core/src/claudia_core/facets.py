@@ -13,7 +13,7 @@ says what those properties *are*:
   facets it understands and offers only styles of its kind (D304). The :class:`SlotTable` says which slots every
   kind of thing has; :data:`SLOTS` is the table of what can be styled today.
 
-The table is **open** (D315): a slide's background, a page or the parts of a diagram come later as one more row,
+The table is **open** (D315): a slide's background, a page or the parts of a chart come later as one more row,
 through :meth:`claudia_core.SlotTable.with_row`, without changing the facets, the kinds, or anything that reads
 the table.
 
@@ -226,7 +226,7 @@ _WORDS = (TEXT_FACET, PARAGRAPH_FACET)
 
 #: Everything that can be styled today, and its slots (D304, D310, D311). A composes paragraph is one slot that reads
 #: all three of a paragraph style's facets; a text box, a shape and a cell each have a container and words; a
-#: picture's box reads nothing yet (it carries its own colours); a diagram draws itself and has a box around it, and
+#: picture's box reads nothing yet (it carries its own colours); a chart draws itself and has a box around it, and
 #: so does a container, whose picture is made from its text (D390), and a table, whose own boxes are the
 #: ``cell`` thing's (D1206).
 SLOTS = SlotTable(
@@ -235,7 +235,7 @@ SLOTS = SlotTable(
         "text": (Slot("box", (BOX_FACET,), "box"), Slot("words", _WORDS, "paragraph")),
         "shape": (Slot("outline", (OUTLINE_FACET,), "outline"), Slot("label", _WORDS, "paragraph")),
         "image": (Slot("box", (), "box"),),
-        "diagram": (Slot("box", (BOX_FACET,), "box"),),
+        "chart": (Slot("box", (BOX_FACET,), "box"),),
         "container": (Slot("box", (BOX_FACET,), "box"),),
         "table": (Slot("box", (BOX_FACET,), "box"),),  # the box around the whole table; its boxes are cells' (D1206)
         "cell": (Slot("box", (BOX_FACET,), "box"), Slot("words", _WORDS, "paragraph")),

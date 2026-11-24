@@ -24,7 +24,7 @@ scenarios("../../../claudiaoffice-log/specs/computes/slides.feature")
 TABS = ".foot [role=tablist] [role=tab]"
 NAME_BOX = ".formulaRow input.name"
 SLIDE = "[data-testid=slide]"
-CHART_ON_SLIDE = f"{SLIDE} .obj.diagram"
+CHART_ON_SLIDE = f"{SLIDE} .obj.chart"
 CHART_ON_SHEET = ".viewport .object[data-object]"
 OBJECT_MENU = "[role=menu][aria-label='Object menu']"
 FRAME_SLACK_PX = 2  # a box measured on the screen is rounded to whole pixels

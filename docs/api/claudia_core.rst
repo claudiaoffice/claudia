@@ -254,7 +254,7 @@ An object is a shared body and a per-app anchor; everything but the anchor is wr
 .. autoclass:: claudia_core.ObjectModel
 .. autoclass:: claudia_core.ObjectSet
 .. autoclass:: claudia_core.ObjectsChanged
-.. autoclass:: claudia_core.DiagramDefinition
+.. autoclass:: claudia_core.ChartDefinition
 
 The object commands, the same in all three apps:
 

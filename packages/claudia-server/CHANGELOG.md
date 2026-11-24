@@ -14,8 +14,15 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
   free generic name of a kind, in the language of the request.
 
 ### Removed
-- **Breaking** — computes' `charts`, `add_chart`, `remove_chart` and `add_diagram_object`, and the event `charts`
-  (E6.31 step 3, D1475): a chart is made with `insert_chart`.
+- **Breaking** — the chart tabs (E6.31 step 3, D1475): computes' `charts` as the list of the tabs, `add_chart`,
+  `remove_chart`, `add_diagram_object` and the event `charts`; a chart is made with `insert_chart`, and `charts` lists
+  the charts' definitions now (D1476).
+
+### Changed
+- **Breaking** — the chart names of E1.18 (D1476): computes' `diagrams`, `define_diagram`, `update_diagram` and
+  `forget_diagram` are `charts`, `define_chart`, `update_chart` and `forget_chart`; `chart_figure(chart)`; the id of a
+  chart's definition is answered as `chart` (by `define_chart` and `insert_chart`), the event of a definition is
+  `chart`, and the kind of a chart object is `chart` everywhere, `free_name("chart")` included.
 
 ## [0.42.0] - 2026-11-22
 

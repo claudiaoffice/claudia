@@ -45,6 +45,9 @@ Heavy functions in worker processes (E4.4, D37, D1314).
   `charts`, and a state or a log with chart tabs is not read (no upgrade, D1475). `SetSheetPrint` is for sheets only.
 
 ### Changed
+- **Breaking** — the chart names of E1.18 (D1476): a chart is an object of the kind `chart`, its definitions are
+  `WorkbookModel.charts`, stored under `charts` (state schema 19); `chart_from_data` and `blank_chart` replace
+  `diagram_from_data` and `blank_diagram`. `ChartSpec` keeps its name. A state with the old names is not read.
 - **Breaking** — `names.name_problem(text)` returns the `Refusal` (or `None`), not a string. A taken name is "a
   named range" (was "a range"); a row or column size out of range says "a row is … high" or "a column is … wide".
 - **Breaking** — the glossary's holder (D1430, see `claudia-core`): `CellAnchor.holder` (was `container`),

@@ -7,7 +7,7 @@
   "value": "1"
  },
  "ASSET_KINDS": {
-  "value": "(AssetKind(name='table', object_kind='table', noun='table', read=<function <lambda>>, editable=True, check=<function <lambda>>, blank=None, event_key='definition', in_use='is shown by'), AssetKind(name='shape', object_kind='shape', noun='shape', read=<function <lambda>>, editable=False, check=None, blank=None, event_key='definition', in_use='is in use by'), AssetKind(name='image', object_kind='image', noun='image', read=<function <lambda>>, editable=False, check=None, blank=<function <lambda>>, event_key='asset', in_use='is in use by'), AssetKind(name='diagram', object_kind='diagram', noun='diagram', read=<function <lambda>>, editable=True, check=None, blank=<function <lambda>>, event_key='definition', in_use='is in use by'), AssetKind(name='container', object_kind='container', noun='container', read=<function <lambda>>, editable=True, check=<function _check_container>, blank=<function <lambda>>, event_key='definition', in_use='is in use by'))"
+  "value": "(AssetKind(name='table', object_kind='table', noun='table', read=<function <lambda>>, editable=True, check=<function <lambda>>, blank=None, event_key='definition', in_use='is shown by'), AssetKind(name='shape', object_kind='shape', noun='shape', read=<function <lambda>>, editable=False, check=None, blank=None, event_key='definition', in_use='is in use by'), AssetKind(name='image', object_kind='image', noun='image', read=<function <lambda>>, editable=False, check=None, blank=<function <lambda>>, event_key='asset', in_use='is in use by'), AssetKind(name='chart', object_kind='chart', noun='chart', read=<function <lambda>>, editable=True, check=None, blank=<function <lambda>>, event_key='definition', in_use='is in use by'), AssetKind(name='container', object_kind='container', noun='container', read=<function <lambda>>, editable=True, check=<function _check_container>, blank=<function <lambda>>, event_key='definition', in_use='is in use by'))"
  },
  "AddObject": {
   "class": [
@@ -208,6 +208,18 @@
   "init": "(regions: 'tuple[Region, ...]', truncated: 'bool') -> None",
   "methods": {},
   "properties": []
+ },
+ "ChartDefinition": {
+  "class": [
+   "Protocol"
+  ],
+  "init": "(*args, **kwargs)",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "id"
+  ]
  },
  "ChatPosted": {
   "class": [
@@ -601,18 +613,6 @@
   "properties": [
    "label",
    "summary"
-  ]
- },
- "DiagramDefinition": {
-  "class": [
-   "Protocol"
-  ],
-  "init": "(*args, **kwargs)",
-  "methods": {
-   "to_data": "(self) -> 'dict'"
-  },
-  "properties": [
-   "id"
   ]
  },
  "Document": {
@@ -1302,7 +1302,7 @@
   "function": "(template: 'str') -> 'str'"
  },
  "OBJECT_KINDS": {
-  "value": "('text', 'shape', 'image', 'diagram', 'container', 'table')"
+  "value": "('text', 'shape', 'image', 'chart', 'container', 'table')"
  },
  "ORIGINS": {
   "value": "{'document': 'document', 'builtin': 'built-in', 'template': 'template'}"
@@ -1321,8 +1321,8 @@
    "to_data_for": "(self, viewer: 'str') -> 'dict'"
   },
   "properties": [
+   "chart",
    "container",
-   "diagram",
    "image",
    "shape",
    "table"
@@ -1336,9 +1336,10 @@
   "methods": {
    "anchor_from_data": "(self, data: 'dict') -> 'A'",
    "assets_to_data": "(self) -> 'dict[str, list[dict]]'",
-   "blank_diagram": "(definition: 'dict') -> 'dict'",
+   "blank_chart": "(definition: 'dict') -> 'dict'",
    "blank_objects": "(self, parts: 'frozenset[str] | None') -> 'None'",
    "can_turn": "(self, body: 'ObjectBody') -> 'bool'",
+   "chart_from_data": "(self, data: 'dict') -> 'ChartDefinition'",
    "check_anchor": "(self, anchor: 'A', body: 'ObjectBody') -> 'None'",
    "check_entry_edit": "(self, paragraph_id: 'str') -> 'None'",
    "check_name_free": "(self, thing_id: 'str', name: 'str', ignoring: 'tuple[str, ...]' = ()) -> 'None'",
@@ -1347,7 +1348,6 @@
    "check_thing_name": "(self, thing_id: 'str', name: 'str', *, shared: 'bool' = True) -> 'None'",
    "close_holder": "(self, holder: 'str') -> 'None'",
    "delete_object": "(self, object_id: 'str') -> 'tuple[VisualObject[A], int]'",
-   "diagram_from_data": "(self, data: 'dict') -> 'DiagramDefinition'",
    "entry_words": "(self, paragraph_id: 'str') -> 'Paragraph'",
    "get_object": "(self, object_id: 'str') -> 'VisualObject[A]'",
    "has_thing": "(self, thing_id: 'str') -> 'bool'",
@@ -1400,8 +1400,8 @@
    "users_of": "(self, kind: 'AssetKind', asset_id: 'str') -> 'list[str]'"
   },
   "properties": [
+   "charts",
    "containers",
-   "diagrams",
    "images",
    "shapes",
    "tables"

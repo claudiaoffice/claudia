@@ -944,7 +944,7 @@
       "feature": "charts",
       "source": "ods/charts/source.ods",
       "spec": "ods/charts/spec.py",
-      "summary": "Two bar charts LibreOffice saved (one over the columns of a table, one over its rows) come in as diagrams with a floating object each; one is moved and resized, one is added, and the chart nobody touched stays byte for byte.",
+      "summary": "Two bar charts LibreOffice saved (one over the columns of a table, one over its rows) come in as charts with a floating object each; one is moved and resized, one is added, and the chart nobody touched stays byte for byte.",
       "backlog": "E6.13",
       "tags": [
         "tier2",
@@ -972,7 +972,7 @@
       "feature": "charts",
       "source": "xlsx/charts/source.xlsx",
       "spec": "xlsx/charts/spec.py",
-      "summary": "Two bar charts LibreOffice saved into an xlsx (one over the columns of a table, one over its rows) come in as diagrams with a floating object each; one is moved and resized, one is added, and the chart nobody touched stays byte for byte.",
+      "summary": "Two bar charts LibreOffice saved into an xlsx (one over the columns of a table, one over its rows) come in as charts with a floating object each; one is moved and resized, one is added, and the chart nobody touched stays byte for byte.",
       "backlog": "E6.13",
       "tags": [
         "tier2",

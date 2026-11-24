@@ -531,9 +531,9 @@ def written_charts(model: WorkbookModel) -> list[WrittenChart]:
     for sheet_id, sheet in model.sheets.items():
         for layer, object_id in enumerate(model.stack_of(str(sheet_id))):
             obj = model.get_object(object_id)
-            if obj.body.diagram is None:
+            if obj.body.chart is None:
                 continue
-            spec = model.diagrams[obj.body.diagram]
+            spec = model.charts[obj.body.chart]
             assert isinstance(spec, ChartSpec)
             assert isinstance(obj.anchor, CellAnchor)  # (an object on a sheet hangs at a cell)
             xml = chart_xml(model, spec)

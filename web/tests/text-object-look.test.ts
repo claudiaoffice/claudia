@@ -43,7 +43,7 @@ describe('how an object in a text looks', () => {
     expect(look.words?.css['color']).toBeUndefined()
   })
   it('says that a chart cannot be shown in a text yet, and draws nothing for it', () => {
-    const look = lookOf(holder(), object({ kind: 'diagram', diagram: 'c1' }))
+    const look = lookOf(holder(), object({ kind: 'chart', chart: 'c1' }))
     expect(look.unsupported).toBe(true)
     expect(look.picture).toBe('')
   })

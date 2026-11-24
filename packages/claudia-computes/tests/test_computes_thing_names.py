@@ -19,7 +19,7 @@ def a_chart(doc, object_id: str = "o1", name: str = "Revenue", spec_id: str = "c
 def test_sheets_and_charts_are_named_things(doc):
     a_chart(doc)
     things = sorted(doc.model.named_things())
-    assert things == [("diagram", "o1", "Revenue"), ("sheet", S1, "Sheet1")]
+    assert things == [("chart", "o1", "Revenue"), ("sheet", S1, "Sheet1")]
     assert doc.model.thing_name(S1) == "Sheet1"
     assert doc.model.thing_name("o1") == "Revenue"
 

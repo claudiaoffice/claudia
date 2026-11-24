@@ -283,7 +283,7 @@ const kindLabels: Record<ThingKind, string> = {
   text: t('Text box'),
   shape: t('Shape'),
   image: t('Picture'),
-  diagram: t('Chart'),
+  chart: t('Chart'),
   container: t('Container'),
   table: t('Table'),
   slide: t('Slide'),

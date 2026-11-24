@@ -31,7 +31,7 @@
     asset_store  AssetStore, AssetKind, AssetsChanged: what objects show and the document keeps once, by id (D1431)
     asset_commands  DefineAsset, UpdateAsset, ForgetAsset: the same three commands for every kind of asset (D1431)
     objects      the shared object layer: ObjectBody, Anchor, VisualObject, ObjectModel and their commands
-                 (E10.16); DiagramDefinition is the same split applied to a diagram's own data (E6.6)
+                 (E10.16); ChartDefinition is the same split applied to a chart's own data (E6.6)
     file_boxes   the text boxes and shapes of an office file as the model holds them (D465)
     file_pictures  the pictures of an office file as image objects: what an app needs to hold one (D464)
     raster       Rasterise and the empty picture that stands in for an SVG nobody can draw (D394)
@@ -192,9 +192,9 @@ from .objects import (
     OBJECT_KINDS,
     AddObject,
     Anchor,
+    ChartDefinition,
     DescribeObject,
     DescribeThing,
-    DiagramDefinition,
     MoveObject,
     ObjectBody,
     ObjectModel,
@@ -461,7 +461,7 @@ __all__ = [
     "DescribeThing",
     "delete_runs",
     "edit_object_text",
-    "DiagramDefinition",
+    "ChartDefinition",
     "Document",
     "Look",
     "DocumentModel",

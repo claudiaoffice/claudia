@@ -13,7 +13,7 @@ table is written as the cells the name is today: a file has no chart that follow
 
 **What of a file the model can hold.** A frame of a bar chart that is drawn the way the model draws one, over one
 range of one sheet of the file, in which the series are what the model would make of that range, is read as a
-floating diagram object (D462). Everything else, a chart of another kind, a stacked or a horizontal one, a chart over
+floating chart object (D462). Everything else, a chart of another kind, a stacked or a horizontal one, a chart over
 several ranges, of a sheet that is not there, one that has series the range does not explain, is left alone in the
 file and counted (``chart``): it is not read and it is not touched.
 
@@ -44,7 +44,7 @@ from .ods_names import range_of
 CHART_MEDIA = "application/vnd.oasis.opendocument.chart"
 _DECLARATION = '<?xml version="1.0" encoding="UTF-8"?>\n'
 _DECLARED = " ".join(f'xmlns:{prefix}="{uri}"' for prefix, uri in NS.items() if prefix != "xml")
-_STYLE_OF_OBJECT = "plain-image"  # (a diagram carries its own colours, as an image does)
+_STYLE_OF_OBJECT = "plain-image"  # (a chart carries its own colours, as an image does)
 _LABELS = {(True, True): "both", (True, False): "row", (False, True): "column", (False, False): "none"}
 #: What a chart style may say that the model's bar chart does not: another direction, stacking, a third dimension.
 _NOT_THE_MODELS = ("vertical", "stacked", "percentage", "three-dimensional", "deep", "lines", "symbol-type")
@@ -430,9 +430,9 @@ def written_charts(model: WorkbookModel, *, first: int = 1) -> WrittenCharts:
     for sheet_id, sheet in model.sheets.items():
         for layer, object_id in enumerate(model.stack_of(str(sheet_id))):
             obj = model.get_object(object_id)
-            if obj.body.diagram is None:
+            if obj.body.chart is None:
                 continue
-            spec = model.diagrams[obj.body.diagram]
+            spec = model.charts[obj.body.chart]
             assert isinstance(spec, ChartSpec)
             assert isinstance(obj.anchor, CellAnchor)  # (an object on a sheet hangs at a cell)
             corner = offset_of(sheet.col_widths, sheet.row_heights, obj.anchor.row, obj.anchor.col)

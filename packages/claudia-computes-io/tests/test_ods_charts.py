@@ -60,8 +60,8 @@ def put_chart(
     model: WorkbookModel, spec_id="c1", object_id="o1", *, at=(5, 1), size=(480, 300), description="", **spec
 ):
     fields = {"id": spec_id, "kind": "bar", "range": a_range(), **spec}
-    model.diagrams.define(ChartSpec(**fields))
-    body = ObjectBody(object_id, "diagram", *size, "plain-image", ref=spec_id, description=description)
+    model.charts.define(ChartSpec(**fields))
+    body = ObjectBody(object_id, "chart", *size, "plain-image", ref=spec_id, description=description)
     model.insert_object(VisualObject(body, CellAnchor(S1, *at)))
 
 
@@ -72,7 +72,7 @@ def a_chart_workbook(**spec) -> WorkbookModel:
 
 
 def the_chart(model: WorkbookModel) -> tuple[ChartSpec, VisualObject]:
-    (spec,) = model.diagrams.values()
+    (spec,) = model.charts.values()
     (obj,) = model.objects.values()
     assert isinstance(spec, ChartSpec)
     return spec, obj
@@ -156,7 +156,7 @@ def test_a_sheet_name_with_a_space_is_quoted_in_the_addresses_of_a_chart():
     chart = chart_part(workbook_to_ods(model))
     plot = chart.find(".//chart:plot-area", NS)
     assert plot.get(f"{{{NS['table']}}}cell-range-address") == "'Q1 Data'.A1:'Q1 Data'.C4"
-    assert ods_to_workbook(workbook_to_ods(model)).diagrams
+    assert ods_to_workbook(workbook_to_ods(model)).charts
 
 
 def test_the_charts_of_a_workbook_get_one_part_each_in_the_order_of_the_sheets():
@@ -185,7 +185,7 @@ def test_a_chart_comes_back_as_it_went(spec):
     now, found = the_chart(back)
     assert replace(now, id="c1") == then
     assert (found.id, found.anchor, found.body.w, found.body.h) == ("o1", CellAnchor(S1, 5, 1), 480, 300)
-    assert (was.anchor, was.body.diagram) == (CellAnchor(S1, 5, 1), "c1")
+    assert (was.anchor, was.body.chart) == (CellAnchor(S1, 5, 1), "c1")
     assert ods_import_losses(workbook_to_ods(model)) == ()
 
 
@@ -203,7 +203,7 @@ def test_a_chart_reads_its_sheet_by_name_whatever_the_case():
     parts["Object 1/content.xml"] = parts["Object 1/content.xml"].replace(b"Data.", b"DATA.")
     from claudia_opc_io import write_parts
 
-    assert ods_to_workbook(write_parts(parts)).diagrams
+    assert ods_to_workbook(write_parts(parts)).charts
 
 
 def _edited(data: bytes, old: bytes, new: bytes) -> bytes:
@@ -230,9 +230,9 @@ def test_a_chart_that_is_not_the_one_the_model_draws_stays_in_the_file_and_is_co
     data = _edited(workbook_to_ods(a_chart_workbook()), old, new)
     if b"gone" in new:
         data = _edited(data, b"<style:style ", b"<style:style ")  # (a style that is missing changes nothing)
-        assert ods_to_workbook(data).diagrams  # (the colours are not what the model holds)
+        assert ods_to_workbook(data).charts  # (the colours are not what the model holds)
         return
-    assert ods_to_workbook(data).diagrams == {}
+    assert ods_to_workbook(data).charts == {}
     assert kinds(ods_import_losses(data)) == {"chart": 1}
 
 
@@ -244,13 +244,13 @@ def test_a_stacked_chart_a_horizontal_one_and_a_chart_in_three_dimensions_are_no
             b'<style:style style:name="ch3" style:family="chart"><style:chart-properties ',
             b'<style:style style:name="ch3" style:family="chart"><style:chart-properties ' + flag + b'="true" ',
         )
-        assert ods_to_workbook(edited).diagrams == {}, flag
+        assert ods_to_workbook(edited).charts == {}, flag
         assert kinds(ods_import_losses(edited)) == {"chart": 1}
 
 
 def test_a_chart_over_a_sheet_the_file_does_not_have_is_not_the_models():
     data = _edited(workbook_to_ods(a_chart_workbook()), b"Data.", b"Elsewhere.")
-    assert ods_to_workbook(data).diagrams == {}
+    assert ods_to_workbook(data).charts == {}
     assert kinds(ods_import_losses(data)) == {"chart": 1}
 
 
@@ -261,15 +261,15 @@ def test_a_chart_too_small_for_an_object_of_the_model_is_not_held():
     from claudia_opc_io import write_parts
 
     parts["content.xml"] = parts["content.xml"].replace(b'svg:width="12.7000cm"', b'svg:width="0.1000cm"')
-    assert ods_to_workbook(write_parts(parts)).diagrams == {}
+    assert ods_to_workbook(write_parts(parts)).charts == {}
 
 
 # -- what a file cannot keep -----------------------------------------------------------------------------------------
 def test_a_chart_that_follows_a_name_is_written_as_the_cells_the_name_is_now():
     model = a_workbook()
     model.names.put(NamedRange("Sales", None, a_range(), header=True))
-    model.diagrams.define(ChartSpec(id="c1", kind="bar", source="Sales"))
-    body = ObjectBody("o1", "diagram", 480, 300, "plain-image", ref="c1")
+    model.charts.define(ChartSpec(id="c1", kind="bar", source="Sales"))
+    body = ObjectBody("o1", "chart", 480, 300, "plain-image", ref="c1")
     model.insert_object(VisualObject(body, CellAnchor(S1, 5, 1)))
     back = ods_to_workbook(workbook_to_ods(model))
     spec, _ = the_chart(back)
@@ -279,12 +279,12 @@ def test_a_chart_that_follows_a_name_is_written_as_the_cells_the_name_is_now():
 
 def test_a_chart_that_reads_nothing_is_not_written_and_that_is_said():
     model = a_workbook()
-    model.diagrams.define(ChartSpec(id="c1", kind="bar", source="Gone"))
+    model.charts.define(ChartSpec(id="c1", kind="bar", source="Gone"))
     model.insert_object(
-        VisualObject(ObjectBody("o1", "diagram", 480, 300, "plain-image", ref="c1"), CellAnchor(S1, 5, 1))
+        VisualObject(ObjectBody("o1", "chart", 480, 300, "plain-image", ref="c1"), CellAnchor(S1, 5, 1))
     )
     data = workbook_to_ods(model)
-    assert ods_to_workbook(data).diagrams == {} and not [n for n in read_parts(data) if n.startswith("Object")]
+    assert ods_to_workbook(data).charts == {} and not [n for n in read_parts(data) if n.startswith("Object")]
     assert kinds(ods_export_losses(model)) == {"chart:empty": 1}
 
 
@@ -384,13 +384,13 @@ def test_a_new_chart_is_a_new_frame_and_a_new_part_in_a_kept_file():
     assert len(back.objects) == 2
     second = back.objects["o2"]
     assert (second.anchor, second.body.w, second.body.h) == (CellAnchor(S1, 12, 2), 300, 200)
-    assert back.diagrams["c2"].title == "Rows" and back.diagrams["c2"].series_in == "rows"
+    assert back.charts["c2"].title == "Rows" and back.charts["c2"].series_in == "rows"
 
 
 def test_a_chart_that_was_removed_is_taken_out_with_its_part():
     original, baseline, current = a_kept_file()
     current.delete_object("o1")
-    current.diagrams.forget("c1")
+    current.charts.forget("c1")
     patched = apply_edits_to_ods(original, baseline, current)
     parts = read_parts(patched)
     assert not [name for name in parts if name.startswith("Object")]
@@ -410,7 +410,7 @@ def test_a_chart_that_was_moved_and_resized_has_its_frame_changed_and_its_part_k
 
 def test_a_chart_whose_definition_changed_is_drawn_again_the_way_it_was_before():
     original, baseline, current = a_kept_file(title="Before")
-    current.diagrams.replace(replace(current.diagrams["c1"], title="After", legend=False))
+    current.charts.replace(replace(current.charts["c1"], title="After", legend=False))
     patched = apply_edits_to_ods(original, baseline, current, losses=(losses := LossLog()))
     assert losses.result() == ()  # (a chart of ours is drawn the way it was)
     spec, _ = the_chart(ods_to_workbook(patched))
@@ -445,9 +445,9 @@ def test_the_description_of_a_chart_is_patched_into_its_frame():
 def test_a_chart_on_a_sheet_that_was_added_comes_with_the_sheet():
     original, baseline, current = a_kept_file()
     current.add_sheet(Sheet(SheetId("s2"), "More"), None)
-    current.diagrams.define(ChartSpec(id="c7", kind="bar", range=a_range()))
+    current.charts.define(ChartSpec(id="c7", kind="bar", range=a_range()))
     current.insert_object(
-        VisualObject(ObjectBody("o7", "diagram", 300, 200, "plain-image", ref="c7"), CellAnchor(SheetId("s2"), 1, 1))
+        VisualObject(ObjectBody("o7", "chart", 300, 200, "plain-image", ref="c7"), CellAnchor(SheetId("s2"), 1, 1))
     )
     back = ods_to_workbook(apply_edits_to_ods(original, baseline, current))
     assert [sheet.name for sheet in back.sheets.values()] == ["Data", "More"]
@@ -462,8 +462,8 @@ def test_a_chart_goes_with_its_sheet_when_the_sheet_is_removed():
     original = workbook_to_ods(current)
     del current.sheets[S1]
     current.objects.clear()
-    for chart in list(current.diagrams):
-        current.diagrams.forget(chart)
+    for chart in list(current.charts):
+        current.charts.forget(chart)
     patched = apply_edits_to_ods(original, baseline, current)
     assert not [name for name in read_parts(patched) if name.startswith("Object")]
 
@@ -496,11 +496,11 @@ def test_a_chart_libreoffice_saved_is_moved_and_resized_without_being_drawn_agai
 def test_a_chart_libreoffice_saved_is_drawn_our_way_when_its_definition_changed_and_that_is_said():
     original = LIBRARY.read_bytes()
     baseline, current = ods_to_workbook(original), ods_to_workbook(original)
-    current.diagrams.replace(replace(current.diagrams["c1"], title="Changed"))
+    current.charts.replace(replace(current.charts["c1"], title="Changed"))
     losses = LossLog()
     patched = apply_edits_to_ods(original, baseline, current, losses=losses)
     assert kinds(losses.result()) == {"chart:look": 1}
-    assert ods_to_workbook(patched).diagrams["c1"].title == "Changed"
+    assert ods_to_workbook(patched).charts["c1"].title == "Changed"
     assert read_parts(patched)["Object 2/content.xml"] == read_parts(original)["Object 2/content.xml"]
 
 

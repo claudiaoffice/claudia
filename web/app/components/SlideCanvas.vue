@@ -481,7 +481,7 @@ const setEditor = (el: unknown) => {
 
 async function beginEdit(id: string | null = state.selected) {
   const o = slideObject(id) ?? null
-  if (!o || editing.value || containerEditing.value || o.kind === 'image' || o.kind === 'diagram') return // a picture and a chart have no text to write
+  if (!o || editing.value || containerEditing.value || o.kind === 'image' || o.kind === 'chart') return // a picture and a chart have no text to write
   if (readonly.value) return session.notice(t('You can only look at this document.'), 'warning')
   await session.select(o.id)
   if (state.selected !== o.id) return // a colleague holds it
@@ -607,10 +607,10 @@ defineExpose({ paste: () => clip.paste(), focus: () => area.value?.focus(), begi
         @contextmenu="onObjectContext($event, o)"
       >
         <img v-if="o.kind === 'image'" class="picture" :src="pictureSrc(o)" alt="" draggable="false" >
-        <template v-else-if="o.kind === 'diagram'">
+        <template v-else-if="o.kind === 'chart'">
           <!-- drawn in slide units and scaled with the slide, so that it looks the same at every size of the window -->
           <div v-if="session.figures && o.ref" class="chart" :style="{ transform: `scale(${scale})` }">
-            <ChartView :session="session.figures" :diagram-id="o.ref" :width="frameOf(o).w" :height="frameOf(o).h" />
+            <ChartView :session="session.figures" :chart-id="o.ref" :width="frameOf(o).w" :height="frameOf(o).h" />
           </div>
         </template>
         <template v-else-if="o.kind === 'container'">

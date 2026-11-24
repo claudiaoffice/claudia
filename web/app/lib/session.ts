@@ -102,15 +102,15 @@ export interface State extends BaseState {
   colWidths: Record<string, Map<number, number>>
   generation: number
   objects: Record<string, WorkbookObject>
-  diagrams: Record<string, ChartSpec> // chart definitions this document knows, by id (E6.6)
+  charts: Record<string, ChartSpec> // chart definitions this document knows, by id (E6.6)
   /** The workbook's names: named ranges, tables and the results of `SQL()` cells (E6.5), as `names` sends them. */
   names: NameInfo[]
   /** The workbook's pivot tables (E6.30), as `pivots` sends them: what each is made from, and the cells it fills now. Asked
    * for again whenever something that could change them did (`reloadPivots`). */
   pivots: PivotInfo[]
-  /** A diagram's Plotly figure, read live off its sheet, cached by diagram id until something that could
+  /** A chart's Plotly figure, read live off its sheet, cached by chart id until something that could
    * change it happens — its own definition changing, or a `cells` event touching its range (`ensureFigure`,
-   * `onAppEvent`'s `'cells'`/`'diagram'` cases). Never persisted across a reload: `loadApp` starts it empty. */
+   * `onAppEvent`'s `'cells'`/`'chart'` cases). Never persisted across a reload: `loadApp` starts it empty. */
   figures: Record<string, ChartFigure>
   /** The document's styles: what a floating object and a cell look like (E6.13). */
   styles: Record<string, StyleDef>
@@ -221,7 +221,7 @@ export class Session extends BaseSession<State> implements SlideHost {
       rowHeights: {},
       colWidths: {},
       generation: 0,
-      diagrams: {},
+      charts: {},
       names: [],
       pivots: [],
       figures: {},
@@ -242,10 +242,10 @@ export class Session extends BaseSession<State> implements SlideHost {
   protected async loadApp() {
     const link = this.need()
     const s = this.state
-    const [sheets, images, diagrams, names, styles, palette, styleModel, random, formats, printing, language, pivots] = await Promise.all([
+    const [sheets, images, charts, names, styles, palette, styleModel, random, formats, printing, language, pivots] = await Promise.all([
       link.request<SheetInfo[]>('sheets'),
       link.request<ImageAsset[]>('images'),
-      link.request<ChartSpec[]>('diagrams'),
+      link.request<ChartSpec[]>('charts'),
       link.request<{ names: NameInfo[] }>('names'),
       link.request<StyleDef[]>('styles'),
       link.request<PaletteEvent>('palette'),
@@ -283,7 +283,7 @@ export class Session extends BaseSession<State> implements SlideHost {
     s.library = shapes.library
     s.shapes = Object.fromEntries(shapes.document.map((d) => [d.id, d]))
     s.images = Object.fromEntries(images.map((x) => [x.id, x]))
-    s.diagrams = Object.fromEntries(diagrams.map((x) => [x.id, x]))
+    s.charts = Object.fromEntries(charts.map((x) => [x.id, x]))
     s.names = names.names
     s.pivots = pivots
     s.figures = {}
@@ -418,29 +418,29 @@ export class Session extends BaseSession<State> implements SlideHost {
     return this
   }
 
-  /** The already-cached figure for a diagram, or `null` while it has not been asked for yet (call
+  /** The already-cached figure for a chart, or `null` while it has not been asked for yet (call
    * `ensureFigure` to start that, typically from the component that is about to draw it). */
-  figureOf(diagramId: string): ChartFigure | null {
-    return this.state.figures[diagramId] ?? null
+  figureOf(chartId: string): ChartFigure | null {
+    return this.state.figures[chartId] ?? null
   }
 
-  /** Load (or reload, with `force`) a diagram's figure. Safe to call on every render of a chart view: a figure
+  /** Load (or reload, with `force`) a chart's figure. Safe to call on every render of a chart view: a figure
    * already cached and not invalidated resolves at once and does nothing. */
-  async ensureFigure(diagramId: string, force = false): Promise<void> {
-    if (!force && this.state.figures[diagramId]) return
-    const running = this.figuresInflight.get(diagramId)
+  async ensureFigure(chartId: string, force = false): Promise<void> {
+    if (!force && this.state.figures[chartId]) return
+    const running = this.figuresInflight.get(chartId)
     if (!force && running) return running
     const job = this.need()
-      .request<{ figure: ChartFigure }>('chart_figure', { diagram: diagramId })
+      .request<{ figure: ChartFigure }>('chart_figure', { chart: chartId })
       .then((answer) => {
-        this.state.figures[diagramId] = answer.figure
+        this.state.figures[chartId] = answer.figure
       })
       .catch(() => {
-        /* the diagram may have just been forgotten under us; the next relevant event resolves it one way or
+        /* the chart may have just been forgotten under us; the next relevant event resolves it one way or
          * the other, so a chart view that asked simply keeps showing its last good figure (if any) */
       })
-      .finally(() => this.figuresInflight.delete(diagramId))
-    this.figuresInflight.set(diagramId, job)
+      .finally(() => this.figuresInflight.delete(chartId))
+    this.figuresInflight.set(chartId, job)
     return job
   }
 
@@ -449,7 +449,7 @@ export class Session extends BaseSession<State> implements SlideHost {
   private async reloadNames() {
     const answer = await this.need().request<{ names: NameInfo[] }>('names')
     this.state.names = answer.names
-    for (const spec of Object.values(this.state.diagrams)) if (spec.source !== undefined) delete this.state.figures[spec.id]
+    for (const spec of Object.values(this.state.charts)) if (spec.source !== undefined) delete this.state.figures[spec.id]
   }
 
   private pivotsAsked = false
@@ -592,10 +592,10 @@ export class Session extends BaseSession<State> implements SlideHost {
         }
         this.refollow()
         if (s.pivots.length) this.track(this.reloadPivots()) // the source it reads, or the cells it fills, may be these
-        // A changed cell may feed a diagram's figure even on another sheet's screen (a slide, say), so
+        // A changed cell may feed a chart's figure even on another sheet's screen (a slide, say), so
         // every cached figure is checked, not only those for the active sheet.
         const positions = data.positions as [number, number][]
-        for (const spec of Object.values(s.diagrams)) {
+        for (const spec of Object.values(s.charts)) {
           // A chart that reads a name follows whatever the name is on, which may be a query result that moves: any
           // change of cells may touch it, so it is asked for again.
           if (spec.id in s.figures && (spec.range ? rangeTouchedBy(spec.range, data.sheet, positions) : true)) delete s.figures[spec.id]
@@ -620,10 +620,10 @@ export class Session extends BaseSession<State> implements SlideHost {
         this.track(this.reload())
         this.refollow()
         return true
-      case 'diagram':
-        if (data.definition) s.diagrams[data.id] = data.definition as ChartSpec
-        else delete s.diagrams[data.id]
-        delete s.figures[data.id] // its range or titles may have changed (DefineDiagram/UpdateDiagram alike)
+      case 'chart':
+        if (data.definition) s.charts[data.id] = data.definition as ChartSpec
+        else delete s.charts[data.id]
+        delete s.figures[data.id] // its range or titles may have changed (DefineChart/UpdateChart alike)
         return true
       case 'names':
         this.track(this.reloadNames())
@@ -831,13 +831,13 @@ export class Session extends BaseSession<State> implements SlideHost {
   }
 
   /** Redefine a chart in place: what a chart already showing `id` updates to. */
-  async updateDiagram(id: string, draft: ChartDraft): Promise<boolean> {
-    return (await this.write('update_diagram', { id, definition: { kind: 'bar', ...draft } })) !== false
+  async updateChart(id: string, draft: ChartDraft): Promise<boolean> {
+    return (await this.write('update_chart', { id, definition: { kind: 'bar', ...draft } })) !== false
   }
 
   /** Let a chart definition go. Refused (returns `false`) while a chart still shows it. */
-  async forgetDiagram(id: string): Promise<boolean> {
-    return (await this.write('forget_diagram', { id })) !== false
+  async forgetChart(id: string): Promise<boolean> {
+    return (await this.write('forget_chart', { id })) !== false
   }
 
   // -- names, tables and queries (E6.5)
@@ -924,7 +924,7 @@ export class Session extends BaseSession<State> implements SlideHost {
   }
 
   /** Give an object a new frame: its anchor cell and pixel size together, since dragging a corner moves the
-   * corner too. An image must keep its own proportions (the server refuses otherwise); a diagram keeps none. */
+   * corner too. An image must keep its own proportions (the server refuses otherwise); a chart keeps none. */
   async resizeObject(id: string, frame: { row: number; col: number; w: number; h: number }): Promise<boolean> {
     return (await this.write('resize_object', { id, ...frame })) !== false
   }

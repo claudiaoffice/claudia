@@ -37,7 +37,7 @@ def check_addable(kind: str, shape: str | None) -> None:
         raise RequestError("bad_request", msg("add_object: use add_image to put a picture here"))
     if kind == "container":
         raise RequestError("bad_request", msg("add_object: use add_container to put a container here"))
-    if kind == "diagram":
+    if kind == "chart":
         raise RequestError("bad_request", msg("add_object: a chart is made in computes, not here"))
     if kind not in ADDABLE_KINDS:
         raise RequestError(

@@ -9,7 +9,7 @@ import type { ChartFigures } from '~/lib/charts'
 
 const props = defineProps<{
   session: ChartFigures
-  diagramId: string
+  chartId: string
   /** the chart object's own frame, in pixels */
   width: number
   height: number
@@ -31,8 +31,8 @@ async function draw() {
   drawing = true
   do {
     redrawPending = false
-    await props.session.ensureFigure(props.diagramId)
-    const figure = props.session.figureOf(props.diagramId)
+    await props.session.ensureFigure(props.chartId)
+    const figure = props.session.figureOf(props.chartId)
     if (el.value && figure) {
       plotly ??= await import('plotly.js-dist-min')
       const target = el.value // (the chart may have gone while the chart library was loading)
@@ -45,7 +45,7 @@ async function draw() {
   drawing = false
 }
 
-watch(() => [props.diagramId, props.width, props.height, props.session.figureOf(props.diagramId)] as const, draw)
+watch(() => [props.chartId, props.width, props.height, props.session.figureOf(props.chartId)] as const, draw)
 
 onMounted(draw)
 

@@ -61,7 +61,7 @@ def corner(row: int, col: int) -> dict:
 
 
 def test_a_chart_keeps_what_it_reads_but_not_its_titles():
-    blank = WorkbookModel.blank_diagram(
+    blank = WorkbookModel.blank_chart(
         {
             "format": 1,
             "id": "c1",
