@@ -192,6 +192,8 @@ def rows() -> list[Row]:
 
 @pytest.mark.parametrize("app", APPS)
 def test_the_menus_are_what_the_workbook_says(app: str, rows: list[Row]) -> None:
+    """Must not break (coding standards, tests): the key risk of the menu rebuild (E5.23) is a client whose menus are
+    not what the owner decided in the workbook."""
     wanted, have = workbook_places(rows, app), definition_places(app)
     missing = [str(p) for p in wanted if p not in have]
     extra = [str(p) for p in have if p not in wanted]
