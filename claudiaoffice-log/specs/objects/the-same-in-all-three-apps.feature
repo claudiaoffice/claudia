@@ -55,6 +55,25 @@ Feature: Objects, styles and the palette work the same in a text, a workbook and
       | workbook     | change a colour of the palette           |
       | presentation | change a colour of the palette           |
 
+  # Approved by the owner on 2026-11-25 (UX-84, D1223).
+  @core @two-users @app:composes @app:computes @app:creates
+  Scenario Outline: What I have selected, a colleague sees in my colour with my name, and cannot change
+    Given a <document> open by me and by a colleague
+    And a picture in it
+    When I select the picture
+    Then my colleague sees my colour round it and my name
+    When my colleague tries to move it
+    Then she is told that I am working on it
+    And it stays where it is for both of us
+    When I let go of it
+    Then my colleague no longer sees my name on it
+
+    Examples:
+      | document     |
+      | text         |
+      | workbook     |
+      | presentation |
+
   # -- what an object shows, kept in the document ------------------------------------------------------------
   @core @app:composes @app:computes @app:creates
   Scenario Outline: Undo and redo of inserting an object take what it shows with it
