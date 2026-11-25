@@ -1284,3 +1284,38 @@ def test_the_colour_of_another_slides_page_is_reported():
     )
     data = an_odp(page(textbox()) + second, automatic=automatic)
     assert [(loss.kind, loss.count) for loss in odp_import_losses(data)] == [("look", 1)]
+
+
+# -- what people call the slides and the objects (CODE-25, D550) ------------------------------------------------------
+def _names(model: SlideModel) -> dict[str, str]:
+    return {thing: model.thing_name(thing) for thing in [*model.order, *model.objects]}
+
+
+def test_the_names_of_slides_and_objects_go_out_and_come_back():
+    model = a_deck()
+    model.set_thing_name("s2", "Closing")
+    model.set_thing_name("o1", "Greeting")
+    model.set_thing_name("o3", "Box")
+    back = _names(odp_to_slides(slides_to_odp(model)))
+    assert back == {"s1": "", "s2": "Closing", "o1": "Greeting", "o2": "", "o3": "Box", "o4": ""}
+
+
+def test_a_page_called_as_a_program_numbers_its_pages_has_no_name():
+    data = an_odp(page(textbox(), "page1") + page(textbox(), "Results"))
+    assert [odp_to_slides(data).thing_name(slide) for slide in ("s1", "s2")] == ["", "Results"]
+
+
+def test_a_slide_called_like_a_numbered_page_does_not_take_the_name_of_another_page():
+    model = a_deck()
+    model.set_thing_name("s2", "page1")
+    names = [element.get(f"{{{NS['draw']}}}name") for element in pages_of(slides_to_odp(model))]
+    assert len(set(names)) == 2 and "page1" in names, f"two pages, two names: {names}"
+
+
+def test_a_name_given_after_the_import_is_written_into_the_kept_file():
+    original = slides_to_odp(a_deck())
+    baseline, current = odp_to_slides(original), odp_to_slides(original)
+    current.set_thing_name("s1", "Opening")
+    current.set_thing_name("o2", "Badge")
+    back = _names(odp_to_slides(apply_edits_to_odp(original, baseline, current)))
+    assert (back["s1"], back["o2"]) == ("Opening", "Badge")

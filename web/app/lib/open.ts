@@ -234,9 +234,11 @@ export interface Uploaded {
    *  start: the person may keep, change or clear it. */
   description?: string
   tags?: string[]
-  /** A Claudia export: who made it and when, as the file says (D1272). */
+  /** A Claudia export: who made it and when, as the file says (D1272), and whether it brings the history of the
+   *  original (D2005). */
   made_by?: string
   made_at?: string
+  with_history?: boolean
 }
 
 /** The file types the file picker offers: every one Claudia opens (sheet 10, B2). */

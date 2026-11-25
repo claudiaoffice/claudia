@@ -27,3 +27,5 @@ superseded-by: []
 
 **Notes.** D102 keeps names out of the file for outsiders; an export is a file the owner chose to make readable, so names
 in an owner's history export are part of what she chose.
+
+**2026-11-25:** the history and the chat come in as D2005 says: one read-only note of the import step, text only.

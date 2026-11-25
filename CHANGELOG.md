@@ -6,6 +6,11 @@ While the major version is 0, a minor version may break the API; every break is 
 
 ## [Unreleased]
 
+### Added
+- `OriginalLine` and `Import.original` (PROC-37, D2005): the import of an owner's export carries the history and chat
+  of the original as one read-only note, text only (`when`, `who`, `what`, `said`). It is stored only when there is one,
+  so an import without it is written as before; blanking the whole import takes it away, blanking in parts keeps it.
+
 ## [0.38.0] - 2026-11-25
 
 ### Added

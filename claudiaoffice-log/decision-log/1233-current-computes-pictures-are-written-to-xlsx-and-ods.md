@@ -35,3 +35,7 @@ and survive an edit; tracker CODE-67).
 **Notes.** Applies D390, D462, D463, D1232. Code: `claudia_computes_io/_pictures.py` (what both formats take from the model),
 `xlsx_pictures.py`, `ods_pictures.py`; tests `packages/claudia-computes-io/tests/test_pictures.py`; scenarios
 `specs/computes/pictures-in-files.feature`.
+
+**2026-11-25:** the patch of a kept file writes them now (CODE-66, on `batch-4`): a picture added, moved, turned, renamed,
+described or removed since the import is in the file, and no longer an `object` loss. Pivot tables defined since the import
+are written too (CODE-70).

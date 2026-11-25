@@ -71,10 +71,12 @@ async function create() {
 <template>
   <Modal :title="t('New pivot table')" :width="640" @close="emit('close')">
     <form class="create" data-testid="pivot-create" @submit.prevent="create">
-      <p v-if="!choices.length" class="empty" role="status">
-        {{ t('There is no table to analyse yet. Select cells with a header row, type a word in the box left of the formula bar and press Enter — then it can be a pivot table’s source.') }}
-      </p>
-      <template v-else>
+      <div role="status">
+        <p v-if="!choices.length" class="empty">
+          {{ t('There is no table to analyse yet. Select cells with a header row, type a word in the box left of the formula bar and press Enter — then it can be a pivot table’s source.') }}
+        </p>
+      </div>
+      <template v-if="choices.length">
         <label class="field">
           <span>{{ t('Name') }}</span>
           <span class="row">

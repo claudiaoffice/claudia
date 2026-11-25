@@ -21,6 +21,7 @@ lacks), ``hidden-items``, ``top-n`` and ``sort``.
 
 from __future__ import annotations
 
+from collections.abc import Collection
 from dataclasses import dataclass, field
 from typing import cast
 
@@ -109,10 +110,11 @@ def has_room(model: WorkbookModel, pivot: FilePivot) -> bool:
     )
 
 
-def written_pivots_of(model: WorkbookModel) -> WrittenPivots:
-    """The pivots of ``model`` an xlsx file holds as pivots, and the losses of the others: those the exchange cannot
-    make a pivot of (:func:`~claudia_computes_io.pivot_exchange.written_pivots`) and those with filters and no room."""
-    found = written_pivots(model)
+def written_pivots_of(model: WorkbookModel, among: Collection[str] | None = None) -> WrittenPivots:
+    """The pivots of ``model`` (with ``among``: of those names) an xlsx file holds as pivots, and the losses of the
+    others: those the exchange cannot make a pivot of (:func:`~claudia_computes_io.pivot_exchange.written_pivots`) and
+    those with filters and no room."""
+    found = written_pivots(model, among)
     fitting = tuple(pivot for pivot in found.pivots if has_room(model, pivot))
     losses = LossLog()
     for pivot in found.pivots:
@@ -123,15 +125,25 @@ def written_pivots_of(model: WorkbookModel) -> WrittenPivots:
 
 # ------------------------------------------------------------------------------------------------ writing
 def add_pivots(data: bytes, model: WorkbookModel, pivots: tuple[FilePivot, ...]) -> bytes:
-    """``data`` (an xlsx file made of ``model``'s sheets) with a pivot table for each of ``pivots``: its cache and
-    records, the table, and the relationships and content types that join them to the workbook and the sheet."""
+    """``data`` (an xlsx file made of ``model``'s sheets) with a pivot table for each of ``pivots``
+    (:func:`put_pivots`)."""
     if not pivots:
         return data
     package = open_package(data)
     patch = PackagePatch(package.parts)
+    put_pivots(patch, package, model, pivots)
+    return write_parts(patch.finish())
+
+
+def put_pivots(patch: PackagePatch, package: Package, model: WorkbookModel, pivots: tuple[FilePivot, ...]) -> None:
+    """A pivot table for each of ``pivots`` in ``package`` (changed in ``patch``), a new file or a kept one (CODE-70):
+    its cache and records, the table, and the relationships and content types that join them to the workbook and the
+    sheet. The caches are numbered on from those the workbook has, in its ``pivotCaches``."""
+    workbook = parse_xml(patch.parts["xl/workbook.xml"])
+    caches = _caches_of(workbook)
+    first = max((int(each.get("cacheId") or 0) for each in caches), default=0) + 1
     parts = {sheet.name.casefold(): sheet.part for sheet in package.sheets}
-    caches = etree.Element(f"{{{_MAIN}}}pivotCaches", nsmap={**_NSMAP, "r": _R})
-    for number, pivot in enumerate(pivots, start=1):
+    for number, pivot in enumerate(pivots, start=first):
         cache = _Cache(model, pivot)
         definition = patch.free_name("xl/pivotCache/pivotCacheDefinition{}.xml")
         records = patch.free_name("xl/pivotCache/pivotCacheRecords{}.xml")
@@ -150,18 +162,21 @@ def add_pivots(data: bytes, model: WorkbookModel, pivots: tuple[FilePivot, ...])
         patch.add_relationship(
             parts[model.sheet(cast("SheetId", pivot.target.sheet)).name.casefold()], "pivotTable", table
         )
-    _place_caches(patch, caches)
-    return write_parts(patch.finish())
+    patch.parts["xl/workbook.xml"] = serialized(workbook)
 
 
-def _place_caches(patch: PackagePatch, caches: etree._Element) -> None:
-    workbook = parse_xml(patch.parts["xl/workbook.xml"])
+def _caches_of(workbook: etree._Element) -> etree._Element:
+    """The ``pivotCaches`` of ``workbook``, made where the standard has it when there is none."""
+    caches = workbook.find("x:pivotCaches", NS)
+    if caches is not None:
+        return caches
+    caches = etree.Element(f"{{{_MAIN}}}pivotCaches", nsmap={**_NSMAP, "r": _R})
     later = next((e for e in workbook if isinstance(e.tag, str) and etree.QName(e).localname in _AFTER_CACHES), None)
     if later is None:
         workbook.append(caches)
     else:
         later.addprevious(caches)
-    patch.parts["xl/workbook.xml"] = serialized(workbook)
+    return caches
 
 
 def _kind(value: Value) -> str:

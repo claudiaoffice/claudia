@@ -288,22 +288,43 @@ def test_the_source_of_a_kept_pivot_edited_gives_the_new_numbers_in_the_cells_th
     assert back.pivots.get("PivotSales") is not None
 
 
-def test_a_pivot_made_in_a_kept_file_gives_its_cells_and_is_said_not_written():
-    data = an_ods(DATA)
-    baseline = ods_to_workbook(data)
+def defined_in(data: bytes, name: str = "P", anchor=("s2", 0, 0), definition=None, new_sheet: str | None = "Pivot"):
+    """``data`` imported, with a table ``Sales`` over the sales of ``DATA`` and the pivot ``name`` defined over it."""
     doc = Document(ods_to_workbook(data), store=MemoryStore())
     source = RangeRef.between(CellRef(0, 0, "s1"), CellRef(6, 3, "s1"))
     doc.execute(DefineName(NamedRange("Sales", None, source, True)), author="ana")
-    doc.execute(
-        create_pivot(doc.model, "P", ("s2", 0, 0), by_region_and_quarter(), None, new_sheet="Pivot"), author="ana"
-    )
+    pivot = create_pivot(doc.model, name, anchor, definition or by_region_and_quarter(), None, new_sheet=new_sheet)
+    doc.execute(pivot, author="ana")
+    return doc.model
+
+
+def test_api_a_pivot_defined_in_an_imported_file_is_in_the_export():
+    data = an_ods(DATA)
+    baseline, current = ods_to_workbook(data), defined_in(data)
     losses = LossLog()
-    out = apply_edits_to_ods(data, baseline, doc.model, losses=losses)
+    out = apply_edits_to_ods(data, baseline, current, losses=losses)
+    assert ods_unwritten_changes(current, baseline) == ()
+    assert losses.result() == ()
+    assert problems(out) == []
     back = ods_to_workbook(out)
-    assert back.value("s2", 0, 0) == "Sum of Amount"
-    assert back.value("s2", 5, 3) == 600
-    assert pilots(out) == []
-    assert kinds(ods_unwritten_changes(doc.model, baseline)).get("pivot-table") == 1
+    assert back.pivots.get("P") == current.pivots.get("P")
+    assert grid_of(back, "s2", 6, 4) == grid_of(current, "s2", 6, 4)
+    assert pilots(out) == pilots(workbook_to_ods(current))
+
+
+def test_api_a_pivot_defined_in_an_imported_file_that_has_one_goes_beside_it():
+    data = a_libreoffice_file()
+    definition = by_region_and_quarter(columns=())
+    baseline, current = ods_to_workbook(data), defined_in(data, "Q", ("s2", 10, 0), definition, new_sheet=None)
+    out = apply_edits_to_ods(data, baseline, current)
+    assert ods_unwritten_changes(current, baseline) == ()
+    assert problems(out) == []
+    assert content_of(out).count("<table:data-pilot-tables>") == 1
+    assert pilots(out)[0] == pilots(data)[0] and len(pilots(out)) == 2
+    back = ods_to_workbook(out)
+    assert back.pivots.get("PivotSales") is not None  # (over the table Sales now, which is the range it had)
+    assert back.pivots.get("Q") == current.pivots.get("Q")
+    assert grid_of(back, "s2", 5, 2, row=10) == grid_of(current, "s2", 5, 2, row=10)
 
 
 def test_a_file_that_is_not_ods_is_still_refused():

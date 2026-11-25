@@ -1258,9 +1258,11 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
             <span class="mono">{{ item.label }}</span><small>{{ item.detail }}</small>
           </li>
         </ul>
-        <div v-if="formulaHelp" class="formulaHelp" role="status">
-          <span class="sig mono">{{ formulaHelp.signature }}</span>
-          <span v-if="formulaExample" class="example mono">{{ formulaExample }}</span>
+        <div role="status">
+          <div v-if="formulaHelp" class="formulaHelp">
+            <span class="sig mono">{{ formulaHelp.signature }}</span>
+            <span v-if="formulaExample" class="example mono">{{ formulaExample }}</span>
+          </div>
         </div>
       </div>
     </template>

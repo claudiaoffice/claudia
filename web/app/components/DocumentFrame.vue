@@ -185,7 +185,9 @@ const noticeSaid = useNoticeSaid(() => state.notice)
     <!-- One header around every bar above the document, so that the page has exactly one banner landmark (UX-32). -->
     <header class="top">
       <TopBar :session="session" :panel-open="panelOpen" @toggle-panel="panelOpen = !panelOpen" />
-      <div v-if="state.preview" class="banner preview" role="status" data-testid="redaction-preview">{{ t('Preview of the redaction: the marked places as they would be. Nothing has changed yet.') }}</div>
+      <div role="status">
+        <div v-if="state.preview" class="banner preview" data-testid="redaction-preview">{{ t('Preview of the redaction: the marked places as they would be. Nothing has changed yet.') }}</div>
+      </div>
       <div v-if="state.status === 'reconnecting'" class="banner" role="alert">{{ t('The connection was lost. Trying to get back… what you do now is not saved.') }}</div>
       <FontReportBanner :session="session" />
       <MenuBar data-region="menus" :class="{ hidden: shell.nativeMenu }" :menus="menus" />

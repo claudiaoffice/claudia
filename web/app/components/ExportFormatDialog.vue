@@ -8,6 +8,7 @@ import { computed, onMounted, ref } from 'vue'
 import type { BaseSession } from '~/lib/base-session'
 import { downloadBase64, downloadText, type Saved } from '~/lib/download'
 import { UNPROTECTED } from '~/lib/audit'
+import { lossLines, type LossLine } from '~/lib/export-losses'
 import { useI18n } from '~/lib/i18n'
 
 const { t } = useI18n()
@@ -39,6 +40,8 @@ const done = ref(false)
 /** Where a desktop window saved it (D501): the person chose it, and sees it again here. */
 const savedTo = ref('')
 const problem = ref('')
+/** What the file could not hold, a line per kind (UX-70, D405); `null` for a format that does not say. */
+const losses = ref<LossLine[] | null>(null)
 
 // A4: a paragraph's description can go into the file as a review comment, by whoever exports it, dated today. The tick
 // is off by default and is there only when there is a description to write and the format can carry a comment.
@@ -78,7 +81,9 @@ async function exportNow() {
       finished(await downloadText(`${props.session.state.doc}.${format.value}`, format.local(), format.mimeType))
     } else {
       const result = await props.session.exportOffice(format.value, { descriptionComments: offerComments.value && comments.value })
-      if (result !== false) finished(await downloadBase64(`${props.session.state.doc}.${format.value}`, result.content_type, result.data))
+      if (result === false) return
+      finished(await downloadBase64(`${props.session.state.doc}.${format.value}`, result.content_type, result.data))
+      losses.value = result.losses ? lossLines(result.losses, t) : null
     }
   } catch (e) {
     problem.value = t('The file could not be saved: {reason}', { reason: (e as Error).message })
@@ -122,8 +127,24 @@ async function exportNow() {
         <p>{{ t('Claudia cannot tell whether someone copies from the screen.') }}</p>
       </div>
     </div>
-    <p v-if="done && savedTo" class="lead" data-testid="export-saved-to">{{ t('Saved as {path}.', { path: savedTo }) }}</p>
-    <p v-else-if="done" class="lead">{{ t('Exported.') }}</p>
+    <!-- always on the page, so that a screen reader says what comes into it (BITV 4.1.3) -->
+    <div role="status" data-testid="export-result">
+      <template v-if="done">
+        <p v-if="savedTo" class="lead" data-testid="export-saved-to">{{ t('Saved as {path}.', { path: savedTo }) }}</p>
+        <p v-else class="lead">{{ t('Exported.') }}</p>
+        <template v-if="losses?.length">
+          <p class="lost-head">{{ t('The file does not hold:') }}</p>
+          <ul class="lost" data-testid="export-losses">
+            <li v-for="line in losses" :key="line.kind" :data-loss="line.kind">
+              <span class="what">{{ line.title }}</span>
+              <span class="why">{{ line.hint }}</span>
+            </li>
+          </ul>
+          <p class="hint">{{ t('Everything else is in the file.') }}</p>
+        </template>
+        <p v-else-if="losses" class="hint" data-testid="export-nothing-lost">{{ t('Everything is in the file.') }}</p>
+      </template>
+    </div>
     <p v-if="problem" class="error" role="alert">{{ problem }}</p>
     <div class="buttons">
       <button v-if="!done && !confirming" class="btn primary" type="button" :disabled="busy" @click="start">{{ t('Export') }}</button>
@@ -179,5 +200,27 @@ async function exportNow() {
   display: flex;
   gap: 10px;
   margin-top: 4px;
+}
+.lost-head {
+  margin: 8px 0 0;
+  font-weight: 600;
+}
+.lost {
+  margin: 6px 0;
+  padding-left: 18px;
+}
+.lost li {
+  margin: 0 0 6px;
+}
+.lost li::marker {
+  color: var(--apricot-dark);
+}
+.what {
+  display: block;
+}
+.why {
+  display: block;
+  color: var(--muted);
+  font-size: 12.5px;
 }
 </style>

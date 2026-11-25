@@ -115,16 +115,20 @@ def _export_app(archive: zipfile.ZipFile) -> str | None:
     return app if isinstance(app, str) and app in {app for app, _ in FORMATS.values()} else None
 
 
-def export_made(data: bytes) -> tuple[str, str]:
-    """Who made an export and when, as the file says it (shown to the person who imports it): ``("", "")`` for a file
-    that does not say. Only ``export.json`` is read."""
+def export_made(data: bytes) -> tuple[str, str, bool]:
+    """Who made an export, when, and whether it brings the history of the original (D2005), as the file says it (shown
+    to the person who imports it): ``("", "", False)`` for a file that does not say. Only ``export.json`` is read."""
     try:
         with zipfile.ZipFile(io.BytesIO(data)) as archive:
             header = _export_header(archive) or {}
     except (zipfile.BadZipFile, OSError, ValueError, EOFError):
-        return "", ""
-    who, when = header.get("exporter"), header.get("exported_at")
-    return (who if isinstance(who, str) else "")[:200], (when if isinstance(when, str) else "")[:40]
+        return "", "", False
+    who, when, parts = header.get("exporter"), header.get("exported_at"), header.get("parts")
+    return (
+        (who if isinstance(who, str) else "")[:200],
+        (when if isinstance(when, str) else "")[:40],
+        isinstance(parts, dict) and "history.jsonl" in parts,
+    )
 
 
 def _reader(fmt: str):  # noqa: ANN202 - one of six reader functions
@@ -150,12 +154,22 @@ def _reader(fmt: str):  # noqa: ANN202 - one of six reader functions
     raise UnknownFormat(f"{fmt} cannot be imported")
 
 
-def import_state(
-    fmt: str, data: bytes, locale: str = DEFAULT_LOCALE, *, state_schema: int | None = None
-) -> tuple[dict, list[dict]]:
-    """The state an import of ``data`` (a file of format ``fmt``) makes, as ``serialize()`` gives it, and what the
-    document will not show, as ``{kind, detail, count}``. For a Claudia export (D1272) it is the export's own state,
-    refused if its ``state_schema`` is not ``state_schema``. Raises whatever the reader raises for a broken file, and
+@dataclass(frozen=True)
+class Imported:
+    """What an import of a file makes: the ``state``, as ``serialize()`` gives it, and what the document will not show
+    (``losses``, as ``{kind, detail, count}``). An owner's export also brings the ``history`` and ``chat`` of the
+    document it was made of, one JSON text per line as the export holds them (D1272, D2005)."""
+
+    state: dict
+    losses: list[dict]
+    history: list[bytes] | None = None
+    chat: list[bytes] | None = None
+
+
+def import_state(fmt: str, data: bytes, locale: str = DEFAULT_LOCALE, *, state_schema: int | None = None) -> Imported:
+    """What an import of ``data`` (a file of format ``fmt``) makes. For a Claudia export (D1272) it is the export's own
+    state, history and chat, refused if its ``state_schema`` is not ``state_schema``. Raises whatever the reader raises
+    for a broken file, and
     ``claudia_opc_io.PackageRefused`` for a zip that unpacks to far too much (SEC-15): the office libraries open the
     zip themselves, so this is the one place every format passes before any of them does.
 
@@ -165,7 +179,7 @@ def import_state(
         exported = read_export(data)
         if state_schema is not None and exported.state_schema != state_schema:
             raise ValueError("the export was made by another version of Claudia and has another shape of state")
-        return exported.state, []
+        return Imported(exported.state, [], exported.history, exported.chat)
     read, losses_of = _reader(fmt)
     check_package(data)
     model = read(data)
@@ -175,7 +189,7 @@ def import_state(
         if losses_of is None
         else [{"kind": loss.kind, "detail": loss.detail, "count": loss.count} for loss in losses_of(data)]
     )
-    return model.serialize(), losses
+    return Imported(model.serialize(), losses)
 
 
 # -- what a file says about itself ------------------------------------------------------------------------------------

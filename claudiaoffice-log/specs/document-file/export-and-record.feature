@@ -56,6 +56,16 @@ Feature: An unencrypted export asks first, is recorded, and comes back in as a n
     Then the new document has the paragraph "First line"
     And I am its only owner
 
+  @extended @io:packages/claudia-server/tests/test_server_export_import.py
+  Scenario: An owner's export comes back in with the history of the original as one note
+    Given Ann changed the document and wrote "A1 is the budget" in the chat for everybody and one private message
+    And Ann exported the document without protection with its history and chat
+    When Nora makes a new document of that file
+    Then the dialog said that the people named in its history are not given access
+    And the new document's history has one step, the import, with a folded "History of the original"
+    And the note names Ann for her change and for "A1 is the budget", with when, and not the private message
+    And Nora has nothing to undo
+
   @extended @unit:packages/claudia-document-file/tests/test_audit.py
   Scenario: A redaction, a restore and a packing do not change one byte of the record
     Given the document has two entries in its record

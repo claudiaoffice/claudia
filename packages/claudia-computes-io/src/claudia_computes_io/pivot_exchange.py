@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import math
 import re
-from collections.abc import Mapping, Sequence
+from collections.abc import Collection, Mapping, Sequence
 from dataclasses import dataclass, replace
 
 from claudia_computes import (
@@ -143,17 +143,19 @@ def _placed(model: WorkbookModel) -> list[_Placed]:
     return found
 
 
-def written_pivots(model: WorkbookModel) -> WrittenPivots:
+def written_pivots(model: WorkbookModel, among: Collection[str] | None = None) -> WrittenPivots:
     """The pivots of ``model`` as a file says them, and what a file cannot hold of the others: a pivot that shows
     nothing (``empty``) is not written, one over cells that are no range with a header row (``source``: a query's
-    result, a range with no header) is written as the values it shows."""
+    result, a range with no header) is written as the values it shows. With ``among``, only the pivots of those names
+    (what a kept file adds)."""
     found: list[FilePivot] = []
     losses = LossLog()
-    shown = {placed.entry.name for placed in _placed(model)}
+    placed_ones = [placed for placed in _placed(model) if among is None or placed.entry.name in among]
+    shown = {placed.entry.name for placed in placed_ones}
     for entry in model.pivots.sorted():
-        if entry.name not in shown:
+        if entry.name not in shown and (among is None or entry.name in among):
             losses.add(PIVOT_LOSS, "empty")
-    for placed in _placed(model):
+    for placed in placed_ones:
         pivot = _file_pivot(model, placed)
         if pivot is None:
             losses.add(PIVOT_LOSS, "source")

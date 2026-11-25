@@ -90,8 +90,10 @@ const PLOT_W = 360
         </div>
       </header>
 
-      <p v-if="loading" class="hint" role="status">{{ t('Working it out…') }}</p>
-      <template v-else-if="table">
+      <div role="status">
+        <p v-if="loading" class="hint">{{ t('Working it out…') }}</p>
+      </div>
+      <template v-if="!loading && table">
         <svg class="plot" :viewBox="`0 0 ${PLOT_W} 54`" role="img" :aria-label="t('Dot plot of {n} outcomes, from {low} to {high}, median {median}', { n: values.length, low: stat(least), high: stat(greatest), median: stat(median) })">
           <line x1="0" y1="34" :x2="PLOT_W" y2="34" class="axis" />
           <circle v-for="(f, i) in dots" :key="i" :cx="8 + f * (PLOT_W - 16)" cy="34" r="4.5" class="point" />
@@ -112,7 +114,9 @@ const PLOT_W = 360
           {{ t('How many fall below') }}
           <input v-model="threshold" type="number" inputmode="decimal" autocomplete="off" >
         </label>
-        <p v-if="below" class="hint" role="status">{{ t('{below} of {total} outcomes, {percent} %', { below: below.below, total: below.total, percent: below.percent }) }}</p>
+        <div role="status">
+          <p v-if="below" class="hint">{{ t('{below} of {total} outcomes, {percent} %', { below: below.below, total: below.total, percent: below.percent }) }}</p>
+        </div>
 
         <section v-if="bars.length" :aria-label="t('What moves the result most')">
           <h4>{{ t('What moves the result most') }}</h4>

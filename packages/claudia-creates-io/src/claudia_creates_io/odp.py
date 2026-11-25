@@ -33,7 +33,7 @@ from __future__ import annotations
 import copy
 import re
 from collections.abc import Iterator, Mapping
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from html import escape
 from zipfile import BadZipFile
 
@@ -46,6 +46,7 @@ from claudia_core import (
     ObjectBody,
     Rasterise,
     VisualObject,
+    name_key,
     nudge_into,
     paragraph_for,
     picture_body,
@@ -92,6 +93,7 @@ from claudia_opc_io import EMU_PER_POINT, read_parts, write_parts
 
 from ._file_looks import Look, LookBook
 from ._items import Mark, OdpListReader, OdpLists, agendas, list_styles, marks_of, odp_level, references, words_of
+from ._names import FileNames
 from ._notes import BULLET, Line, Run, lines_to_markdown, markdown_to_lines
 from ._odp_fonts import DeckFonts
 from ._odp_looks import StyleIndex, read_look
@@ -138,6 +140,28 @@ _DRAWN = {
     "regular-polygon",
 }
 _MAX_OBJECTS = 500
+
+
+#: What a program writes as the name of a page nobody named: its number (``page1``, as LibreOffice and this module
+#: write it). Read as no name (CODE-25).
+_NUMBERED_PAGE = re.compile(r"page\d+")
+
+
+def _page_names(model: SlideModel) -> list[str]:
+    """The ``draw:name`` of each page, in order: the slide's name, or for a slide without one the first ``page<n>`` that
+    no page or other thing of the document is called (a page name is one of a kind in the file)."""
+    taken = {name_key(name) for name in model.names_in_use()}
+    names: list[str] = []
+    for slide_id in model.order:
+        name = model.thing_name(slide_id)
+        if not name:
+            number = len(names) + 1
+            while name_key(f"page{number}") in taken:
+                number += 1
+            name = f"page{number}"
+        taken.add(name_key(name))
+        names.append(name)
+    return names
 
 
 def _q(prefix: str, local: str) -> str:
@@ -626,9 +650,14 @@ def odp_to_slides(odp_bytes: bytes) -> SlideModel:
     looks = LookBook(model)
     # one palette for the deck: the page colour of its first slide, white where a file says none (D467)
     model.palette.set_colour("page", slides[0].background or _WHITE)
+    names = FileNames()
     for slide in slides:
         model.insert_slide(slide.id, notes=slide.notes)
+        said = slide.element.get(_q("draw", "name")) or ""
+        if not _NUMBERED_PAGE.fullmatch(said) and (named := names.take(said)):
+            model.slides.rename(slide.id, named)
         for found in slide.objects:
+            called = names.take(found.element.get(_q("draw", "name")))
             if found.kind == "image":
                 assert found.asset is not None  # the scan keeps an image only with its asset
                 if found.asset.id not in model.images:
@@ -641,6 +670,7 @@ def odp_to_slides(odp_bytes: bytes) -> SlideModel:
                     description=found.description,
                     rotation=found.rotation,
                 )
+                body = replace(body, name=called)  # what the file calls it, not the file name of its picture
                 model.insert_object(VisualObject(body, SlideAnchor(slide.id, found.x, found.y)))
                 continue
             style, words = _default_styles(found.kind)
@@ -666,6 +696,7 @@ def odp_to_slides(odp_bytes: bytes) -> SlideModel:
                 paragraph_for(found.id, words, found.text).with_item(_item_of(found, items)),
                 ref=shape,
                 rotation=found.rotation,
+                name=called,
             )
             model.insert_object(VisualObject(body, SlideAnchor(slide.id, found.x, found.y)))
     return model
@@ -897,7 +928,14 @@ class _Writer:
         return [self.lists.wrap(paragraphs, mark)]
 
     def object(self, obj: VisualObject) -> etree._Element | None:
-        """The element of an object, or ``None`` for an image whose picture the model does not have."""
+        """The element of an object, called what people call it (``draw:name``, CODE-25), or ``None`` for an image
+        whose picture the model does not have."""
+        element = self._drawn(obj)
+        if element is not None and obj.body.name:
+            element.set(_q("draw", "name"), obj.body.name)
+        return element
+
+    def _drawn(self, obj: VisualObject) -> etree._Element | None:
         body, anchor = obj.body, obj.anchor
         over = page_colour(self.model)
         placing = _placing(anchor, body, self.cm_per_unit)
@@ -1050,9 +1088,9 @@ def slides_to_odp(model: SlideModel, *, info: DocumentInfo | None = None, raster
     automatic = etree.SubElement(root, _q("office", "automatic-styles"))
     presentation = etree.SubElement(etree.SubElement(root, _q("office", "body")), _q("office", "presentation"))
     background = colour_of({"fill": page_colour(model) or ""}, "fill")
-    for number, slide_id in enumerate(model.order, start=1):
+    for slide_id, name in zip(model.order, _page_names(model), strict=True):
         page = etree.SubElement(presentation, _q("draw", "page"))
-        page.set(_q("draw", "name"), f"page{number}")
+        page.set(_q("draw", "name"), name)
         if background:
             page.set(_q("draw", "style-name"), writer.looks.page(background))
         page.set(_q("draw", "master-page-name"), "Default")
@@ -1272,6 +1310,10 @@ class _Patch:
         return _Writer(self.current, self.looks, self._per_cm(size), size[1] * 72 / SLIDE_HEIGHT)
 
     def _patch_slide(self, slide: _Slide) -> None:
+        name = self.current.thing_name(slide.id)
+        if name != self.baseline.thing_name(slide.id):
+            self.part.set_attributes(slide.element, {"draw:name": name or self._page_name()})
+            self.changed = True
         writer = self._writer(slide.size)
         for obj in slide.objects:
             if obj.id not in self.current.objects:
@@ -1355,7 +1397,7 @@ class _Patch:
         )
         master = neighbour.master if neighbour is not None else self._first_master()
         size = neighbour.size if neighbour is not None else (_SLIDE_CM[0] / CM_PER_INCH, _SLIDE_CM[1] / CM_PER_INCH)
-        page = _el("draw", "page", {"draw:name": self._page_name()})
+        page = _el("draw", "page", {"draw:name": self.current.thing_name(slide_id) or self._page_name()})
         if master:
             page.set(_q("draw", "master-page-name"), master)
         writer = self._writer(size)
@@ -1413,6 +1455,11 @@ class _Patch:
         if before.body.kind != after.body.kind or before.body.shape != after.body.shape:
             raise UnsupportedEdit("changing an object's kind or shape outline cannot be patched onto the file yet")
         attributes, taken = self._moved(before, after, self._per_cm(slide.size))
+        if before.body.name != after.body.name:
+            if after.body.name:
+                attributes["draw:name"] = after.body.name
+            else:
+                taken = (*taken, "draw:name")
         over, pt_per_unit = page_colour(self.current), slide.size[1] * 72 / SLIDE_HEIGHT
         if after.body.kind == "shape":
             old_look = look(self.baseline, before.body.style)

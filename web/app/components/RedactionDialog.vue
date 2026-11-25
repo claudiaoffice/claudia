@@ -226,7 +226,9 @@ onBeforeUnmount(() => {
 
       <p v-if="problem" class="problem" role="alert">{{ t('This cannot be redacted: {why}', { why: problem }) }}</p>
       <p v-else-if="!plan && !working" class="lead">{{ t('Nothing is picked. Pick changes or messages in History & Chat.') }}</p>
-      <p v-if="working && !plan" class="lead" role="status">{{ t('Working it out…') }}</p>
+      <div role="status">
+        <p v-if="working && !plan" class="lead">{{ t('Working it out…') }}</p>
+      </div>
 
       <template v-if="plan">
         <section aria-labelledby="red-picked">

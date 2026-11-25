@@ -42,6 +42,7 @@ from weakref import WeakKeyDictionary
 
 from claudia_core import (
     Document,
+    Import,
     KernelError,
     RegionHeld,
     Revision,
@@ -947,8 +948,9 @@ def _log(ctx, limit):
 def _entry_view(entry) -> dict:
     """One step of the history as a history panel shows it: `{revision, author, origin, time, label, summary, of, kind,
     redacted}`; `kind` is the command's (`core.Redaction` for the record of a redaction), `redacted` whether its content
-    was taken away (D720)."""
-    return {
+    was taken away (D720). The import of an owner's export also has `original`, the history of the document it was made
+    of as `[{when, who, what, said}]`, oldest first (D2005)."""
+    view = {
         "revision": entry.rev.to_data(),
         "author": entry.author,
         "origin": entry.origin,
@@ -959,6 +961,9 @@ def _entry_view(entry) -> dict:
         "kind": entry.command.kind,
         "redacted": entry.redacted,
     }
+    if isinstance(entry.command, Import) and entry.command.original:
+        view["original"] = [line.to_data() for line in entry.command.original]
+    return view
 
 
 @core_methods.method("peek_revision", "revision:revision state:bool=true", reads="history")

@@ -67,6 +67,7 @@ class Upload:
     tags: tuple[str, ...] = ()
     made_by: str = ""  # an export: who made it, as the file says (D1272)
     made_at: str = ""  # an export: when
+    with_history: bool = False  # an export: does it bring the history of the original (D2005)?
 
     def describe(self) -> dict:
         """What the person is told about it: never the bytes."""
@@ -77,6 +78,7 @@ class Upload:
         if self.fmt == CLAUDIA_EXPORT:
             answer["kind"] = EXPORT_KIND
             answer["made_by"], answer["made_at"] = self.made_by, self.made_at
+            answer["with_history"] = self.with_history
         elif self.fmt != CLAUDIA:
             answer["kind"] = FORMATS[self.fmt][1]
         return answer
@@ -173,7 +175,7 @@ class UploadDesk:
         upload.uid = uid
         upload.description, upload.tags = details
         if kind.fmt == CLAUDIA_EXPORT:
-            upload.made_by, upload.made_at = export_made(data)
+            upload.made_by, upload.made_at, upload.with_history = export_made(data)
         self._held[upload.token] = upload
         return upload
 

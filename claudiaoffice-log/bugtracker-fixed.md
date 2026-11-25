@@ -20,7 +20,7 @@ PROC-24 to PROC-27, CODE-58 to CODE-61, SEC-19, UX-44; SEC-15 fixed (see "Round 
 
 ## Index
 
-### Fixed (220)
+### Fixed (228)
 
 By ID. Items closed without a fix (superseded, wontfix) are here too.
 
@@ -101,6 +101,7 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | UX-63 | P3 | UX / all apps | The print preview says printing and saving a PDF are "recorded in the document's history"; they go into the exit record, which is not part of the history (glossary) | **fixed** 2026-11-25 (batch 1 of the bug eater, `batch-1`) | 2026-11-21 |  |
 | UX-66 | P3 | UX / composes | `StylesDialog.vue` hard-codes `#7a4710` for the text of its `.flag` pill instead of a colour token (`--apricot-dark`), so it does not follow the themes | **fixed** 2026-11-25 (batch 1 of the bug eater, `batch-1`) | 2026-11-22 |  |
 | UX-67 | P3 | UX / a11y | The Heading and Numbering selects in the Styles dialog are unstyled native `<select>`s: they look unlike every other field and may diverge from BITV (focus, contrast, target size not tested) | **fixed** 2026-11-25 (batch 1 of the bug eater, `batch-1`) | 2026-11-22 |  |
+| UX-70 | P2 | UX / all apps | What an export could not keep is never shown: the losses come back with the file and no client says them | **fixed** 2026-11-25 (batch 4 of the bug eater, `batch-4`) | 2026-11-22 | 2026-11-25 |
 | UX-72 | P2 | UX / computes | Search in a workbook does not look at the words on its slides, and "This sheet" searches the sheet behind a slide | **fixed** 2026-11-22 on `e6-31-slides-in-computes` | 2026-11-22 | 2026-11-22 |
 | UX-73 | P2 | UX / computes | While a slide is shown, the print bar offers "This sheet" and counts the slide as a sheet | **fixed** 2026-11-22 on `e6-31-slides-in-computes` | 2026-11-22 | 2026-11-22 |
 | UX-74 | P3 | UX / AI | While the administrator has Claude off, the owners' dialog shows no check box, so an owner cannot withdraw a consent given earlier; it resumes when Claude is switched on again | **fixed** 2026-11-25 (batch 1 of the bug eater, `batch-1`) | 2026-11-22 |  |
@@ -116,6 +117,7 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | UX-87 | P3 | UX / i18n | A new workbook's first sheet is "Sheet1" in every language, beside an offered "Blatt2" | **fixed** 2026-11-25 (batch 3 of the bug eater, `batch-3`) | 2026-11-25 | 2026-11-25 |
 | UX-88 | P2 | UX / a11y | A notice (toast) is a `role=status` element made together with its text, which screen readers may not announce (BITV 4.1.3) | **fixed** 2026-11-25 (batch 3 of the bug eater, `batch-3`) | 2026-11-25 | 2026-11-25 |
 | UX-89 | P3 | UX / a11y | A table's accessible name is "Table 1 Options…": the Options… button is inside its caption | **fixed** 2026-11-25 (batch 3 of the bug eater, `batch-3`) | 2026-11-25 | 2026-11-25 |
+| UX-90 | P2 | UX / a11y | About 25 other `role="status"` elements appear with their text already in them (`v-if`), so screen readers may not announce them (BITV 4.1.3), as the notice did (UX-88) | **fixed** 2026-11-25 (batch 4 of the bug eater, `batch-4`) | 2026-11-25 | 2026-11-25 |
 | CODE-01 | P2 | Code | No coverage, no web lint; Playwright not declared | **fixed** |  |  |
 | CODE-02 | P3 | Code | 26 build files tracked in `web/dist` | fixed |  |  |
 | CODE-05 | P3 | Code | Dead branch in `Gateway.admit`; stale docstring in `state.py` | **fixed** (the branch was not dead: comment corrected) |  |  |
@@ -135,6 +137,7 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | CODE-22 | P2 | Code / Import | An xlsx with an array formula failed to import; one edit dropped a sheet's lists, icon sets and spill marks | **fixed** 2026-11-13 |  | 2026-11-13 |
 | CODE-23 | P2 | Code / clients | The Windows and macOS menus lacked Insert ▸ Container: their generated menus were stale and CI's client job red (CODE-16 again) | **fixed** 2026-11-15 |  | 2026-11-15 |
 | CODE-24 | P3 | Code / server | `add_object` with kind `rendered` or `diagram` failed inside the server after a message that allowed them | **fixed** 2026-11-15 |  | 2026-11-15 |
+| CODE-25 | P2 | Code / Export | A renamed object loses its name in pptx and odp without the export saying so (D450) | **fixed** 2026-11-25 (batch 4 of the bug eater, `batch-4`) |  | 2026-11-25 |
 | CODE-26 | **P1** | Code / macOS client | Closing a window with its close button crashes the macOS app every time (Neutralino 6.8.0) | **fixed** 2026-11-15 (D506) |  | 2026-11-15 |
 | CODE-27 | P2 | Code / Arch | The object methods are written once in the kernel and three times on the wire | **fixed** 2026-11-19: the server's methods 2026-11-15; composes' Edit ▸ Image… and Format ▸ Name & describe… (D1317) followed; the web sessions' copies are CODE-35 |  | 2026-11-19 |
 | CODE-33 | P3 | Code | `claudia-client` is a package no client uses | **fixed** 2026-11-16 (D700) |  | 2026-11-16 |
@@ -146,6 +149,7 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | CODE-42 | P3 | Code / Export | Exports named a generic font family by a font Claudia does not show | **fixed** 2026-11-16 (E3.13) |  | 2026-11-16 |
 | CODE-43 | P2 | Code / Import | docx and odt import ignored the file's fonts and reported no loss | **fixed** 2026-11-16 (E3.13) |  | 2026-11-16 |
 | CODE-44 | P2 | Code / Import | pptx and odp import did not read fonts | **fixed** 2026-11-16 (E3.13) |  | 2026-11-16 |
+| CODE-45 | P2 | Code / Import | pptx placeholders (titles, body text) are not imported at all | **fixed** 2026-11-25 (batch 4 of the bug eater, `batch-4`) |  | 2026-11-25 |
 | CODE-46 | P2 | Code / Import | The slides importers do not read text size and colour, so most boxes are a `look` loss | **fixed** 2026-11-17 (IEW-20, D467: `_pptx_looks` and `_odp_looks` read a box's size and colour) |  | 2026-11-17 |
 | CODE-48 | P3 | Code / Web | After naming the first administrator, the server settings stayed on the setup form | **fixed** 2026-11-17 |  | 2026-11-17 |
 | CODE-49 | P2 | Code / Server | Add fonts… stayed blocked for 30 minutes after too many files were chosen | **fixed** 2026-11-17 |  | 2026-11-17 |
@@ -162,6 +166,8 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | CODE-61 | P3 | Process / Backlog | Stale statuses in the backlog (E9.30, E10.21, probably E9.31 say open where code exists) | **fixed** (seen 2026-11-20: E9.30 and E9.31 are `done`, E10.21 is `in-progress`) |  |  |
 | CODE-64 | P2 | composes | The browser editor does not draw the text wrap (the flowing view shows objects over the words; Page view and print wrap) | **fixed** 2026-11-18 (D1068) |  | 2026-11-18 |
 | CODE-65 | P2 | composes I/O | `dx`/`dy` of an object is not written to or read from DOCX/ODT | **fixed** 2026-11-18 (D1067) |  | 2026-11-18 |
+| CODE-66 | P3 | computes I/O | A picture added to an imported XLSX or ODS is not written into it: the patch of a kept file does not add pictures (reported as `object`) | **fixed** 2026-11-25 (batch 4 of the bug eater, `batch-4`) |  | 2026-11-25 |
+| CODE-70 | P3 | computes I/O | The patch of a kept XLSX or ODS does not add pivot tables either (reported), as it does not add pictures (CODE-66) | **fixed** 2026-11-25 (batch 4 of the bug eater, `batch-4`) |  | 2026-11-25 |
 | CODE-72 | P3 | Code / docs | `KdfParams`' docstring said that the cost can be raised "at the next login"; it cannot for a document with several people | **fixed** 2026-11-19 |  | 2026-11-19 |
 | CODE-73 | P2 | Code / security | File ▸ Download wrote the unencrypted content-only JSON while D110 and the menu workbook say it is the sealed file | **fixed** 2026-11-19 (D1270, E2.12) |  | 2026-11-19 |
 | CODE-78 | P2 | Code / i18n | A refusal of a model (a `ValueError` of core, computes, composes or creates) reaches a German user in English | **fixed** 2026-11-23 on `code-78-translated-refusals` (D1510) | 2026-11-22 | 2026-11-23 |
@@ -218,6 +224,7 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | PROC-34 | P3 | Process / backlog | The `backlog` branch had renamed `e0.3-shells-gtk-with-webkitgtk-6-0.md` (an Obsidian plugin does that when a title changes) so the story and its epic no longer named each other and `tests/test_backlog.py` failed | **fixed** 2026-11-19 (file name restored) |  | 2026-11-19 |
 | PROC-35 | P3 | Process / e2e | `uv run pytest tests/e2e` as one run fails three tests ("Playwright Sync API inside the asyncio loop") that each pass alone: an earlier test leaves an event loop running | **fixed** 2026-11-19 on branch `e2-document-sec` (measured on the branch, which has no change to the other e2e tests) |  | 2026-11-19 |
 | PROC-36 | P3 | Process / tooling | A `ruff` installed outside the project (0.16.9) rewrites `except (A, B):` into `except A, B:` and reformats unrelated files; the project pins `ruff<0.15` for this | **fixed** 2026-11-19 (a rule in `CONTRIBUTING.md`, rule 5) |  | 2026-11-19 |
+| PROC-37 | P2 | Process / scope | D1272 says an export's history and chat come back in with their authors as text; slice B imports the content only (`import_state` returns the state, the `history.jsonl` and `chat.jsonl` of an export are written but never read back) | **fixed** 2026-11-25 (batch 4 of the bug eater, `batch-4`) |  | 2026-11-25 |
 | PROC-38 | P3 | Process / tests | `test_another_window_is_answered_quickly_while_a_password_is_hashed` assumed that hashing takes more than 0.15 s: on the CI runners it took 0.12 s and the test failed on all three systems | **fixed** 2026-11-21 (the test measures this machine and takes as many passes as it needs; size 3) |  | 2026-11-21 |
 | PROC-39 | P2 | Process / e2e | The test server's output went to a pipe nobody read (`tests/e2e/live.py`); after about 64 KiB the server blocked on its next write and the whole event loop stood still, so page loads timed out (three `test_viewer` scenarios failed in a full run of `tests/e2e/specs` and passed alone) | **fixed** 2026-11-19 on branch `e2-document-sec` (the output goes to `server.log`; `test_greeting.py` and `test_computes_grid.py` still use a pipe but stop their servers within a minute) |  | 2026-11-19 |
 | PROC-40 | P2 | Process / E2E | Four spec files (51 scenarios) run nowhere: no step code binds them and no scenario names a unit or e2e test (`names`, `requirements`, `objects-in-composes`, `pictures-in-files`) | **fixed** 2026-11-25 (batch 2 of the bug eater, `batch-2`): every approved spec file is bound; the six scenarios of `requirements.feature` still skip until their steps have code | 2026-11-20 | 2026-11-25 |
@@ -240,6 +247,7 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | PROC-59 | P3 | Process / CI | The scenarios tagged @firefox were never run in Firefox by CI | **fixed** 2026-11-25 (batch 3 of the bug eater, `batch-3`; batch 2's job had run nothing) | 2026-11-25 | 2026-11-25 |
 | PROC-60 | P2 | Process / E2E | `wait_for_function` given an expression string breaks on the page's Content-Security-Policy once it has to poll; `Person.wait_until_open` uses it | **fixed** 2026-11-25 (batch 3 of the bug eater, `batch-3`) | 2026-11-25 | 2026-11-25 |
 | PROC-61 | P3 | Process / CI | `test_calculating_a_long_chain_is_linear` failed on CI's Ubuntu runner (44x for a 10x chain, after its own second try) and passed on a rerun; here it measures 14x to 16x | **fixed** 2026-11-25 (batch 3 of the bug eater, `batch-3`) | 2026-11-25 | 2026-11-25 |
+| PROC-62 | P3 | Process / CI | A test of the Neutralino client failed once on Windows CI and passed when the job was run again: "opens a PDF to print in the computer's viewer…" (`clients/neutralino/tests/files.test.ts`) | **fixed** 2026-11-25 (batch 4 of the bug eater, `batch-4`) | 2026-11-25 | 2026-11-25 |
 | DOC-01 | P2 | Docs | Decision numbers D70–D82 and D97–D99 are used twice for different decisions | fixed |  |  |
 | DOC-02 | P3 | Docs | `start-client.sh` was renamed; the Linux README and the other launchers still named it | **fixed** 2026-11-13 |  | 2026-11-13 |
 | DOC-03 | P3 | Docs | Current decisions that later ones contradict (D2, D44, D84, D115, D242); a stale row in `ranges.md`; stale lines in two notes | **fixed** 2026-11-17 (log audit: D44, D84, D115 superseded; D2, D242 noted) |  | 2026-11-17 |
@@ -2630,3 +2638,140 @@ test that was seen to fail first; the details are in `implementation-notes/bug-e
 
 Still open from these batches: UX-90 (other status messages, BITV 4.1.3) and UX-91 (Firefox, the down arrow into a new
 table). Released with them on 2026-11-25: claudia-core 0.38.0, -computes 0.13.0, -composes 0.19.0, -creates 0.21.0.
+
+## Round of 2026-11-25 (bug eater, batch 4; branch `batch-4`): marked 2026-11-25 with the owner's agreement
+
+Proposed by the bug eater and agreed by the owner on 2026-11-25; the index above says so. Each item has its commit and a
+test that was seen to fail first; the details are in `implementation-notes/bug-eater-batch-4.md`. CODE-47 was postponed
+(D2004); the bugs found in the batch are logged in `bugtracker-open.md` ("Found in batch 4").
+
+| Item | Evidence |
+|---|---|
+| CODE-25 | `test_pptx.py`, `test_odp.py` (names of slides and objects, round trip and kept-file patch); D2006 |
+| UX-70 | `web/tests/export-losses.test.ts`; `tests/test_loss_words.py` (every code an export reports has words); used in the browser |
+| CODE-45 | `test_pptx.py` ("Title and Content" deck: places, heading font, the master's bullet, no loss, patch keeps the placeholder); used in the browser |
+| UX-90 | `web/tests/live-regions.test.ts` (no status region made by a condition, written out or bound; no screen reader was heard) |
+| PROC-62 | `clients/neutralino/tests/files.test.ts` waits for the answer (reproduced with no time to settle); CI's Windows job green |
+| CODE-66 | `test_pictures.py` (add, move, turn, rename, describe, remove in a kept xlsx and ods); LibreOffice reads the files |
+| CODE-70 | `test_xlsx_pivots.py`, `test_ods_pivots.py` |
+| PROC-37 | `test_server_export_import.py`; D2005 |
+
+### CODE-25 · Object names are lost in pptx and odp without a word · P2 · fixed 2026-11-25 (`batch-4`)
+**Evidence (measured):** renaming a slide and exporting reports `not-written: names`; renaming an object reports
+nothing, because the `objects` facet counts as written. **Fix:** write the names (`p:cNvPr/@name`, `draw:name`; and the
+slide names: `p:cSld/@name`, the page's `draw:name`), read them on import (suffixing duplicates), then drop `names` from
+the unwritten facets. Until then every presentation's export lists `names` as not written.
+**Measured** again on `main` at `a2e9cf1f`: since slide names moved into the slides' records (D1470), not even
+`not-written: names` was reported any more; a round trip lost every name without a word. **Fix** on `batch-4`: the names
+are written (`p:cNvPr/@name`, `p:cSld/@name`; `draw:name` of an object and of a page) and read back, duplicates told
+apart as `Name (2)` (`distinct_name`); a page called `page<n>` has no name; an unnamed slide's page gets the first free
+`page<n>`. **Tests:** `test_pptx.py` and `test_odp.py`, "the names of slides and objects go out and come back", the
+kept-file patch, duplicates, a picture's name.
+
+### UX-70 · What an export could not keep is never shown · P2 · size 2 · fixed 2026-11-25 (`batch-4`)
+**Found** while writing the slide's loss (`slide_plan.py`): `export_office` answers with `losses` (`{kind, detail,
+count}`) for xlsx and ods, and composes and creates have their own, but no client reads them (`ExportedFile.losses` in
+`web/app/lib/base-session.ts` is never shown). The person is not told that a chart tab became a sheet, that a formula
+was written as its value, or (since E6.31) that a slide was written as a sheet. Evidence: **read**. **Acceptance:** after
+an export that lost something, the person is told what, in words, once per kind (the scenario "Downloading as xlsx or
+ods says that a slide became a sheet" of `specs/computes/slides.feature` is one of them).
+**Fix** on `batch-4`, to the design the owner agreed on 2026-11-25 (`notes/mockups/export-dialog-tracked-changes.svg`,
+panel B): after Export the dialog says "The file does not hold:", one line per kind (with how many when more than one)
+and a sentence why or what to do, then "Everything else is in the file."; a format that reported nothing lost says
+"Everything is in the file."; a format that does not report says nothing more. The words of every code are in
+`web/app/lib/export-losses.ts`; a code nobody has put into words is still said, with its code. The result is in a
+`role=status` region that is always in the dialog (BITV 4.1.3). **Test:** `web/tests/export-losses.test.ts`; used in
+the browser once (odt of a typed text: "Who typed which words"). The export of a kept file reports three more kinds,
+which have words too: `not-patched` (written anew), `removed-…` (what went with a deleted part, by the kind of thing)
+and `stale-reference`. **Guard:** `tests/test_loss_words.py` reads the codes the Python sources report and finds words
+for every one an export can report (the import-only ones are named there).
+
+### CODE-45 · pptx placeholders (titles, body text) are not imported at all · P2 · fixed 2026-11-25 (`batch-4`)
+**Measured** (found while fixing CODE-44, reported to the owner as bug A, size 1): `pptx._classify` takes text boxes,
+auto shapes and pictures only, so a placeholder — the title and the body text of nearly every slide made from a
+layout — is left out of the model, and with it its words and its font. Most decks from PowerPoint come in nearly empty.
+The stand-in-fonts sample uses a text box for its title for that reason. **Acceptance:** a deck made from the default
+"Title and Content" layout imports with its title and body as objects (in their placeholder's place and size, the
+title's words in the theme's heading font), round-trips through `apply_edits_to_pptx` keeping the placeholder, and
+`pptx_import_losses` reports nothing for them. Touches the object ids, the losses and the export; its own patch.
+**Fix** on `batch-4`: a title, subtitle or body placeholder with words is read as a text box in its layout's place and
+size (the title in the heading font, a body's first paragraph with its master's bullet, read through the layout's and
+the master's list styles); an empty one shows nothing and is no loss; footers, dates and slide numbers stay `object`.
+The patch keeps the placeholder and writes `buNone` for a bullet taken away. Left out (new bug, see the batch-4 note):
+the size and alignment a placeholder inherits (a title's 44 pt, centred) are neither read nor reported.
+
+### UX-90 · Other status messages may not be announced either · P2 · size 3 · fixed 2026-11-25 (`batch-4`)
+**Read** (helper, UX-88): about 25 elements with `role="status"` are made with `v-if` together with their text, among
+them `AdminFonts.vue`, `AdminLogin.vue`, `OpenDialog.vue`, `PrintPreview.vue`, `RecoveryKeyDialog.vue`,
+`StylesDialog.vue`, `FontReportBanner.vue` and the redaction banner in `DocumentFrame.vue`. A live region that appears
+with its content may not be read out (BITV 4.1.3). UX-88 fixed the notice only.
+**Fix** on `batch-4`: 28 such regions in 23 components (one with a bound role: `ContainerFace.vue`, status or alert). The
+`role="status"` is now on a wrapper that is always on the page,
+and the condition is on what it says inside it; an empty one takes no room (`[role="status"]:empty` is placed
+absolutely in `app.css`, not hidden, so it stays in the accessibility tree). **Test:** `web/tests/live-regions.test.ts`
+reads every template with Vue's own parser and finds no `role="status"` or `aria-live="polite"` element made or shown by
+a condition, written out or bound. `role="alert"` is left as it is: an alert is announced when it appears. A region
+that comes with a whole new view (a dialog that opens, the part of the Import dialog for a chosen file) is read with that
+view and is not changed. Not heard with a screen reader.
+
+### PROC-62 · A test of the Neutralino client fails now and then on Windows · P3 · size 3 · fixed 2026-11-25 (`batch-4`)
+**Measured:** CI of `main` at `ebeed301`, job "Neutralino client on Windows": `tests/files.test.ts` › Files › "opens a
+PDF to print in the computer's viewer, from a folder of its own, without asking where (D502)" failed with
+`expected [] to deeply equal [ Array(1) ]` (432 ms). The push did not touch `clients/`, the same test passed at
+`30e69f2b`, and the job passed when it was run again. Not read further. **Acceptance:** the test waits for what it
+expects instead of for a time, and passes on Windows repeatedly.
+**Cause** (reproduced on Linux by giving the tests no time to settle: four tests fail, this one with the same
+`expected [] to deeply equal [ Array(1) ]`): the tests waited 10 ms for real files to be written, which a slow disk
+does not always manage. **Fix** on `batch-4`: each test waits (up to 5 s) until the core has answered its requests, and no
+longer for a time. Run ten times in a row here; Windows is CI's.
+
+### CODE-66 · A picture added to an imported workbook is not written into it · P3 · fixed 2026-11-25 (`batch-4`)
+`apply_edits_to_xlsx` / `apply_edits_to_ods` change only the cells, looks, names, widths and charts of the original file's XML;
+a picture added in computes after an import is reported (`object`) and not in the file (a fresh export has it, D1233).
+**Fix.** The patch adds an `xdr:pic` and its media part to the sheet's drawing (`Drawings.add_picture` is there for it) and a
+`draw:frame` and its `Pictures/` part to the sheet's `table:shapes`; moving, turning or describing a picture changes its frame
+or anchor; removing one takes it and its part out. **Acceptance.** Import a workbook, add, move, turn and remove a picture,
+export: the file has what the model has and `xlsx_unwritten_changes` is empty (`test_pictures.py`, a patch case for each).
+Found while building D1233.
+**Fix** on `batch-4`: `xlsx_picture_patch` and `ods_picture_patch` patch the pictures as the chart patches patch the
+charts, with the same `Drawings` (xlsx) and `SheetShapes` (ods, taken out of the chart patch) and the fresh export's
+`picture_anchor` / `picture_frame` for an added one; a moved, resized or turned picture keeps the rest of what the file
+gives it (its anchor is pinned again, its `rot` or `draw:transform` set, an ods frame in a cell taken onto the sheet),
+a removed one takes its bytes with it unless another picture shows them; pictures are no longer fresh-only in
+`_unwritten`. **Test:** "api: a picture added to an imported xlsx/ods is in the export" (`test_pictures.py`: added,
+moved and resized, turned, renamed and described, removed, removed with its bytes still shown, in an ods cell, made
+decorative beside the file's own extensions, an SVG; both formats); LibreOffice 24 reads each patched file as it reads
+the fresh export of the same model.
+
+### CODE-70 · The patch of a kept file does not add pivot tables · P3 · fixed 2026-11-25 (`batch-4`)
+Same cause and same shape as CODE-66: `apply_edits_to_xlsx` / `_ods` change what the file already has. A pivot table
+defined in computes after an import is reported and not written. **Acceptance.** Import a workbook, define a pivot, export:
+the file has it, or `xlsx_unwritten_changes` names it and the test says so.
+**Fix** on `batch-4`: the patches write the pivots defined since the import with the fresh export's own writers:
+`put_pivots` (taken out of `add_pivots`; the caches are numbered on from those the file has, in its one `pivotCaches`)
+and `data_pilot_tables` (into the file's `table:data-pilot-tables`, made where it has none); `written_pivots` takes the
+names to write, so what a file holds as values only is said for those alone (`pivot-table` with `room`, `source`,
+`empty`). A pivot of the file that was changed or removed is still not written and still reported. **Test:** "api: a
+pivot defined in an imported file is in the export" (`test_xlsx_pivots.py`, `test_ods_pivots.py`: into a file without
+pivots, beside one the file has, and in xlsx one with no room for its filter); LibreOffice 24 reads the pivots of each
+patched file.
+
+### PROC-37 · The history and chat of an export are not read back · P2 · fixed 2026-11-25 (`batch-4`)
+**Evidence (read, measured by the tests).** `write_export` puts `history.jsonl` and `chat.jsonl` in the zip for an owner and
+`read_export` returns them, but `import_state` takes only `state`; the new document starts with one `core.Import` step. D1272
+says the history comes in with its authors as plain text ("former people"). **Not built** because the history of an export
+is the commands of another document, with revisions that mean nothing in the new one; what a person would want is the list of
+who did what, not commands that can be undone. **Options.** (a) a read-only "History of the original" kept as one note in the
+new document's history, text only, with the names as text; (b) the commands replayed with their authors as former people;
+(c) log it and leave the import as content only. **Proposal:** (a) in slice C. The mock-up's sentence "The people named in its
+history are not given access; their names stay in the history as former people" is **not** on the import dialog until this
+is built; the dialog says "Nobody else is given access." and nothing about names.
+
+**Fix** on `batch-4` (D2005, the owner chose (a)): the import of an owner's export carries the history and the chat of
+the original as one read-only note of its `core.Import` step (`Import.original`): a line per step (who, when, what the
+original's history said of it) and per chat message for everybody (private messages stay out); the names are text. It is
+nobody's undo step, as the import is not; redacting the whole import takes it away. History & Chat shows it folded under
+the import's step ("History of the original"); the import dialog now says the mock-up's sentence about names when the
+export brings a history (`with_history` in the upload answer), and "Nobody else is given access." otherwise. **Test:**
+"importing an owner's export adds one note with who did what" (`test_server_export_import.py`), and "the upload says
+whether the export brings a history".

@@ -25,11 +25,12 @@ from claudia_computes_io import (
 from lxml import etree
 from test_ods_charts import S1, a_workbook, put_chart
 
-from claudia_computes import CellAnchor, ObjectBody, VisualObject, WorkbookModel
+from claudia_computes import CellAnchor, ObjectBody, SheetId, VisualObject, WorkbookModel
+from claudia_computes.model import Sheet
 from claudia_core import ContainerDefinition, ImageAsset, ImageImport, Paragraph, blank_png, decode_image
 from claudia_odf_io import NS as ODF
-from claudia_odf_io import Loss, problems, read_manifest
-from claudia_opc_io import read_parts, write_parts
+from claudia_odf_io import Loss, LossLog, problems, read_manifest
+from claudia_opc_io import DECORATIVE_URI, read_parts, write_parts
 
 XDR = "http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing"
 A = "http://schemas.openxmlformats.org/drawingml/2006/main"
@@ -198,15 +199,6 @@ def test_xlsx_a_picture_is_written_so_it_is_no_loss_but_a_text_box_still_is():
     assert xlsx_unwritten_changes(model) == (Loss("object", "", 1),)
 
 
-def test_xlsx_a_picture_added_to_an_imported_file_is_still_reported_until_a_kept_file_is_patched():
-    before = a_workbook()
-    original = workbook_to_xlsx(before)
-    after = a_workbook()
-    put_picture(after)
-    assert xlsx_unwritten_changes(after, before) == (Loss("object", "", 2),)  # (the object and the image it shows)
-    assert apply_edits_to_xlsx(original, before, after) is not None
-
-
 # ------------------------------------------------------------------------------------------------------------- ods
 def content_of(data: bytes) -> etree._Element:
     return etree.fromstring(read_parts(data)["content.xml"])
@@ -342,3 +334,195 @@ def test_a_cropped_picture_of_a_file_stays_in_it_and_is_reported():
     data = write_parts(parts)
     assert [obj for obj in xlsx_to_workbook(data).objects.values() if obj.body.kind == "image"] == []
     assert kinds(xlsx_import_losses(data))["picture"] == 1
+
+
+# ----------------------------------------------------------------------------- a picture in an imported file (CODE-66)
+S2 = SheetId("s2")
+FORMATS = {
+    "xlsx": (workbook_to_xlsx, xlsx_to_workbook, apply_edits_to_xlsx, xlsx_unwritten_changes),
+    "ods": (workbook_to_ods, ods_to_workbook, apply_edits_to_ods, ods_unwritten_changes),
+}
+
+
+def a_file(fmt: str, *, picture: bool) -> bytes:
+    """A workbook of two sheets as a file of ``fmt``, with a picture called Logo at C3 of the first, or none."""
+    model = a_workbook()
+    model.add_sheet(Sheet(S2, "More"), None)
+    if picture:
+        put_picture(model, at=(2, 2), size=(200, 100), name="Logo", description="Our logo")
+    return FORMATS[fmt][0](model)
+
+
+def edited(fmt: str, original: bytes, change) -> tuple[WorkbookModel, bytes, dict[str, int]]:
+    """``original`` imported, changed by ``change`` and exported by patching the file: the model, the file and what the
+    patch said it lost. Nothing is left unwritten."""
+    _, read, patch, unwritten = FORMATS[fmt]
+    baseline, current = read(original), read(original)
+    change(current)
+    lost = LossLog()
+    data = patch(original, baseline, current, losses=lost)
+    assert unwritten(current, baseline) == ()
+    return current, data, kinds(lost.result())
+
+
+def shown(model: WorkbookModel) -> list[tuple]:
+    """The pictures of ``model``, stacked as they are, as a file says them: where, how big, how turned, called what,
+    saying what, showing what."""
+    return [
+        (obj.anchor.sheet, obj.anchor.row, obj.anchor.col, obj.body.w, obj.body.h, obj.body.rotation)
+        + (obj.body.name, obj.body.description, model.images[model.picture_of(obj.body)].data)
+        for sheet in model.sheets
+        for obj in model.objects_on(str(sheet))
+        if obj.body.kind == "image"
+    ]
+
+
+def the_picture(model: WorkbookModel) -> VisualObject:
+    (picture,) = [obj for obj in model.objects.values() if obj.body.kind == "image"]
+    return picture
+
+
+def moved(model: WorkbookModel) -> None:
+    picture = the_picture(model)
+    model.replace_object(replace(picture, anchor=CellAnchor(S1, 6, 4), body=replace(picture.body, w=100, h=50)))
+
+
+def turned(model: WorkbookModel) -> None:
+    picture = the_picture(model)
+    model.replace_object(replace(picture, body=replace(picture.body, rotation=90)))
+
+
+def described(model: WorkbookModel) -> None:
+    picture = the_picture(model)
+    model.replace_object(replace(picture, body=replace(picture.body, name="Seal", description="The seal")))
+
+
+def added(model: WorkbookModel) -> None:
+    put_picture(model, a_png(30, 30), "p9", at=(9, 3), size=(60, 60), name="Stamp", description="A stamp")
+
+
+@pytest.mark.parametrize("fmt", ["xlsx", "ods"])
+@pytest.mark.parametrize("had_one", [False, True], ids=["file-without-pictures", "file-with-one"])
+def test_api_a_picture_added_to_an_imported_file_is_in_the_export(fmt, had_one):
+    current, data, lost = edited(fmt, a_file(fmt, picture=had_one), added)
+    assert shown(FORMATS[fmt][1](data)) == shown(current)
+    assert len(shown(current)) == 1 + had_one
+    assert lost == {}
+
+
+@pytest.mark.parametrize("fmt", ["xlsx", "ods"])
+@pytest.mark.parametrize(
+    "change",
+    [moved, turned, described],
+    ids=["moved-and-resized", "turned", "renamed-and-described"],
+)
+def test_api_a_picture_of_an_imported_file_that_is_changed_is_changed_in_the_export(fmt, change):
+    current, data, lost = edited(fmt, a_file(fmt, picture=True), change)
+    assert shown(FORMATS[fmt][1](data)) == shown(current)
+    assert lost == {}
+
+
+@pytest.mark.parametrize("fmt", ["xlsx", "ods"])
+def test_api_a_picture_removed_from_an_imported_file_is_gone_from_the_export_with_its_bytes(fmt):
+    current, data, lost = edited(
+        fmt, a_file(fmt, picture=True), lambda model: model.delete_object(the_picture(model).id)
+    )
+    assert shown(FORMATS[fmt][1](data)) == []
+    assert not [name for name in read_parts(data) if name.startswith(("xl/media/", "Pictures/"))]
+    if fmt == "ods":
+        assert not [name for name in read_manifest(read_parts(data)["META-INF/manifest.xml"]) if "Pictures/" in name]
+        assert problems(data) == []
+    assert lost == {}
+
+
+def test_api_a_decorative_picture_added_to_an_imported_ods_is_written_and_its_mark_is_a_loss():
+    def decorative(model: WorkbookModel) -> None:
+        put_picture(model, object_id="p9", at=(9, 3), decorative=True)
+
+    _, data, lost = edited("ods", a_file("ods", picture=False), decorative)
+    assert len(frames_of(data)) == 1
+    assert problems(data) == []
+    assert lost == {"decorative": 1}
+
+
+def test_api_a_picture_added_to_an_imported_xlsx_opens_in_openpyxl():
+    import openpyxl
+
+    _, data, _ = edited("xlsx", a_file("xlsx", picture=True), added)
+    assert len(openpyxl.load_workbook(BytesIO(data))["Data"]._images) == 2  # noqa: SLF001
+
+
+def in_its_cell(data: bytes) -> bytes:
+    """An ods whose one picture is in the cell it hangs at, as LibreOffice keeps a picture anchored to a cell."""
+    parts = read_parts(data)
+    content = etree.fromstring(parts["content.xml"])
+    (frame,) = content.xpath("//table:shapes/draw:frame", namespaces=ODF)
+    shapes = frame.getparent()
+    shapes.getparent().remove(shapes)
+    cell = content.xpath("//table:table[1]/table:table-row[3]/table:table-cell[3]", namespaces=ODF)[0]
+    for side in ("x", "y"):
+        frame.set(f"{{{ODF['svg']}}}{side}", "0cm")
+    cell.insert(0, frame)
+    parts["content.xml"] = etree.tostring(content, xml_declaration=True, encoding="UTF-8")
+    return write_parts(parts)
+
+
+@pytest.mark.parametrize("change", [moved, turned], ids=["moved", "turned"])
+def test_api_a_picture_an_ods_has_in_a_cell_is_taken_onto_the_sheet_when_it_is_placed_again(change):
+    def placed_and_described(model: WorkbookModel) -> None:
+        change(model)
+        described(model)
+
+    current, data, lost = edited("ods", in_its_cell(a_file("ods", picture=True)), placed_and_described)
+    assert shown(ods_to_workbook(data)) == shown(current)
+    assert len(frames_of(data)) == 1
+    assert not content_of(data).xpath("//table:table-cell/draw:frame", namespaces=ODF)
+    assert problems(data) == []
+    assert lost == {}
+
+
+@pytest.mark.parametrize("fmt", ["xlsx", "ods"])
+def test_api_a_picture_removed_whose_bytes_another_shows_keeps_them(fmt):
+    model = a_workbook()
+    asset = put_picture(model, object_id="p1", name="One")
+    put_picture(model, asset, object_id="p2", at=(9, 1), name="Two")
+    original = FORMATS[fmt][0](model)
+
+    def remove_one(current: WorkbookModel) -> None:
+        current.delete_object(next(obj.id for obj in current.objects.values() if obj.body.name == "One"))
+
+    current, data, _ = edited(fmt, original, remove_one)
+    assert shown(FORMATS[fmt][1](data)) == shown(current)
+    assert asset.data in read_parts(data).values()
+
+
+def test_api_a_picture_of_an_xlsx_made_decorative_keeps_the_files_own_extensions_of_it():
+    creation = (
+        '<a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}"><a16:creationId xmlns:a16="urn:a16" id="{1}"/></a:ext>'
+    )
+    parts = read_parts(a_file("xlsx", picture=True))
+    parts["xl/drawings/drawing1.xml"] = parts["xl/drawings/drawing1.xml"].replace(
+        b'descr="Our logo"/>', f'descr="Our logo"><a:extLst>{creation}</a:extLst></xdr:cNvPr>'.encode()
+    )
+
+    def decorative(model: WorkbookModel) -> None:
+        picture = the_picture(model)
+        model.replace_object(replace(picture, body=replace(picture.body, decorative=True, description="")))
+
+    current, data, lost = edited("xlsx", write_parts(parts), decorative)
+    (properties,) = drawing(data).findall(".//xdr:pic/xdr:nvPicPr/xdr:cNvPr", X)
+    (extensions,) = properties.findall("a:extLst", X)
+    assert [ext.get("uri") for ext in extensions] == ["{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}", DECORATIVE_URI]
+    assert the_picture(xlsx_to_workbook(data)).body.decorative
+    assert lost == {}
+
+
+def test_api_an_svg_picture_added_to_an_imported_xlsx_is_written_beside_a_blank_one_and_said():
+    svg = an_svg()
+
+    def an_svg_picture(model: WorkbookModel) -> None:
+        put_picture(model, svg, "p9", at=(9, 3), size=(40, 20))
+
+    _, data, lost = edited("xlsx", a_file("xlsx", picture=False), an_svg_picture)
+    assert svg.data in read_parts(data).values()
+    assert lost == {"svg-fallback": 1}

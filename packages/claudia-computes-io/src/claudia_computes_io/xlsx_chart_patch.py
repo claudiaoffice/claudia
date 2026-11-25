@@ -31,8 +31,8 @@ from .xlsx_charts import (
     FileChart,
     anchor_element,
     chart_xml,
-    file_charts,
     new_drawing,
+    pinned_at,
 )
 from .xlsx_patch import PackagePatch, UnsupportedEdit, serialized
 from .xlsx_pictures import picture_anchor
@@ -54,7 +54,8 @@ _MAIN = "http://schemas.openxmlformats.org/spreadsheetml/2006/main"
 
 
 class Drawings:
-    """The drawings of the sheets of a package, changed for charts: only what is changed is written back."""
+    """The drawings of the sheets of a package, changed for charts, pictures and boxes: only what is changed is written
+    back."""
 
     def __init__(
         self,
@@ -140,6 +141,34 @@ class Drawings:
         """A text box or a shape on the sheet in ``sheet_part``: the anchor ``make(number)`` gives (D1479)."""
         self._append(self._drawing_of(sheet_part), make)
 
+    def pin(self, drawing: str, anchor: etree._Element, drawn: etree._Element, placed: Placed) -> etree._Element:
+        """The anchor of ``drawn`` (a chart's frame, a picture) in ``drawing`` made one pinned to the cell ``placed``
+        says and as big, and returned: an anchor of the one-cell kind (a file's two-cell anchor says its size by the
+        cells it reaches, which a move would change). What is drawn stays as the file has it."""
+        pinned = etree.fromstring(
+            f'<xdr:oneCellAnchor xmlns:xdr="{NS["xdr"]}">{pinned_at(placed.pin, placed.width, placed.height)}'
+            "<xdr:clientData/></xdr:oneCellAnchor>"
+        )
+        parent = anchor.getparent()
+        assert parent is not None  # (an anchor of a drawing)
+        parent.replace(anchor, pinned)
+        pinned.insert(2, drawn)
+        self.changed.add(drawing)
+        return pinned
+
+    def take_out(self, drawing: str, anchor: etree._Element) -> None:
+        """An anchor taken out of ``drawing``, with each relationship of what it draws that nothing else in the drawing
+        uses, and the part of each that nothing in the package reaches any more (a picture's bytes)."""
+        root = self.roots[drawing]
+        root.remove(anchor)
+        self.changed.add(drawing)
+        used = {value for element in root.iter() for value in _relationship_ids(element)}
+        targets = {rid: target for rid, _, target in relationships(self.patch.parts, drawing)}
+        for rid in {value for element in anchor.iter() for value in _relationship_ids(element)} - used:
+            self.patch.remove_relationship(drawing, rid)
+            if rid in targets and not self.patch.reached(targets[rid]):
+                self.patch.forget(targets[rid])
+
     def remove(self, chart: FileChart) -> None:
         """A chart's anchor taken out of its drawing, and its part (with what only it uses) out of the package."""
         parent = chart.anchor.getparent()
@@ -165,23 +194,31 @@ class Drawings:
             self.patch.parts[part] = serialized(root)
 
 
+def _relationship_ids(element: etree._Element) -> list[str]:
+    """The ids of the relationships an element names (``r:embed``, ``r:link``, ``r:id``)."""
+    return [str(value) for key, value in element.attrib.items() if str(key).startswith(f"{{{NS['r']}}}")]
+
+
 # ------------------------------------------------------------------------------------------------ a kept file
 class ChartPatch:
     """The charts of one run of :func:`~claudia_computes_io.apply_edits_to_xlsx`."""
 
-    def __init__(  # noqa: PLR0913 (the file's parts and sheets, the two models, and where to say what was lost)
+    def __init__(
         self,
-        patch: PackagePatch,
+        drawings: Drawings,
         package: Package,
         baseline: WorkbookModel,
         current: WorkbookModel,
-        found: tuple[Sequence[FileChart], dict[str, etree._Element]],
         lose: Callable[[str, str], None],
     ) -> None:
-        self.patch, self.baseline, self.current, self.lose = patch, baseline, current, lose
-        self.charts, roots = found
-        self.drawings = Drawings(patch, roots, self.charts)
-        self.by_object = {chart.object_id: chart for chart in self.charts if chart.held is not None}
+        self.patch, self.drawings, self.baseline, self.current, self.lose = (
+            drawings.patch,
+            drawings,
+            baseline,
+            current,
+            lose,
+        )
+        self.by_object = {chart.object_id: chart for chart in drawings.charts if chart.held is not None}
         self.sheet_parts = {sheet.sheet_id: sheet.part for sheet in package.sheets}
         self.changed = False
 
@@ -202,8 +239,6 @@ class ChartPatch:
         for object_id, now in new.items():
             if object_id not in old:
                 self._add(now)
-        if self.changed:
-            self.drawings.finish()
         return self.changed
 
     # -- changes -----------------------------------------------------------------------------------------------
@@ -237,17 +272,8 @@ class ChartPatch:
         return True
 
     def _place(self, file: FileChart, now: VisualObject) -> None:
-        """The chart pinned to the cell it is at now and as big as it is now: its frame in an anchor of the one-cell
-        kind (a file's two-cell anchor says its size by the cells it reaches, which a move would change)."""
-        moved = anchor_element("", 1, "", placed_on_its_sheet(self.current, now))
-        placeholder = moved.find("xdr:graphicFrame", NS)
-        assert placeholder is not None
-        moved.replace(placeholder, file.frame)
-        parent = file.anchor.getparent()
-        assert parent is not None
-        parent.replace(file.anchor, moved)
-        file.anchor = moved
-        self.drawings.changed.add(file.drawing)
+        """The chart pinned to the cell it is at now and as big as it is now."""
+        file.anchor = self.drawings.pin(file.drawing, file.anchor, file.frame, placed_on_its_sheet(self.current, now))
         self.changed = True
 
     def _describe(self, file: FileChart, text: str) -> None:
@@ -275,15 +301,16 @@ class ChartPatch:
 
 
 def patch_charts(
-    patch: PackagePatch,
+    drawings: Drawings,
     package: Package,
     baseline: WorkbookModel,
     current: WorkbookModel,
     lose: Callable[[str, str], None],
 ) -> bool:
-    """The charts of a kept file brought up to date with ``current``; whether anything in the file changed. What a file
-    cannot keep of the charts is said through ``lose`` (``chart``, with the detail). Raises
+    """The charts of a kept file (``drawings``, made with the file's charts) brought up to date with ``current``;
+    whether anything in the file changed (:meth:`Drawings.finish` writes the drawings back). What a file cannot keep
+    of the charts is said through ``lose`` (``chart``, with the detail). Raises
     :class:`~claudia_computes_io.UnsupportedEdit` for a baseline that does not know the charts of the file."""
     for detail in chart_losses(current):
         lose("chart", detail)
-    return ChartPatch(patch, package, baseline, current, file_charts(package), lose).run()
+    return ChartPatch(drawings, package, baseline, current, lose).run()

@@ -87,11 +87,12 @@ from .extensions import INVERSE_NAMES, NOTE_MARKER, from_excel, restore_alternat
 from .layout_sizes import MAX_SIZED_COLUMNS, MAX_SIZED_ROWS, changed_sizes
 from .ods_boxes import box_frame, held_box_of
 from .ods_chart_files import FileChart, drawn_frames, file_charts
-from .ods_chart_patch import ChartPatch
+from .ods_chart_patch import ChartPatch, SheetShapes
 from .ods_charts import Parts, a_chart, new_shapes
 from .ods_layout import OdsSizes, read_sizes
 from .ods_looks import OdsLooks, column_styles, read_looks
 from .ods_names import NamesPatch, SheetPlace, global_elements, local_expressions, read_names, sheet_names
+from .ods_picture_patch import PicturePatch
 from .ods_pictures import decorative_count, held_picture, part_name, picture_frame
 from .ods_pivots import data_pilot_tables, read_pivots
 from .ods_write_looks import OdsLookWriter, OdsRestyler
@@ -1006,9 +1007,9 @@ def ods_export_losses(model: WorkbookModel, *, rasterised: bool = False) -> tupl
     losses = LossLog()
     for detail in chart_losses(model):
         losses.add("chart", detail)
-    for loss in picture_losses(model, rasterised=rasterised):
-        losses.add(loss.kind, loss.detail, loss.count)
     placed = placed_objects(model)
+    for loss in picture_losses(model, placed, rasterised=rasterised):
+        losses.add(loss.kind, loss.detail, loss.count)
     pictures = written_pictures(model, placed, svg_beside_png=False)
     if decorative := decorative_count(pictures) + sum(1 for box in written_boxes(placed) if box.obj.body.decorative):
         losses.add("decorative", count=decorative)
@@ -1038,6 +1039,10 @@ def ods_unwritten_changes(model: WorkbookModel, baseline: WorkbookModel | None =
     return workbook_unwritten_changes(
         model, baseline, written=ODS_WRITTEN | (FRESH_ONLY if baseline is None else set())
     )
+
+
+#: What ``office:spreadsheet`` may hold after its ``table:data-pilot-tables`` (ODF 1.3, 9.1.2).
+_AFTER_PILOTS = ("consolidation", "dde-links")
 
 
 # -- edit and re-export ----------------------------------------------------------------------------------------------
@@ -1161,7 +1166,8 @@ class _Patch:
                 self._patch_table(table, sheet)
         self._add_tables()
         self._patch_names()
-        self._patch_charts()
+        self._add_pivots()
+        self._patch_drawings()
         if not self.changed:
             return self.original
         self._add_styles()
@@ -1173,22 +1179,43 @@ class _Patch:
             update_package_meta(self.parts, self.info)
         return write_parts(self.parts)
 
-    def _patch_charts(self) -> None:
-        """The charts: added, removed, moved, drawn again; and what a file cannot keep of the ones there are (D462)."""
+    def _patch_drawings(self) -> None:
+        """The charts (added, removed, moved, drawn again; and what a file cannot keep of the ones there are, D462) and
+        the pictures (added, removed, moved, turned, described, CODE-66)."""
         for detail in chart_losses(self.current):
             self._lose("chart", detail)
-        patch = ChartPatch(
-            self.part,
-            self.parts,
-            self.baseline,
-            self.current,
-            self.charts,
-            {SheetId(table.id): table.element for table in self.tables},
-            self.new_tables,
-            self._lose,
+        tables = {SheetId(table.id): table.element for table in self.tables}
+        shapes = SheetShapes(self.part, tables, self.new_tables)
+        charts = ChartPatch(self.part, self.parts, self.baseline, self.current, self.charts, shapes, self._lose)
+        drawn = {one.order: one for one in drawn_frames(self.tables)}
+        found = {one.body.id: drawn[one.order] for one in self.held if one.kind == "picture"}
+        pictures = PicturePatch(self.parts, shapes, (self.baseline, self.current), found, self._lose)
+        changed = charts.run()
+        changed |= pictures.run()
+        self.changed |= changed
+
+    def _add_pivots(self) -> None:
+        """The pivots defined since the file was read, put into its ``table:data-pilot-tables`` as a new file has
+        them, or said (``pivot-table``, with why) where a file holds one as its values only (CODE-70). A pivot of the
+        file that was changed or removed is not written (:func:`ods_unwritten_changes` says so)."""
+        added = [entry.name for entry in self.current.pivots.sorted() if self.baseline.pivots.get(entry.name) is None]
+        written = written_pivots(self.current, added)
+        for loss in written.losses:
+            self._lose(loss.kind, loss.detail, loss.count)
+        pilots = data_pilot_tables(self.current, written.pivots, sheet_names(self.current))
+        if pilots is None:
+            return
+        held = self.spreadsheet.find("table:data-pilot-tables", NS)
+        later = next(
+            (e for e in self.spreadsheet if isinstance(e.tag, str) and local_name(e.tag) in _AFTER_PILOTS), None
         )
-        if patch.run():
-            self.changed = True
+        if held is not None:
+            self.part.insert_into(held, *pilots)
+        elif later is not None:
+            self.part.insert_before(later, pilots)
+        else:
+            self.part.insert_into(self.spreadsheet, pilots)
+        self.changed = True
 
     def _patch_names(self) -> None:
         """The names of the workbook and of its sheets (D457)."""
@@ -1605,7 +1632,11 @@ def apply_edits_to_ods(
     What it patches: a cell whose content changed (a run of equal cells or rows is split so that only that cell
     changes, and the cell keeps its look, its comment and its merge), a formula whose result changed because a cell it
     reads did (the value written beside it), a cell, row or column whose look changed (an automatic style of its own,
-    D380), and sheets that were added, removed or renamed (``losses`` gets a
+    D380), the charts (D462) and the pictures (added, removed, moved, turned, described; ``losses`` gets
+    ``decorative`` for a picture marked so, and what cannot be written of an added one, CODE-66), a pivot defined
+    since the import (a ``table:data-pilot-table`` as a new file has it; ``losses`` gets ``pivot-table`` with why for
+    one a file holds as its values only; a pivot of the file that was changed or removed is not written, CODE-70), and
+    sheets that were added, removed or renamed (``losses`` gets a
     ``removed-...`` entry for what went with a removed sheet, and a ``stale-reference`` when the file has something that
     may still name a sheet that is gone or has another name). ``info`` brings ``meta.xml`` up to date for a file that
     was changed (D411).

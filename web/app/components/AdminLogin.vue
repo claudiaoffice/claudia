@@ -47,7 +47,9 @@ async function signIn() {
       <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="var(--iris)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="shield">
         <path d="M12 2l8 3.5v5.3c0 5-3.4 8.9-8 10.2-4.6-1.3-8-5.2-8-10.2V5.5L12 2z" /><path d="M9.5 12l1.8 1.8 3.2-3.6" />
       </svg>
-      <p v-if="notice" class="notice" role="status" data-testid="login-notice">{{ notice }}</p>
+      <div role="status">
+        <p v-if="notice" class="notice" data-testid="login-notice">{{ notice }}</p>
+      </div>
       <h1>{{ t('Sign in to {label}', { label }) }}</h1>
       <p class="lead">{{ t('These settings are for administrators only. Sign in with your name and password to continue.') }}</p>
 
@@ -55,9 +57,11 @@ async function signIn() {
       <label class="field">{{ t('Password') }}<PasswordInput v-model="password" autocomplete="current-password" /></label>
 
       <p v-if="formError" class="error" role="alert">{{ formError }}</p>
-      <p v-if="wait.said.value" class="error" role="status" aria-live="polite" data-testid="login-wait">
-        {{ wait.said.value }} <span v-if="wait.waiting.value" aria-hidden="true">({{ wait.left.value }} s)</span>
-      </p>
+      <div role="status">
+        <p v-if="wait.said.value" class="error" data-testid="login-wait">
+          {{ wait.said.value }} <span v-if="wait.waiting.value" aria-hidden="true">({{ wait.left.value }} s)</span>
+        </p>
+      </div>
 
       <div class="spacer" />
       <div class="buttons">

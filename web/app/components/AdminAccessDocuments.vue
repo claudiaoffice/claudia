@@ -208,10 +208,12 @@ async function applyDocs() {
     <p v-if="loadError" class="error" role="alert">{{ loadError }}</p>
 
     <h2>{{ t('Administrators') }}</h2>
-    <div v-if="resetWords" class="reset-note" role="status" data-testid="reset-note">
-      <span class="mark" aria-hidden="true">!</span>
-      <p>{{ t("Administrators were reset from the server's console on {date} (previously {names}). If they should no longer know the access secret, rotate it below.", resetWords) }}</p>
-      <button class="link" type="button" @click="dismissReset">{{ t('Dismiss') }}</button>
+    <div role="status">
+      <div v-if="resetWords" class="reset-note" data-testid="reset-note">
+        <span class="mark" aria-hidden="true">!</span>
+        <p>{{ t("Administrators were reset from the server's console on {date} (previously {names}). If they should no longer know the access secret, rotate it below.", resetWords) }}</p>
+        <button class="link" type="button" @click="dismissReset">{{ t('Dismiss') }}</button>
+      </div>
     </div>
     <div class="card">
       <div v-for="(a, i) in admins" :key="a.name" class="admin-row">

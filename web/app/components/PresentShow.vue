@@ -186,9 +186,11 @@ onBeforeUnmount(() => {
           <span class="big mono">{{ clock }}</span>
         </div>
       </header>
-      <div v-if="changes" class="changes" role="status" data-testid="show-changes">
-        <span>{{ t('Changes since you started: {n}', { n: changes }) }}</span>
-        <button type="button" data-testid="show-take-in" @click="takeInChanges">{{ t('Update now') }}</button>
+      <div role="status">
+        <div v-if="changes" class="changes" data-testid="show-changes">
+          <span>{{ t('Changes since you started: {n}', { n: changes }) }}</span>
+          <button type="button" data-testid="show-take-in" @click="takeInChanges">{{ t('Update now') }}</button>
+        </div>
       </div>
       <div class="views">
         <section class="now" :aria-label="t('Current slide')">

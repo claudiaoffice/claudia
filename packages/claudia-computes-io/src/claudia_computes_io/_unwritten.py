@@ -9,6 +9,7 @@ there is one (``KINDS``)."""
 from __future__ import annotations
 
 from collections.abc import Collection
+from typing import cast
 
 from claudia_computes import WorkbookModel
 from claudia_odf_io import Loss, is_written, unwritten_changes
@@ -18,12 +19,15 @@ from ._pictures import PICTURE_KINDS
 
 #: The facets a converter writes, by the name :func:`facets` gives them: the cells with their looks, and the look
 #: definitions they name.
-ODS_WRITTEN: frozenset[str] = frozenset({"sheets", "styles", "palette", "number_formats", "names", "layout", "charts"})
-XLSX_WRITTEN: frozenset[str] = frozenset({"sheets", "styles", "palette", "number_formats", "names", "layout", "charts"})
-#: What only a fresh export writes: a pivot table, a picture and a slide's text boxes and shapes are put into a file
-#: that is made, not yet into one that is kept (an edit of an import reports them until its patch learns them; a
-#: workbook with a slide is always written anew).
-FRESH_ONLY: frozenset[str] = frozenset({"pivots", "pictures", "boxes"})
+ODS_WRITTEN: frozenset[str] = frozenset(
+    {"sheets", "styles", "palette", "number_formats", "names", "layout", "charts", "pictures"}
+)
+XLSX_WRITTEN: frozenset[str] = frozenset(
+    {"sheets", "styles", "palette", "number_formats", "names", "layout", "charts", "pictures"}
+)
+#: What only a fresh export writes in full: a pivot table (a kept file is given only the ones defined since the import)
+#: and a slide's text boxes and shapes (a workbook with a slide is always written anew).
+FRESH_ONLY: frozenset[str] = frozenset({"pivots", "boxes"})
 
 #: The code a facet is reported under, where an export reported it before the facets existed.
 KINDS: dict[str, str] = {
@@ -97,9 +101,13 @@ def workbook_unwritten_changes(
     model: WorkbookModel, baseline: WorkbookModel | None, *, written: Collection[str]
 ) -> tuple[Loss, ...]:
     """What differs between ``baseline`` (``None``: an empty workbook, the start of a fresh export) and ``model`` in a
-    facet outside ``written``."""
-    start = facets(baseline if baseline is not None else WorkbookModel())
-    found = unwritten_changes(start, facets(model), written=written, kinds=KINDS)
+    facet outside ``written``. A kept file is given the pivots defined since the import (CODE-70): of its pivots, only
+    one of the file that was changed or removed is reported."""
+    start, end = facets(baseline if baseline is not None else WorkbookModel()), facets(model)
+    if baseline is not None:
+        known = cast("dict[str, object]", start["pivots"])
+        end["pivots"] = {name: each for name, each in cast("dict[str, object]", end["pivots"]).items() if name in known}
+    found = unwritten_changes(start, end, written=written, kinds=KINDS)
     if "names" not in written:
         return found
     return in_order((*found, *unheld(model, baseline).result()))

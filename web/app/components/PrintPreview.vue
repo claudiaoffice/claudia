@@ -358,7 +358,9 @@ defineExpose({ print, download, status })
         <p v-for="(n, i) in noteText" :key="i" class="note" data-testid="print-note"><span aria-hidden="true">ⓘ</span> {{ n }}</p>
         <p class="note" data-testid="print-recorded"><span aria-hidden="true">ⓘ</span> {{ t('Printing and saving a PDF are recorded in the document\'s exit record: who, when and how many pages. It is written when the file is saved or the page is sent, not when the preview opens.') }}</p>
         <p v-if="problem" class="note bad" role="alert" data-testid="print-problem">{{ problem }}</p>
-        <p v-if="outcome" class="note" role="status" data-testid="print-outcome">{{ outcome }}</p>
+        <div role="status">
+          <p v-if="outcome" class="note" data-testid="print-outcome">{{ outcome }}</p>
+        </div>
         <span class="grow" />
         <div class="zoom" role="group" :aria-label="t('Zoom')">
           <button type="button" :title="t('Smaller')" @click="zoomBy(0.8)">−</button>
