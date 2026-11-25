@@ -43,7 +43,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        # macOS is switched off, not removed (the owner, 2026-11-25): GitHub's hosted macOS runners came late or not at
+        # all, and the job ran into its timeout. Put `macos-latest` back into the list once another runner service
+        # with Macs is connected; nothing else in this job needs to change for it.
+        os: [ubuntu-latest, windows-latest] # , macos-latest
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
       - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7.6.0
