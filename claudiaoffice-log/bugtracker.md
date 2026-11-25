@@ -35,7 +35,7 @@ The index is the status of record; a section below keeps the status of the round
 re-checked. **Opened** and **Fixed** are filled from 2026-11-20 on: for older items only where the status already gave
 the date.
 
-### Open (88)
+### Open (89)
 
 By priority (P1, P2, P3, then items that wait for a decision without one), then by ID.
 
@@ -128,6 +128,7 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | PROC-31 | P3 | Process / i18n | `po/claudia.pot` goes stale at every merge of `main`: only its `#:` source lines move, no msgid changes, and the i18n check of `check_debt.py` fails on them | **new, open** (measured) |  |  |
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |  |  |
 | UX-80 | P3 | UX / a11y | The word "hidden" on its pill in the Styles dialog is light on light in dark mode (1.04:1, BITV 1.4.3) | **new**, fix on `batch-1` (proposed) | 2026-11-24 |  |
+| PROC-56 | P3 | Process / E2E | The examples of one scenario outline wrote one screenshot file, so the next example overwrote the picture of a failure | **new**, fix on `batch-1` (proposed) | 2026-11-25 |  |
 | UX-06 | — | UX | Web menu differs from decisions D4/D5 | needs decision |  |  |
 
 ### Fixed (167)
@@ -2844,6 +2845,12 @@ fails every time with "Choose Table, Text or Slides first.". The password hashin
 `/api/docs` answer and clicks the kind's button, which waits for it. **Test:**
 `tests/e2e/specs/test_person.py::test_a_person_makes_a_document_of_her_kind_when_the_list_of_kinds_comes_late`.
 
+### PROC-56 · The examples of one outline wrote one screenshot file · P3 · size 3 · new, fix proposed
+**Seen** while chasing PROC-55: its first failure's screenshot was overwritten by the next example. `looked_after` (and
+two helpers of the administrator and Claude specs) cut the test's name at 80 characters, and the examples of an outline
+differ only at the end of theirs. **Fix** on `batch-1`: `shot_name` keeps a long name's start, its end (the example) and a
+short digest. **Test:** `tests/e2e/specs/test_shot_names.py`.
+
 ## Round of 2026-11-24 (bug eater, batch 1; branch `batch-1`): proposed, not yet marked
 
 Proposed by the bug eater for the owner's agreement (`notes/bug-eater.md`); the index above changes only once the owner
@@ -2869,7 +2876,8 @@ agrees. Each item has its commit on `batch-1` and a test that was seen to fail f
 | UX-74 | fixed | `web/tests/ai-provider.test.ts` |
 | UX-32 | fixed | `web/e2e/grid-a11y.cjs` |
 | UX-80 | fixed (found in this batch) | `web/tests/tokens.test.ts` |
-| PROC-55 | fixed (found in this batch) | `tests/e2e/specs/test_person.py` |
+| PROC-55 | fixed (found in this batch); the test servers hash at the lowest cost too | `tests/e2e/specs/test_person.py`, `tests/e2e/test_live_servers.py` |
+| PROC-56 | fixed (found in this batch) | `tests/e2e/specs/test_shot_names.py` |
 | CODE-92 | fixed (found in this batch, D2003) | `test_server_admin_i18n.py`, `web/tests/admin-api.test.ts` |
 
 Also proposed for closing from the triage (`notes/bug-eater-queue.md`, section 1): CODE-35, CODE-37, CODE-69, UX-06,

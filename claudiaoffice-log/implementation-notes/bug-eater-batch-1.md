@@ -55,14 +55,19 @@ Fixed on the owner's word (2026-11-24), each with its test first:
 | UX-63 | The German for "exit record" is "Export-Log" (the owner's word) | `web/tests/print-preview-wording.test.ts` | — |
 | UX-66 | `StyleBar.vue` and `StyleMenu.vue` take `--shadow-raised` too | `web/tests/tokens.test.ts` | — |
 
-Found while fixing PROC-55 (the owner decides: fix or log):
+Found while fixing PROC-55, and done on the owner's word (2026-11-25):
 
-- **Size 3:** a failing spec's screenshot is overwritten by the next example of the same outline: `looked_after` cuts the
-  file name at 80 characters, so all examples share it, and the evidence of a failure is lost.
-- The same unwaited `count()` branch as PROC-55 in `test_names.py` (lines 118 and 425) and `test_claude_consent.py` (216
-  and 230); not checked whether they race.
-- Speed: the E2E servers run at the production password-hashing cost (about 0.75 s a hash); the lowest cost the settings
-  allow makes creating a document 2–3 times faster in the specs.
+- **PROC-56 (size 3):** a failing spec's screenshot was overwritten by the next example of the same outline (names cut at
+  80 characters). `shot_name` keeps the start, the end and a digest; three helpers use it.
+- The same unwaited `count()` as PROC-55 in `test_names.py` and `test_claude_consent.py`: read, and not races. The menus
+  and the new-sheet dialog open from the page's own state before the click returns; each "I read" of the consent specs
+  follows a step that waited for the dialog. PROC-55's race needed a network answer. The new-sheet step now expects its
+  dialog instead of silently skipping the sheet.
+- The test servers (`live.server`, `run_e2e.py`) hash at the lowest cost the settings allow (`quick_hashing`), unless a
+  test saved settings of its own.
+- The glossary notes "Export-Log" as the German for **Exit record**.
+- UX-79 and PROC-53 were renumbered UX-80 and PROC-55: `win-installer-fix` gave those numbers to other items the same
+  evening. The commits of patches 0037, 0040 and 0041 still say the old numbers.
 
 Not fixed (menu work is agreed with the owner first):
 
@@ -123,7 +128,5 @@ Left, and why:
   formatting by language (D2003 says so).
 - A refusal that comes from another package (fonts, typesetting, document file) stays English, as for the document
   protocol (E5.17).
-- The glossary lists "export log" among the words to avoid for **Exit record**, while the owner chose "Export-Log" as its
-  German; the glossary is English-only and has no German column. Asked of the owner, not changed.
 - The PROC-55 test delays the server's answer by 500 ms on purpose, to provoke the race; nothing waits on that timer
   (the fixed helper waits for the kind's button).
