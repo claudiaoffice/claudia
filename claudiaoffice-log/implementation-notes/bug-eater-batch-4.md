@@ -30,7 +30,7 @@ on `batch-4` (one commit per item).
 **Versions:** additions under *Unreleased* in the changelogs of claudia-creates-io, -computes-io, -core and -server; the
 API snapshot regenerated for PROC-37; versions are raised at release, as the repository does.
 
-## CODE-47: what D2004 needs (the owner decides)
+## CODE-47: what D2004 needs (postponed by the owner, 2026-11-25)
 
 A paragraph of composes has exactly one style; its `runs` only record who wrote what, and only paragraph styles exist
 (D306's marks were never built). To give words their own font, as D379 does for cells, composes needs styled stretches
@@ -41,8 +41,8 @@ model: when every run of a paragraph has the same font of its own, a provisional
 
 ## Assumptions
 
-- CODE-25: PowerPoint's automatic names ("TextBox 3", "Title 1") come in as the objects' names: they are what PowerPoint
-  shows in its selection pane. LibreOffice names no shape; a page it calls `page<n>` is read as no name.
+- CODE-25: PowerPoint's automatic names ("TextBox 3", "Title 1") come in as the objects' names; the owner decided to keep
+  them (D2006). LibreOffice names no shape; a page it calls `page<n>` is read as no name.
 - CODE-45: only the first paragraph of a body takes its bullet (the model holds one paragraph per box, as for a text box);
   the size and alignment a placeholder inherits are not read (see CODE-101 below). A picture placeholder stays `object`.
 - UX-70: a count is said as "(n)" after the line, so no line needs a plural form; the reason a kept file was written anew
@@ -56,7 +56,7 @@ model: when every run of a paragraph has the same font of its own, a provisional
 - PROC-37 (helper): steps of every branch, ordered by time; an undo or redo step is "undo · …" as the panel says it; a
   redacted chat message keeps its line without words; the note has no size cap.
 
-## Found in this batch (proposed IDs, not logged yet)
+## Found in this batch (logged by the owner's word, 2026-11-25)
 
 | ID | Size | What | How known |
 |---|---|---|---|

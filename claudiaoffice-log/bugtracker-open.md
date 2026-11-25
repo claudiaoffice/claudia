@@ -27,7 +27,7 @@ The index is the status of record; a section below keeps the status of the round
 re-checked. **Opened** and **Fixed** are filled from 2026-11-20 on: for older items only where the status already gave
 the date.
 
-### Open (62)
+### Open (71)
 
 By priority (P1, P2, P3, then items that wait for a decision without one), then by ID.
 
@@ -35,6 +35,8 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 |---|---|---|---|---|---|---|
 | SEC-19 | P2 | Security / Perf | Imports run on the worker pool with no memory cap; `check_package` bounds the input, not the parsed model | **new, open** |  |  |
 | SEC-22 | P2 | Security | Who wrote which stretch (`runs`, E9.10) is part of the content state, so a viewer still receives it: in the `blocks` method, in `text` events, in the snapshot and in her own sealed file, although D1261 says no data should be behind "show who wrote what" for a viewer | **new, open**, needs the owner's decision (mask it live and in the viewer's file, or accept it as content) |  |  |
+| SEC-24 | P2 | Security / privacy | An owner's export writes every chat message into the file, also the private ones between other people that she cannot read in the document | **new, open** (read) | 2026-11-25 |  |
+| SEC-25 | P2 | Security | An editor can send a whole `Import` command through `apply` and so replace the document (or write a forged "History of the original") | **new, open** (read) | 2026-11-25 |  |
 | PERF-02 | P2 | Performance | Journal `fsync` on the event loop for every edit | verified open (2026-11-12; see CODE-13) |  |  |
 | PERF-10 | P2 | Performance | What-if outcomes are recalculated on the event loop: 9 s per edit in a 1,000-cell model | **new, open** |  |  |
 | UX-22 | P2 | UX | The history speaks three dialects: one per app | **new, open** |  |  |
@@ -46,6 +48,7 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | UX-71 | P2 | UX / computes | Text on a workbook's slide is drawn in the workbook's Body text (13 px), tiny on a 1600-unit slide | **needs decision** (measured; size 2) | 2026-11-22 |  |
 | UX-90 | P2 | UX / a11y | About 25 other `role="status"` elements appear with their text already in them (`v-if`), so screen readers may not announce them (BITV 4.1.3), as the notice did (UX-88) | **fix on `batch-4`** (proposed: fixed) | 2026-11-25 |  |
 | UX-91 | P2 | UX / composes / Firefox | In Firefox the down arrow from the paragraph above a new table does not put the caret in its first box (Chromium does) | **new, open** (measured on CI) | 2026-11-25 |  |
+| UX-93 | P2 | UX / a11y | The font banner ("This document uses fonts this server does not have …") is dark text on a dark ground, about 1.1:1 (BITV 1.4.3 asks 4.5:1) | **new, open** (measured) | 2026-11-25 |  |
 | CODE-25 | P2 | Code / Export | A renamed object loses its name in pptx and odp without the export saying so (D450) | **fix on `batch-4`** (proposed: fixed) |  |  |
 | CODE-31 | P2 | Code / i18n | The history speaks English to everybody: command labels and summaries are not translated | **new, open** |  |  |
 | CODE-45 | P2 | Code / Import | pptx placeholders (titles, body text) are not imported at all | **fix on `batch-4`** (proposed: fixed) |  |  |
@@ -86,7 +89,7 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | CODE-38 | P3 | Code / naming | computes kept the generic names (`Session`, `Workspace.vue`, `standin.py`) | **new, open** |  |  |
 | CODE-39 | P3 | Code / web | `OpenDialog.vue` does five jobs in 1,615 lines | **new, open** |  |  |
 | CODE-41 | P3 | Code / Arch | Import cycles in computes are worked around with 29 function-level imports | **new, open** |  |  |
-| CODE-47 | P3 | Code / Import | Words of a docx with a font of their own are a `formatting` loss | **new, open** |  |  |
+| CODE-47 | P3 | Code / Import | Words of a docx with a font of their own are a `formatting` loss | open, **postponed** by the owner (2026-11-25; D2004 decided, not built) |  |  |
 | CODE-53 | P3 | Code / web | The failure text of a rendered container is clipped in a small frame and cannot be read in full | open |  |  |
 | CODE-62 | P3 | Code / Linux client | A window that revives the shared server while the old one still holds the port starts it on a random port, not the remembered one | **new, open** |  |  |
 | CODE-63 | P3 | Code / composes | The Format ▸ Styles menu lists composes' built-in `contents-title` and `contents-1` to `contents-9` as "custom" styles | **new, open** (read) |  |  |
@@ -95,6 +98,12 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | CODE-70 | P3 | computes I/O | The patch of a kept XLSX or ODS does not add pivot tables either (reported), as it does not add pictures (CODE-66) | **fix on `batch-4`** (proposed: fixed) |  |  |
 | CODE-74 | P3 | Code | `export_content` still answers `{format: "claudia-export 1", ...}`, a JSON that is neither the zip of D1270 nor documented anywhere; it is recorded as an export and the panel says "exported as claudia-export 1"; no window calls it | **new, open** (size 3; remove it or make it the zip) |  |  |
 | PROC-62 | P3 | Process / CI | A test of the Neutralino client failed once on Windows CI and passed when the job was run again: "opens a PDF to print in the computer's viewer…" (`clients/neutralino/tests/files.test.ts`) | **fix on `batch-4`** (proposed: fixed) | 2026-11-25 |  |
+| UX-92 | P3 | UX / i18n | History & Chat says "undo" and "redo" in English before a step, and the "History of the original" copies it | **new, open** (read) | 2026-11-25 |  |
+| CODE-101 | P3 | Code / Import | A pptx placeholder's inherited size and alignment (a title's 44 pt, centred) are neither read nor reported | **new, open** (read) | 2026-11-25 |  |
+| CODE-102 | P3 | Code / Import | A pptx box with several bulleted paragraphs comes in with one bullet (one paragraph per box), and no loss says so | **new, open** (measured) | 2026-11-25 |  |
+| CODE-103 | P3 | computes I/O | The ods chart patch: a chart in a cell that is moved and described in one export makes overlapping edits, so the kept file is written anew | **new, open** (read) | 2026-11-25 |  |
+| CODE-104 | P3 | computes I/O | The pictures of an xlsx that LibreOffice wrote are not read in, nor the turned ones of such an ods | **new, open** (measured) | 2026-11-25 |  |
+| CODE-105 | P3 | composes I/O | docx: a paragraph mark's own run properties count as a `formatting` loss, though nothing is lost | **new, open** (measured) | 2026-11-25 |  |
 
 ## Security
 
@@ -349,7 +358,8 @@ style's font and is reported as `formatting`, since the text model has no direct
 way direct formatting comes in (D379 for computes: provisional styles); until then the loss report is right.
 **Batch 4** (D2004 decided, not built): a paragraph has one style and no styled words inside it, so D2004 needs those
 first (`implementation-notes/bug-eater-batch-4.md` says what); a smaller step would give a paragraph whose words all have
-the same font of their own a provisional paragraph style. The owner decides which.
+the same font of their own a provisional paragraph style. **Postponed** by the owner (2026-11-25); the decision is
+written as D2004.
 
 ### CODE-53 · The failure text of a rendered container is clipped in a small frame · P3 · open
 **Read** (`RenderedFace.vue`, `.state` has `overflow: hidden`; the frame is as big as the picture was): a long message,
@@ -676,3 +686,72 @@ expects instead of for a time, and passes on Windows repeatedly.
 `expected [] to deeply equal [ Array(1) ]`): the tests waited 10 ms for real files to be written, which a slow disk
 does not always manage. **Fix** on `batch-4`: each test waits (up to 5 s) until the core has answered its requests, and no
 longer for a time. Run ten times in a row here; Windows is CI's.
+
+## Found in batch 4 of the bug eater (2026-11-25)
+
+Logged by the owner's word of 2026-11-25. "Helper" means a helper of batch 4 found it while fixing CODE-66, CODE-70 or
+PROC-37; the evidence label says how far it was checked.
+
+### SEC-24 · An owner's export carries private chat messages · P2 · size 2 · open
+**Read:** `_export_claudia` in `claudia_server/protocol.py` writes `chat_payloads(ctx.document.chat)`, every message,
+when an owner exports with the history; the `chat` method gives each person only the messages for everybody and those
+to or from her (`readable`, same file). So an owner's file holds private messages between two other people that she
+cannot read in the document, and anybody she gives the file to can. (D2005 already keeps private messages out of the
+note an imported export brings; this is the export itself.) Found by a helper (PROC-37), confirmed by reading.
+**Acceptance:** an export of a document in which Ben wrote privately to Cleo holds no such message when Ann exports it;
+one Ann wrote or received privately, the owner decides (keep, or leave out too).
+
+### SEC-25 · An editor can replace the document with a raw `Import` · P2 · size 2 · open
+**Read:** `apply` (`_apply` in `protocol.py`) decodes any command the registry knows and executes it as the editor; it
+refuses only the assistant (SEC-10). `core.Import` is such a command, so an editor can replace the whole content, and
+since D2005 also give it a forged `original` ("History of the original" with words nobody said). The app's own import
+path is an owner's upload. Found by a helper (PROC-37), confirmed by reading. **Acceptance:** `apply` with an `Import`
+from an editor is refused (`forbidden`), and the history is unchanged; the owner says whether any other command is
+for the server's own use only.
+
+### UX-93 · The font banner cannot be read · P2 · size 2 · open
+**Measured** in Chromium (batch 4, opening a pptx in creates): `[data-testid=font-banner]` has the background
+`rgb(42, 35, 66)` (the fallback of `--panel-2`, which is not defined) and the text `rgb(31, 26, 51)` (`--ink`): a
+contrast of about 1.1:1. BITV 1.4.3 asks 4.5:1, so this is a divergence from the standard. `FontReportBanner.vue` was
+not changed by batch 4 (its wrapper for UX-90 has no style). **Acceptance:** the banner's text and its links and
+buttons reach 4.5:1 in light and dark mode, checked by a test of the computed colours.
+
+### UX-92 · History & Chat says "undo" and "redo" in English · P3 · size 3 · open
+**Read:** `SidePanel.vue` shows `{{ row.entry.origin }} ·` before an undone or redone step, the raw `undo` or `redo`;
+the "History of the original" (D2005) copies the same words into its lines on the server. Close to CODE-31 (the
+summaries are English too), but these two words are the web's own. **Acceptance:** with German chosen, the panel says
+"Rückgängig ·" / "Wiederholt ·" (or the agreed words); the note of an imported export keeps the origin apart from the
+words, so the reader's language says it.
+
+### CODE-101 · A pptx placeholder's inherited size and alignment are lost silently · P3 · size 2 · open
+**Read** while fixing CODE-45 (and seen in the browser: the title of a "Title and Content" slide comes in at the size of
+body text, left aligned). A placeholder takes its size and alignment from its layout and master (a title's 44 pt,
+centred); the import reads only the bullet (CODE-45) and the font (`_pptx_fonts`), and `pptx_import_losses` reports
+nothing (CODE-45's acceptance). An explicit size on a run is a `look` loss; an inherited one is not seen at all.
+**Acceptance:** the title of the default "Title and Content" slide comes in centred and at its size, or the import says
+that its size is not kept.
+
+### CODE-102 · A pptx box with several bulleted paragraphs has one bullet · P3 · size 2 · open
+**Measured** in the browser (batch 4): a body placeholder with "First point" and "Second point" shows a bullet before
+the first only. The model holds one paragraph per box, with one list item, and the import joins the paragraphs with
+line breaks; it reads the bullet of the first paragraph only. Text boxes always did so; CODE-45 makes it common, as
+every body placeholder is bulleted. Nothing reports it. **Acceptance:** a box of three bulleted paragraphs comes in
+with three bullets, or the import says that the bullets after the first are not kept.
+
+### CODE-103 · ods: a chart in a cell moved and described in one export is written anew · P3 · size 3 · open
+**Read** by a helper (CODE-66), not reproduced: in `ods_chart_patch`, a chart frame anchored in a cell that is both
+moved and given a description since the import gets two edits of the same element; the patch raises `UnsupportedEdit`
+and the export falls back to a fresh file (`not-patched`), losing what the kept file had beyond the model.
+**Acceptance:** that export patches the kept file, with the chart at its new place and with its description.
+
+### CODE-104 · Pictures of a file LibreOffice wrote are not read in · P3 · size 3 · open
+**Measured** by a helper (CODE-66) with LibreOffice: an xlsx that LibreOffice wrote from one of our files comes in
+without any of its pictures; such an ods loses the turned ones. Files we write, fresh or patched, are read back with
+their pictures. The cause was not found. **Acceptance:** a picture (and a turned one) of an xlsx and an ods that
+LibreOffice saved comes in at its place.
+
+### CODE-105 · docx: a paragraph mark's run properties count as a loss · P3 · size 3 · open
+**Measured** by a helper (CODE-47 analysis): a docx paragraph whose mark has run properties of its own (`w:pPr/w:rPr`,
+which Word writes for nearly every paragraph) is counted as a `formatting` loss, though the properties of the mark are
+not visible in the text. So the import over-counts what it leaves out. **Acceptance:** a docx whose only run properties
+are those of paragraph marks reports no `formatting` loss.
