@@ -483,7 +483,7 @@
    "set_thing_name": "(self, thing_id: 'str', name: 'str') -> 'str'",
    "set_time": "(self, slide: 'str', seconds: 'int | None') -> 'int | None'",
    "settle": "(self, ctx) -> 'None'",
-   "setup_commands": "(language: 'str | None') -> 'tuple[Command, ...]'",
+   "setup_commands": "(language: 'str | None', *, translate: 'Callable[[str], str]') -> 'tuple[Command, ...]'",
    "thing_description": "(self, thing_id: 'str') -> 'str'",
    "thing_name": "(self, thing_id: 'str') -> 'str'",
    "time_of": "(self, slide: 'str') -> 'int | None'",

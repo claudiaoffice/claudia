@@ -87,7 +87,7 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | UX-60 | P3 | UX / composes | Dragging an object to another paragraph is "Moved an object" in the history; the mock names the object and the paragraph | **new, open** (divergence from the mock of D1352; size 3) | 2026-11-20 |  |
 | UX-65 | P3 | UX / composes | Search & replace panel, find-only state: the results list overflows its container and the "text" badge of a result is clipped at the panel edge | **new, open** (`web/app/components/SearchPanel.vue`; **measured** in the running app; size 3) | 2026-11-22 |  |
 | UX-86 | P3 | UX / computes | A colleague's name tag on a cell or an object in row 1 is hidden under the column header | **new, open** | 2026-11-25 |  |
-| UX-87 | P3 | UX / i18n | A new workbook's first sheet is "Sheet1" in every language, beside an offered "Blatt2" | **new, open** (read) | 2026-11-25 |  |
+| UX-87 | P3 | UX / i18n | A new workbook's first sheet is "Sheet1" in every language, beside an offered "Blatt2" | **fix on `batch-3-py`** (read) | 2026-11-25 |  |
 | UX-89 | P3 | UX / a11y | A table's accessible name is "Table 1 Options…": the Options… button is inside its caption | **new, open** | 2026-11-25 |  |
 | CODE-03 | P3 | Code | README is out of date | open (not re-checked) |  |  |
 | CODE-04 | P3 | Code | Untyped functions escape the type check | verified open |  |  |
@@ -3058,9 +3058,14 @@ only. No history entry is made, and the table's accessible description stays emp
 now of an object she selected, sits above the box. In row 1 that is under the column header, so the outline shows but
 her name does not.
 
-### UX-87 · A new workbook's first sheet is "Sheet1" in every language · P3 · size 3 · open
+### UX-87 · A new workbook's first sheet is "Sheet1" in every language · P3 · size 3 · fix on `batch-3-py`
 **Read** (helper, while fixing UX-76): `WorkbookModel.setup_commands` ignores `language`, so a German person gets
-"Sheet1" next to the offered "Blatt2".
+"Sheet1" next to the offered "Blatt2". **Fix** on `batch-3-py`: `DocumentModel.setup_commands` takes `translate` (the
+packages carry no catalog; the server passes its own in, as for the function help, D323), and computes calls the first
+sheet by the catalog's "Sheet" (the web's word for the next one) with a 1: "Blatt1" in German, "Sheet1" otherwise.
+**Test** (red before: "Sheet1" != "Blatt1"): `test_server_setup.py::test_a_new_workbooks_first_sheet_is_named_in_its_makers_language`
+and the two `first_sheet` tests of `test_computes_thing_names.py`. **Escaped** because: spec gap, the setup tests only
+asked a text and a deck for the maker's language.
 
 ### UX-88 · A notice may not be announced by a screen reader · P2 · size 3 · open
 **Read** (helper, while fixing UX-69): the toast is a `role=status` element created together with its text. Screen

@@ -14,7 +14,7 @@ Nothing in this module or its siblings does I/O.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, ClassVar, Self
 
@@ -44,11 +44,13 @@ class DocumentModel(ABC):
         """A new, empty document: the state before the first command."""
 
     @classmethod
-    def setup_commands(cls, language: str | None) -> tuple[Command, ...]:
+    def setup_commands(cls, language: str | None, *, translate: Callable[[str], str]) -> tuple[Command, ...]:
         """What a new document starts with beyond :meth:`empty`, as commands: a workbook its first sheet, a text its
         language. ``language`` is the language of its maker's interface (D915), or ``None`` when that is not a language
-        tag. The server runs them once, when it creates the document, as one :class:`~claudia_core.Setup` entry: in
-        the history, but nobody's undo step (UX-33). None by default."""
+        tag; ``translate`` says a word of the interface in that language (a workbook's first sheet is "Blatt1" for a
+        German person, UX-87). The packages carry no catalog: the server, which has one, passes it in. The server runs
+        the commands once, when it creates the document, as one :class:`~claudia_core.Setup` entry: in the history,
+        but nobody's undo step (UX-33). None by default."""
         return ()
 
     @abstractmethod

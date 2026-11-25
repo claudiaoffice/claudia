@@ -31,6 +31,8 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 
 ### Changed
+- **Breaking** — `TextModel.setup_commands(language, *, translate)` takes the core's new `translate` (UX-87); a
+  new text needs no word of it.
 - **Breaking** — a paragraph is called a paragraph (D1430, E1.18): the alias `Block` is gone (`Paragraph`, from
   claudia-core, is the class); `TextModel.paragraphs`, `paragraph()`, `paragraph_names`, `paragraph_descriptions`,
   `paragraph_kind` and the other `block_*` names say `paragraph`; `ParagraphAnchor` (anchor kind `paragraph`, its

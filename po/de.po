@@ -5233,7 +5233,7 @@ msgstr "Dieses Dokument teilen"
 msgid "Share…"
 msgstr "Teilen…"
 
-#: web/app/components/SidePanel.vue web/app/components/Workspace.vue web/app/lib/session.ts
+#: packages/claudia-computes/src/claudia_computes/model.py web/app/components/SidePanel.vue web/app/components/Workspace.vue web/app/lib/session.ts
 msgid "Sheet"
 msgstr "Blatt"
 

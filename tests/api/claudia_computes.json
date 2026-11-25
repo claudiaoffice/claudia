@@ -1154,7 +1154,7 @@
    "set_thing_description": "(self, thing_id: 'str', description: 'str') -> 'str'",
    "set_thing_name": "(self, thing_id: 'str', name: 'str') -> 'str'",
    "settle": "(self, ctx) -> 'None'",
-   "setup_commands": "(language: 'str | None') -> 'tuple[Command, ...]'",
+   "setup_commands": "(language: 'str | None', *, translate: 'Callable[[str], str]') -> 'tuple[Command, ...]'",
    "sheet": "(self, sheet_id: 'SheetId') -> 'Sheet'",
    "sheet_id_of": "(self, name: 'str') -> 'SheetId | None'",
    "sheet_name_of": "(self, sheet_id: 'SheetId') -> 'str | None'",

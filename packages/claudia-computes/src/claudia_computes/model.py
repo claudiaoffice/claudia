@@ -65,6 +65,10 @@ Content = dict | None  # None (empty) or {"t": "int"|"float"|"text"|"bool"|"form
 Cells = list[tuple[int, int, Content]]
 NameRestores = list[tuple[NameKey, NamedRange | None]]  # (key, the name as it was, None: there was none)
 
+#: The word a new workbook's first sheet is called by, said in its maker's language (UX-87); the same word as the
+#: web's "Sheet" that names the next one, so both are found in one entry of the catalog.
+SHEET = N_("Sheet")
+
 # Row height and column width (D135): sheet layout, not a cell style — a line not in ``Sheet.row_heights`` or
 # ``col_widths`` shows at the default. Pixels, matching the grid's own units; the bounds keep a line shrinkable
 # a long way without a drag ever hiding it outright (there is no separate hide-row/column feature yet).
@@ -508,12 +512,13 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor | SlideAnchor]):
         return cls()
 
     @classmethod
-    def setup_commands(cls, language: str | None) -> tuple[Command, ...]:
-        """A new workbook starts with its first sheet, ``s1`` called "Sheet1" (UX-33: before, the client added it as
-        the person's own first step, which her first Ctrl+Z took away again)."""
+    def setup_commands(cls, language: str | None, *, translate: Callable[[str], str]) -> tuple[Command, ...]:
+        """A new workbook starts with its first sheet, ``s1``, called "Sheet1" in its maker's language ("Blatt1",
+        UX-87), written as the web names the next one (UX-33: before, the client added it as the person's own first
+        step, which her first Ctrl+Z took away again)."""
         from .commands import AddSheet
 
-        return (AddSheet(SheetId("s1"), "Sheet1"),)
+        return (AddSheet(SheetId("s1"), f"{translate(SHEET)}1"),)
 
     def requirements(self) -> Requirements:
         """The fonts the styles ask for by name are what this document needs from the server (E1.9, D1306)."""

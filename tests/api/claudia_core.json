@@ -684,7 +684,7 @@
    "restore": "(state: 'dict') -> 'Self'",
    "serialize": "(self) -> 'dict'",
    "settle": "(self, ctx: 'Context') -> 'None'",
-   "setup_commands": "(language: 'str | None') -> 'tuple[Command, ...]'"
+   "setup_commands": "(language: 'str | None', *, translate: 'Callable[[str], str]') -> 'tuple[Command, ...]'"
   },
   "properties": []
  },

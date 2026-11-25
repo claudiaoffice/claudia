@@ -89,7 +89,7 @@ from .hosts import AllowedHosts, HostGuard
 from .http_refusal import install as install_refusals
 from .hub import Hub, HubError, same_document_message
 from .hyphenation import HyphenationService, hyphenation_router
-from .i18n import localized, message_of, msg
+from .i18n import localized, message_of, msg, translate
 from .idle import IdleMiddleware, IdleWatch
 from .login_throttle import LoginThrottle
 from .protocol import DEFAULT_LOCALE, RequestError, normalize_locale, parse_request
@@ -569,12 +569,14 @@ def _set_up(document, author: str, locale: str) -> None:
     """What a new document starts with (``DocumentModel.setup_commands``: a workbook's first sheet, a text's language,
     D915), as one ``Setup`` entry by its maker that is nobody's undo step (UX-33). Before, her client did this as her
     own first steps, and her first Ctrl+Z took them back. A thing the empty document already holds (a presentation's
-    first slide) is named in the same entry, in her language: every thing has a name (D550)."""
+    first slide) is named in the same entry, in her language: every thing has a name (D550). What the app names itself
+    is said in her language too (a workbook's first sheet, UX-87)."""
     try:
         language: str | None = normalize_language(locale)
     except LanguageError:
         language = None
-    commands = [*type(document.model).setup_commands(language), *naming_steps(document.model, locale)]
+    setup = type(document.model).setup_commands(language, translate=lambda word: translate(word, locale))
+    commands = [*setup, *naming_steps(document.model, locale)]
     if commands:
         document.execute(Setup(tuple(commands)), author=author)
 

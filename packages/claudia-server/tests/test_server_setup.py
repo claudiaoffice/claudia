@@ -55,6 +55,16 @@ def test_a_new_workbook_has_its_first_sheet_and_nothing_to_undo():
     assert isinstance(first.command, Setup) and first.author == "ann"
 
 
+@pytest.mark.parametrize(
+    ("locale", "name"), [("de", "Blatt1"), ("de-AT", "Blatt1"), ("en", "Sheet1"), ("fr", "Sheet1")]
+)
+def test_a_new_workbooks_first_sheet_is_named_in_its_makers_language(locale, name):
+    """UX-87: a German person got "Sheet1", and the web then offered her "Blatt2" for her next sheet. A language
+    without a catalog keeps the English word."""
+    document = made(WorkbookModel, locale=locale).open("plan")
+    assert [sheet.name for sheet in document.model.sheets.values()] == [name]
+
+
 @pytest.mark.parametrize("model_cls", [TextModel, SlideModel])
 def test_a_new_text_or_deck_is_in_the_language_of_its_makers_interface_and_has_nothing_to_undo(model_cls):
     document = made(model_cls, locale="de").open("plan")

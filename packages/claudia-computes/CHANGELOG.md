@@ -5,6 +5,10 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+### Changed
+- **Breaking** — `WorkbookModel.setup_commands(language, *, translate)` (UX-87): a new workbook's first sheet is
+  called by the word "Sheet" said by `translate` ("Blatt1" for a German person), no longer "Sheet1" for everybody.
+
 ### Fixed
 - Calculating a chain of formulas is linear again: a formula done no longer shifts the rest of its column's list of
   waiting formulas (PERF-13).

@@ -36,6 +36,19 @@ def test_a_thing_that_is_not_there_is_an_error(doc):
         doc.model.thing_name("nothing")
 
 
+def test_a_new_workbooks_first_sheet_is_called_by_the_word_of_its_makers_language():
+    """UX-87: it was "Sheet1" for everybody, while the web offers a German person "Blatt2" as her next sheet. This
+    package carries no catalog: the server passes in how a word is said in her language."""
+    german = {"Sheet": "Blatt"}.get
+    (first,) = WorkbookModel.setup_commands("de", translate=lambda word: german(word, word))
+    assert first == AddSheet(SheetId("s1"), "Blatt1")
+
+
+def test_a_new_workbooks_first_sheet_is_sheet1_where_the_word_is_not_translated():
+    (first,) = WorkbookModel.setup_commands(None, translate=lambda word: word)
+    assert first == AddSheet(SheetId("s1"), "Sheet1")
+
+
 # -- one namespace --------------------------------------------------------------------------------------------
 def test_a_chart_cannot_take_the_name_of_a_sheet(doc):
     with pytest.raises(ValueError, match="There is already a sheet called “Sheet1”"):

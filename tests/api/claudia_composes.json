@@ -625,7 +625,7 @@
    "set_thing_description": "(self, thing_id: 'str', description: 'str') -> 'str'",
    "set_thing_name": "(self, thing_id: 'str', name: 'str') -> 'str'",
    "settle": "(self, ctx: 'Context') -> 'None'",
-   "setup_commands": "(language: 'str | None') -> 'tuple[Command, ...]'",
+   "setup_commands": "(language: 'str | None', *, translate: 'Callable[[str], str]') -> 'tuple[Command, ...]'",
    "split": "(self, paragraph_id: 'str', offset: 'int', new_id: 'str', style: 'str', name: 'str' = '') -> 'None'",
    "style_in_use": "(self, style_id: 'str') -> 'bool'",
    "style_uses": "(self) -> 'dict[str, int]'",

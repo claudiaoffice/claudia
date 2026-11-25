@@ -218,5 +218,5 @@ def test_redacting_takes_what_was_written_about_a_slide_and_keeps_the_slide(doc)
 
 def test_a_new_document_still_starts_with_one_sheet():
     doc = Document(WorkbookModel(), store=MemoryStore())
-    doc.execute(WorkbookModel.setup_commands(None)[0], author="ana")
+    doc.execute(WorkbookModel.setup_commands(None, translate=lambda word: word)[0], author="ana")
     assert [(t.kind, t.id) for t in doc.model.tabs] == [("sheet", "s1")]

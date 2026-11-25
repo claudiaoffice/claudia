@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import re
 from collections import Counter
-from collections.abc import Iterator, Mapping
+from collections.abc import Callable, Iterator, Mapping
 from dataclasses import dataclass, replace
 from typing import ClassVar, Self
 
@@ -495,7 +495,7 @@ class TextModel(DocumentModel, ObjectModel[ParagraphAnchor]):
         return cls()
 
     @classmethod
-    def setup_commands(cls, language: str | None) -> tuple[Command, ...]:
+    def setup_commands(cls, language: str | None, *, translate: Callable[[str], str]) -> tuple[Command, ...]:
         """A new text starts in the language of its maker's interface (D915), set by the server when it creates
         the document rather than by her client as her own first step (UX-33)."""
         return () if language is None else (SetLanguage(language),)

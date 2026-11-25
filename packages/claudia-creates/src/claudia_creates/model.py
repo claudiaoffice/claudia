@@ -14,7 +14,7 @@ What is not here yet: templates and layouts (E10.4), groups, free colours.
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Mapping
+from collections.abc import Callable, Iterator, Mapping
 from typing import ClassVar, Self, TypeIs
 
 from claudia_core import (
@@ -163,7 +163,7 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         return model
 
     @classmethod
-    def setup_commands(cls, language: str | None) -> tuple[Command, ...]:
+    def setup_commands(cls, language: str | None, *, translate: Callable[[str], str]) -> tuple[Command, ...]:
         """A new presentation starts in the language of its maker's interface (D915), set by the server when it creates
         the document rather than by her client as her own first step (UX-33)."""
         return () if language is None else (SetLanguage(language),)
