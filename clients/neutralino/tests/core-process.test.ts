@@ -242,14 +242,6 @@ describe.each(PLATFORMS)('the core process built for %s', (platform) => {
       { env: coreEnvironment(home, { CLAUDIA_SHELL_APP: 'creates' }), stdio: ['ignore', 'pipe', 'inherit'] },
     )
     const corePid = await new Promise<number>((resolve) => parent.stdout!.once('data', (chunk) => resolve(Number(String(chunk).trim()))))
-    const isThere = (pid: number): boolean => {
-      try {
-        process.kill(pid, 0)
-        return true
-      } catch {
-        return false
-      }
-    }
     try {
       await neutralino.connected()
       parent.kill('SIGKILL')
@@ -267,14 +259,6 @@ describe.each(PLATFORMS)('the core process built for %s', (platform) => {
     // (CI, 2026-11-25): the page tells the core which process the window is (NL_PID), and the core watches that.
     const window = spawn(process.execPath, ['-e', 'setInterval(() => {}, 1000)'], { stdio: 'ignore' })
     start({})
-    const isThere = (pid: number): boolean => {
-      try {
-        process.kill(pid, 0)
-        return true
-      } catch {
-        return false
-      }
-    }
     try {
       await neutralino.connected()
       neutralino.dispatch('claudia.core', { kind: 'start', windowPid: window.pid })
@@ -287,7 +271,17 @@ describe.each(PLATFORMS)('the core process built for %s', (platform) => {
     }
   }, 30_000)
 
-  describe('without being told anything (what a window that was not started by the launcher, or a Neutralino that passes on no environment, gives it)', () => {
+  /** Whether a process is there: `kill(pid, 0)` sends nothing. */
+function isThere(pid: number): boolean {
+  try {
+    process.kill(pid, 0)
+    return true
+  } catch {
+    return false
+  }
+}
+
+describe('without being told anything (what a window that was not started by the launcher, or a Neutralino that passes on no environment, gives it)', () => {
     const suiteDir = () => suiteFolder(platform, home)
 
     function startBare(core: string): void {

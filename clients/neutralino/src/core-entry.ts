@@ -92,7 +92,7 @@ function main(): void {
   // The page says which process the window is (NL_PID): the core's parent is not always Neutralino (a shell on Windows).
   let watchingWindow = false
   const watchWindow = (pid: unknown): void => {
-    if (watchingWindow || typeof pid !== 'number' || !Number.isInteger(pid) || pid <= 1) return
+    if (watchingWindow || typeof pid !== 'number' || !Number.isInteger(pid)) return
     watchingWindow = true
     log(`the window is process ${pid}`)
     watchProcess({ pid, onGone: end })

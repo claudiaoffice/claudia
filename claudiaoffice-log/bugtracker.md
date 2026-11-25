@@ -2910,13 +2910,13 @@ uninstall check now says what is left and which processes there are.
 own server that answers there (the core starts it at that port), so the check was right.
 **Escaped** because: the advisory step had never run a window until CODE-93 was fixed.
 
-### CODE-96 · Neutralino logs two errors on every start · P3 · size 3 · fixed
+### CODE-96 · Neutralino logs two errors on every start · P3 · size 3 · fixed, unverified
 **Found** in the launcher's log (UX-82): `NE_RS_TREEGER` and `NE_RS_UNBLDRE` on a start that works. **Cause** (**read**, Neutralino's
 documentation of resource modes since v6.3, not measured): started without `--res-mode`, Neutralino looks for its resources in
 its own binary and in a `resources.neu`, which an app folder served from files does not have; the web view asks for `/favicon.ico`,
 which the folder does not have. **Fixed** 2026-11-25 (D752): `--res-mode=directory`, and `<link rel="icon" href="/icon.png">` in
 the shell page. **Tests:** `launch.test.ts` and `build-shell.test.ts` (red before), the scenario in
-`specs/desktop/windows-launcher.feature`. **Not run** with the real Neutralino: the log of the owner's next start is the check.
+`specs/desktop/windows-launcher.feature`. **Unverified:** not run with the real Neutralino, and the CI log of a green run does not print `launcher.log`; the log of the owner's next start is the check.
 **Escaped** because: nothing read the log of a start until UX-82 kept one.
 
 ### CODE-97 · A node.exe stays after its window is killed · P2 · size 2 · fixed
@@ -2927,7 +2927,7 @@ link having broken. Neutralino does not end extensions (its release notes, v4.0.
 broke, and on Windows the link stayed up. A window **closed** with `CloseMainWindow` left nothing (same step). **Fixed** 2026-11-25 (D753):
 the page tells the core the pid of its window (`NL_PID`) and the core watches it (a watch on the core's parent alone was
 tried first and failed in CI: on Windows the core's parent is a shell, not Neutralino). **Tests:** `shell-page.test.ts`, `parent-watch.test.ts` and `core-process.test.ts` (the window process killed outright, link still up; red before), the CI step *The core of a window ends when its window is closed or killed*
-(red before on windows-2022 and 2025, green after: see the run in the implementation note). **Not known:** why the link stays up.
+(red before on windows-2022 and 2025 in runs 45574749911 and the first of 45576250762; green after on both: run 45577231183, 2026-11-25). **Not known:** why the link stays up. **Open (size 3):** a window killed in its first second or two, before its page has sent `start`, leaves its core (seen once in CI).
 **Escaped** because: the core's end was only tested with a link that closes politely.
 
 ### UX-83 · The installer shows composes' icon for the whole suite · P3 · size 3 · fixed

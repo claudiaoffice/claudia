@@ -13,7 +13,6 @@ export interface ParentWatch {
   alive?: (pid: number) => boolean
   /** Said once, with the reason for the log. */
   onGone: (reason: string) => void
-  intervalMs?: number
 }
 
 const LOOK_EVERY_MS = 1000
@@ -42,7 +41,7 @@ export function watchProcess(watch: ParentWatch): () => void {
       clearInterval(timer)
       watch.onGone(`the process ${watch.pid} is gone`)
     }
-  }, watch.intervalMs ?? LOOK_EVERY_MS)
+  }, LOOK_EVERY_MS)
   // The looking must not keep a process alive that has nothing else to do.
   timer.unref()
   return () => clearInterval(timer)
