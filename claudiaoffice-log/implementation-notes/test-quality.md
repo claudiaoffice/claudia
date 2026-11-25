@@ -122,13 +122,21 @@ The first version of the time-limit test passed with the broken code: the fake c
 questions were never queued together. Holding the model until all three were asked fixed the test. That is why every
 rewritten test gets this check.
 
-## 5. Left as it is, and why
+## 5. The bugs the audit found, fixed the same day (owner's go-ahead)
 
-* `test_server_heavy_dispatch.py` steps the event loop with counted `sleep(0)`: deterministic, but bound to how many
-  `await`s the dispatcher has. An `idle()` on `HeavyDispatcher` would free it; for decision.
-* The GTK end-to-end test (`clients/linux/tests/test_e2e.py`) failed in three clusters, the last before run 101 of 200; it
-  polls everywhere since. Not reproduced here (no GTK display in this workspace).
-* The Windows sandbox test gives a child two seconds to start before the time limit kills it; not flaky in the history.
+PROC-67 (a stopped question cuts its read of a silent Anthropic), PROC-68 (the "must not break" mark and its check,
+D1663), PROC-69 (`HeavyDispatcher.idle()`), CODE-106 (public seams instead of private access) and PERF-14 (counted work,
+processor time where the cost is in C, D1661). Each is in `bugtracker-fixed.md` with its test.
+
+What the second round learnt: counting is blind to work in C, and a mutant of `since()` that copied the whole history
+with a slice passed the counted guard. Where the data lives in lists the clock backs the count up, in processor time,
+which a busy machine does not inflate. Two "breaks on purpose" patches of private names stay (`Round._precedents`,
+`paragraph._opcodes`): they are how a guard is proved, not how a behaviour is checked.
+
+Still as it was: the GTK end-to-end test that failed in three clusters before run 101 (not reproduced here); the
+Windows sandbox test's two seconds for a child to start; the remaining private reads of the Linux client's and the
+document file's own tests (not part of CODE-106); the wiring tests of `test_server_apps.py` and the `Mock` of the KDF
+start in `test_server_cli.py`.
 
 ## 6. What was run, and what could not be
 

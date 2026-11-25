@@ -20,7 +20,7 @@ PROC-24 to PROC-27, CODE-58 to CODE-61, SEC-19, UX-44; SEC-15 fixed (see "Round 
 
 ## Index
 
-### Fixed (232)
+### Fixed (237)
 
 By ID. Items closed without a fix (superseded, wontfix) are here too.
 
@@ -52,6 +52,7 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | PERF-09 | P2 | Performance | Making a webfont (WOFF2) blocked every request of every document for seconds | **fixed** 2026-11-13 |  | 2026-11-13 |
 | PERF-11 | P3 | Performance | Search preview and replace have no time budget at all | **fixed** 2026-11-13 |  | 2026-11-13 |
 | PERF-13 | P3 | Performance / computes | Calculating a chain of formulas is quadratic: `Waiting.done` deletes from the front of a sorted list once per formula | **fixed** 2026-11-25 (on `main` ahead of batch 3, `a5f5aa14`) | 2026-11-25 | 2026-11-25 |
+| PERF-14 | P3 | Performance / tests | The performance guards measured wall time: a busy machine reads as super-linear cost | **fixed** 2026-11-25 (`test-quality`, D1661) | 2026-11-25 | 2026-11-25 |
 | UX-01 | P2 | UX | Menus cannot be operated with the keyboard | fixed (read 2026-11-12, not screen-reader tested) |  |  |
 | UX-02 | P2 | UX | The grid has no accessible structure | fixed, merged at `cfa2d91` (`grid-a11y.cjs` passes; no screen reader run yet) |  |  |
 | UX-03 | P2 | UX | Dialogs do not manage focus | fixed (native `<dialog>`, read 2026-11-12) |  |  |
@@ -190,6 +191,7 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | CODE-97 | P2 | Code / Windows | A node.exe (the core of a window) stayed running after its window was killed: Neutralino does not end its extension and the link to it did not break | **fixed** 2026-11-25 on `win-installer-fix` (D753) | 2026-11-25 | 2026-11-25 |
 | CODE-92 | P2 | Code / i18n | The server settings answer only in English: the administrator API's refusals were plain text, not messages | **fixed** 2026-11-25 (batch 1 of the bug eater, `batch-1`), D2003 | 2026-11-24 |  |
 | CODE-98 | P3 | Code / web | About 25 components repeat the look-only notice instead of calling `session.tellLookOnly()` | **fixed** 2026-11-25 (batch 3 of the bug eater, `batch-3`) | 2026-11-25 | 2026-11-25 |
+| CODE-106 | P3 | Code / tests | Tests reached into private code where a public seam was missing: `_calculate_loaded`, `Hub._documents`, `KdfPolicy._set`, `WorkerPool._discard`, eleven private names patched | **fixed** 2026-11-25 (`test-quality`) | 2026-11-25 | 2026-11-25 |
 | PROC-01 | P1 | Process | No CI workflow in the repository | fixed (verified at `54d1245`) |  |  |
 | PROC-02 | P2 | Process | The quality gate prints "everything is clean" when half of it was skipped | fixed |  |  |
 | PROC-03 | P2 | Process | Work described as delivered is not in the repository | fixed |  |  |
@@ -252,6 +254,9 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | PROC-64 | P3 | Process / CI | The chain test of computes' performance fails now and then (reported from CI runs before the fix reached `main`) | **wontfix**: a duplicate of PROC-61, fixed on `batch-3` | 2026-11-25 | 2026-11-25 |
 | PROC-65 | P3 | Process / CI | `test_the_check_names_the_libreoffice_it_ran_against` failed on CI (reported from runs before the fix reached `main`) | **wontfix**: the Windows stand-in of PROC-22, fixed the same day | 2026-11-25 | 2026-11-25 |
 | PROC-66 | P2 | Process / CI | Tests wait by the clock: sleeps as synchronisation, stopwatch bounds near the measured time, a 0.2 s nap for background rendering; on a busy runner they fail a sound build | **fixed** 2026-11-25 (`test-quality`, D1660–D1662) | 2026-11-25 | 2026-11-25 |
+| PROC-67 | P3 | Process / AI | A server's shutdown, or a switch of provider, waited for the read timeout (30 s) when Anthropic had sent its headers and then nothing | **fixed** 2026-11-25 (`test-quality`) | 2026-11-25 | 2026-11-25 |
+| PROC-68 | P3 | Process / tests | "Must not break" (coding standards §2) had no form and no check: no test carried it | **fixed** 2026-11-25 (`test-quality`, D1663) | 2026-11-25 | 2026-11-25 |
+| PROC-69 | P3 | Process / tests | The heavy-dispatch tests stepped the event loop by counted `sleep(0)`s: bound to how many `await`s the dispatcher has | **fixed** 2026-11-25 (`test-quality`) | 2026-11-25 | 2026-11-25 |
 | DOC-01 | P2 | Docs | Decision numbers D70–D82 and D97–D99 are used twice for different decisions | fixed |  |  |
 | DOC-02 | P3 | Docs | `start-client.sh` was renamed; the Linux README and the other launchers still named it | **fixed** 2026-11-13 |  | 2026-11-13 |
 | DOC-03 | P3 | Docs | Current decisions that later ones contradict (D2, D44, D84, D115, D242); a stale row in `ranges.md`; stale lines in two notes | **fixed** 2026-11-17 (log audit: D44, D84, D115 superseded; D2, D242 noted) |  | 2026-11-17 |
@@ -2823,3 +2828,38 @@ Every rewritten test was checked against the bug it guards (the code broken on p
 implementation note). Also: two assertions that could not fail (`isinstance(x, (CommandApplied, object))`,
 `isinstance(SandboxError("x"), Exception)`), the housekeeping test that checked nothing, and the stalled-Claude test that
 waited 30 s for its read timeout (now 1 s; the AI router's tests take 1.5 s instead of 39 s).
+
+### PROC-67 · Stopping a question waited for a silent Anthropic · P3 · size 3 · fixed
+**Measured:** a question stopped while Anthropic had sent its headers and then nothing ended only at the read
+timeout, 30 s; `ModelRunner.close` (shutdown, a switch of provider) waits for it. **Fix:** while the answer is read, a
+watch cuts the connection once `stop()` turns true (a shutdown of the socket, which wakes a read that waits in another
+thread); the question ends with what there is. **Test:** `test_a_question_stopped_while_anthropic_is_silent_ends_at_once_not_at_the_read_timeout`
+(read timeout an hour; red before). The stalled-Anthropic test of the AI router needs no shortened read timeout any more.
+
+### PROC-68 · "Must not break" had no form · P3 · size 3 · fixed
+**Fix** (D1663): `@pytest.mark.must_not_break("E…")`, the Gherkin tag `@must-not-break:E…`, `[must not break: E…]` in a
+vitest title; `tests/test_must_not_break.py` wants one for every story that is done. The 46 stories done before the
+rule stand in its `NOT_MARKED_YET` (it only shrinks); E7.11 has the first mark, a proposal.
+
+### PROC-69 · The heavy-dispatch tests counted turns of the event loop · P3 · size 3 · fixed
+**Fix:** `HeavyDispatcher.idle()`; the tests wait for it, a fake pool says when it was called, another event is a
+real edit (not the private `_on_event`). Checked: without the dispatcher's in-flight guard the test goes red.
+
+### CODE-106 · Tests reached into private code · P3 · size 3 · fixed
+**Fix:** `WorkbookModel.calculate_loaded()` is public (three importers called it by its private name); a restart in
+the tests is a new `Hub` on the same provider, an open document `hub.open`; the KDF policy is driven through
+`retarget`; `WorkerPool(make_executor=)` lets a test time the crashes, and the late-crash race is tested through the
+pool (red with the old unguarded `_discard`; `KdfPolicy._set`, unused, is gone); the download command lines take
+`download=`, the font cache `compress=`, the font service `make_webfont`; the i18n fallback patches the public
+`translate`; warm login material has a public `warm_clock` and `warm_material_names()`; the export's info limit, the zip
+bomb and the disk failure of a renewal are tested with real files and a failing `zipfile`; the GTK shell's language
+through the saved choice. Two fault injections stay, marked "breaks on purpose": they prove a guard
+(`Round._precedents`, `paragraph._opcodes`).
+
+### PERF-14 · The performance guards measured wall time · P3 · size 3 · fixed
+**Measured:** under load (six busy loops on two cores) the guard of PERF-13 measured 61x–71x for a 10x linear step.
+**Fix** (D1661): `claudia_core.testing.work_of` counts the Python work (all guards of core, composes and computes but
+three); `best_of` measures processor time in batches of 0.2 s where the cost may be in C (the log's lookups, the sheet
+extent, letting formulas go); the kernel's counted guards are backed by the clock, as its log keeps its steps in lists
+(a copy in C counts as nothing: caught by the backstop). Every guard passed twice under the same load.
+
