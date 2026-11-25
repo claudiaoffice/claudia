@@ -11565,6 +11565,10 @@ msgstr ""
 msgid "{kind} (no description)"
 msgstr ""
 
+#: packages/claudia-server/src/claudia_server/protocol.py
+msgid "{kind} is made by the server only, through its own methods"
+msgstr ""
+
 #: web/app/lib/descriptions.ts
 msgid "{kind}: {words}"
 msgstr ""

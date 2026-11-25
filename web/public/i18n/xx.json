@@ -2889,6 +2889,7 @@
   "{id} is here now. Open it with your name and password in it.": "[{id} îs héré nôw. Ôpén ît wîth yôûr nàmé ànd pàsswôrd în ît.~~~~~~~~~~~~~~~~~~~~~~~~]",
   "{kind} (decorative)": "[{kind} (décôràtîvé)~~~~~~~~]",
   "{kind} (no description)": "[{kind} (nô déscrîptîôn)~~~~~~~~~]",
+  "{kind} is made by the server only, through its own methods": "[{kind} îs màdé by thé sérvér ônly, thrôûgh îts ôwn méthôds~~~~~~~~~~~~~~~~~~~~~~~]",
   "{kind}: {words}": "[{kind}: {words}~~~~~~]",
   "{label} (top of the selection)": "[{label} (tôp ôf thé séléctîôn)~~~~~~~~~~~~]",
   "{label} as hex": "[{label} às héx~~~~~~]",

@@ -2889,6 +2889,7 @@
   "{id} is here now. Open it with your name and password in it.": "{id} ist jetzt hier. Öffnen Sie es mit Ihrem Namen und Passwort darin.",
   "{kind} (decorative)": "{kind} (dekorativ)",
   "{kind} (no description)": "{kind} (ohne Beschreibung)",
+  "{kind} is made by the server only, through its own methods": "{kind} macht nur der Server, mit seinen eigenen Methoden",
   "{kind}: {words}": "{kind}: {words}",
   "{label} (top of the selection)": "{label} (oberste der Auswahl)",
   "{label} as hex": "{label} als Hex",
