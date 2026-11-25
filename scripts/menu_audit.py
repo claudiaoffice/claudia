@@ -11,10 +11,13 @@ Three sources, per app (coding standards §12: menus come from the workbook):
   ("Today's action id"), or none for an entry that does not exist yet.
 * the **manifest** (``clients/linux/src/claudia_shell_gtk/manifest.py``): what the desktop clients show. The Linux
   client builds its menus from it, the Windows and macOS clients from the menus generated from it.
-* the **web capture** (``menu_capture.py``): what a person sees in the browser, per role and in German.
+* the **web capture** (``menu_capture.py``): what a person sees in the browser, per role and in German. Its keys:
+  ``owner``, ``editor``, ``viewer`` and ``owner (de)`` hold the menu bars, ``contexts (<role>)`` and
+  ``contexts (owner, de)`` the context menus by place.
 
 Each difference becomes one row (a finding): its kind, what the workbook says, what web and desktop do today, the next
-step, and whether it needs the owner's decision or is only work to do.
+step, and whether it needs the owner's decision or is only work to do. "Shortcut" is the glossary's word for what the
+workbook's columns call a key.
 """
 
 from __future__ import annotations
@@ -27,30 +30,37 @@ from collections import Counter
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from openpyxl.workbook.workbook import Workbook
+    from openpyxl.worksheet.worksheet import Worksheet
 
 ROOT = Path(__file__).resolve().parent.parent
 WORKBOOK = ROOT / "claudiaoffice-log" / "notes" / "claudia-menus.xlsx"
 WEB = ROOT / ".claudia" / "menu-audit" / "web.json"
+SHAPES = ROOT / "packages" / "claudia-creates" / "src" / "claudia_creates" / "builtin_shapes"
 SHEET = "Diagnosis"
 APPS = ("computes", "composes", "creates")
+ROLES = ("editor", "viewer")
 PLATFORMS = ("Web", "Linux", "Windows", "macOS")
 ARROW = " ▸ "
 
 #: Kinds of finding, in the order the sheet lists them, and whether each needs the owner's decision.
 KINDS: dict[str, bool] = {
     "Open in the workbook": True,
+    "Question": True,
     "Workbook: capitalisation rule": True,
-    "Workbook: key clash": True,
+    "Workbook: shortcut clash": True,
     "Workbook: row out of menu order": True,
     "Not in the workbook": True,
     "Only in the web menu": True,
     "Context menu: not in the workbook": True,
-    "Key per platform": True,
+    "Shortcut per platform": True,
     "Wrong menu": False,
     "Label": False,
     "Label: capitalisation only": False,
-    "Key": False,
+    "Shortcut": False,
     "Order or separators": False,
     "Not in this app yet": False,
     "Not built yet": False,
@@ -59,13 +69,30 @@ KINDS: dict[str, bool] = {
     "Context menu: missing entries": False,
     "Not translated": False,
     "Greyed for a role": False,
+    "Usable by a viewer: check": False,
     "Not checked": False,
 }
+
+#: Entries that are app-wide settings rather than actions of a document (one per language)
+LANGUAGE_IDS = "config.language."
+#: Differences between web and desktop that a decision made on purpose, by action id
+BY_DESIGN = {
+    "file.quit": "by design: a browser tab has no Quit",
+    "format.apply-style": "by design: a flyout of the styles on the web, the page's popover in a shell (D301)",
+}
+#: Submenus whose entries are the document's (style names), not the app's: only entries with a shortcut are kept
+DOCUMENT_SUBMENUS = {"Apply Style", "Format anwenden"}
+#: Entries a viewer may use because they change nothing (anything else in Edit, Insert, Format is checked)
+READ_ONLY = {"Copy", "Search & Replace…", "Go to Target", "Reference in Chat"}
+
+
+def _join(menu: str, path: tuple[str, ...]) -> str:
+    return ARROW.join((menu, *path))
 
 
 @dataclass(frozen=True)
 class Entry:
-    """One menu entry where it is today: its top menu, the labels down to it, its separator group and its key.
+    """One menu entry where it is today: its top menu, the labels down to it, its separator group and its shortcut.
 
     ``submenu`` marks the entry that opens a submenu; ``sealed`` one whose submenu could not be read (it is greyed)."""
 
@@ -73,23 +100,26 @@ class Entry:
     path: tuple[str, ...]
     group: int
     position: int
-    key: str | None = None
-    id: str | None = None
+    shortcut: str | None = None
+    action: str | None = None
     disabled: bool = False
     submenu: bool = False
     sealed: bool = False
 
     @property
     def place(self) -> str:
-        return ARROW.join((self.menu, *self.path[:-1]))
+        """The menu and submenu it is in: ``Edit ▸ Paste As``."""
+        return _join(self.menu, self.path[:-1])
 
     @property
     def label(self) -> str:
+        """Its own words."""
         return self.path[-1]
 
     def shown(self) -> str:
-        key = f" [{self.key}]" if self.key else ""
-        return ARROW.join((self.menu, *self.path)) + key
+        """Where it is and its shortcut, for a person: ``Edit ▸ Copy [Ctrl+C]``."""
+        shortcut = f" [{self.shortcut}]" if self.shortcut else ""
+        return _join(self.menu, self.path) + shortcut
 
 
 @dataclass(frozen=True)
@@ -100,25 +130,30 @@ class Row:
     menu: str
     path: tuple[str, ...]
     groups: dict[str, int]
-    keys: dict[str, str | None]
+    shortcuts: dict[str, str | None]
     today_labels: dict[str, str]
-    today_id: str | None
+    today_action: str | None
 
     @property
     def target(self) -> str:
-        return ARROW.join((self.menu, *self.path))
+        """Where the workbook puts it: ``Insert ▸ Image…``."""
+        return _join(self.menu, self.path)
 
     @property
     def place(self) -> str:
-        return ARROW.join((self.menu, *self.path[:-1]))
+        """The menu and submenu the workbook puts it in."""
+        return _join(self.menu, self.path[:-1])
 
     @property
     def label(self) -> str:
+        """Its words in the workbook, without notes such as "(switch)"."""
         return clean_label(self.path[-1])
 
 
 @dataclass
 class Finding:
+    """One difference: a row of the Diagnosis sheet."""
+
     kind: str
     app: str
     where: str
@@ -138,9 +173,9 @@ class Finding:
 _KEY_WORDS = {"Up": "↑", "Down": "↓", "Left": "←", "Right": "→", "Delete": "Del", "Return": "Enter"}
 
 
-def normal_key(key: object) -> str | None:
-    """A key as the web menus show it, so the workbook's ``Shift+Alt+Up`` and the menu's ``Shift+Alt+↑`` agree."""
-    text = str(key).strip() if key is not None else ""
+def normal_shortcut(shortcut: object) -> str | None:
+    """A shortcut as the web menus show it, so the workbook's ``Shift+Alt+Up`` and the menu's ``Shift+Alt+↑`` agree."""
+    text = str(shortcut).strip() if shortcut is not None else ""
     if text in {"", "None", "n/a"}:
         return None
     return "+".join(_KEY_WORDS.get(part, part) for part in text.replace(" ", "").split("+"))
@@ -152,7 +187,7 @@ def clean_label(label: str) -> str:
 
 
 def same_words(a: str, b: str) -> bool:
-    """Two labels for the same entry, whatever their capitalisation and their closing ``…``: Table and Table…"""
+    """Two labels for the same entry, whatever their capitalisation, closing ``…`` and submenu arrow: Table, Table…"""
 
     def bare(label: str) -> str:
         return re.sub(r"[\s…?.▸]+$", "", clean_label(label)).casefold()
@@ -168,11 +203,11 @@ def compare_labels(want: str, have: str) -> str | None:
     return "case" if want.casefold() == have.casefold() else "words"
 
 
-def mac_key(key: str | None) -> str | None:
-    """The macOS form of a key as the one-key manifest gives it there: Ctrl is Cmd, Alt is Option."""
-    if key is None:
+def mac_shortcut(shortcut: str | None) -> str | None:
+    """The macOS form of a shortcut as the one-shortcut manifest gives it there: Ctrl is Cmd, Alt is Option."""
+    if shortcut is None:
         return None
-    return "+".join({"Ctrl": "Cmd", "Alt": "Option"}.get(part, part) for part in key.split("+"))
+    return "+".join({"Ctrl": "Cmd", "Alt": "Option"}.get(part, part) for part in shortcut.split("+"))
 
 
 def today_labels(cell: object) -> dict[str, str]:
@@ -189,12 +224,17 @@ def today_labels(cell: object) -> dict[str, str]:
 # --- reading -------------------------------------------------------------------------------------------------------
 
 
-def columns(sheet) -> dict[str, int]:
+def columns(sheet: Worksheet) -> dict[str, int]:
     """Column index by header, so a column the owner inserts does not shift the others."""
-    return {cell.value: n for n, cell in enumerate(sheet[1]) if cell.value}
+    return {str(cell.value): n for n, cell in enumerate(sheet[1]) if cell.value}
 
 
-def workbook_rows(sheet) -> list[Row]:
+def _marked(value: object) -> bool:
+    """An app column of the workbook says the entry is in that app."""
+    return value not in (None, "")
+
+
+def workbook_rows(sheet: Worksheet) -> list[Row]:
     """The "Menus" sheet as rows."""
     col = columns(sheet)
     rows = []
@@ -203,20 +243,20 @@ def workbook_rows(sheet) -> list[Row]:
             continue
         rows.append(
             Row(
-                number=int(values[col["#"]]),
+                number=int(str(values[col["#"]])),
                 menu=str(values[col["Menu"]]),
                 path=tuple(part.strip() for part in str(values[col["Entry"]]).split("▸")),
-                groups={app: int(values[col[app]]) for app in APPS if values[col[app]] not in (None, "")},
-                keys={platform: normal_key(values[col[platform]]) for platform in PLATFORMS},
+                groups={app: int(str(values[col[app]])) for app in APPS if _marked(values[col[app]])},
+                shortcuts={platform: normal_shortcut(values[col[platform]]) for platform in PLATFORMS},
                 today_labels=today_labels(values[col["Today's label"]]),
-                today_id=values[col["Today's action id"]] or None,
+                today_action=str(values[col["Today's action id"]] or "") or None,
             )
         )
     return rows
 
 
-def workbook_texts(workbook) -> list[tuple[str, str]]:
-    """Every text of the workbook's sheets but the diagnosis, as (sheet, text): where a removal may be written down."""
+def workbook_texts(workbook: Workbook) -> list[tuple[str, str]]:
+    """Every longer text of the workbook's sheets but the diagnosis, as (sheet, text): where a removal is explained."""
     return [
         (sheet.title, value)
         for sheet in workbook
@@ -228,36 +268,31 @@ def workbook_texts(workbook) -> list[tuple[str, str]]:
 
 
 def manifest_entries(app: str) -> list[Entry]:
-    """The desktop clients' menus of ``app``, from the manifest."""
-    if str(ROOT / "scripts") not in sys.path:
-        sys.path.insert(0, str(ROOT / "scripts"))
-    from generate_keys import _manifest_module, shown  # the web menus' own key notation
+    """The desktop clients' menus of ``app``, from the manifest, with shortcuts as the web menus write them."""
+    for folder in (ROOT / "scripts", ROOT / "clients" / "linux" / "src"):
+        if str(folder) not in sys.path:
+            sys.path.insert(0, str(folder))
+    from claudia_shell_gtk import manifest  # pure data, no GTK (its own docstring says so)
+    from generate_keys import shown  # the web menus' own notation of a GTK accelerator
 
-    manifest = _manifest_module()
     entries: list[Entry] = []
     for menu in manifest.for_app(app).menus:
         for group, section in enumerate(menu.sections, start=1):
             for item in section:
-                if isinstance(item, manifest.Submenu):
-                    entries.extend(
+                inside = item.items if isinstance(item, manifest.Submenu) else (item,)
+                above = (item.label,) if isinstance(item, manifest.Submenu) else ()
+                for action in inside:
+                    entries.append(
                         Entry(
-                            menu.label,
-                            (item.label, child.label),
-                            1,
-                            len(entries) + n,
-                            shown(child.accelerators[0]) if child.accelerators else None,
-                            child.id,
+                            menu=menu.label,
+                            path=(*above, action.label),
+                            group=1 if above else group,
+                            position=len(entries),
+                            shortcut=shown(action.accelerators[0]) if action.accelerators else None,
+                            action=action.id,
                         )
-                        for n, child in enumerate(item.items)
                     )
-                else:
-                    key = shown(item.accelerators[0]) if item.accelerators else None
-                    entries.append(Entry(menu.label, (item.label,), group, len(entries), key, item.id))
     return entries
-
-
-#: Submenus whose entries are the document's (style names), not the app's: only entries with a key are kept from them
-_DOCUMENT_SUBMENUS = {"Apply Style", "Stil anwenden"}
 
 
 def web_entries(menus: dict[str, list[dict[str, Any]]]) -> list[Entry]:
@@ -274,23 +309,26 @@ def _web_items(menu: str, above: tuple[str, ...], items: list[dict[str, Any]], a
         if item.get("sep"):
             group += 1
             continue
-        path = (*above, item["label"])
         children = item.get("items")
         submenu = bool(item.get("sub"))
         yield Entry(
-            menu,
-            path,
-            group,
-            at + n * 100 if not above else at + n,
-            item.get("hint"),
-            None,
-            bool(item.get("disabled")),
-            submenu,
-            submenu and not isinstance(children, list),
+            menu=menu,
+            path=(*above, item["label"]),
+            group=group,
+            position=at + n if above else at + n * 100,
+            shortcut=item.get("hint"),
+            disabled=bool(item.get("disabled")),
+            submenu=submenu,
+            sealed=submenu and not isinstance(children, list),
         )
         if isinstance(children, list):
-            kept = [c for c in children if c.get("sep") or c.get("hint") or item["label"] not in _DOCUMENT_SUBMENUS]
-            yield from _web_items(menu, path, kept, at + n * 100 + 1)
+            kept = [c for c in children if c.get("sep") or c.get("hint") or item["label"] not in DOCUMENT_SUBMENUS]
+            yield from _web_items(menu, (*above, item["label"]), kept, at + n * 100 + 1)
+
+
+def builtin_shape_names() -> set[str]:
+    """The names of the shapes every new document's library starts with: document data, like style names."""
+    return {json.loads(path.read_text(encoding="utf-8"))["name"] for path in SHAPES.glob("*.json")}
 
 
 # --- one app -------------------------------------------------------------------------------------------------------
@@ -331,42 +369,41 @@ class App:
         unpaired = [d for n, d in enumerate(self.desktop) if n not in self.twin and d.place.casefold() == place]
         return here[0] if len(here) == 1 and len(unpaired) == 1 else None
 
-    @staticmethod
-    def _same_words_anywhere(entry: Entry, free: list[Entry]) -> Entry | None:
-        found = [w for w in free if same_words(w.label, entry.label) and not w.submenu]
-        return found[0] if len(found) == 1 else None
+    def _same_words_anywhere(self, entry: Entry, free: list[Entry]) -> Entry | None:
+        return self._only_one(free, entry.label)
 
     @staticmethod
     def _sealed_parent(entry: Entry, free: list[Entry]) -> Entry | None:
         return next((w for w in free if w.sealed and (w.menu, *w.path) == (entry.menu, *entry.path[:-1])), None)
 
-    def by_id(self, action_id: str | None) -> tuple[Entry | None, Entry | None]:
-        """(desktop, web) of an action id."""
-        for n, entry in enumerate(self.desktop):
-            if action_id and entry.id == action_id:
-                return entry, self.twin.get(n)
-        return None, None
-
-    def web_named(self, label: str | None) -> Entry | None:
-        """The one web entry anywhere with these words, or None when there is none or several."""
-        found = [w for w in self.web if label and same_words(w.label, label) and not w.submenu]
+    @staticmethod
+    def _only_one(entries: list[Entry], label: str | None) -> Entry | None:
+        """The one entry (not a submenu) with these words, or None when there is none or several."""
+        found = [w for w in entries if label and same_words(w.label, label) and not w.submenu]
         return found[0] if len(found) == 1 else None
 
-    def desktop_of(self, web: Entry | None) -> Entry | None:
-        """The desktop entry paired with a web entry."""
-        return next((self.desktop[n] for n, w in self.twin.items() if web is not None and w is web), None)
+    def locate(self, row: Row) -> tuple[Entry | None, Entry | None]:
+        """Where a workbook row's entry is today: (desktop, web). By its action id; a row without one (a new entry) by
+        its words, so that an entry which exists under another name or in another menu is not called new."""
+        for n, entry in enumerate(self.desktop):
+            if row.today_action and entry.action == row.today_action:
+                return entry, self.twin.get(n)
+        web = self._only_one(self.web, row.today_labels.get(self.name)) or self._only_one(self.web, row.path[-1])
+        desktop = next((self.desktop[n] for n, w in self.twin.items() if web is not None and w is web), None)
+        return desktop, web
 
-    def paired_web(self) -> set[int]:
-        return {id(w) for w in self.twin.values()}
+    def covered(self, rows: list[Row]) -> set[int]:
+        """The ids (``id()``) of the entries, desktop and web, that a workbook row of this app places."""
+        located = {id(e) for row in rows if self.name in row.groups for e in self.locate(row) if e}
+        twins = {id(self.desktop[n]) for n, w in self.twin.items() if id(w) in located}
+        return (
+            located
+            | twins
+            | {id(self.twin[n]) for n, d in enumerate(self.desktop) if id(d) in located and n in self.twin}
+        )
 
 
-def locate(app: App, row: Row) -> tuple[Entry | None, Entry | None]:
-    """Where a workbook row's entry is today in ``app``: (desktop, web)."""
-    desktop, web = app.by_id(row.today_id)
-    if desktop is None and web is None:
-        web = app.web_named(row.today_labels.get(app.name)) or app.web_named(row.path[-1])
-        desktop = app.desktop_of(web)
-    return desktop, web
+# --- one workbook row ------------------------------------------------------------------------------------------------
 
 
 def compare_row(app: App, row: Row) -> Iterator[Finding]:
@@ -376,43 +413,35 @@ def compare_row(app: App, row: Row) -> Iterator[Finding]:
             "Not checked", app.name, row.target, row.target, next_step="needs the macOS client", row=row.number
         )
         return
-    desktop, web = locate(app, row)
+    desktop, web = app.locate(row)
     if desktop is None and web is None:
-        if row.today_id:
+        if row.today_action:
             yield Finding(
                 "Not in this app yet",
                 app.name,
                 row.target,
-                row.target,
-                "—",
-                "—",
+                workbook=row.target,
+                web="—",
+                desktop="—",
                 row=row.number,
-                next_step=f"add {row.today_id} to {app.name}",
+                next_step=f"add {row.today_action} to {app.name}",
             )
         else:
             yield Finding(
                 "Not built yet",
                 app.name,
                 row.target,
-                row.target,
-                "—",
-                "—",
+                workbook=row.target,
+                web="—",
+                desktop="—",
                 row=row.number,
                 next_step="build the feature, then the entry",
             )
         return
-    readable_web = web if web is not None and not web.sealed else None
-    common = {
-        "app": app.name,
-        "where": row.target,
-        "workbook": row.target,
-        "row": row.number,
-        "web": _shown(web),
-        "desktop": _shown(desktop),
-    }
-    yield from _place(row, desktop, readable_web, common)
-    yield from _label(row, desktop, readable_web, common)
-    yield from _keys(app, row, desktop, readable_web)
+    readable = web if web is not None and not web.sealed else None
+    yield from _place(app, row, desktop, readable, web)
+    yield from _label(app, row, desktop, readable, web)
+    yield from _shortcuts(app, row, desktop, readable)
 
 
 def _shown(entry: Entry | None) -> str:
@@ -421,56 +450,71 @@ def _shown(entry: Entry | None) -> str:
     return entry.shown() + (" (greyed submenu, not opened)" if entry.sealed else "")
 
 
-def _place(row: Row, desktop: Entry | None, web: Entry | None, common: dict[str, Any]) -> Iterator[Finding]:
+def _finding(kind: str, app: App, row: Row, desktop: Entry | None, web: Entry | None, next_step: str) -> Finding:
+    return Finding(
+        kind,
+        app.name,
+        row.target,
+        workbook=row.target,
+        web=_shown(web),
+        desktop=_shown(desktop),
+        next_step=next_step,
+        row=row.number,
+    )
+
+
+def _place(app: App, row: Row, desktop: Entry | None, web: Entry | None, raw: Entry | None) -> Iterator[Finding]:
     places = {e.place for e in (desktop, web) if e}
     if any(p.casefold() != row.place.casefold() for p in places):
-        yield Finding("Wrong menu", next_step=f"move to {row.place}", **common)
+        yield _finding("Wrong menu", app, row, desktop, raw, f"move to {row.place}")
     elif any(p != row.place for p in places):
-        yield Finding("Label: capitalisation only", next_step=f"submenu written {row.place}", **common)
+        yield _finding("Label: capitalisation only", app, row, desktop, raw, f"submenu written {row.place}")
 
 
-def _label(row: Row, desktop: Entry | None, web: Entry | None, common: dict[str, Any]) -> Iterator[Finding]:
+def _label(app: App, row: Row, desktop: Entry | None, web: Entry | None, raw: Entry | None) -> Iterator[Finding]:
     if "(one entry per language)" in row.path[-1]:
         return
     verdicts = {compare_labels(row.path[-1], e.label) for e in (desktop, web) if e}
     if "words" in verdicts:
-        yield Finding("Label", next_step=f"rename to “{row.label}” (and in the .po files)", **common)
+        yield _finding("Label", app, row, desktop, raw, f"rename to “{row.label}” (and in the .po files)")
     elif "case" in verdicts:
-        yield Finding("Label: capitalisation only", next_step=f"write it “{row.label}”", **common)
+        yield _finding("Label: capitalisation only", app, row, desktop, raw, f"write it “{row.label}”")
 
 
-def _keys(app: App, row: Row, desktop: Entry | None, web: Entry | None) -> Iterator[Finding]:
-    want = row.keys["Web"]
-    sides = {"web": web, "desktop": desktop}
-    if any(entry is not None and entry.key != want for entry in sides.values()):
+def _shortcuts(app: App, row: Row, desktop: Entry | None, web: Entry | None) -> Iterator[Finding]:
+    want = row.shortcuts["Web"]
 
-        def now(entry: Entry | None) -> str:
-            return "—" if entry is None else entry.key or "no key"
+    def now(entry: Entry | None) -> str:
+        return "—" if entry is None else entry.shortcut or "no shortcut"
 
+    if any(entry is not None and entry.shortcut != want for entry in (web, desktop)):
         yield Finding(
-            "Key",
+            "Shortcut",
             app.name,
             row.target,
-            want or "no key",
-            now(web),
-            now(desktop),
+            workbook=want or "no shortcut",
+            web=now(web),
+            desktop=now(desktop),
             row=row.number,
-            next_step=f"bind {want}" if want else "drop the key",
+            next_step=f"bind {want}" if want else "drop the shortcut",
         )
-    linux, windows, mac = row.keys["Linux"], row.keys["Windows"], row.keys["macOS"]
-    if windows != linux or mac not in (mac_key(linux), linux):
+    linux, windows, mac = row.shortcuts["Linux"], row.shortcuts["Windows"], row.shortcuts["macOS"]
+    if windows != linux or mac not in (mac_shortcut(linux), linux):
         yield Finding(
-            "Key per platform",
+            "Shortcut per platform",
             app.name,
             row.target,
-            f"Linux {linux} · Windows {windows} · macOS {mac}",
+            workbook=f"Linux {linux} · Windows {windows} · macOS {mac}",
             row=row.number,
-            next_step="the manifest gives an entry one key on every platform: allow more?",
+            next_step="the manifest gives an entry one shortcut on every platform: allow more?",
         )
 
 
-def misplaced_rows(rows: list[Row]) -> set[int]:
-    """Rows written after their menu's block had ended ("rows are in menu order", says Read me): rows 95 and 96."""
+# --- one app as a whole ----------------------------------------------------------------------------------------------
+
+
+def rows_out_of_order(rows: list[Row]) -> set[int]:
+    """Rows written after their menu's block had ended (the Read me says rows are in menu order)."""
     seen: list[str] = []
     late = set()
     for row in rows:
@@ -481,28 +525,28 @@ def misplaced_rows(rows: list[Row]) -> set[int]:
     return late
 
 
+def _order_breaks(pairs: list[tuple[int, int, int, int]], top: bool) -> bool:
+    """Pairs of (wanted position, wanted group, position, group): out of order, or (in a top menu) other groups."""
+    in_order = [p[2] for p in sorted(pairs)] == sorted(p[2] for p in pairs)
+    ordered = sorted(pairs)
+    grouped = not top or all((a[1] == b[1]) == (a[3] == b[3]) for a, b in zip(ordered, ordered[1:], strict=False))
+    return not (in_order and grouped)
+
+
 def compare_order(app: App, rows: list[Row], late: set[int]) -> Iterator[Finding]:
     """Per menu and submenu: are the entries already in their place in the workbook's order and separator groups?
     (Inside a submenu only the order counts: the workbook's group number is the submenu's own group.)"""
     containers: dict[str, list[tuple[Row, Entry]]] = {}
     for row in rows:
-        _desktop, web = locate(app, row)
-        if (
-            app.name in row.groups
-            and row.number not in late
-            and web
-            and not web.sealed
-            and web.place.casefold() == row.place.casefold()
-        ):
+        _desktop, web = app.locate(row)
+        if web is None or web.sealed or app.name not in row.groups or row.number in late:
+            continue
+        if web.place.casefold() == row.place.casefold():
             containers.setdefault(row.place, []).append((row, web))
     for place, pairs in containers.items():
-        in_order = [w.position for _r, w in pairs] == sorted(w.position for _r, w in pairs)
         top = ARROW not in place
-        grouped = not top or all(
-            (a.groups[app.name] == b.groups[app.name]) == (x.group == y.group)
-            for (a, x), (b, y) in zip(pairs, pairs[1:], strict=False)
-        )
-        if not (in_order and grouped):
+        numbers = [(r.number, r.groups[app.name], w.position, w.group) for r, w in pairs]
+        if _order_breaks(numbers, top):
             want = " | ".join((f"{r.groups[app.name]}:" if top else "") + r.label for r, _w in pairs)
             have = " | ".join(
                 (f"{w.group}:" if top else "") + w.label for _r, w in sorted(pairs, key=lambda p: p[1].position)
@@ -511,55 +555,53 @@ def compare_order(app: App, rows: list[Row], late: set[int]) -> Iterator[Finding
                 "Order or separators",
                 app.name,
                 place,
-                want,
-                have,
+                workbook=want,
+                web=have,
                 next_step="reorder" + (" / regroup (n: = separator group)" if top else ""),
             )
 
 
 def compare_extras(app: App, rows: list[Row], texts: list[tuple[str, str]]) -> Iterator[Finding]:
     """What the app has that no workbook row places in it."""
-    rows_here = [r for r in rows if app.name in r.groups]
-    covered = {id(e) for r in rows_here for e in locate(app, r) if e}
-    ids_anywhere = {r.today_id for r in rows if r.today_id}
+    covered = app.covered(rows)
+    actions_anywhere = {r.today_action for r in rows if r.today_action}
     for n, entry in enumerate(app.desktop):
         web = app.twin.get(n)
-        if id(entry) in covered or (web and id(web) in covered) or (entry.id or "").startswith("config.language."):
+        if id(entry) in covered or (entry.action or "").startswith(LANGUAGE_IDS) or entry.action in BY_DESIGN:
             continue
-        if entry.id in ids_anywhere:
+        today = f"{entry.shown()} ({entry.action})"
+        if entry.action in actions_anywhere:
             yield Finding(
                 "To remove (the workbook drops it in this app)",
                 app.name,
                 entry.shown(),
-                "—",
-                _shown(web),
-                f"{entry.shown()} ({entry.id})",
+                workbook="—",
+                web=_shown(web),
+                desktop=today,
                 next_step=f"remove from {app.name}",
             )
-        elif entry.id == "file.quit":
-            continue  # desktop only by design: a browser tab has no Quit (To decide #15)
-        else:
-            note = mention(texts, entry)
-            yield Finding(
-                "Not in the workbook",
-                app.name,
-                entry.shown(),
-                note or "—",
-                _shown(web),
-                f"{entry.shown()} ({entry.id})",
-                next_step="the workbook's notes drop it: confirm" if note else "add a row, or remove",
-            )
-    paired = app.paired_web()
+            continue
+        note = mention(texts, entry)
+        yield Finding(
+            "Not in the workbook",
+            app.name,
+            entry.shown(),
+            workbook=note or "—",
+            web=_shown(web),
+            desktop=today,
+            next_step="the workbook's notes drop it: confirm" if note else "add a row, or remove",
+        )
+    paired = {id(w) for w in app.twin.values()}
     for entry in app.web:
-        if id(entry) in paired or id(entry) in covered or entry.submenu or entry.path[0] == "App Language":
+        if id(entry) in paired | covered or entry.submenu or entry.path[0] == "App Language":
             continue
         yield Finding(
             "Only in the web menu",
             app.name,
             entry.shown(),
-            "—",
-            entry.shown(),
-            "—",
+            workbook="—",
+            web=entry.shown(),
+            desktop="—",
             next_step="an id in the manifest and a workbook row, or remove",
         )
 
@@ -569,49 +611,74 @@ _NOTE_ORDER = ("To decide", "Menus", "Context menus", "Keys without entry", "Rea
 
 
 def mention(texts: list[tuple[str, str]], entry: Entry) -> str:
-    """Where the workbook's notes speak of a removed entry (by its id or its words), shortened: or ''."""
+    """Where the workbook's notes speak of a removed entry (by its action id or its words), shortened; or ''."""
     words = re.sub(r"[…]+$", "", entry.label)
-    by_id = re.compile(rf"(?<![\w.-]){re.escape(entry.id)}(?![\w.-])") if entry.id else None
+    by_action = re.compile(rf"(?<![\w.-]){re.escape(entry.action)}(?![\w.-])") if entry.action else None
     by_words = re.compile(rf"(?<!\w){re.escape(words)}(?!\w)", re.IGNORECASE) if len(words) > 4 else None
     ranked = sorted(texts, key=lambda t: _NOTE_ORDER.index(t[0]) if t[0] in _NOTE_ORDER else len(_NOTE_ORDER))
     for sheet, text in ranked:
-        hit = (by_id and by_id.search(text)) or (by_words and by_words.search(text))
+        hit = (by_action and by_action.search(text)) or (by_words and by_words.search(text))
         if hit:
             start = max(0, hit.start() - 60)
             return f"{sheet}: …{text[start : hit.end() + 80].strip()}…"
     return ""
 
 
-#: Differences between web and desktop that a decision made on purpose
-_BY_DESIGN = {
-    "format.apply-style": "by design: a flyout of the styles on the web, the page's popover in a shell (D301)"
-}
-
-
 def compare_clients(app: App) -> Iterator[Finding]:
-    """Where the web menu and the desktop menus (the manifest) disagree about the same action."""
+    """Where the web menu and the desktop menus (the manifest) disagree: an entry only one of them has, or the same
+    action at another place, with other words or another shortcut, or in another order."""
     for n, entry in enumerate(app.desktop):
         web = app.twin.get(n)
-        if (entry.id or "").startswith("config.language.") or (web is not None and web.sealed):
+        if (entry.action or "").startswith(LANGUAGE_IDS) or (web is not None and web.sealed):
             continue
+        desktop = f"{entry.shown()} ({entry.action})"
+        next_step = BY_DESIGN.get(entry.action or "", "one menu definition")
         if web is None:
-            note = "by design: a browser tab has no Quit" if entry.id == "file.quit" else "one menu definition"
             yield Finding(
                 "Web and desktop differ",
                 app.name,
                 entry.shown(),
                 web="not in the web menu",
-                desktop=f"{entry.shown()} ({entry.id})",
-                next_step=note,
+                desktop=desktop,
+                next_step=next_step,
             )
-        elif (web.place, web.label, web.key) != (entry.place, entry.label, entry.key):
+        elif (web.place, web.label, web.shortcut) != (entry.place, entry.label, entry.shortcut):
+            yield Finding(
+                "Web and desktop differ", app.name, entry.shown(), web=web.shown(), desktop=desktop, next_step=next_step
+            )
+    paired = {id(w) for w in app.twin.values()}
+    for entry in app.web:
+        if id(entry) not in paired and not entry.submenu and entry.path[0] != "App Language":
             yield Finding(
                 "Web and desktop differ",
                 app.name,
                 entry.shown(),
-                web=web.shown(),
-                desktop=f"{entry.shown()} ({entry.id})",
-                next_step=_BY_DESIGN.get(entry.id or "", "one menu definition"),
+                web=entry.shown(),
+                desktop="not in the desktop menus",
+                next_step="one menu definition",
+            )
+    yield from _client_order(app)
+
+
+def _client_order(app: App) -> Iterator[Finding]:
+    """Per (sub)menu: the paired entries in the same order, and (in a top menu) between the same separators?"""
+    containers: dict[str, list[tuple[Entry, Entry]]] = {}
+    for n, entry in enumerate(app.desktop):
+        web = app.twin.get(n)
+        if web is not None and not web.sealed and web.place == entry.place:
+            containers.setdefault(entry.place, []).append((entry, web))
+    for place, pairs in containers.items():
+        numbers = [(d.position, d.group, w.position, w.group) for d, w in pairs]
+        if _order_breaks(numbers, ARROW not in place):
+            on_desktop = " | ".join(f"{d.group}:{d.label}" for d, _w in pairs)
+            on_web = " | ".join(f"{w.group}:{w.label}" for _d, w in sorted(pairs, key=lambda p: p[1].position))
+            yield Finding(
+                "Web and desktop differ",
+                app.name,
+                f"{place} (order or separators)",
+                web=on_web,
+                desktop=on_desktop,
+                next_step="one menu definition",
             )
 
 
@@ -619,30 +686,32 @@ def compare_clients(app: App) -> Iterator[Finding]:
 _SAME_IN_GERMAN = {"Format", "LaTeX", "Mermaid", "Typst", "English", "Deutsch", "Container", "AI…", "Agenda", "Export…"}
 
 
-def compare_german(app: str, english: dict[str, Any], german: dict[str, Any]) -> Iterator[Finding]:
-    """Entries whose German label is the English one: not translated. The two captures are of the same window, so
-    their menus have the same shape and are walked side by side."""
-    for (title, items), (_titel, items_de) in zip(english.items(), german.items(), strict=False):
-        yield from _german_items(app, (title,), items, items_de)
+def compare_german(app: str, english: dict[str, Any], german: dict[str, Any], data: set[str]) -> Iterator[Finding]:
+    """Entries whose German label is the English one: not translated. The two captures are of the same window, so their
+    menus have the same shape and are walked side by side. ``data`` holds the document's names (built-in shapes)."""
+    for (title, items), (_german_title, items_de) in zip(english.items(), german.items(), strict=False):
+        yield from _german_items(app, (title,), items, items_de, data)
 
 
-def _german_items(app: str, above: tuple[str, ...], items: list, items_de: list) -> Iterator[Finding]:
+def _german_items(
+    app: str, above: tuple[str, ...], items: list[Any], items_de: list[Any], data: set[str]
+) -> Iterator[Finding]:
     for item, item_de in zip(items, items_de, strict=False):
         if item.get("sep") or item_de.get("sep"):
             continue
         label, label_de = item["label"], item_de["label"]
-        if above[-1] in _DOCUMENT_SUBMENUS and not item.get("hint"):
-            continue  # a style's name is the document's
+        if (above[-1] in DOCUMENT_SUBMENUS and not item.get("hint")) or label in data:
+            continue  # a style's or a shape's name is the document's
         if label == label_de and label not in _SAME_IN_GERMAN and re.search("[a-z]", label):
             yield Finding(
                 "Not translated",
                 app,
-                ARROW.join((*above, label)),
+                _join(above[0], (*above[1:], label)),
                 web=f"the German menu shows “{label_de}”",
                 next_step="translate (po/de.po)",
             )
         if isinstance(item.get("items"), list) and isinstance(item_de.get("items"), list):
-            yield from _german_items(app, (*above, label), item["items"], item_de["items"])
+            yield from _german_items(app, (*above, label), item["items"], item_de["items"], data)
 
 
 def compare_roles(app: App) -> Iterator[Finding]:
@@ -672,15 +741,48 @@ def _greyed_for(owner: Entry, entries: list[Entry]) -> bool:
     return False
 
 
+def viewer_can_use(app: App) -> Iterator[Finding]:
+    """Entries of Edit, Insert and Format that a viewer can use, apart from those that only read: does each change
+    nothing (a dialog that only shows), or should it be greyed or hidden for her? The reverse of "Greyed for a role"."""
+    for entry in app.web_by_role["viewer"]:
+        if (
+            entry.menu in {"Edit", "Insert", "Format"}
+            and not entry.disabled
+            and not entry.submenu
+            and entry.label not in READ_ONLY
+            and entry.path[0] not in DOCUMENT_SUBMENUS
+        ):
+            yield Finding(
+                "Usable by a viewer: check",
+                app.name,
+                entry.shown(),
+                web="enabled for a viewer",
+                next_step="does it change the document? then grey or hide it for a viewer",
+            )
+
+
+def sealed_submenus(app: App) -> Iterator[Finding]:
+    """Submenus that are greyed for the owner with nothing selected: their entries were not seen on the web."""
+    for entry in app.web:
+        if entry.sealed:
+            yield Finding(
+                "Not checked",
+                app.name,
+                entry.shown(),
+                web="greyed submenu, its entries not opened",
+                next_step="the capture needs a selection that enables it",
+            )
+
+
 # --- context menus -------------------------------------------------------------------------------------------------
 
-#: Workbook context (column "Context") → the place the capture right-clicked, per app
-CONTEXTS = {
-    "Object (image, text box, shape, container, chart)": dict.fromkeys(APPS, "object"),
-    "Cell (range)": {"computes": "cell"},
-    "Paragraph (in composes, or in a text box)": {"composes": "paragraph"},
-    "Table": {"composes": "table"},
-    "Row and column headers (tables in composes, and computes)": {"computes": "column header"},
+#: Workbook context (column "Context") → the places the capture right-clicked, per app
+CONTEXTS: dict[str, dict[str, tuple[str, ...]]] = {
+    "Object (image, text box, shape, container, chart)": dict.fromkeys(APPS, ("object",)),
+    "Cell (range)": {"computes": ("cell",)},
+    "Paragraph (in composes, or in a text box)": {"composes": ("paragraph",)},
+    "Table": {"composes": ("table",)},
+    "Row and column headers (tables in composes, and computes)": {"computes": ("column header", "row header")},
 }
 
 
@@ -688,56 +790,59 @@ def context_items(got: Any) -> list[str] | None:
     """The labels of a captured context menu; a popover of buttons that calls itself a menu counts as one."""
     if isinstance(got, dict):
         return [i["label"] for i in got["items"] if not i.get("sep")]
-    found = re.match(r"no menu; opened instead: [^:]*menu: (.*)$", str(got))
-    return found.group(1).split(" / ") if found else None
+    found = re.match(r"no menu; opened instead: [^:]*men(u|ü): (.*)$", str(got))
+    return found.group(2).split(" / ") if found else None
 
 
-def compare_contexts(sheet, captured: dict[str, Any]) -> Iterator[Finding]:
+def compare_contexts(sheet: Worksheet, captured: dict[str, Any]) -> Iterator[Finding]:
+    """The workbook's context menus against what a right press opens, as the owner; and the places the capture reached
+    that the workbook has no rows for."""
     col = columns(sheet)
     wanted: dict[tuple[str, str], list[str]] = {}
     for values in sheet.iter_rows(min_row=2, values_only=True):
         if values[col["#"]]:
             for app in APPS:
-                if values[col[app]] not in (None, ""):
+                if _marked(values[col[app]]):
                     wanted.setdefault((str(values[col["Context"]]), app), []).append(str(values[col["Entry"]]))
     checked = set()
     for (context, app), entries in wanted.items():
-        place = CONTEXTS.get(context, {}).get(app)
-        if place is None:
+        places = CONTEXTS.get(context, {}).get(app)
+        if places is None:
             yield Finding(
                 "Not checked",
                 app,
                 f"context menu: {context}",
-                ", ".join(entries),
+                workbook=", ".join(entries),
                 next_step="the capture does not reach this place yet",
             )
             continue
-        checked.add((app, place))
-        yield from _compare_context(app, context, entries, captured[app]["contexts"].get(place))
+        for place in places:
+            checked.add((app, place))
+            got = captured[app]["contexts (owner)"].get(place)
+            yield from _compare_context(app, f"context menu: {context} ({place})", entries, got)
     for app in APPS:
-        for place, got in captured[app]["contexts"].items():
+        for place, got in captured[app]["contexts (owner)"].items():
             items = context_items(got)
             if (app, place) not in checked and items:
                 yield Finding(
                     "Context menu: not in the workbook",
                     app,
                     f"context menu: {place}",
-                    "—",
-                    ", ".join(items),
+                    workbook="—",
+                    web=", ".join(items),
                     next_step="add rows to the Context menus sheet, or drop the menu",
                 )
 
 
-def _compare_context(app: str, context: str, entries: list[str], got: Any) -> Iterator[Finding]:
-    where = f"context menu: {context}"
+def _compare_context(app: str, where: str, entries: list[str], got: Any) -> Iterator[Finding]:
     have = context_items(got)
     if have is None:
         yield Finding(
             "Context menu: missing entries",
             app,
             where,
-            ", ".join(entries),
-            str(got),
+            workbook=", ".join(entries),
+            web=str(got),
             next_step="build this context menu",
         )
         return
@@ -748,8 +853,8 @@ def _compare_context(app: str, context: str, entries: list[str], got: Any) -> It
             "Context menu: missing entries",
             app,
             where,
-            ", ".join(entries),
-            ", ".join(have),
+            workbook=", ".join(entries),
+            web=", ".join(have),
             next_step="add " + ", ".join(missing),
         )
     if extra:
@@ -757,69 +862,99 @@ def _compare_context(app: str, context: str, entries: list[str], got: Any) -> It
             "Context menu: not in the workbook",
             app,
             where,
-            ", ".join(entries),
-            ", ".join(have),
+            workbook=", ".join(entries),
+            web=", ".join(have),
             next_step="add rows for " + ", ".join(extra) + ", or drop them",
         )
+
+
+def context_roles_and_german(captured: dict[str, Any], data: set[str]) -> Iterator[Finding]:
+    """Context-menu entries greyed for an editor or a viewer but not for the owner, and context menus in German."""
+    for app in APPS:
+        owner = captured[app]["contexts (owner)"]
+        for place, got in owner.items():
+            if not isinstance(got, dict):
+                continue
+            for n, item in enumerate(i for i in got["items"] if not i.get("sep")):
+                greyed = [
+                    role for role in ROLES if _context_disabled(captured[app][f"contexts ({role})"].get(place), n)
+                ]
+                if greyed and not item["disabled"]:
+                    yield Finding(
+                        "Greyed for a role",
+                        app,
+                        f"context menu: {place} ▸ {item['label']}",
+                        web=f"greyed for: {', '.join(greyed)}",
+                        next_step="phase 3: hide, or keep greyed?",
+                    )
+            german = captured[app]["contexts (owner, de)"].get(place)
+            if isinstance(german, dict):
+                yield from _german_items(app, (f"context menu: {place}",), got["items"], german["items"], data)
+
+
+def _context_disabled(got: Any, n: int) -> bool:
+    if not isinstance(got, dict):
+        return False
+    items = [i for i in got["items"] if not i.get("sep")]
+    return n < len(items) and bool(items[n]["disabled"])
 
 
 # --- the workbook itself -------------------------------------------------------------------------------------------
 
 
 def workbook_clashes(
-    rows: list[Row], apps: list[App], loose_keys: dict[str, Any], texts: list[tuple[str, str]]
+    rows: list[Row], apps: list[App], loose: dict[str, dict[str, str]], texts: list[tuple[str, str]]
 ) -> Iterator[Finding]:
-    """Two different entries of one app with the same key in the workbook, or a workbook key that an entry the
-    workbook does not list and its notes do not drop, or a key without an entry, already uses. Ask ai in Tools and
-    in Help is one function with one key, not a clash."""
+    """Two different entries of one app with the same shortcut in the workbook; or a workbook shortcut that an entry
+    the workbook does not list (and its notes do not drop) or a key without an entry already uses. Ask ai in Tools and
+    in Help is one function with one shortcut, not a clash."""
     for app in apps:
-        by_key: dict[str, set[str]] = {}
+        by_shortcut: dict[str, set[str]] = {}
         for row in rows:
-            if app.name in row.groups and row.keys["Web"]:
-                by_key.setdefault(row.keys["Web"], set()).add(row.label)
-        listed = {id(e) for r in rows for e in locate(app, r) if e}
-        for n, entry in enumerate(app.desktop):
-            web = app.twin.get(n)
-            unlisted = id(entry) not in listed and not (web and id(web) in listed) and not mention(texts, entry)
-            if entry.key and unlisted and entry.key in by_key:
-                by_key[entry.key].add(f"{entry.label} (today, not in the workbook)")
-        for key, labels in loose_keys.items():
-            if app.name in labels and key in by_key:
-                by_key[key].add(f"{labels[app.name]} (Keys without entry)")
-        for key, labels in sorted(by_key.items()):
+            if app.name in row.groups and row.shortcuts["Web"]:
+                by_shortcut.setdefault(row.shortcuts["Web"], set()).add(row.label)
+        covered = app.covered(rows)
+        for entry in app.desktop:
+            if entry.shortcut in by_shortcut and id(entry) not in covered and not mention(texts, entry):
+                by_shortcut[entry.shortcut].add(f"{entry.label} (today, not in the workbook)")
+        for shortcut, apps_doing in loose.items():
+            if app.name in apps_doing and shortcut in by_shortcut:
+                by_shortcut[shortcut].add(f"{apps_doing[app.name]} (Keys without entry)")
+        for shortcut, labels in sorted(by_shortcut.items()):
             if len(labels) > 1:
                 yield Finding(
-                    "Workbook: key clash",
+                    "Workbook: shortcut clash",
                     app.name,
-                    key,
-                    " / ".join(sorted(labels)),
-                    next_step="give one of them another key",
+                    shortcut,
+                    workbook=" / ".join(sorted(labels)),
+                    next_step="give one of them another shortcut",
                 )
 
 
-def keys_without_entry(sheet) -> dict[str, Any]:
-    """The sheet "Keys without entry": {key: {app: what it does}}."""
+def keys_without_entry(sheet: Worksheet) -> dict[str, dict[str, str]]:
+    """The sheet "Keys without entry": {shortcut: {app: what it does}}."""
     col = columns(sheet)
-    found: dict[str, Any] = {}
+    found: dict[str, dict[str, str]] = {}
     for values in sheet.iter_rows(min_row=2, values_only=True):
         if values[col["#"]]:
             for written in str(values[col["Key"]]).split(" / "):
-                key = normal_key(written)
-                if key:
-                    found[key] = {
-                        app: str(values[col["What it does"]]) for app in APPS if values[col[app]] not in (None, "")
+                shortcut = normal_shortcut(written)
+                if shortcut:
+                    found[shortcut] = {
+                        app: str(values[col["What it does"]]) for app in APPS if _marked(values[col[app]])
                     }
     return found
 
 
-def open_decisions(sheet) -> Iterator[Finding]:
+def open_decisions(sheet: Worksheet) -> Iterator[Finding]:
+    """The rows of the "To decide" sheet that have no decision yet."""
     for values in sheet.iter_rows(min_row=2, values_only=True):
         if values[0] and not values[5]:
             yield Finding(
                 "Open in the workbook",
                 "all",
                 f"To decide #{values[0]}: {values[1]}",
-                str(values[4] or ""),
+                workbook=str(values[4] or ""),
                 next_step="decide (sheet To decide)",
             )
 
@@ -833,21 +968,34 @@ def capitalisation_rule(found: list[Finding]) -> Iterator[Finding]:
             "Workbook: capitalisation rule",
             "all",
             f"{len(cases)} labels differ only in capitalisation",
-            "sentence case (“Rename sheet…”)",
-            "header capitalisation (“Rename Sheet…”)",
-            "header capitalisation (manifest: “in the capitalisation of the GNOME HIG”)",
+            workbook="sentence case (“Rename sheet…”)",
+            web="header capitalisation (“Rename Sheet…”)",
+            desktop="header capitalisation (manifest: “in the capitalisation of the GNOME HIG”)",
             next_step="choose one rule: the GNOME HIG asks for header capitalisation in menu items",
         )
 
 
+def questions() -> Iterator[Finding]:
+    """Questions the comparison raised that no single row answers."""
+    yield Finding(
+        "Question",
+        "all",
+        "built-in names in German",
+        workbook="—",
+        web="the built-in styles (Title, Heading 1, …) and shapes (Circle, …) show in English in German",
+        next_step="they are document data, like any style name: translate the built-in ones when a document is made?",
+    )
+
+
 def late_rows(rows: list[Row], late: set[int]) -> Iterator[Finding]:
+    """One finding per workbook row written after its menu's block had ended."""
     for row in rows:
         if row.number in late:
             yield Finding(
                 "Workbook: row out of menu order",
                 "all",
                 row.target,
-                f"row {row.number}",
+                workbook=f"row {row.number}",
                 row=row.number,
                 next_step=f"move the row to where it goes in {row.menu}",
             )
@@ -857,37 +1005,42 @@ def late_rows(rows: list[Row], late: set[int]) -> Iterator[Finding]:
 
 
 def apps_from(captured: dict[str, Any]) -> list[App]:
+    """The three apps from the manifest and a capture of the web client."""
     return [
         App(
             name=name,
             desktop=manifest_entries(name),
             web=web_entries(captured[name]["owner"]),
-            web_by_role={role: web_entries(captured[name][role]) for role in ("editor", "viewer")},
+            web_by_role={role: web_entries(captured[name][role]) for role in ROLES},
         )
         for name in APPS
     ]
 
 
-def findings(workbook, captured: dict[str, Any]) -> list[Finding]:
+def findings(workbook: Workbook, captured: dict[str, Any]) -> list[Finding]:
+    """Every difference between the workbook and the apps, sorted by kind as ``KINDS`` lists them."""
     rows = workbook_rows(workbook["Menus"])
-    late = misplaced_rows(rows)
+    late = rows_out_of_order(rows)
     texts = workbook_texts(workbook)
+    data = builtin_shape_names()
     apps = apps_from(captured)
     found: list[Finding] = [
         *open_decisions(workbook["To decide"]),
+        *questions(),
         *workbook_clashes(rows, apps, keys_without_entry(workbook["Keys without entry"]), texts),
         *late_rows(rows, late),
     ]
     for app in apps:
-        for row in rows:
-            if app.name in row.groups:
-                found.extend(compare_row(app, row))
+        found.extend(f for row in rows if app.name in row.groups for f in compare_row(app, row))
         found.extend(compare_order(app, rows, late))
         found.extend(compare_extras(app, rows, texts))
         found.extend(compare_clients(app))
-        found.extend(compare_german(app.name, captured[app.name]["owner"], captured[app.name]["owner (de)"]))
+        found.extend(compare_german(app.name, captured[app.name]["owner"], captured[app.name]["owner (de)"], data))
         found.extend(compare_roles(app))
+        found.extend(viewer_can_use(app))
+        found.extend(sealed_submenus(app))
     found.extend(compare_contexts(workbook["Context menus"], captured))
+    found.extend(context_roles_and_german(captured, data))
     found.extend(capitalisation_rule(found))
     order = list(KINDS)
     return sorted(found, key=lambda f: (order.index(f.kind), f.row or 0, f.where, f.app))
@@ -911,7 +1064,7 @@ COLUMNS = (
 )
 
 
-def write_sheet(workbook, found: Iterable[Finding], source: str) -> None:
+def write_sheet(workbook: Workbook, found: Iterable[Finding], source: str) -> None:
     """Replace the "Diagnosis" sheet, in the look of the workbook's other sheets (ink header, yellow for the owner)."""
     from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
     from openpyxl.worksheet.datavalidation import DataValidation
@@ -970,6 +1123,7 @@ def summary(found: list[Finding]) -> list[str]:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Compare, print the counts, and (without --dry-run) write the Diagnosis sheet."""
     import openpyxl
 
     parser = argparse.ArgumentParser(description=(__doc__ or "").splitlines()[0])
@@ -982,11 +1136,12 @@ def main(argv: list[str] | None = None) -> int:
     found = findings(workbook, captured)
     print("\n".join(summary(found)))
     if not args.dry_run:
+        browser = captured.get("browser", "chromium")
         write_sheet(
             workbook,
             found,
             f"Made by scripts/menu_audit.py from the manifest and a capture of the web client "
-            f"in {captured.get('browser', 'chromium')}. Rerun both after a change.",
+            f"in {browser}. Rerun both after a change.",
         )
         workbook.save(args.workbook)
         print(f"wrote the {SHEET} sheet of {args.workbook}")

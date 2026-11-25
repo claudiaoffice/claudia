@@ -14,27 +14,35 @@ import menu_audit as audit  # noqa: E402
 from menu_audit import App, Entry, Row  # noqa: E402
 
 
-def row(number: int, menu: str, entry: str, *, groups=None, key="Ctrl+K", today_id=None, today_label=None) -> Row:
+def row(number: int, menu: str, entry: str, *, groups=None, shortcut="Ctrl+K", action=None, today=None) -> Row:
     return Row(
         number=number,
         menu=menu,
         path=tuple(p.strip() for p in entry.split("▸")),
         groups=groups or {"composes": 1},
-        keys=dict.fromkeys(audit.PLATFORMS, key) | {"macOS": audit.mac_key(key)},
-        today_labels=audit.today_labels(today_label),
-        today_id=today_id,
+        shortcuts=dict.fromkeys(audit.PLATFORMS, shortcut) | {"macOS": audit.mac_shortcut(shortcut)},
+        today_labels=audit.today_labels(today),
+        today_action=action,
     )
 
 
-def app(desktop: list[Entry], web: list[Entry]) -> App:
-    return App("composes", desktop, web, {"editor": web, "viewer": web})
+def entry(menu: str, path: str, *, group=1, position=0, shortcut=None, action=None, **flags) -> Entry:
+    return Entry(menu, tuple(path.split(" ▸ ")), group, position, shortcut, action, **flags)
+
+
+def app(desktop: list[Entry], web: list[Entry], viewer: list[Entry] | None = None) -> App:
+    return App("composes", desktop, web, {"editor": web, "viewer": web if viewer is None else viewer})
+
+
+def kinds(found) -> list[str]:
+    return [f.kind for f in found]
 
 
 class TestNormalising:
-    def test_keys_are_written_as_the_web_menus_show_them(self):
-        assert audit.normal_key("Shift+Alt+Up") == "Shift+Alt+↑"
-        assert audit.normal_key("n/a") is None
-        assert audit.normal_key(None) is None
+    def test_shortcuts_are_written_as_the_web_menus_show_them(self):
+        assert audit.normal_shortcut("Shift+Alt+Up") == "Shift+Alt+↑"
+        assert audit.normal_shortcut("n/a") is None
+        assert audit.normal_shortcut(None) is None
 
     def test_a_switch_note_is_not_part_of_the_label(self):
         assert audit.clean_label("Dark mode (switch)") == "Dark mode"
@@ -53,8 +61,8 @@ class TestNormalising:
         assert audit.today_labels("computes: A / creates: B") == {"computes": "A", "creates": "B"}
         assert audit.today_labels("Copy") == dict.fromkeys(audit.APPS, "Copy")
 
-    def test_the_macos_key_of_a_ctrl_alt_key(self):
-        assert audit.mac_key("Ctrl+Alt+N") == "Cmd+Option+N"
+    def test_the_macos_form_of_a_ctrl_alt_shortcut(self):
+        assert audit.mac_shortcut("Ctrl+Alt+N") == "Cmd+Option+N"
 
 
 class TestWebCapture:
@@ -73,15 +81,14 @@ class TestWebCapture:
                 },
             ]
         }
-        entries = audit.web_entries(captured)
-        assert [(e.path, e.group, e.sealed) for e in entries] == [
+        assert [(e.path, e.group, e.sealed) for e in audit.web_entries(captured)] == [
             (("Undo",), 1, False),
             (("Row",), 2, True),
             (("Paste As",), 2, False),
             (("Paste As", "Plain Text"), 1, False),
         ]
 
-    def test_style_names_are_left_out_but_an_entry_with_a_key_stays(self):
+    def test_style_names_are_left_out_but_an_entry_with_a_shortcut_stays(self):
         captured = {
             "Format": [
                 {
@@ -101,61 +108,100 @@ class TestWebCapture:
 
 class TestPairing:
     def test_the_one_entry_left_in_a_menu_pairs_even_with_other_words(self):
-        desktop = [Entry("Help", ("About Claudia Composes",), 1, 0, "Ctrl+Shift+F1", "help.about")]
-        web = [Entry("Help", ("About claudia",), 1, 0, "Ctrl+Shift+F1")]
+        desktop = [entry("Help", "About Claudia Composes", shortcut="Ctrl+Shift+F1", action="help.about")]
+        web = [entry("Help", "About claudia", shortcut="Ctrl+Shift+F1")]
         assert app(desktop, web).twin[0] is web[0]
 
     def test_an_entry_inside_a_greyed_submenu_pairs_with_the_submenu(self):
-        desktop = [Entry("Tools", ("Row", "Delete"), 1, 0, None, "edit.row-delete")]
-        web = [Entry("Tools", ("Row",), 1, 0, None, None, True, True, True)]
+        desktop = [entry("Tools", "Row ▸ Delete", action="edit.row-delete")]
+        web = [entry("Tools", "Row", disabled=True, submenu=True, sealed=True)]
         assert app(desktop, web).twin[0] is web[0]
 
 
 class TestOneRow:
-    def test_an_entry_in_another_menu_with_other_words_and_another_key(self):
-        desktop = [Entry("Edit", ("Search & Replace…",), 1, 0, "Ctrl+F", "edit.search-replace")]
-        web = [Entry("Edit", ("Search & Replace…",), 1, 0, "Ctrl+F")]
-        wanted = row(70, "Tools", "Search and replace…", key="Ctrl+H", today_id="edit.search-replace")
-        kinds = [f.kind for f in audit.compare_row(app(desktop, web), wanted)]
-        assert kinds == ["Wrong menu", "Label", "Key"]
+    def test_an_entry_in_another_menu_with_other_words_and_another_shortcut(self):
+        desktop = [entry("Edit", "Search & Replace…", shortcut="Ctrl+F", action="edit.search-replace")]
+        web = [entry("Edit", "Search & Replace…", shortcut="Ctrl+F")]
+        wanted = row(70, "Tools", "Search and replace…", shortcut="Ctrl+H", action="edit.search-replace")
+        assert kinds(audit.compare_row(app(desktop, web), wanted)) == ["Wrong menu", "Label", "Shortcut"]
 
     def test_capitalisation_only(self):
-        entries = [Entry("Edit", ("Rename Sheet…",), 1, 0, "Ctrl+K", "edit.rename-sheet")]
-        wanted = row(20, "Edit", "Rename sheet…", today_id="edit.rename-sheet")
-        assert [f.kind for f in audit.compare_row(app(entries, list(entries)), wanted)] == [
-            "Label: capitalisation only"
-        ]
+        both = [entry("Edit", "Rename Sheet…", shortcut="Ctrl+K", action="edit.rename-sheet")]
+        wanted = row(20, "Edit", "Rename sheet…", action="edit.rename-sheet")
+        assert kinds(audit.compare_row(app(both, list(both)), wanted)) == ["Label: capitalisation only"]
 
     def test_a_new_entry_that_exists_nowhere_is_not_built_yet(self):
         found = list(audit.compare_row(app([], []), row(59, "View", "Quiet mode (switch)")))
-        assert [f.kind for f in found] == ["Not built yet"]
+        assert kinds(found) == ["Not built yet"]
         assert not found[0].decide
 
     def test_a_new_entry_found_by_its_words_is_not_new(self):
-        web = [Entry("Insert", ("Table…",), 1, 0, "Ctrl+Shift+F")]
-        found = list(audit.compare_row(app([], web), row(27, "Insert", "Table", key="Ctrl+Shift+Alt+T")))
-        assert [f.kind for f in found] == ["Label", "Key"]  # the dialog's "…" is part of the words
+        web = [entry("Insert", "Table…", shortcut="Ctrl+Shift+F")]
+        found = audit.compare_row(app([], web), row(27, "Insert", "Table", shortcut="Ctrl+Shift+Alt+T"))
+        assert kinds(found) == ["Label", "Shortcut"]  # the dialog's "…" is part of the words
 
-    def test_a_different_key_on_one_platform_asks_for_a_decision(self):
+    def test_another_shortcut_on_one_platform_asks_for_a_decision(self):
         wanted = row(1, "File", "New")
-        wanted.keys["Windows"] = "Ctrl+N"
-        entries = [Entry("File", ("New",), 1, 0, "Ctrl+K", "file.new")]
-        found = [f for f in audit.compare_row(app(entries, list(entries)), wanted) if f.kind == "Key per platform"]
+        wanted.shortcuts["Windows"] = "Ctrl+N"
+        both = [entry("File", "New", shortcut="Ctrl+K", action="file.new")]
+        found = [f for f in audit.compare_row(app(both, list(both)), wanted) if f.kind == "Shortcut per platform"]
         assert found and found[0].decide
+
+
+class TestWholeApp:
+    def test_an_entry_no_row_places_is_not_in_the_workbook_unless_its_notes_drop_it(self):
+        desktop = [
+            entry("Edit", "Go to Target", action="edit.go-to-target"),
+            entry("File", "Save", position=1, action="file.save"),
+        ]
+        texts = [("Menus", "Next: rename, and drop the old Save action (file.save) in the manifest and the menus.")]
+        found = list(audit.compare_extras(app(desktop, list(desktop)), [], texts))
+        assert [(f.kind, f.next_step) for f in found] == [
+            ("Not in the workbook", "add a row, or remove"),
+            ("Not in the workbook", "the workbook's notes drop it: confirm"),
+        ]
+        assert "(file.save)" in found[1].workbook
+
+    def test_an_entry_the_workbook_gives_another_app_is_to_remove_here(self):
+        desktop = [entry("Insert", "Table of Contents", action="insert.contents")]
+        rows = [row(24, "Insert", "Table of contents", groups={"computes": 1}, action="insert.contents")]
+        assert kinds(audit.compare_extras(app(desktop, list(desktop)), rows, [])) == [
+            "To remove (the workbook drops it in this app)"
+        ]
+
+    def test_web_and_desktop_differ_in_words_presence_and_order(self):
+        desktop = [
+            entry("Tools", "Pivot Fields", position=0, action="tools.pivot-fields"),
+            entry("Tools", "Value Field Settings…", position=1, action="tools.pivot-value"),
+        ]
+        web = [
+            entry("Tools", "Value Field Settings…", position=0),
+            entry("Tools", "Pivot Fields", position=1),
+            entry("Edit", "Circle", position=2),
+        ]
+        found = list(audit.compare_clients(app(desktop, web)))
+        assert [f.where for f in found] == ["Edit ▸ Circle", "Tools (order or separators)"]
+
+    def test_the_owners_entries_greyed_for_a_viewer_and_the_viewers_editing_entries_that_are_not(self):
+        owner = [entry("Edit", "Cut"), entry("Format", "Colours…", position=1)]
+        viewer = [entry("Edit", "Cut", disabled=True), entry("Format", "Colours…", position=1)]
+        one = app([], owner, viewer)
+        assert [f.where for f in audit.compare_roles(one)] == ["Edit ▸ Cut"]
+        assert [f.where for f in audit.viewer_can_use(one)] == ["Format ▸ Colours…"]
 
 
 class TestWorkbook:
     def test_rows_written_after_their_menu_ended_are_found(self):
         rows = [row(1, "File", "New"), row(2, "View", "Dark mode"), row(3, "Help", "About"), row(4, "View", "Back")]
-        assert audit.misplaced_rows(rows) == {4}
+        assert audit.rows_out_of_order(rows) == {4}
 
-    def test_a_note_that_drops_an_entry_is_found_by_its_id_first(self):
-        texts = [
-            ("Menus", "Next: drop the old Save action (file.save) in the manifest, web menus and the shells."),
-            ("Menus", "Next: rename file.save-as to Save checkpoint… and bind it to Ctrl+S everywhere."),
+    def test_a_shortcut_the_workbook_gives_twice_or_that_an_unlisted_entry_has_is_a_clash(self):
+        rows = [row(31, "Insert", "Shape ▸ Rectangle", shortcut="Ctrl+Shift+Alt+R")]
+        desktop = [
+            entry("File", "Manage ▸ Delete From Server…", shortcut="Ctrl+Shift+Alt+R", action="file.manage.delete")
         ]
-        found = audit.mention(texts, Entry("File", ("Save",), 1, 0, "Ctrl+S", "file.save"))
-        assert "(file.save)" in found
+        found = list(audit.workbook_clashes(rows, [app(desktop, list(desktop))], {}, []))
+        assert [(f.kind, f.where) for f in found] == [("Workbook: shortcut clash", "Ctrl+Shift+Alt+R")]
 
     def test_the_menus_sheet_is_read_by_its_headers(self):
         sheet = openpyxl.Workbook().active
@@ -192,7 +238,7 @@ class TestWorkbook:
             ]
         )
         (only,) = audit.workbook_rows(sheet)
-        assert (only.path, only.groups, only.keys["macOS"], only.today_id) == (
+        assert (only.path, only.groups, only.shortcuts["macOS"], only.today_action) == (
             ("Save checkpoint…",),
             {"computes": 2, "composes": 2},
             "Cmd+S",
@@ -200,13 +246,35 @@ class TestWorkbook:
         )
 
 
+class TestContextMenus:
+    def test_a_popover_that_calls_itself_a_menu_is_read_as_one(self):
+        assert audit.context_items("no menu; opened instead: Row menu: Insert Row Above / Delete Rows") == [
+            "Insert Row Above",
+            "Delete Rows",
+        ]
+        assert audit.context_items("no menu; opened instead: Zeilenmenü: Zeile löschen") == ["Zeile löschen"]
+        assert audit.context_items("nothing opened") is None
+
+    def test_missing_and_extra_entries_of_a_context_menu(self):
+        got = {"label": "Object menu", "items": [{"label": "Delete"}, {"sep": True}, {"label": "Edit text"}]}
+        found = list(audit._compare_context("composes", "object", ["Delete", "Copy"], got))
+        assert [(f.kind, f.next_step) for f in found] == [
+            ("Context menu: missing entries", "add Copy"),
+            ("Context menu: not in the workbook", "add rows for Edit text, or drop them"),
+        ]
+
+
 @pytest.mark.parametrize("label", ["Format", "Agenda"])
 def test_words_that_are_the_same_in_german_are_not_untranslated(label):
     english = {"Insert": [{"label": label, "disabled": False, "hint": None}]}
-    assert list(audit.compare_german("creates", english, english)) == []
+    assert list(audit.compare_german("creates", english, english, set())) == []
 
 
-def test_an_untranslated_entry_is_found():
-    english = {"Edit": [{"label": "Circle", "disabled": False, "hint": None}]}
-    german = {"Bearbeiten": [{"label": "Circle", "disabled": False, "hint": None}]}
-    assert [f.where for f in audit.compare_german("composes", english, german)] == ["Edit ▸ Circle"]
+def test_an_untranslated_entry_is_found_but_not_a_shapes_name():
+    english = {"Edit": [{"label": "Circle", "hint": None}, {"label": "Image…", "hint": "Ctrl+Alt+I"}]}
+    german = {"Bearbeiten": [{"label": "Circle", "hint": None}, {"label": "Image…", "hint": "Ctrl+Alt+I"}]}
+    assert [f.where for f in audit.compare_german("composes", english, german, {"Circle"})] == ["Edit ▸ Image…"]
+
+
+def test_the_built_in_shapes_are_read_from_the_creates_package():
+    assert {"Circle", "Rectangle", "Triangle"} <= audit.builtin_shape_names()
