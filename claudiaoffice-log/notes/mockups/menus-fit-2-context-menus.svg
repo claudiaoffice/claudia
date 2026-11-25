@@ -1,6 +1,6 @@
 <svg viewBox="0 0 1500 1110" xmlns="http://www.w3.org/2000/svg" font-family="Inter, 'Segoe UI', system-ui, sans-serif">
 <rect x="0" y="0" width="1500" height="1110" fill="#f3f1ea"/>
-<text x="40" y="44" font-family="Fraunces, Georgia, serif" font-size="22" font-weight="600" fill="#1f1a33" text-anchor="start">claudia — menus that show what fits · 2 · Context menus (D1602, D1603, D1607, D1612, D1619)</text>
+<text x="40" y="44" font-family="Fraunces, Georgia, serif" font-size="22" font-weight="600" fill="#1f1a33" text-anchor="start">claudia — menus that show what fits · 2 · Context menus (D1602, D1603, D1607, D1612, D1619, D1640)</text>
 <text x="40" y="66" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">Every thing has one: a right press gives the thing&#x27;s menu, its first entries name and style it. Actions that need one kind of selected thing live here. Nothing built yet.</text>
 <rect x="40" y="96" width="460" height="580" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
 <text x="62" y="126" font-family="Fraunces, Georgia, serif" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start">A · An object, the owner</text>
@@ -44,11 +44,10 @@
 <circle cx="630" cy="224" r="6" fill="#5b4bc4" opacity="0.8"/>
 <rect x="633" y="238" width="270" height="46" rx="10" fill="#1f1a33" opacity="0.06"/>
 <rect x="630" y="234" width="270" height="46" rx="10" fill="#fff" stroke="#d8d2e6" stroke-width="1"/>
-<text x="646" y="262" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Copy</text>
-<text x="886" y="262" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="end">Ctrl+C</text>
+<text x="646" y="262" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start" font-style="italic">You can only look at this document.</text>
 <line x1="542" y1="304" x2="542" y2="338" stroke="#5b4bc4" stroke-width="3"/>
-<text x="552" y="316" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">Only Copy fits a viewer, so the menu shrinks to it. At grey she</text>
-<text x="552" y="331" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">would see A, all greyed but Copy.</text>
+<text x="552" y="316" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">Nothing fits a viewer, not even Copy (D1640), so one line says why.</text>
+<text x="552" y="331" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">At grey she would see A, all greyed.</text>
 <rect x="1000" y="96" width="460" height="580" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
 <text x="1022" y="126" font-family="Fraunces, Georgia, serif" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start">C · A paragraph, the owner (D1619)</text>
 <rect x="1022" y="144" width="16" height="16" rx="5" fill="#d6477a"/>

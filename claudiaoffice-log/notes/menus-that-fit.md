@@ -17,6 +17,9 @@ is one switch per reason. This note holds the design behind the decisions and th
 | D1605 | The workbook gets a "Fits when" column, and a test holds the code to it. |
 | D1606 | For the trial the switches are a developer setting, every reason starts at hide, an entry can be overridden on its own. The menu rebuild carries the rules from its first build. The ai is unaffected. |
 | D1615 | More words for "fits when" (below, marked †), and what a viewer gets. |
+| D1640 | A viewer cannot copy, in the document and in History & chat: Copy and Cut are not offered, and the copy itself is refused with a notice. Download, Export and Print stay hers and are recorded (D1271). |
+| D1641 | Paste and Paste As depend on the role only; there is no "clipboard" reason. |
+| D1642 | A notice names the first failing reason in the order role, server, client, ai, document, selection. The Shortcuts dialog has the switch "What Fits Now" / "Everything" and the tags "not for you", "not now", "not here". Text that says why is drawn in the muted ink, not in the greyed-entry grey. |
 
 ## The words of "fits when" (D1601)
 
@@ -90,14 +93,10 @@ In `notes/mockups/`, each as SVG with a PNG render. The entries, shortcuts and c
 | `menus-fit-3-shortcut-notices.svg` | The notice for each kind of reason: role, selection, server, ai, document |
 | `menus-fit-4-shortcuts-dialog.svg` | Preferences ▸ Shortcuts with every action and when it fits, for a viewer |
 
-Open in the mock-ups, for the owner to decide:
-- **Which reason the notice names when several fail.** Proposed: the first in the order role, server, client, ai,
-  document, selection.
-- **The Shortcuts dialog's switch** ("What Fits Now" / "Everything") **and the tags** ("not for you", "not now", "not
-  here").
-- **Contrast (BITV).** The "why" line and the muted rows of the Shortcuts dialog carry information, so they are drawn in
-  the muted ink (about 5:1 on white), not in the paler grey of a greyed entry, which BITV allows only for controls
-  that cannot be used.
+The owner's answers on them are D1640–D1642.
+
+Still open: **what Paste As ▸ Plain text does when the clipboard holds no text.** The owner agreed that it needs text,
+and also that there is no clipboard condition (D1641), so it cannot be hidden for that; to be asked.
 
 ## Next steps
 
