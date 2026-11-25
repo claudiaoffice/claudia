@@ -16,7 +16,6 @@ from __future__ import annotations
 
 import contextlib
 import json
-import os
 import socket
 import threading
 import urllib.error
@@ -109,12 +108,14 @@ class _UrllibResponse:
 
     def close(self) -> None:
         # A read that waits in another thread is not woken by closing the file, only by shutting the connection down
-        # (PROC-67); that is done on a duplicate of the socket, which shuts the one connection both name.
-        with (
-            contextlib.suppress(OSError, ValueError, AttributeError),  # (already closed, or an error answer)
-            socket.socket(fileno=os.dup(self._raw.fileno())) as same,  # type: ignore[attr-defined]
-        ):
-            same.shutdown(socket.SHUT_RDWR)
+        # (PROC-67). The socket is borrowed by its number and handed back (detach) without being closed: the response
+        # closes it. Not a duplicate: on Windows a socket's number is a handle, which os.dup cannot copy.
+        with contextlib.suppress(OSError, ValueError, AttributeError):  # (already closed, or an error answer)
+            same = socket.socket(fileno=self._raw.fileno())  # type: ignore[attr-defined]
+            try:
+                same.shutdown(socket.SHUT_RDWR)
+            finally:
+                same.detach()
         self._raw.close()  # type: ignore[attr-defined]
 
 
