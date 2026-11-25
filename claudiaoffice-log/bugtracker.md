@@ -3164,4 +3164,5 @@ test_i_can_work_in_a_new_kind_straight_away[table]` fails at "Ctrl+Home, End, â†
 installed in this workspace, and CI's screenshots cannot be downloaded from it): the editor decides that the caret is on
 the last line of the paragraph from the rectangle of the collapsed selection (`onEdgeLine` in `TextEditor.vue`), which
 Firefox reports differently at the end of a line. A first guess (the table not there yet when it was inserted) was
-tried on CI and was wrong.
+tried on CI and was wrong. **Until it is fixed** (the owner, 2026-11-25) the scenario "I can work in a new <kind>
+straight away" of `invariants/objects-in-composes.feature` carries no `@firefox` tag; put it back with the fix.

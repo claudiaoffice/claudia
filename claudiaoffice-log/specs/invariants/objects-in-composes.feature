@@ -59,7 +59,7 @@ Feature: Every object in a composes text behaves like an object
 
   # ---------------------------------------------------------------- I can work in it
 
-  @core @firefox
+  @core
   Scenario Outline: I can work in a new <kind> straight away
     When I insert a <kind>
     Then I can work in the <kind> with the mouse
