@@ -16,6 +16,7 @@ import { chordLabel, installWindowShortcuts, menuShortcuts, regionShortcuts, sha
 import { createShellBridge } from '~/lib/shell-bridge'
 import type { AnySession } from '~/lib/open'
 import { openedFromDocument } from '~/lib/switch-session'
+import { useNoticeSaid } from '~/lib/notice-said'
 import type { ExportFormatOption } from './ExportFormatDialog.vue'
 import type { Menu } from './MenuBar.vue'
 import { useI18n } from '~/lib/i18n'
@@ -176,6 +177,7 @@ watch(
   },
 )
 onBeforeUnmount(() => clearTimeout(timer))
+const noticeSaid = useNoticeSaid(() => state.notice)
 </script>
 
 <template>
@@ -239,7 +241,9 @@ onBeforeUnmount(() => clearTimeout(timer))
     />
     <slot name="overlay" />
 
-    <div v-if="state.notice" class="toast" :class="state.notice.kind" role="status" @click="state.notice = null">{{ state.notice.text }}</div>
+    <!-- the toast is for the eyes; a screen reader is told by the region below it, which is always there (UX-88) -->
+    <div v-if="state.notice" class="toast" :class="state.notice.kind" aria-hidden="true" @click="state.notice = null">{{ state.notice.text }}</div>
+    <p class="sr-only" role="status" data-testid="notice-said">{{ noticeSaid }}</p>
 
     <div v-if="state.status === 'waiting'" class="gone" role="alertdialog" data-testid="waiting-for-an-editor">
       <div>
