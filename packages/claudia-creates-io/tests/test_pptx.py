@@ -768,3 +768,50 @@ def test_a_colour_made_lighter_a_dash_and_a_second_page_colour_are_reported():
     out = BytesIO()
     document.save(out)
     assert {(loss.kind, loss.count) for loss in pptx_import_losses(out.getvalue())} == {("look", 3)}
+
+
+# -- what people call the slides and the objects (CODE-25, D550) ------------------------------------------------------
+def _names(model: SlideModel) -> dict[str, str]:
+    return {thing: model.thing_name(thing) for thing in [*model.order, *model.objects]}
+
+
+def test_the_names_of_slides_and_objects_go_out_and_come_back():
+    model = two_slide_deck()
+    model.set_thing_name("s1", "Opening")
+    model.set_thing_name("o1", "Greeting")
+    model.set_thing_name("o2", "Badge")
+    back = pptx_to_slides(slides_to_pptx(model))
+    assert _names(back) == {"s1": "Opening", "s2": "", "o1": "Greeting", "o2": "Badge"}
+
+
+def test_two_objects_a_file_calls_the_same_are_told_apart_on_import():
+    prs = pptx.Presentation()
+    for _ in range(2):
+        slide = prs.slides.add_slide(prs.slide_layouts[6])
+        slide.shapes.add_textbox(Emu(0), Emu(0), Emu(914_400), Emu(457_200)).name = "Note"
+    out = BytesIO()
+    prs.save(out)
+    names = sorted(_names(pptx_to_slides(out.getvalue())).values())
+    assert names == ["", "", "Note", "Note (2)"], "names are one namespace in a document (D550)"
+
+
+def test_a_name_given_after_the_import_is_written_into_the_kept_file():
+    original = slides_to_pptx(two_slide_deck())
+    baseline = pptx_to_slides(original)
+    current = pptx_to_slides(original)
+    current.set_thing_name("s2", "Closing")
+    current.set_thing_name("o1", "Greeting")
+    patched = apply_edits_to_pptx(original, baseline, current)
+    back = _names(pptx_to_slides(patched))
+    assert (back["s2"], back["o1"]) == ("Closing", "Greeting")
+
+
+def test_a_pictures_name_comes_back():
+    model = two_slide_deck()
+    asset = _image_asset()
+    model.images.define(asset)
+    model.insert_object(_image_object("o3", "s2", 10, 10, 40, 20, asset))
+    model.set_thing_name("o3", "Seal")
+    back = pptx_to_slides(slides_to_pptx(model))
+    (picture,) = [obj for obj in back.objects.values() if obj.body.kind == "image"]
+    assert picture.body.name == "Seal"

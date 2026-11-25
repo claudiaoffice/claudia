@@ -6,6 +6,11 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 ## [Unreleased]
 
 ### Added
+- What people call the slides and the objects goes out and comes back (CODE-25, D550): `slides_to_pptx` and
+  `apply_edits_to_pptx` write `p:cNvPr/@name` and `p:cSld/@name`, `slides_to_odp` and `apply_edits_to_odp` the
+  `draw:name` of a page and of an object; `pptx_to_slides` and `odp_to_slides` read them, two things a file calls the
+  same told apart as `Name (2)`. A page a program called by its number (`page1`) has no name. A picture keeps where
+  it came from (`source_name`) apart from its name.
 - A style property no presentation file can hold is a loss (CODE-58): `pptx_export_losses`, `odp_export_losses` and
   both `*_unwritten_changes` report `style-property`, with the property as detail (`line-height`, `letter-spacing`,
   `border-left`, `padding-left`...) and how many objects it touches. Before, `styles` counted as written and the export

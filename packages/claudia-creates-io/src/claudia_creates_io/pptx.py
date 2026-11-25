@@ -30,6 +30,7 @@ from __future__ import annotations
 
 import posixpath
 import zipfile
+from dataclasses import replace
 from io import BytesIO
 from itertools import count
 
@@ -80,6 +81,7 @@ from ._items import (
     words_of,
     write_pptx_mark,
 )
+from ._names import FileNames
 from ._notes import BULLET, Line, Run, lines_to_markdown, markdown_to_lines
 from ._pptx_fonts import deck_theme, mixes_fonts, shape_font, write_body_font
 from ._pptx_looks import Theme, read_look
@@ -183,6 +185,28 @@ def _turn(shape, body: ObjectBody) -> None:  # noqa: ANN001 (python-pptx's own s
     attribute at all, so a file of upright objects is the file it always was."""
     if body.rotation:
         shape.rotation = body.rotation
+
+
+def _call(shape, name: str) -> None:  # noqa: ANN001 (python-pptx's own shape classes are not one type)
+    """Write what people call the object (D550, CODE-25); one without a name keeps the name the file gives it."""
+    if name:
+        shape.name = name
+
+
+def _finish(shape, body: ObjectBody) -> None:  # noqa: ANN001 (python-pptx's own shape classes are not one type)
+    """What every kind of object writes on its shape: its turn, what it says to someone who cannot see it, its name."""
+    _turn(shape, body)
+    _describe(shape, body)
+    _call(shape, body.name)
+
+
+def _call_slide(slide, name: str) -> None:  # noqa: ANN001
+    """Write what people call the slide (``p:cSld/@name``, D550, CODE-25); ``""`` takes the name away."""
+    page = slide._element.find(_qn("cSld"))  # noqa: SLF001
+    if name:
+        page.set("name", name)
+    else:
+        page.attrib.pop("name", None)
 
 
 def _describe(shape, body: ObjectBody) -> None:  # noqa: ANN001 (python-pptx's own shape classes are not one type)
@@ -371,6 +395,7 @@ def slides_to_pptx(model: SlideModel, *, rasterise: Rasterise | None = None, inf
     background = colour_of({"fill": page or ""}, "fill")
     for slide_id in model.order:
         slide = prs.slides.add_slide(layout)
+        _call_slide(slide, model.thing_name(slide_id))
         if background is not None:
             slide.background.fill.solid()
             slide.background.fill.fore_color.rgb = RGBColor(*background)
@@ -393,15 +418,13 @@ def slides_to_pptx(model: SlideModel, *, rasterise: Rasterise | None = None, inf
                 shape.text_frame.text = words
                 _style_text(shape.text_frame, text_css, pt_per_unit, page)
                 write_pptx_mark(shape.text_frame.paragraphs[0]._p, marks.get(body.id))  # noqa: SLF001
-                _turn(shape, body)
-                _describe(shape, body)
+                _finish(shape, body)
             elif body.kind in ("image", "container"):
                 picture = model.picture_of(body)
                 asset = model.images.get(picture) if picture else None
                 if asset is not None:
                     shape = _add_picture(slide, asset, box, body, rasterise)
-                    _turn(shape, body)
-                    _describe(shape, body)
+                    _finish(shape, body)
             else:
                 definition = model.shapes.get(body.shape) if body.shape else None
                 auto_shape = _AUTOSHAPE.get(definition.id if definition else "", MSO_SHAPE.RECTANGLE)
@@ -410,8 +433,7 @@ def slides_to_pptx(model: SlideModel, *, rasterise: Rasterise | None = None, inf
                 _style_shape(shape, css, pt_per_unit, page)
                 _style_text(shape.text_frame, text_css, pt_per_unit, page)
                 write_pptx_mark(shape.text_frame.paragraphs[0]._p, marks.get(body.id))  # noqa: SLF001
-                _turn(shape, body)
-                _describe(shape, body)
+                _finish(shape, body)
     write_print_setup(prs, model.print_setup)  # a new presentation always has the part that says it
     speak(_runs_of_words(prs.slides), model.language)
     out = BytesIO()
@@ -569,15 +591,12 @@ def pptx_to_slides(pptx_bytes: bytes) -> SlideModel:
     defined: set[str] = set()
     object_ids = count(1)
     items = ItemReader(model.lists, model.schemes)
-    colours, looks = _theme_of(prs), LookBook(model)
+    colours, looks, names = _theme_of(prs), LookBook(model), FileNames()
     # one palette for the deck: the page of its first slide, white where a file says none (D467)
     model.palette.set_colour("page", _background(prs, prs.slides[0], colours) or "#ffffff")
     for slide_number, pptx_slide in enumerate(prs.slides, start=1):
         slide_id = f"s{slide_number}"
-        model.insert_slide(slide_id)
-        notes = _notes_markdown(pptx_slide)
-        if 0 < len(notes) <= MAX_NOTES_LENGTH:  # longer is left in the file and out of the model (see the patch)
-            model.set_notes(slide_id, notes)
+        _read_slide(model, slide_id, pptx_slide, names)
         for index in _modeled_shape_indices(pptx_slide):
             shape = pptx_slide.shapes[index]
             kind = _classify(shape)
@@ -603,7 +622,8 @@ def pptx_to_slides(pptx_bytes: bytes) -> SlideModel:
                     decorative=decorative,
                     rotation=rotation,
                 )
-                model.insert_object(VisualObject(body, SlideAnchor(slide_id, x, y)))
+                called = replace(body, name=names.take(shape.name))  # what the file calls it, not its file name
+                model.insert_object(VisualObject(called, SlideAnchor(slide_id, x, y)))
                 continue
             if kind == "text":
                 style, words, shape_id = _DEFAULT_BOX_STYLE, _DEFAULT_TEXT_STYLE, None
@@ -626,11 +646,24 @@ def pptx_to_slides(pptx_bytes: bytes) -> SlideModel:
                 paragraph_for(object_id, words, text).with_item(None if said is None else items.item(*said)),
                 ref=shape_id,
                 rotation=rotation,
+                name=names.take(shape.name),
                 description="" if decorative else description[:MAX_ALT_CHARS],
                 decorative=decorative,
             )
             model.insert_object(VisualObject(body, SlideAnchor(slide_id, x, y)))
     return _with_setup(model, prs)
+
+
+def _read_slide(model: SlideModel, slide_id: str, pptx_slide, names: FileNames) -> None:  # noqa: ANN001
+    """Add the slide ``slide_id`` with what the file calls it (``p:cSld/@name``, CODE-25) and its notes; notes longer
+    than the model holds are left in the file and out of the model (see the patch)."""
+    model.insert_slide(slide_id)
+    named = names.take(pptx_slide._element.find(_qn("cSld")).get("name"))  # noqa: SLF001
+    if named:
+        model.slides.rename(slide_id, named)
+    notes = _notes_markdown(pptx_slide)
+    if 0 < len(notes) <= MAX_NOTES_LENGTH:
+        model.set_notes(slide_id, notes)
 
 
 def _styles_of(  # noqa: ANN001
@@ -731,6 +764,8 @@ def _patch_shape(  # noqa: ANN001, PLR0913
     shape.rotation = body.rotation
     if (before.body.description, before.body.decorative) != (body.description, body.decorative):
         _describe(shape, body)
+    if before.body.name != body.name:
+        _call(shape, body.name)
     if body.kind == "image":
         return  # a picture has no words and no look of its own
     shape.text_frame.text = words_of(current, body)
@@ -780,6 +815,9 @@ def apply_edits_to_pptx(original_bytes: bytes, baseline: SlideModel, current: Sl
     marks_before, marks_after = marks_of(baseline), marks_of(current)
     for slide_number, slide_id in enumerate(baseline.order):
         touched_parts |= _patch_notes(prs, members, slide_number, baseline, current, slide_id)
+        if baseline.thing_name(slide_id) != current.thing_name(slide_id):
+            _call_slide(prs.slides[slide_number], current.thing_name(slide_id))
+            touched_parts.add(_slide_part(members, slide_number))
         shape_indices = _modeled_shape_indices(prs.slides[slide_number])
         for position, object_id in enumerate(obj.id for obj in baseline.objects_on(slide_id)):
             before, after = baseline_by_id[object_id], current_by_id[object_id]

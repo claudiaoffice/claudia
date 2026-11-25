@@ -240,11 +240,17 @@ history (one undo brings the box back next to the container) and the container g
 box shows it as gone. **Fix:** one server request that replaces the box in one `Batch`, giving the container the box's
 name.
 
-### CODE-25 · Object names are lost in pptx and odp without a word · P2 · open
+### CODE-25 · Object names are lost in pptx and odp without a word · P2 · fix on `batch-4`
 **Evidence (measured):** renaming a slide and exporting reports `not-written: names`; renaming an object reports
 nothing, because the `objects` facet counts as written. **Fix:** write the names (`p:cNvPr/@name`, `draw:name`; and the
 slide names: `p:cSld/@name`, the page's `draw:name`), read them on import (suffixing duplicates), then drop `names` from
 the unwritten facets. Until then every presentation's export lists `names` as not written.
+**Measured** again on `main` at `a2e9cf1f`: since slide names moved into the slides' records (D1470), not even
+`not-written: names` was reported any more; a round trip lost every name without a word. **Fix** on `batch-4`: the names
+are written (`p:cNvPr/@name`, `p:cSld/@name`; `draw:name` of an object and of a page) and read back, duplicates told
+apart as `Name (2)` (`distinct_name`); a page called `page<n>` has no name; an unnamed slide's page gets the first free
+`page<n>`. **Tests:** `test_pptx.py` and `test_odp.py`, "the names of slides and objects go out and come back", the
+kept-file patch, duplicates, a picture's name.
 
 ## Code review of 2026-11-15 at `7994b00`
 
