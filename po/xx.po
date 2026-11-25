@@ -3617,6 +3617,10 @@ msgstr "[Nàmés~~]"
 msgid "Names the format cannot hold as they are"
 msgstr "[Nàmés thé fôrmàt cànnôt hôld às théy àré~~~~~~~~~~~~~~~~]"
 
+#: web/app/lib/export-losses.ts
+msgid "Names, charts or rules this program does not show still name the old sheet: check them in the file."
+msgstr "[Nàmés, chàrts ôr rûlés thîs prôgràm dôés nôt shôw stîll nàmé thé ôld shéét: chéck thém în thé fîlé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+
 #: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/FormulaBar.vue web/app/components/Workspace.vue
 msgid "Names…"
 msgstr "[Nàmés…~~]"
@@ -5613,6 +5617,10 @@ msgstr "[Smàllést~~~]"
 msgid "Snap to grid"
 msgstr "[Snàp tô grîd~~~~~]"
 
+#: web/app/lib/export-losses.ts
+msgid "So what this program does not show of the original is not in it."
+msgstr "[Sô whàt thîs prôgràm dôés nôt shôw ôf thé ôrîgînàl îs nôt în ît.~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+
 #: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/TextWorkspace.vue
 msgid "Soft Hyphen"
 msgstr "[Sôft Hyphén~~~~]"
@@ -6348,6 +6356,10 @@ msgstr "[Thé fîlé hôlds thé côntént às ît îs nôw. Hîstôry ànd chà
 #: web/app/lib/open.ts
 msgid "The file is too large for this server."
 msgstr "[Thé fîlé îs tôô làrgé fôr thîs sérvér.~~~~~~~~~~~~~~~]"
+
+#: web/app/lib/export-losses.ts
+msgid "The file was written anew, not changed in place"
+msgstr "[Thé fîlé wàs wrîttén ànéw, nôt chàngéd în plàcé~~~~~~~~~~~~~~~~~~~]"
 
 #: web/app/components/ExportFormatDialog.vue
 msgid "The file will not be protected by a password."
@@ -7385,6 +7397,10 @@ msgstr "[Théy àré wrîttén às plàîn wôrds.~~~~~~~~~~~~~]"
 msgid "They come with the file and cannot be changed here — use Details… after it is in."
 msgstr "[Théy cômé wîth thé fîlé ànd cànnôt bé chàngéd héré — ûsé Détàîls… àftér ît îs în.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
+#: web/app/lib/export-losses.ts
+msgid "They were in the original file, in a part this program does not show."
+msgstr "[Théy wéré în thé ôrîgînàl fîlé, în à pàrt thîs prôgràm dôés nôt shôw.~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+
 #: web/app/components/StyleSpec.vue
 msgid "Thicker"
 msgstr "[Thîckér~~~]"
@@ -7392,6 +7408,10 @@ msgstr "[Thîckér~~~]"
 #: web/app/components/StyleSpec.vue
 msgid "Thicker border"
 msgstr "[Thîckér bôrdér~~~~~~]"
+
+#: web/app/lib/export-losses.ts
+msgid "Things in the file that may point to a sheet that is gone or renamed"
+msgstr "[Thîngs în thé fîlé thàt mày pôînt tô à shéét thàt îs gôné ôr rénàméd~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
 #: web/app/components/SidePanel.vue
 msgid "Things to point at"
@@ -7932,6 +7952,10 @@ msgstr "[Wébsîté~~~]"
 #: web/app/components/RandomDialog.vue
 msgid "Weibull"
 msgstr "[Wéîbûll~~~]"
+
+#: web/app/lib/export-losses.ts
+msgid "Went with what you deleted: {what}"
+msgstr "[Wént wîth whàt yôû délétéd: {what}~~~~~~~~~~~~~~]"
 
 #: web/app/lib/export-losses.ts
 msgid "What a name is for, or which table it belongs to, is not in the file."
@@ -8745,6 +8769,10 @@ msgstr "[ànd {moreCount} môré~~~~~~~~]"
 msgid "and {n} more"
 msgstr "[ànd {n} môré~~~~~]"
 
+#: web/app/lib/export-losses.ts
+msgid "animations"
+msgstr "[ànîmàtîôns~~~~]"
+
 #: web/app/components/OpenDialog.vue
 msgid "ann"
 msgstr "[ànn~]"
@@ -8857,6 +8885,10 @@ msgstr "[céll~~]"
 msgid "cell content"
 msgstr "[céll côntént~~~~~]"
 
+#: web/app/lib/export-losses.ts
+msgid "cell looks"
+msgstr "[céll lôôks~~~~]"
+
 #: packages/claudia-server/src/claudia_server/computes.py
 msgid "cell_styles: the window must not end before it starts"
 msgstr "[céll_stylés: thé wîndôw mûst nôt énd béfôré ît stàrts~~~~~~~~~~~~~~~~~~~~~]"
@@ -8897,6 +8929,10 @@ msgstr "[chàrt~~]"
 msgid "chart type"
 msgstr "[chàrt typé~~~~]"
 
+#: web/app/lib/export-losses.ts
+msgid "charts"
+msgstr "[chàrts~~]"
+
 #: web/app/components/SidePanel.vue
 msgid "chat message"
 msgstr "[chàt méssàgé~~~~~]"
@@ -8936,6 +8972,10 @@ msgstr "[côlûmn {n}~~~~]"
 #: packages/claudia-computes/src/claudia_computes/pivot.py
 msgid "columns: at most one column field in this version"
 msgstr "[côlûmns: àt môst ôné côlûmn fîéld în thîs vérsîôn~~~~~~~~~~~~~~~~~~~~]"
+
+#: web/app/lib/export-losses.ts
+msgid "comments"
+msgstr "[cômménts~~~]"
 
 #: web/app/components/Workspace.vue
 msgid "completions"
@@ -9121,6 +9161,10 @@ msgstr "[énd wîth~~~]"
 msgid "end with “{text}”"
 msgstr "[énd wîth “{text}”~~~~~~~]"
 
+#: web/app/lib/export-losses.ts
+msgid "endnotes"
+msgstr "[éndnôtés~~~]"
+
 #: web/app/lib/grid-a11y.ts
 msgid "error {value}"
 msgstr "[érrôr {value}~~~~~]"
@@ -9165,6 +9209,10 @@ msgstr "[éxpôrtéd às {format}~~~~~~~~]"
 msgid "exported unprotected"
 msgstr "[éxpôrtéd ûnprôtéctéd~~~~~~~~]"
 
+#: web/app/lib/export-losses.ts
+msgid "fields"
+msgstr "[fîélds~~]"
+
 #: packages/claudia-server/src/claudia_server/admin_fonts.py
 msgid "files must be a list of tokens from /api/admin/fonts/files"
 msgstr "[fîlés mûst bé à lîst ôf tôkéns frôm /àpî/àdmîn/fônts/fîlés~~~~~~~~~~~~~~~~~~~~~~~]"
@@ -9197,9 +9245,25 @@ msgstr "[fônt~~]"
 msgid "font {hash}… is not in the server's catalogue"
 msgstr "[fônt {hash}… îs nôt în thé sérvér's càtàlôgûé~~~~~~~~~~~~~~~~~~]"
 
+#: web/app/lib/export-losses.ts
+msgid "footnotes"
+msgstr "[fôôtnôtés~~~~]"
+
+#: web/app/lib/export-losses.ts
+msgid "formatting"
+msgstr "[fôrmàttîng~~~~]"
+
 #: web/app/components/SearchPanel.vue web/app/lib/grid-a11y.ts
 msgid "formula"
 msgstr "[fôrmûlà~~~]"
+
+#: web/app/lib/export-losses.ts
+msgid "formulas"
+msgstr "[fôrmûlàs~~~]"
+
+#: web/app/lib/export-losses.ts
+msgid "frames"
+msgstr "[fràmés~~]"
 
 #: packages/claudia-server/src/claudia_server/thing_names.py
 msgid "free_name: there are no things of the kind {kind!r}"
@@ -9304,6 +9368,10 @@ msgstr "[în {name}~~~~]"
 #: web/app/components/PivotValueDialog.vue
 msgid "in {source}"
 msgstr "[în {source}~~~~]"
+
+#: web/app/lib/export-losses.ts
+msgid "input rules"
+msgstr "[înpût rûlés~~~~]"
 
 #: web/app/components/InsertBar.vue
 msgid "insert"
@@ -9420,6 +9488,10 @@ msgstr "[lîné héîght~~~~]"
 #: web/app/components/ContainerFace.vue
 msgid "line {line}: {message}"
 msgstr "[lîné {line}: {message}~~~~~~~~~]"
+
+#: web/app/lib/export-losses.ts
+msgid "links"
+msgstr "[lînks~~]"
 
 #: web/app/components/SearchPanel.vue
 msgid "locked by {name}"
@@ -9713,7 +9785,7 @@ msgstr "[nôt thé ôptîôns ôf à tàblé ôf cônténts: {reason}~~~~~~~~~~~
 msgid "not valid JSON"
 msgstr "[nôt vàlîd JSÔN~~~~~~]"
 
-#: web/app/components/SearchPanel.vue
+#: web/app/components/SearchPanel.vue web/app/lib/export-losses.ts
 msgid "notes"
 msgstr "[nôtés~~]"
 
@@ -9732,6 +9804,10 @@ msgstr "[nûmbérs~~~]"
 #: web/app/components/SearchPanel.vue web/app/lib/noun-phrases.ts
 msgid "object"
 msgstr "[ôbjéct~~]"
+
+#: web/app/lib/export-losses.ts
+msgid "objects"
+msgstr "[ôbjécts~~~]"
 
 #: packages/claudia-server/src/claudia_server/styles.py
 msgid "objects must be a list of at most {limit} object ids"
@@ -9937,6 +10013,10 @@ msgstr "[péôplé sét à dôcûmént ûp, nôt thé àssîstànt~~~~~~~~~~~~~~
 msgid "picture"
 msgstr "[pîctûré~~~]"
 
+#: web/app/lib/export-losses.ts
+msgid "pictures"
+msgstr "[pîctûrés~~~]"
+
 #: web/app/lib/pivots.ts
 msgid "pivot table column header"
 msgstr "[pîvôt tàblé côlûmn héàdér~~~~~~~~~~]"
@@ -10089,6 +10169,10 @@ msgstr "[rôw {n}’s stylé~~~~~~]"
 msgid "rows: at most one row field in this version"
 msgstr "[rôws: àt môst ôné rôw fîéld în thîs vérsîôn~~~~~~~~~~~~~~~~~]"
 
+#: web/app/lib/export-losses.ts
+msgid "ruby text"
+msgstr "[rûby téxt~~~~]"
+
 #: web/app/lib/audit.ts
 msgid "saved a PDF"
 msgstr "[sàvéd à PDF~~~~]"
@@ -10213,6 +10297,10 @@ msgstr "[sôûrcé ôf thé pîvôt tàblé~~~~~~~~~~]"
 msgid "spacing"
 msgstr "[spàcîng~~~]"
 
+#: web/app/lib/export-losses.ts
+msgid "speaker notes"
+msgstr "[spéàkér nôtés~~~~~]"
+
 #: web/app/components/RandomDialog.vue
 msgid "spread (standard deviation)"
 msgstr "[spréàd (stàndàrd dévîàtîôn)~~~~~~~~~~~]"
@@ -10281,7 +10369,7 @@ msgstr "[tàgs àré wôrds~~~~~~]"
 msgid "targets is a list of 1 to {limit} targets"
 msgstr "[tàrgéts îs à lîst ôf 1 tô {limit} tàrgéts~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue
+#: web/app/components/SearchPanel.vue web/app/lib/export-losses.ts
 msgid "text"
 msgstr "[téxt~~]"
 
@@ -10992,6 +11080,14 @@ msgstr "[tràcé: wîndôw îs [rôw0, côl0, rôw1, côl1]~~~~~~~~~~~~~~~~]"
 #: packages/claudia-server/src/claudia_server/computes.py
 msgid "trace: window too large (at most {limit} positions)"
 msgstr "[tràcé: wîndôw tôô làrgé (àt môst {limit} pôsîtîôns)~~~~~~~~~~~~~~~~~~~~]"
+
+#: web/app/lib/export-losses.ts
+msgid "tracked changes"
+msgstr "[tràckéd chàngés~~~~~~]"
+
+#: web/app/lib/export-losses.ts
+msgid "transitions"
+msgstr "[trànsîtîôns~~~~]"
 
 #: web/app/components/RandomDialog.vue
 msgid "trials"

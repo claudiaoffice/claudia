@@ -3617,6 +3617,10 @@ msgstr ""
 msgid "Names the format cannot hold as they are"
 msgstr ""
 
+#: web/app/lib/export-losses.ts
+msgid "Names, charts or rules this program does not show still name the old sheet: check them in the file."
+msgstr ""
+
 #: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/FormulaBar.vue web/app/components/Workspace.vue
 msgid "Names…"
 msgstr ""
@@ -5613,6 +5617,10 @@ msgstr ""
 msgid "Snap to grid"
 msgstr ""
 
+#: web/app/lib/export-losses.ts
+msgid "So what this program does not show of the original is not in it."
+msgstr ""
+
 #: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/TextWorkspace.vue
 msgid "Soft Hyphen"
 msgstr ""
@@ -6347,6 +6355,10 @@ msgstr ""
 
 #: web/app/lib/open.ts
 msgid "The file is too large for this server."
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "The file was written anew, not changed in place"
 msgstr ""
 
 #: web/app/components/ExportFormatDialog.vue
@@ -7385,12 +7397,20 @@ msgstr ""
 msgid "They come with the file and cannot be changed here — use Details… after it is in."
 msgstr ""
 
+#: web/app/lib/export-losses.ts
+msgid "They were in the original file, in a part this program does not show."
+msgstr ""
+
 #: web/app/components/StyleSpec.vue
 msgid "Thicker"
 msgstr ""
 
 #: web/app/components/StyleSpec.vue
 msgid "Thicker border"
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "Things in the file that may point to a sheet that is gone or renamed"
 msgstr ""
 
 #: web/app/components/SidePanel.vue
@@ -7931,6 +7951,10 @@ msgstr ""
 
 #: web/app/components/RandomDialog.vue
 msgid "Weibull"
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "Went with what you deleted: {what}"
 msgstr ""
 
 #: web/app/lib/export-losses.ts
@@ -8745,6 +8769,10 @@ msgstr ""
 msgid "and {n} more"
 msgstr ""
 
+#: web/app/lib/export-losses.ts
+msgid "animations"
+msgstr ""
+
 #: web/app/components/OpenDialog.vue
 msgid "ann"
 msgstr ""
@@ -8857,6 +8885,10 @@ msgstr ""
 msgid "cell content"
 msgstr ""
 
+#: web/app/lib/export-losses.ts
+msgid "cell looks"
+msgstr ""
+
 #: packages/claudia-server/src/claudia_server/computes.py
 msgid "cell_styles: the window must not end before it starts"
 msgstr ""
@@ -8897,6 +8929,10 @@ msgstr ""
 msgid "chart type"
 msgstr ""
 
+#: web/app/lib/export-losses.ts
+msgid "charts"
+msgstr ""
+
 #: web/app/components/SidePanel.vue
 msgid "chat message"
 msgstr ""
@@ -8935,6 +8971,10 @@ msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/pivot.py
 msgid "columns: at most one column field in this version"
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "comments"
 msgstr ""
 
 #: web/app/components/Workspace.vue
@@ -9121,6 +9161,10 @@ msgstr ""
 msgid "end with “{text}”"
 msgstr ""
 
+#: web/app/lib/export-losses.ts
+msgid "endnotes"
+msgstr ""
+
 #: web/app/lib/grid-a11y.ts
 msgid "error {value}"
 msgstr ""
@@ -9165,6 +9209,10 @@ msgstr ""
 msgid "exported unprotected"
 msgstr ""
 
+#: web/app/lib/export-losses.ts
+msgid "fields"
+msgstr ""
+
 #: packages/claudia-server/src/claudia_server/admin_fonts.py
 msgid "files must be a list of tokens from /api/admin/fonts/files"
 msgstr ""
@@ -9197,8 +9245,24 @@ msgstr ""
 msgid "font {hash}… is not in the server's catalogue"
 msgstr ""
 
+#: web/app/lib/export-losses.ts
+msgid "footnotes"
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "formatting"
+msgstr ""
+
 #: web/app/components/SearchPanel.vue web/app/lib/grid-a11y.ts
 msgid "formula"
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "formulas"
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "frames"
 msgstr ""
 
 #: packages/claudia-server/src/claudia_server/thing_names.py
@@ -9303,6 +9367,10 @@ msgstr ""
 
 #: web/app/components/PivotValueDialog.vue
 msgid "in {source}"
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "input rules"
 msgstr ""
 
 #: web/app/components/InsertBar.vue
@@ -9419,6 +9487,10 @@ msgstr ""
 
 #: web/app/components/ContainerFace.vue
 msgid "line {line}: {message}"
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "links"
 msgstr ""
 
 #: web/app/components/SearchPanel.vue
@@ -9713,7 +9785,7 @@ msgstr ""
 msgid "not valid JSON"
 msgstr ""
 
-#: web/app/components/SearchPanel.vue
+#: web/app/components/SearchPanel.vue web/app/lib/export-losses.ts
 msgid "notes"
 msgstr ""
 
@@ -9731,6 +9803,10 @@ msgstr ""
 
 #: web/app/components/SearchPanel.vue web/app/lib/noun-phrases.ts
 msgid "object"
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "objects"
 msgstr ""
 
 #: packages/claudia-server/src/claudia_server/styles.py
@@ -9937,6 +10013,10 @@ msgstr ""
 msgid "picture"
 msgstr ""
 
+#: web/app/lib/export-losses.ts
+msgid "pictures"
+msgstr ""
+
 #: web/app/lib/pivots.ts
 msgid "pivot table column header"
 msgstr ""
@@ -10089,6 +10169,10 @@ msgstr ""
 msgid "rows: at most one row field in this version"
 msgstr ""
 
+#: web/app/lib/export-losses.ts
+msgid "ruby text"
+msgstr ""
+
 #: web/app/lib/audit.ts
 msgid "saved a PDF"
 msgstr ""
@@ -10213,6 +10297,10 @@ msgstr ""
 msgid "spacing"
 msgstr ""
 
+#: web/app/lib/export-losses.ts
+msgid "speaker notes"
+msgstr ""
+
 #: web/app/components/RandomDialog.vue
 msgid "spread (standard deviation)"
 msgstr ""
@@ -10281,7 +10369,7 @@ msgstr ""
 msgid "targets is a list of 1 to {limit} targets"
 msgstr ""
 
-#: web/app/components/SearchPanel.vue
+#: web/app/components/SearchPanel.vue web/app/lib/export-losses.ts
 msgid "text"
 msgstr ""
 
@@ -10991,6 +11079,14 @@ msgstr ""
 
 #: packages/claudia-server/src/claudia_server/computes.py
 msgid "trace: window too large (at most {limit} positions)"
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "tracked changes"
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "transitions"
 msgstr ""
 
 #: web/app/components/RandomDialog.vue

@@ -170,14 +170,77 @@ const WORDS: Record<string, Words> = {
     title: counted(t('Planned times of slides'), count),
     hint: t('The only time the format holds is when a slide moves on by itself.'),
   }),
-  'notes-link': (count, _, t) => ({ title: counted(t('Links in speaker notes'), count), hint: t('They are written as plain words.') }),
-  'notes-image': (count, _, t) => ({ title: counted(t('Pictures in speaker notes'), count), hint: t('They are written as plain words.') }),
-  'notes-code': (count, _, t) => ({ title: counted(t('Code in speaker notes'), count), hint: t('They are written as plain words.') }),
-  'notes-quote': (count, _, t) => ({ title: counted(t('Quotes in speaker notes'), count), hint: t('They are written as plain words.') }),
+  'stale-reference': (_, __, t) => ({
+    title: t('Things in the file that may point to a sheet that is gone or renamed'),
+    hint: t('Names, charts or rules this program does not show still name the old sheet: check them in the file.'),
+  }),
+  'not-patched': (_, __, t) => ({
+    title: t('The file was written anew, not changed in place'),
+    hint: t('So what this program does not show of the original is not in it.'),
+  }),
   'not-written': (_, details, t) => ({
     title: t('Not in the file: {what}', { what: details.map((facet) => facetWords(facet, t)).join(', ') }),
     hint: t('This format has no place for it.'),
   }),
+}
+
+/** The words of what a kind of thing in speaker notes is (``notes-link``...). */
+function notesWords(member: string, t: Translate): string {
+  const words: Record<string, () => string> = {
+    link: () => t('Links in speaker notes'),
+    image: () => t('Pictures in speaker notes'),
+    code: () => t('Code in speaker notes'),
+    quote: () => t('Quotes in speaker notes'),
+  }
+  return words[member]?.() ?? member
+}
+
+/** The words of what went with a deleted paragraph, sheet or slide (``removed-comment``...): what the file had there
+ *  that this program does not show, named by its own loss code or by the kind of thing it is. */
+function removedWords(member: string, t: Translate): string {
+  const words: Record<string, () => string> = {
+    comment: () => t('comments'),
+    note: () => t('notes'),
+    footnote: () => t('footnotes'),
+    endnote: () => t('endnotes'),
+    field: () => t('fields'),
+    frame: () => t('frames'),
+    link: () => t('links'),
+    'tracked-change': () => t('tracked changes'),
+    ruby: () => t('ruby text'),
+    'ruby-text': () => t('ruby text'),
+    formatting: () => t('formatting'),
+    text: () => t('text'),
+    notes: () => t('speaker notes'),
+    transition: () => t('transitions'),
+    animation: () => t('animations'),
+    chart: () => t('charts'),
+    picture: () => t('pictures'),
+    object: () => t('objects'),
+    formula: () => t('formulas'),
+    look: () => t('cell looks'),
+    validation: () => t('input rules'),
+  }
+  return words[member]?.() ?? member
+}
+
+/** The words of the kinds that come in families, by their prefix: the rest of the code says what of the family. */
+const FAMILIES: Record<string, (member: string) => Words> = {
+  'notes-': (member) => (count, _, t) => ({
+    title: counted(notesWords(member, t), count),
+    hint: t('They are written as plain words.'),
+  }),
+  'removed-': (member) => (count, _, t) => ({
+    title: counted(t('Went with what you deleted: {what}', { what: removedWords(member, t) }), count),
+    hint: t('They were in the original file, in a part this program does not show.'),
+  }),
+}
+
+/** The words of ``kind``: its own, or those of its family; none for a kind nobody has put into words yet. */
+function wordsOf(kind: string): Words | undefined {
+  if (WORDS[kind]) return WORDS[kind]
+  const prefix = Object.keys(FAMILIES).find((family) => kind.startsWith(family))
+  return prefix ? FAMILIES[prefix]!(kind.slice(prefix.length)) : undefined
 }
 
 /** One line per kind of loss, in the order the file reported them. A kind nobody has put into words yet is still
@@ -191,7 +254,7 @@ export function lossLines(losses: readonly ExportLoss[], t: Translate): LossLine
     kinds.set(loss.kind, seen)
   }
   return [...kinds].map(([kind, { count, details }]) => {
-    const words = WORDS[kind]
+    const words = wordsOf(kind)
     if (words) return { kind, ...words(count, details, t) }
     return { kind, title: counted(t('Something this format has no place for'), count), hint: t('Its code is “{code}”.', { code: [kind, ...details].join(': ') }) }
   })
