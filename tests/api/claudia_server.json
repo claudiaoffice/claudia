@@ -301,7 +301,8 @@
   ],
   "init": "(document: 'Document', workers: 'Submittable', *, timeout: 'float' = 30.0)",
   "methods": {
-   "close": "(self) -> 'None'"
+   "close": "(self) -> 'None'",
+   "idle": "(self) -> 'None'"
   },
   "properties": []
  },
