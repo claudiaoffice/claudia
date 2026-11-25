@@ -39,7 +39,7 @@ import { currentLocale } from '~/lib/locale'
 import { formatCodeOf, inkOf, symbolsFor } from '~/lib/number-format'
 import { chipsOf, dotFractions, outcomeCaption, type Alt, type Summary } from '~/lib/outcomes'
 import { colorOf, inkOn } from '~/lib/people'
-import { nameTagPlace } from '~/lib/name-tag'
+import { nameTagInside } from '~/lib/name-tag'
 import { ROLE_SHAPE, roleAt, type Role } from '~/lib/follow'
 import { REFERENCE_COLORS, referencesIn } from '~/lib/pointing'
 import { viewTints } from '~/lib/replay-tint'
@@ -404,13 +404,14 @@ const outlines = computed(() => {
     hold.regions.forEach((region, i) => {
       if (region.kind !== 'cells' || region.range.first.sheet !== props.sheet) return
       const { first, last } = region.range
+      const inside = nameTagInside(y(first.row) - HH)
       out.push({
         id: `${user}:${i}`,
         name: user,
         locked: hold.locked,
         ai: user.toLowerCase() === 'ai',
-        tagInside: nameTagPlace(y(first.row) - HH) === 'inside',
-        style: { ...box(first.row, first.col, last.row, last.col), '--who': color, '--who-ink': inkOn(color) },
+        tagInside: inside !== null,
+        style: { ...box(first.row, first.col, last.row, last.col), '--who': color, '--who-ink': inkOn(color), '--tag-down': `${inside ?? 0}px` },
       })
     })
   }
@@ -467,8 +468,8 @@ function objectStyle(o: SheetObject) {
 /** A colleague's selection of an object: the object's box, with her name inside its top edge where above it would be
  * under the column letters (UX-86). */
 function otherStyle(o: SheetObject) {
-  const inside = nameTagPlace(frameOf(o).y - scroll.value.top) === 'inside'
-  return inside ? { ...objectStyle(o), '--tag-top': '0px' } : objectStyle(o)
+  const inside = nameTagInside(frameOf(o).y - scroll.value.top)
+  return inside === null ? objectStyle(o) : { ...objectStyle(o), '--tag-top': `${inside}px` }
 }
 /** What a screen reader says for an object on the sheet: its kind and description, or that it is decoration. */
 const nameOf = (o: SheetObject) => objectName(o)
@@ -1773,7 +1774,7 @@ defineExpose({
   white-space: nowrap;
 }
 .outline.tag-inside .tag {
-  top: 0;
+  top: var(--tag-down);
   bottom: auto;
   border-radius: 0 6px 6px 6px;
 }
