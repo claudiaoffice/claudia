@@ -685,10 +685,12 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
 
   /** Hold these regions so that nobody else changes them; false after telling the person why not. */
   protected async holdRegions(regions: Region[]): Promise<boolean> {
-    if ((await this.attempt('lock', { regions })) === false) return false
+    // locked from the moment it is asked for: letting go before the answer still unlocks (requests keep their order)
     this.holdingRegions = true
     this.shownWhere = ''
-    return true
+    if ((await this.attempt('lock', { regions })) !== false) return true
+    this.holdingRegions = false
+    return false
   }
 
   /** Let go of what I hold, if anything. */
@@ -709,15 +711,16 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
    * colleague has it locked (the person was told why). Only looking, the selection is shown, not locked. `holder` is
    * the slide, sheet or paragraph the object is on, for an object this session has not been told of yet.
    */
-  async lockObject(id: string | null, holder = id === null ? undefined : this.state.objects[id]?.anchor.holder): Promise<boolean> {
+  async lockObject(id: string | null, holder?: string): Promise<boolean> {
     if (id === null) {
       await this.releaseRegions()
       const resting = this.restingRegions()
       await this.showRegions(JSON.stringify(resting), resting)
       return true
     }
-    if (holder === undefined) return false
-    const regions: Region[] = [{ kind: 'objects', holder, ids: [id] }]
+    const on = holder ?? this.state.objects[id]?.anchor.holder
+    if (on === undefined) return false
+    const regions: Region[] = [{ kind: 'objects', holder: on, ids: [id] }]
     if (!this.readOnly) return this.holdRegions(regions)
     await this.showRegions(`select ${id}`, regions)
     return true

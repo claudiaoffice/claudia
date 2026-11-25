@@ -478,6 +478,17 @@ describe('selecting a floating object locks it, as in creates (D1223)', () => {
     expect(count(link, 'unlock')).toBe(1)
     expect(link.last('presence').regions).toEqual([{ kind: 'cells', range: { first: { row: 2, col: 1, sheet: 's1' }, last: { row: 2, col: 1, sheet: 's1' } } }])
   })
+  it('shows nothing, not the cells of a sheet, when it lets go of an object on a slide', async () => {
+    const { link, session } = await withPicture()
+    await session.show('s1', 2, 1)
+    link.handlers.slides = () => [{ id: 'p1', objects: 0 }]
+    link.push('slides', { type: 'slides' })
+    await session.settled()
+    await session.showSlide('p1')
+    await session.lockObject('t1', 'p1')
+    await session.lockObject(null)
+    expect(link.last('presence').regions).toEqual([])
+  })
   it('is refused an object a colleague has locked, and says why', async () => {
     const { link, session } = await withPicture()
     link.handlers.lock = () => {

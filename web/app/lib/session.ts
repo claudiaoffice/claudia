@@ -382,7 +382,7 @@ export class Session extends BaseSession<State> implements SlideHost {
 
   /** The objects of a slide that colleagues have selected, and whether they hold them. */
   selectedByOthers(slide: string): Other[] {
-    return othersOn(this.state, slide)
+    return othersOn(this.state, (holder) => holder === slide)
   }
 
   /** Select an object on the slide on show (`null`: nothing). Selecting holds it; a colleague who holds it first keeps
@@ -957,16 +957,17 @@ export class Session extends BaseSession<State> implements SlideHost {
     return { kind: 'cells', range: { first: ref(Math.min(r0, r1), Math.min(c0, c1)), last: ref(Math.max(r0, r1), Math.max(c0, c1)) } }
   }
 
-  /** The cells last shown to the others: where I am again when I let go of an object. */
-  private here: Region[] = []
+  /** The cells last shown to the others: where I am again when I let go of an object on a sheet. */
+  private restingCells: Region[] = []
 
   async show(sheet: string, r0: number, c0: number, r1 = r0, c1 = c0): Promise<void> {
-    this.here = [this.region(sheet, r0, c0, r1, c1)]
-    await this.showRegions(JSON.stringify([sheet, r0, c0, r1, c1]), this.here)
+    this.restingCells = [this.region(sheet, r0, c0, r1, c1)]
+    await this.showRegions(JSON.stringify([sheet, r0, c0, r1, c1]), this.restingCells)
   }
 
+  /** My cells, while a sheet is shown; on a slide, nowhere, as in creates. */
   protected override restingRegions(): Region[] {
-    return this.here
+    return this.state.activeSlide ? [] : this.restingCells
   }
 
   beginEdit(sheet: string, row: number, col: number): Promise<boolean> {

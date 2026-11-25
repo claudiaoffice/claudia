@@ -430,7 +430,7 @@ const replayClass = (id: string) => {
  * locked keeps it, and the person is told; letting go shows the others my cells again. */
 const selectedObject = ref<string | null>(null)
 watch(selectedObject, async (id) => {
-  if (!(await props.session.lockObject(id)) && selectedObject.value === id) selectedObject.value = null
+  if (!(await props.session.lockObject(id, props.sheet)) && selectedObject.value === id) selectedObject.value = null
 })
 /** Another sheet shown, or the grid gone: the object of this one is let go of. */
 watch(() => props.sheet, () => (selectedObject.value = null))
@@ -439,8 +439,18 @@ onBeforeUnmount(() => {
 })
 
 const objects = computed(() => props.session.sheetObjects(props.sheet))
-/** What colleagues have selected on this sheet (D1223). */
-const others = computed(() => props.session.selectedByOthers(props.sheet))
+/** A selected object that somebody removed is no longer selected, nor locked. */
+watch(objects, (list, before) => {
+  const id = selectedObject.value
+  if (id !== null && before.some((o) => o.id === id) && !list.some((o) => o.id === id)) selectedObject.value = null
+})
+/** What colleagues have selected on this sheet (D1223), and the object each is on. */
+const others = computed(() =>
+  props.session.selectedByOthers(props.sheet).flatMap((other) => {
+    const object = props.session.sheetObject(other.id)
+    return object ? [{ other, object }] : []
+  }),
+)
 
 /** The frame an object is drawn in: the preview of the gesture under way, else its own (sheet pixels from the first cell,
  * without the headers or the scroll), and the angle it is drawn at. */
@@ -1362,9 +1372,7 @@ defineExpose({
         </div>
 
         <!-- what colleagues have selected: their colour and name (D1223) -->
-        <template v-for="other in others" :key="`${other.user}:${other.id}`">
-          <OtherOnObject v-if="session.sheetObject(other.id)" :other="other" :color="colorOf(state, other.user)" :style="objectStyle(session.sheetObject(other.id)!)" />
-        </template>
+        <OtherOnObject v-for="{ other, object } in others" :key="`${other.user}:${other.id}`" :other="other" :color="colorOf(state, other.user)" :style="objectStyle(object)" />
 
         <!-- my selection: the handles, drawn once for the three apps (the outline is the object's own) -->
         <!-- the handles are the object's: their mousedown, which follows the pointerdown, is no cell selection either -->

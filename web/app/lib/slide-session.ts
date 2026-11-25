@@ -186,7 +186,7 @@ export class SlideSession extends BaseSession<SlideState> implements SlideHost {
 
   /** The objects of a slide that colleagues have selected, and whether they hold them. */
   selectedByOthers(slide: string): Other[] {
-    return othersOn(this.state, slide)
+    return othersOn(this.state, (holder) => holder === slide)
   }
 
   // ------------------------------------------------------------------------------ events

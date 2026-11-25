@@ -12,7 +12,7 @@ import type { ObjectKind } from '@claudia/layout'
 import type { ImageImport } from './images'
 import type { Toc } from './contents'
 import type { RefField } from './references'
-import type { BaseState } from './base-session'
+import type { Region } from './protocol'
 
 /** Where an object sits, in the terms of one app. `holder` is its slide, sheet or paragraph. */
 export interface SlideAnchor {
@@ -247,21 +247,27 @@ export function wordsCssOf(styles: Record<string, StyleDef>, body: ObjectBody): 
   return body.paragraph ? (styles[body.paragraph.style]?.resolved ?? {}) : {}
 }
 
-/** A colleague's selection of an object, and whether they hold it (D1223): the same in all three apps. */
+/** A colleague's selection of an object, and whether it is locked (D1223): the same in all three apps. */
 export interface Other {
   id: string
   user: string
   locked: boolean
 }
 
-/** The objects of `holder` that colleagues have selected, and whether they hold them: what `selectedByOthers` says in
- * all three apps. */
-export function othersOn(state: Pick<BaseState, 'presence' | 'me'>, holder: string): Other[] {
+/** Where everybody is (`BaseState`'s `presence` and `me`). */
+interface Whereabouts {
+  presence: Record<string, { regions: Region[]; locked: boolean }>
+  me: { user: string }
+}
+
+/** The objects that colleagues have selected, on the holders `on` accepts, and whether they are locked: what
+ * `selectedByOthers` says in all three apps. */
+export function othersOn(state: Whereabouts, on: (holder: string) => boolean): Other[] {
   const found: Other[] = []
   for (const [user, here] of Object.entries(state.presence)) {
     if (user === state.me.user) continue
     for (const region of here.regions) {
-      if (region.kind === 'objects' && region.holder === holder) for (const id of region.ids) found.push({ id, user, locked: here.locked })
+      if (region.kind === 'objects' && on(region.holder)) for (const id of region.ids) found.push({ id, user, locked: here.locked })
     }
   }
   return found

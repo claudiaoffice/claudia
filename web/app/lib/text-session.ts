@@ -192,8 +192,8 @@ export class TextSession extends BaseSession<TextState> {
 
   /** The objects of this text that colleagues have selected, and whether they have them locked. */
   selectedByOthers(): Other[] {
-    const holders = new Set(Object.values(this.state.objects).map((o) => o.anchor.holder))
-    return [...holders].flatMap((holder) => othersOn(this.state, holder))
+    const paragraphs = this.state.paragraphs
+    return othersOn(this.state, (holder) => paragraphs.some((b) => b.id === holder))
   }
 
   /** Hang a container of `type` from `place` (a paragraph and a place in it, in screen units); its id, or `null` after
@@ -280,7 +280,11 @@ export class TextSession extends BaseSession<TextState> {
   /** Hang an object from another place of the text. `away` is how far it floats from that character (D1023): left out,
    * the object keeps the offset it has. */
   async moveObject(id: string, place: { paragraph: string; offset: number }, away?: { dx: number; dy: number }): Promise<boolean> {
-    return (await this.write('move_object', { id, ...this.placeOnWire(place), ...(away ?? {}) })) !== false
+    const from = this.state.objects[id]?.anchor.holder
+    if ((await this.write('move_object', { id, ...this.placeOnWire(place), ...(away ?? {}) })) === false) return false
+    // the lock names the paragraph the object hangs from: a selected object moved to another one is locked there (D1223)
+    if (this.state.selectedObject === id && place.paragraph !== from) await this.lockObject(id, place.paragraph)
+    return true
   }
 
   async resizeObject(id: string, w: number, h: number): Promise<boolean> {
@@ -441,7 +445,7 @@ export class TextSession extends BaseSession<TextState> {
     s.library = shapes.library
     s.tables = Object.fromEntries(tables.map((x) => [x.id, x]))
     if (s.box && !s.tables[s.box.table]) s.box = null
-    if (s.selectedObject && !s.objects[s.selectedObject]) s.selectedObject = null
+    if (s.selectedObject && !s.objects[s.selectedObject]) this.track(this.selectObject(null))
     s.styles = Object.fromEntries(answer.styles.map((x) => [x.id, x]))
     s.lists = answer.lists
     s.schemes = answer.schemes
@@ -494,10 +498,10 @@ export class TextSession extends BaseSession<TextState> {
   }
 
   // ------------------------------------------------------------------------------ events
-  /** A selected object that went is no longer selected. */
+  /** A selected object that went is no longer selected, and no longer locked. */
   protected override objectsChanged(): void {
     const s = this.state
-    if (s.selectedObject && !s.objects[s.selectedObject]) s.selectedObject = null
+    if (s.selectedObject && !s.objects[s.selectedObject]) this.track(this.selectObject(null))
   }
 
   protected onAppEvent(name: string, data: WireData): boolean {
