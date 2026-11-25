@@ -432,6 +432,52 @@ jobs:
             Get-Content "$env:LOCALAPPDATA\Claudia\composes\state\shell.log", "$env:LOCALAPPDATA\Claudia\state\server.log" -Tail 40 -ErrorAction SilentlyContinue
           }
 
+      # Neutralino does not end its extension (the core, a node of the installation) when its window is gone (Neutralino's
+      # release notes, v4.0.0; the core ends itself when the link to Neutralino breaks, CODE-97). A person closes the window,
+      # or it crashes; either way no node of the window may stay. Where no window can be opened at all (no desktop on this
+      # runner) the step says so and passes: that says nothing about the core.
+      - name: The core of a window ends when its window is closed or killed
+        run: |
+          . .\helpers.ps1
+          $launcher = "$env:INSTALL_DIR\client\claudia-start.exe"
+          $log = "$env:LOCALAPPDATA\Claudia\composes\state\shell.log"
+          function Get-Cores { @(Get-CimInstance Win32_Process -Filter "Name = 'node.exe'" | Where-Object { $_.CommandLine -like '*\Claudia\run\*' }) }
+          function Wait-For([scriptblock]$Condition, [int]$Seconds) {
+            $until = (Get-Date).AddSeconds($Seconds)
+            while ((Get-Date) -lt $until) { if (& $Condition) { return $true }; Start-Sleep -Milliseconds 500 }
+            return $false
+          }
+          $linked = { (Test-Path $log) -and ((Get-Content $log -ErrorAction SilentlyContinue | Where-Object { $_ -match 'connected to Neutralino' }).Count -gt $script:linkedBefore) }
+          $failures = @()
+          try {
+            foreach ($how in 'closed', 'killed') {
+              Get-Process neutralino-win_x64, claudia-server -ErrorAction SilentlyContinue | Stop-Process -Force
+              $script:linkedBefore = if (Test-Path $log) { (Get-Content $log | Where-Object { $_ -match 'connected to Neutralino' }).Count } else { 0 }
+              $started = Start-Process $launcher -ArgumentList 'composes' -PassThru
+              if (-not (Wait-For $linked 90)) {
+                Write-Host "No window of composes came up in 90 seconds ($how): this runner may have no desktop. Nothing to say about the core."
+                if (Test-Path $log) { Get-Content $log -Tail 20 }
+                return
+              }
+              $cores = Get-Cores
+              $window = Get-Process neutralino-win_x64 -ErrorAction SilentlyContinue
+              Write-Host "[$how] window $($window.Id), cores $(($cores | ForEach-Object ProcessId) -join ', '), launcher $($started.Id)"
+              if ($how -eq 'closed') { if (-not $window.CloseMainWindow()) { Write-Host 'CloseMainWindow found no window to close' } }
+              else { Stop-Process -Id $window.Id -Force }
+              if ($cores.Count -eq 0) { $failures += "[$how] no core of the window was found by its command line (*\Claudia\run\*)"; continue }
+              $ended = Wait-For { -not (Get-Process -Id ($cores | ForEach-Object ProcessId) -ErrorAction SilentlyContinue) } 30
+              if (-not $ended) {
+                $failures += "[$how] a core of the window was still running 30 seconds after the window ($(( $cores | ForEach-Object ProcessId) -join ', '))"
+              }
+              Write-Host "[$how] launcher still running: $(-not $started.HasExited)"
+              Get-Content $log -Tail 12 -ErrorAction SilentlyContinue
+            }
+          } finally {
+            Get-Cores | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
+            Get-Process neutralino-win_x64, claudia-server, claudia-start -ErrorAction SilentlyContinue | Stop-Process -Force
+          }
+          if ($failures) { throw ($failures -join "`n") }
+
       - name: Uninstall, standard
         run: |
           . .\helpers.ps1
