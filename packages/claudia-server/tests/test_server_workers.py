@@ -171,7 +171,7 @@ class AnsweredByTheTest(Executor):
         self.futures.append(Future())
         return self.futures[-1]
 
-    def shutdown(self, wait=True, *, cancel_futures=False):
+    def shutdown(self, wait=True, **_options):  # (cancel_futures: nothing runs here to cancel)
         self.let_go = True
 
 
