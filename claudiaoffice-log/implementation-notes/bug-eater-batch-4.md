@@ -68,6 +68,16 @@ model: when every run of a paragraph has the same font of its own, a provisional
 | SEC-24 | 2 | An owner's export writes every chat message, also private ones between other people she cannot read | read (helper) |
 | SEC-25 | 2 | An editor can send a whole `core.Import` through `apply` and replace the document (or forge a note) | read (helper) |
 | CODE-105 | 3 | docx: a paragraph mark's own run properties count as a `formatting` loss, though nothing is lost | measured (helper) |
+| UX-93 | 2 | The font banner ("This document uses fonts this server does not have …") is dark text on a dark ground: `--ink` on `--panel-2`'s fallback `#2a2342`, about 1.1:1 (BITV 1.4.3 asks 4.5:1) | measured in the browser (computed colours) |
+
+## Used before delivery
+
+In Chromium, on a fresh build: a "Title and Content" pptx opened in creates shows its title in the heading font's
+stand-in and its body with the master's bullet (CODE-45; the second line has none, CODE-102); the recovery key's
+"Copied." is in its status region, and every empty status region on the page is placed absolutely with no height
+(UX-90); an odt export of a typed text says "Who typed which words" (UX-70). The @core specs: 143 passed, none failed
+(79 skipped: checked by unit or io tests, or not automated; 23 expected to fail, not built yet). The objects battery
+passed. CI on `batch-4`: every job green, the Firefox and Windows ones included.
 
 ## Say what could not be run
 
