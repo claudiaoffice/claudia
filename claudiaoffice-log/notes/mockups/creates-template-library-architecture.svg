@@ -1,0 +1,95 @@
+<svg viewBox="0 0 1700 700" xmlns="http://www.w3.org/2000/svg" font-family="Inter, 'Segoe UI', system-ui, sans-serif"><rect width="1700" height="700" fill="#f3f1ea"/><text x="40.0" y="44.0" font-family="Fraunces, Georgia, serif" font-size="22" font-weight="600" fill="#1f1a33" text-anchor="start">E10.31 Save as template to the server — what is new where</text>
+<text x="40.0" y="66.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">The library already adds, removes and checks; the new parts are the person's name on each entry, replace, and two ways in for people who are not administrators.</text>
+<rect x="1180.0" y="36.0" width="14.0" height="14.0" rx="3" fill="#ece9f8" stroke="#5b4bc4" stroke-width="1.6"/>
+<text x="1200.0" y="47.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">new</text>
+<rect x="1330.0" y="36.0" width="14.0" height="14.0" rx="3" fill="#fdebd9" stroke="#f2a057" stroke-width="1.6"/>
+<text x="1350.0" y="47.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">changed</text>
+<rect x="1480.0" y="36.0" width="14.0" height="14.0" rx="3" fill="#ffffff" stroke="#c9c4d6" stroke-width="1.6"/>
+<text x="1500.0" y="47.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">exists, unchanged</text>
+<rect x="40.0" y="100.0" width="400.0" height="84.5" rx="8" fill="#ffffff" stroke="#f2a057" stroke-width="1.6"/>
+<rect x="40.0" y="100.0" width="400.0" height="28.0" rx="8" fill="#fdebd9" stroke="#f2a057" stroke-width="1.6"/>
+<text x="240.0" y="119.0" font-family="Fraunces, Georgia, serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="middle">Listed</text>
+<line x1="40.0" y1="128.0" x2="440.0" y2="128.0" stroke="#f2a057" stroke-width="1"/>
+<text x="50.0" y="145.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">id, template, builtin   # exists</text>
+<text x="50.0" y="160.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">added_by: str   # new, read from the file's exporter</text>
+<text x="50.0" y="176.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">added_at: str   # new, from its exported_at</text>
+<rect x="40.0" y="230.0" width="400.0" height="100.0" rx="8" fill="#ffffff" stroke="#f2a057" stroke-width="1.6"/>
+<rect x="40.0" y="230.0" width="400.0" height="28.0" rx="8" fill="#fdebd9" stroke="#f2a057" stroke-width="1.6"/>
+<text x="240.0" y="249.0" font-family="Fraunces, Georgia, serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="middle">TemplateLibrary</text>
+<line x1="40.0" y1="258.0" x2="440.0" y2="258.0" stroke="#f2a057" stroke-width="1"/>
+<text x="50.0" y="275.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">add(data, added_by)     # exists</text>
+<text x="50.0" y="290.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">remove(id)                # exists</text>
+<text x="50.0" y="306.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">replace(id, data, by)   # new: keeps id and place</text>
+<text x="50.0" y="321.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">check(data)              # exists: refuses a taken name</text>
+<rect x="500.0" y="100.0" width="400.0" height="96.5" rx="8" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.6"/>
+<rect x="500.0" y="100.0" width="400.0" height="40.0" rx="8" fill="#ece9f8" stroke="#5b4bc4" stroke-width="1.6"/>
+<text x="700.0" y="112.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="9.5" font-weight="400" fill="#6e6880" text-anchor="middle">«wire, in a deck»</text>
+<text x="700.0" y="131.0" font-family="Fraunces, Georgia, serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="middle">template_methods.py</text>
+<line x1="500.0" y1="140.0" x2="900.0" y2="140.0" stroke="#5b4bc4" stroke-width="1"/>
+<text x="510.0" y="157.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">add_to_templates(name, purpose, language,</text>
+<text x="510.0" y="172.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">                  replace=None) -&gt; {id, name}</text>
+<text x="510.0" y="188.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start"># no leaves="export": a library event, not an export</text>
+<rect x="500.0" y="250.0" width="400.0" height="96.5" rx="8" fill="#ffffff" stroke="#f2a057" stroke-width="1.6"/>
+<rect x="500.0" y="250.0" width="400.0" height="40.0" rx="8" fill="#fdebd9" stroke="#f2a057" stroke-width="1.6"/>
+<text x="700.0" y="262.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="9.5" font-weight="400" fill="#6e6880" text-anchor="middle">«HTTP»</text>
+<text x="700.0" y="281.0" font-family="Fraunces, Georgia, serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="middle">template_routes.py</text>
+<line x1="500.0" y1="290.0" x2="900.0" y2="290.0" stroke="#f2a057" stroke-width="1"/>
+<text x="510.0" y="307.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">GET /api/templates  # + added_by, added_at, mine</text>
+<text x="510.0" y="322.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">DELETE /api/templates/{id}   # new: the adder only</text>
+<text x="510.0" y="338.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start"># File ▸ New has no document open: HTTP, not wire</text>
+<rect x="960.0" y="100.0" width="340.0" height="81.0" rx="8" fill="#ffffff" stroke="#f2a057" stroke-width="1.6"/>
+<rect x="960.0" y="100.0" width="340.0" height="40.0" rx="8" fill="#fdebd9" stroke="#f2a057" stroke-width="1.6"/>
+<text x="1130.0" y="112.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="9.5" font-weight="400" fill="#6e6880" text-anchor="middle">«HTTP, administrators»</text>
+<text x="1130.0" y="131.0" font-family="Fraunces, Georgia, serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="middle">admin_templates.py</text>
+<line x1="960.0" y1="140.0" x2="1300.0" y2="140.0" stroke="#f2a057" stroke-width="1"/>
+<text x="970.0" y="157.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">page(): + added_by, added_at</text>
+<text x="970.0" y="172.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">DELETE: any added template  # exists</text>
+<rect x="960.0" y="250.0" width="340.0" height="84.5" rx="8" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.6"/>
+<rect x="960.0" y="250.0" width="340.0" height="28.0" rx="8" fill="#ece9f8" stroke="#5b4bc4" stroke-width="1.6"/>
+<text x="1130.0" y="269.0" font-family="Fraunces, Georgia, serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="middle">library log</text>
+<line x1="960.0" y1="278.0" x2="1300.0" y2="278.0" stroke="#5b4bc4" stroke-width="1"/>
+<text x="970.0" y="295.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">template added / replaced / removed</text>
+<text x="970.0" y="310.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">by whom, which template</text>
+<text x="970.0" y="326.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start"># the server's log, not the document's</text>
+<rect x="1360.0" y="100.0" width="290.0" height="84.5" rx="8" fill="#ffffff" stroke="#f2a057" stroke-width="1.6"/>
+<rect x="1360.0" y="100.0" width="290.0" height="28.0" rx="8" fill="#fdebd9" stroke="#f2a057" stroke-width="1.6"/>
+<text x="1505.0" y="119.0" font-family="Fraunces, Georgia, serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="middle">SaveTemplateDialog.vue</text>
+<line x1="1360.0" y1="128.0" x2="1650.0" y2="128.0" stroke="#f2a057" stroke-width="1"/>
+<text x="1370.0" y="145.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">Add to this server's templates</text>
+<text x="1370.0" y="160.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">Save file…   # exists</text>
+<text x="1370.0" y="176.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">name taken: Replace it | Another name</text>
+<rect x="1360.0" y="250.0" width="290.0" height="69.0" rx="8" fill="#ffffff" stroke="#f2a057" stroke-width="1.6"/>
+<rect x="1360.0" y="250.0" width="290.0" height="28.0" rx="8" fill="#fdebd9" stroke="#f2a057" stroke-width="1.6"/>
+<text x="1505.0" y="269.0" font-family="Fraunces, Georgia, serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="middle">OpenDialog.vue</text>
+<line x1="1360.0" y1="278.0" x2="1650.0" y2="278.0" stroke="#f2a057" stroke-width="1"/>
+<text x="1370.0" y="295.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">card: added by, Remove on own</text>
+<text x="1370.0" y="310.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">RemoveTemplateDialog   # shared</text>
+<rect x="1360.0" y="380.0" width="290.0" height="69.0" rx="8" fill="#ffffff" stroke="#f2a057" stroke-width="1.6"/>
+<rect x="1360.0" y="380.0" width="290.0" height="28.0" rx="8" fill="#fdebd9" stroke="#f2a057" stroke-width="1.6"/>
+<text x="1505.0" y="399.0" font-family="Fraunces, Georgia, serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="middle">AdminTemplates.vue</text>
+<line x1="1360.0" y1="408.0" x2="1650.0" y2="408.0" stroke="#f2a057" stroke-width="1"/>
+<text x="1370.0" y="425.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">Added by, Added columns</text>
+<text x="1370.0" y="440.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">uses RemoveTemplateDialog</text>
+<rect x="960.0" y="380.0" width="340.0" height="69.0" rx="8" fill="#ffffff" stroke="#f2a057" stroke-width="1.6"/>
+<rect x="960.0" y="380.0" width="340.0" height="28.0" rx="8" fill="#fdebd9" stroke="#f2a057" stroke-width="1.6"/>
+<text x="1130.0" y="399.0" font-family="Fraunces, Georgia, serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="middle">lib/templates.ts</text>
+<line x1="960.0" y1="408.0" x2="1300.0" y2="408.0" stroke="#f2a057" stroke-width="1"/>
+<text x="970.0" y="425.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">removeTemplate(id)   # new</text>
+<text x="970.0" y="440.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">TemplateCard: + addedBy, mine</text>
+<rect x="500.0" y="400.0" width="400.0" height="69.0" rx="8" fill="#ffffff" stroke="#f2a057" stroke-width="1.6"/>
+<rect x="500.0" y="400.0" width="400.0" height="28.0" rx="8" fill="#fdebd9" stroke="#f2a057" stroke-width="1.6"/>
+<text x="700.0" y="419.0" font-family="Fraunces, Georgia, serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="middle">slide-session.ts</text>
+<line x1="500.0" y1="428.0" x2="900.0" y2="428.0" stroke="#f2a057" stroke-width="1"/>
+<text x="510.0" y="445.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">addToTemplates(note, replace?)   # new</text>
+<text x="510.0" y="460.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">saveAsTemplate(note)   # exists</text>
+<line x1="440.0" y1="160.0" x2="500.0" y2="160.0" stroke="#6e6880" stroke-width="1.3"/>
+<line x1="500.0" y1="160.0" x2="491.9" y2="156.1" stroke="#6e6880" stroke-width="1.3"/>
+<line x1="500.0" y1="160.0" x2="491.9" y2="163.9" stroke="#6e6880" stroke-width="1.3"/>
+<line x1="900.0" y1="160.0" x2="960.0" y2="160.0" stroke="#6e6880" stroke-width="1.3"/>
+<line x1="960.0" y1="160.0" x2="951.9" y2="156.1" stroke="#6e6880" stroke-width="1.3"/>
+<line x1="960.0" y1="160.0" x2="951.9" y2="163.9" stroke="#6e6880" stroke-width="1.3"/>
+<rect x="40.0" y="520.0" width="1610.0" height="150.0" rx="10" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="60.0" y="548.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Why HTTP for Remove: the New dialog is open before any document exists, so it can only talk to /api/templates, as it already does to list and to start a deck.</text>
+<text x="60.0" y="576.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Why wire for Add: it happens inside a deck, which is what the server builds the template file from (template_file); the file never travels to the client and back.</text>
+<text x="60.0" y="604.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Who is who: the file's exporter is the person who added it (the library rewrites it on add); a template is "mine" when that name is the signed-in person's. An administrator is not the adder of a colleague's template.</text>
+<text x="60.0" y="632.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Replace keeps the id and the place; the old file is replaced in one step, so nobody sees a library without it. A name taken by another template is refused in words, as check() does for the administrator's page.</text></svg>

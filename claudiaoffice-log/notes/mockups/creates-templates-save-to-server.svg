@@ -1,0 +1,187 @@
+<svg viewBox="0 0 1700 1230" xmlns="http://www.w3.org/2000/svg" font-family="Inter, 'Segoe UI', system-ui, sans-serif"><rect width="1700" height="1230" fill="#f3f1ea"/><text x="40.0" y="44.0" font-family="Fraunces, Georgia, serif" font-size="22" font-weight="600" fill="#1f1a33" text-anchor="start">claudia creates — E10.31 Save as template: add it to the server's templates, or save the file</text>
+<text x="40.0" y="66.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">Mock round of 25 Nov 2026, for review. Content is invented. Agreed in the grill: anyone who may make documents can add; the person who added a template can replace or remove it,</text>
+<text x="40.0" y="83.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">an administrator can remove any; adding is a library event, not an export; the dialog still offers the file.</text>
+<rect x="40.0" y="96.0" width="820.0" height="330.0" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="62.0" y="126.0" font-family="Fraunces, Georgia, serif" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start">O · Format ▸ Template ▸ Save as Template…</text>
+<text x="62.0" y="144.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.3" font-weight="400" fill="#6e6880" text-anchor="start">Two ways to keep it. Adding puts it in File ▸ New for everyone on this server.</text>
+<rect x="65.0" y="155.0" width="776.0" height="256.0" rx="12" fill="#1f1a33" fill-opacity="0.08"/>
+<rect x="62.0" y="150.0" width="776.0" height="256.0" rx="12" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="84.0" y="182.0" font-family="Fraunces, Georgia, serif" font-size="15.5" font-weight="600" fill="#1f1a33" text-anchor="start">Save as template</text>
+<path d="M812 168 l10 10 M822 168 l-10 10" fill="none" stroke="#6e6880" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="62.0" y1="196.0" x2="838.0" y2="196.0" stroke="#e3dfee" stroke-width="1"/>
+<text x="84.0" y="206.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">Name</text>
+<rect x="84.0" y="212.0" width="330.0" height="26.0" rx="6" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="94.0" y="229.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#1f1a33" text-anchor="start">Conference talk</text>
+<text x="440.0" y="206.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">Language</text>
+<rect x="440.0" y="212.0" width="160.0" height="26.0" rx="6" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="450.0" y="229.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#1f1a33" text-anchor="start">English</text>
+<text x="84.0" y="254.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">What it is for</text>
+<rect x="84.0" y="260.0" width="516.0" height="44.0" rx="6" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="94.0" y="278.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">A 20-minute talk: one idea per slide, a few strong pictures.</text>
+<text x="84.0" y="326.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Keeps this presentation without its slides: its 8 layouts and its theme (24 styles, palette).</text>
+<text x="84.0" y="344.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Adding makes it visible to everyone on this server. You can replace or remove it later.</text>
+<rect x="716.0" y="366.0" width="100.0" height="28.0" rx="7" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="766.0" y="384.3" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="middle">Cancel</text>
+<rect x="598.0" y="366.0" width="110.0" height="28.0" rx="7" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="653.0" y="384.3" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="middle">Save file…</text>
+<rect x="360.0" y="366.0" width="230.0" height="28.0" rx="7" fill="#5b4bc4"/>
+<text x="475.0" y="384.3" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#ffffff" text-anchor="middle">Add to this server’s templates</text>
+<rect x="880.0" y="96.0" width="780.0" height="330.0" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="902.0" y="126.0" font-family="Fraunces, Georgia, serif" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start">P · The name is taken</text>
+<text x="902.0" y="144.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.3" font-weight="400" fill="#6e6880" text-anchor="start">In words, under the name. Replace only for your own.</text>
+<text x="900.0" y="166.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#5b4bc4" text-anchor="start">Yours</text>
+<rect x="900.0" y="174.0" width="360.0" height="224.0" rx="10" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="914.0" y="202.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">Name</text>
+<rect x="914.0" y="208.0" width="330.0" height="26.0" rx="6" fill="#ffffff" stroke="#d6477a" stroke-width="1.4"/>
+<text x="924.0" y="225.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#1f1a33" text-anchor="start">Conference talk</text>
+<text x="914.0" y="256.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="500" fill="#d6477a" text-anchor="start">There is a template called Conference talk.</text>
+<text x="914.0" y="272.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">You added “Conference talk” on 21 Nov.</text>
+<text x="914.0" y="296.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Replace it with this presentation, or choose another name.</text>
+<rect x="914.0" y="346.0" width="100.0" height="28.0" rx="7" fill="#5b4bc4"/>
+<text x="964.0" y="364.3" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#ffffff" text-anchor="middle">Replace it</text>
+<rect x="1022.0" y="346.0" width="120.0" height="28.0" rx="7" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="1082.0" y="364.3" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="middle">Another name</text>
+<text x="1284.0" y="166.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#5b4bc4" text-anchor="start">Someone else's</text>
+<rect x="1284.0" y="174.0" width="360.0" height="224.0" rx="10" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="1298.0" y="202.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">Name</text>
+<rect x="1298.0" y="208.0" width="330.0" height="26.0" rx="6" fill="#ffffff" stroke="#d6477a" stroke-width="1.4"/>
+<text x="1308.0" y="225.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#1f1a33" text-anchor="start">Conference talk</text>
+<text x="1298.0" y="256.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="500" fill="#d6477a" text-anchor="start">There is a template called Conference talk.</text>
+<text x="1298.0" y="272.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Ana Weber added “Conference talk” on 21 Nov.</text>
+<text x="1298.0" y="296.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Choose another name. Only the person who added a template</text>
+<text x="1298.0" y="312.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">replaces it; an administrator can remove it.</text>
+<rect x="1298.0" y="346.0" width="120.0" height="28.0" rx="7" fill="#5b4bc4"/>
+<text x="1358.0" y="364.3" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#ffffff" text-anchor="middle">Another name</text>
+<rect x="40.0" y="446.0" width="820.0" height="250.0" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="62.0" y="476.0" font-family="Fraunces, Georgia, serif" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start">Q · After adding</text>
+<text x="62.0" y="494.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.3" font-weight="400" fill="#6e6880" text-anchor="start">It is there at once; nothing else changes in this deck.</text>
+<rect x="65.0" y="505.0" width="776.0" height="176.0" rx="12" fill="#1f1a33" fill-opacity="0.08"/>
+<rect x="62.0" y="500.0" width="776.0" height="176.0" rx="12" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="84.0" y="532.0" font-family="Fraunces, Georgia, serif" font-size="15.5" font-weight="600" fill="#1f1a33" text-anchor="start">Save as template</text>
+<path d="M812 518 l10 10 M822 518 l-10 10" fill="none" stroke="#6e6880" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="62.0" y1="546.0" x2="838.0" y2="546.0" stroke="#e3dfee" stroke-width="1"/>
+<text x="84.0" y="560.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="start">“Conference talk” is in this server’s templates.</text>
+<text x="84.0" y="582.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">Everyone who may make presentations finds it under File ▸ New. You added it, so you can replace it</text>
+<text x="84.0" y="598.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">by saving again under the same name, or remove it from its card in File ▸ New.</text>
+<rect x="726.0" y="636.0" width="90.0" height="28.0" rx="7" fill="#5b4bc4"/>
+<text x="771.0" y="654.3" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#ffffff" text-anchor="middle">Done</text>
+<rect x="880.0" y="446.0" width="780.0" height="250.0" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="902.0" y="476.0" font-family="Fraunces, Georgia, serif" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start">R · File ▸ New: your own templates can be removed</text>
+<text x="902.0" y="494.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.3" font-weight="400" fill="#6e6880" text-anchor="start">Added by you on the card; Remove asks once. Other people's cards have no Remove.</text>
+<rect x="900.0" y="500.0" width="230.0" height="110.0" rx="10" fill="#ffffff" stroke="#5b4bc4" stroke-width="2"/>
+<rect x="912.0" y="510.0" width="62.0" height="34.9" rx="3" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<circle cx="969.7" cy="513.5" r="1.6119999999999999" fill="#5b4bc4"/>
+<line x1="915.7" y1="542.4" x2="970.3" y2="542.4" stroke="#e3dfee" stroke-width="1"/>
+<rect x="915.7" y="513.8" width="28.4" height="2.2" rx="1" fill="#1f1a33"/>
+<rect x="915.7" y="524.0" width="22.9" height="2.2" rx="1" fill="#1f1a33"/>
+<rect x="980.0" y="510.0" width="62.0" height="34.9" rx="3" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<circle cx="1037.7" cy="513.5" r="1.6119999999999999" fill="#5b4bc4"/>
+<line x1="983.7" y1="542.4" x2="1038.3" y2="542.4" stroke="#e3dfee" stroke-width="1"/>
+<rect x="983.7" y="513.8" width="28.4" height="2.2" rx="1" fill="#1f1a33"/>
+<circle cx="985.5" cy="524.9" r="1.2" fill="#c9c4d6"/>
+<rect x="989.7" y="524.0" width="17.3" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="985.5" cy="528.5" r="1.2" fill="#c9c4d6"/>
+<rect x="989.7" y="527.6" width="14.7" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="985.5" cy="532.1" r="1.2" fill="#c9c4d6"/>
+<rect x="989.7" y="531.2" width="16.2" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="1015.3" cy="524.9" r="1.2" fill="#c9c4d6"/>
+<rect x="1019.5" y="524.0" width="11.3" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="1015.3" cy="528.5" r="1.2" fill="#c9c4d6"/>
+<rect x="1019.5" y="527.6" width="16.5" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="1015.3" cy="532.1" r="1.2" fill="#c9c4d6"/>
+<rect x="1019.5" y="531.2" width="13.5" height="1.8" rx="1" fill="#c9c4d6"/>
+<text x="914.0" y="580.0" font-family="Fraunces, Georgia, serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="start">Conference talk</text>
+<text x="914.0" y="598.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10" font-weight="400" fill="#6e6880" text-anchor="start">8 layouts · English · added by you</text>
+<text x="1066.0" y="530.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="500" fill="#d6477a" text-anchor="start">Remove</text>
+<rect x="1144.0" y="500.0" width="230.0" height="110.0" rx="10" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<rect x="1156.0" y="510.0" width="62.0" height="34.9" rx="3" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<circle cx="1213.7" cy="513.5" r="1.6119999999999999" fill="#5b4bc4"/>
+<line x1="1159.7" y1="542.4" x2="1214.3" y2="542.4" stroke="#e3dfee" stroke-width="1"/>
+<rect x="1159.7" y="513.8" width="28.4" height="2.2" rx="1" fill="#1f1a33"/>
+<rect x="1159.7" y="524.0" width="22.9" height="2.2" rx="1" fill="#1f1a33"/>
+<rect x="1224.0" y="510.0" width="62.0" height="34.9" rx="3" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<circle cx="1281.7" cy="513.5" r="1.6119999999999999" fill="#5b4bc4"/>
+<line x1="1227.7" y1="542.4" x2="1282.3" y2="542.4" stroke="#e3dfee" stroke-width="1"/>
+<rect x="1227.7" y="513.8" width="28.4" height="2.2" rx="1" fill="#1f1a33"/>
+<circle cx="1229.5" cy="524.9" r="1.2" fill="#c9c4d6"/>
+<rect x="1233.7" y="524.0" width="17.3" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="1229.5" cy="528.5" r="1.2" fill="#c9c4d6"/>
+<rect x="1233.7" y="527.6" width="14.7" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="1229.5" cy="532.1" r="1.2" fill="#c9c4d6"/>
+<rect x="1233.7" y="531.2" width="16.2" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="1259.3" cy="524.9" r="1.2" fill="#c9c4d6"/>
+<rect x="1263.5" y="524.0" width="11.3" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="1259.3" cy="528.5" r="1.2" fill="#c9c4d6"/>
+<rect x="1263.5" y="527.6" width="16.5" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="1259.3" cy="532.1" r="1.2" fill="#c9c4d6"/>
+<rect x="1263.5" y="531.2" width="13.5" height="1.8" rx="1" fill="#c9c4d6"/>
+<text x="1158.0" y="580.0" font-family="Fraunces, Georgia, serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="start">Team update</text>
+<text x="1158.0" y="598.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10" font-weight="400" fill="#6e6880" text-anchor="start">5 layouts · English · added by Ana Weber</text>
+<rect x="1393.0" y="485.0" width="250.0" height="190.0" rx="12" fill="#1f1a33" fill-opacity="0.08"/>
+<rect x="1390.0" y="480.0" width="250.0" height="190.0" rx="12" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="1412.0" y="512.0" font-family="Fraunces, Georgia, serif" font-size="15.5" font-weight="600" fill="#1f1a33" text-anchor="start">Remove template</text>
+<path d="M1614 498 l10 10 M1624 498 l-10 10" fill="none" stroke="#6e6880" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="1390.0" y1="526.0" x2="1640.0" y2="526.0" stroke="#e3dfee" stroke-width="1"/>
+<text x="1404.0" y="538.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">Remove “Conference talk”?</text>
+<text x="1404.0" y="558.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">Presentations made from it are</text>
+<text x="1404.0" y="572.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">not changed.</text>
+<rect x="1404.0" y="620.0" width="70.0" height="26.0" rx="7" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="1439.0" y="637.3" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="500" fill="#1f1a33" text-anchor="middle">Cancel</text>
+<rect x="1482.0" y="620.0" width="140.0" height="26.0" rx="7" fill="#ffffff" stroke="#d6477a" stroke-width="1"/>
+<text x="1552.0" y="637.3" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="500" fill="#d6477a" text-anchor="middle">Remove template</text>
+<rect x="40.0" y="716.0" width="1620.0" height="480.0" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="62.0" y="746.0" font-family="Fraunces, Georgia, serif" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start">S · Server settings ▸ Templates (administrator): who added each one</text>
+<text x="62.0" y="764.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.3" font-weight="400" fill="#6e6880" text-anchor="start">A new column. An administrator removes any added template; the built-in one cannot be removed. Adding by file stays for those who prefer it.</text>
+<rect x="62.0" y="770.0" width="1576.0" height="410.0" rx="10" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="80.0" y="804.0" font-family="Fraunces, Georgia, serif" font-size="16" font-weight="600" fill="#1f1a33" text-anchor="start">Templates</text>
+<rect x="1490.0" y="786.0" width="113.8" height="28.0" rx="7" fill="#5b4bc4"/>
+<text x="1546.9" y="804.3" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#ffffff" text-anchor="middle">Add template…</text>
+<text x="80.0" y="846.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="500" fill="#6e6880" text-anchor="start">Name</text>
+<text x="282.0" y="846.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="500" fill="#6e6880" text-anchor="start">What it is for</text>
+<text x="822.0" y="846.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="500" fill="#6e6880" text-anchor="start">Layouts</text>
+<text x="912.0" y="846.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="500" fill="#6e6880" text-anchor="start">Language</text>
+<text x="1042.0" y="846.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="500" fill="#6e6880" text-anchor="start">Added by</text>
+<text x="1242.0" y="846.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="500" fill="#6e6880" text-anchor="start">Added</text>
+<text x="1462.0" y="846.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="500" fill="#6e6880" text-anchor="start"></text>
+<line x1="74.0" y1="856.0" x2="1626.0" y2="856.0" stroke="#e3dfee" stroke-width="1"/>
+<text x="80.0" y="882.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="start">Basic</text>
+<text x="282.0" y="882.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">A single empty slide</text>
+<text x="822.0" y="882.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">1</text>
+<text x="912.0" y="882.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">all</text>
+<text x="1042.0" y="882.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">built in</text>
+<text x="1242.0" y="882.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start"></text>
+<text x="1462.0" y="882.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#d6477a" text-anchor="start"></text>
+<line x1="74.0" y1="898.0" x2="1626.0" y2="898.0" stroke="#e3dfee" stroke-width="1"/>
+<text x="80.0" y="926.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="start">Conference talk</text>
+<text x="282.0" y="926.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">A 20-minute talk, one idea per slide</text>
+<text x="822.0" y="926.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">8</text>
+<text x="912.0" y="926.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">English</text>
+<text x="1042.0" y="926.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">you</text>
+<text x="1242.0" y="926.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">21 Nov 2026</text>
+<text x="1462.0" y="926.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#d6477a" text-anchor="start">Remove</text>
+<line x1="74.0" y1="942.0" x2="1626.0" y2="942.0" stroke="#e3dfee" stroke-width="1"/>
+<text x="80.0" y="970.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="start">Team update</text>
+<text x="282.0" y="970.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">A short weekly status</text>
+<text x="822.0" y="970.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">5</text>
+<text x="912.0" y="970.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">English</text>
+<text x="1042.0" y="970.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">Ana Weber</text>
+<text x="1242.0" y="970.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">19 Nov 2026</text>
+<text x="1462.0" y="970.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#d6477a" text-anchor="start">Remove</text>
+<line x1="74.0" y1="986.0" x2="1626.0" y2="986.0" stroke="#e3dfee" stroke-width="1"/>
+<text x="80.0" y="1014.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="start">Council briefing</text>
+<text x="282.0" y="1014.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">A formal briefing with a decision</text>
+<text x="822.0" y="1014.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">7</text>
+<text x="912.0" y="1014.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">Deutsch</text>
+<text x="1042.0" y="1014.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">admin</text>
+<text x="1242.0" y="1014.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">12 Nov 2026</text>
+<text x="1462.0" y="1014.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#d6477a" text-anchor="start">Remove</text>
+<line x1="74.0" y1="1030.0" x2="1626.0" y2="1030.0" stroke="#e3dfee" stroke-width="1"/>
+<text x="80.0" y="1058.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="start">Lecture</text>
+<text x="282.0" y="1058.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">A 90-minute class</text>
+<text x="822.0" y="1058.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">9</text>
+<text x="912.0" y="1058.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">English</text>
+<text x="1042.0" y="1058.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">Ben Okafor</text>
+<text x="1242.0" y="1058.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">9 Nov 2026</text>
+<text x="1462.0" y="1058.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#d6477a" text-anchor="start">Remove</text>
+<line x1="74.0" y1="1074.0" x2="1626.0" y2="1074.0" stroke="#e3dfee" stroke-width="1"/>
+<text x="80.0" y="1142.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Removing a template never changes presentations made from it. A person who added one removes it from its card in File ▸ New.</text></svg>
