@@ -114,8 +114,7 @@ class ImageAsset:
 
     @classmethod
     def from_data(cls, data: dict) -> ImageAsset:
-        """Inverse of :meth:`to_data`; raises :class:`ImageError` naming the first thing that is wrong. An empty
-        ``source_path`` is no path (the person asked not to save it, SEC-27), so it is kept as ``None``."""
+        """Inverse of :meth:`to_data`; raises :class:`ImageError` naming the first thing that is wrong."""
         if not isinstance(data, dict):
             raise ImageError("an image asset is one JSON object")
         try:

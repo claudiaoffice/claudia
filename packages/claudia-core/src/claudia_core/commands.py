@@ -186,7 +186,7 @@ class CommandRegistry:
         with ``ServerOnly``, at any depth, since a command that holds commands decodes them through the same
         registry."""
         persons = CommandRegistry()
-        persons._classes, persons._upcasters, persons._persons_only = self._classes, self._upcasters, True
+        persons._classes, persons._upcasters, persons._persons_only = dict(self._classes), dict(self._upcasters), True
         return persons
 
     def decode(self, envelope: dict) -> Command:

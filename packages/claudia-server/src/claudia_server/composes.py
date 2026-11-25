@@ -40,7 +40,6 @@ from __future__ import annotations
 
 from collections import Counter
 from dataclasses import replace
-from datetime import UTC, datetime
 
 from claudia_composes_io import (
     apply_edits_to_docx,
@@ -242,8 +241,7 @@ def _export_office(ctx, *, format, tracked_changes, description_comments):
     model = _text(ctx)
     info, times = export_info(ctx.reader.log(ctx.document), ctx.document.branch)
     if not ctx.reader.holds(HISTORY):  # a history she cannot read dates nothing: her export does (SEC-26, D2008)
-        now = datetime.now(UTC).isoformat(timespec="seconds").replace("+00:00", "Z")
-        times = dict.fromkeys(model.suggestions, now)
+        times = dict.fromkeys(model.suggestions, ctx.document.now())
     draw = None if ctx.renderings is None else ctx.renderings.rasteriser  # draws an SVG picture as a PNG (D464)
     notes = export_annotations(model, ctx.user, comments=description_comments)
     # the file an import kept cannot be patched with comments: a new one is written, and the answer says so

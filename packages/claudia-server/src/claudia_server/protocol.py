@@ -1002,7 +1002,7 @@ def _chat_log(ctx, limit):
     The newest `limit` (1 to 5000), each as in the `chat` event."""
     if not 1 <= limit <= MAX_LOG:
         raise RequestError("bad_request", msg("chat_log: limit must be from 1 to {limit}", limit=MAX_LOG))
-    return [record.to_data() for record in ctx.reader.chat(ctx.document.chat)][-limit:]
+    return [record.to_data() for record in ctx.reader.chat(ctx.document.chat)[-limit:]]
 
 
 @core_methods.method("history", reads="history")

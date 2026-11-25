@@ -640,6 +640,7 @@
    "lock": "(self, owner: 'str', regions: 'Iterable[Region]', ttl: 'float') -> 'Ephemeral'",
    "manifest": "(self) -> 'Manifest'",
    "materialize": "(self, rev: 'Revision | None') -> 'DocumentModel'",
+   "now": "(self) -> 'str'",
    "on_purge": "(self, hook: 'Callable[[tuple[Revision, ...]], None]') -> 'None'",
    "open": "(model_cls: 'type[DocumentModel]', log: 'CommandLog', *, snapshot: 'Snapshot | None' = None, branch: 'str | None' = None, **options) -> 'Document'",
    "peek_branch": "(self, branch: 'str') -> 'DocumentModel'",
