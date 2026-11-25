@@ -4,6 +4,11 @@ Newest first. The shell contract has its own version (`clients/contract/`); this
 
 ## [0.1.0] - unreleased
 
+### Added (E8.5, D1622, D1624): the shell contract knows the shared service
+- Contract v1, additive: a server entry's optional `shared` and `welcome`'s optional `ask_administrator`. The Linux
+  client has no service (E8.5, Q21) and sets neither; `servers.sanitize` keeps a shared entry only once a person named it,
+  as on macOS and Windows.
+
 ### Changed (E8.5, D1620, D1621, D1623; CODE-99, CODE-100): her private server
 - The desktop's one shared server is now a person's private server, "Private on this computer":
   `desktop_server.py`/`DesktopServer` became `private_server.py`/`PrivateServer`. It is on a port of her account

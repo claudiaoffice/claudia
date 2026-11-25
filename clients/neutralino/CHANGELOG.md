@@ -5,6 +5,13 @@ two systems had a package each, `clients/macos` and `clients/windows`; their his
 
 ## [0.3.0] - unreleased
 
+### Added (E8.5, D1622, D1624): Shared on this computer
+- The computer's claudia service is listed after her private place as a `shared` entry, found by its installer's marker
+  (`shared-service.ts`; `HostPlatform.sharedServiceFile`: `/Library/Application Support/Claudia/service.json`,
+  `%ProgramData%\Claudia\service.json`). Only a name a person gives it is remembered; opening it does not remember it.
+- Its page gets the service's setup code when she may read it, else `ask_administrator` in `welcome`
+  (`Core.show`, `Bridge` option `setup`, which replaces `setupCode`).
+
 ### Changed (E8.5, D1620, D1621, D1623; CODE-99, CODE-100): her private server
 - The desktop's one shared server is now a person's private server, "Private on this computer":
   `desktop-server.ts`/`DesktopServer` became `private-server.ts`/`PrivateServer`. It is on a port of her account

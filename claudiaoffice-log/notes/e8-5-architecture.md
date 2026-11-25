@@ -190,7 +190,8 @@ classDiagram
   shown as "Shared on this computer" (see question 2). `po/` gets both names, German "Privat auf diesem Computer" /
   "Geteilt auf diesem Computer"; "This computer" goes.
 * **Windows installer**: `claudia.iss` writes and removes the marker with the service component, grants the
-  Administrators group read on `%ProgramData%\Claudia\state\service\admin` (icacls), and its component text becomes
+  Administrators group read on the service's state folder (built: `%ProgramData%\Claudia\state`, its `--state-dir`;
+  `state\service` is only its log folder) (icacls), and its component text becomes
   "for the people of this computer to share documents". D743's "the apps use the service's documents" is superseded.
 
 ---

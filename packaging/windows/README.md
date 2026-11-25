@@ -22,9 +22,12 @@ Per person (no administrator rights) or for all people (the wizard asks). Docume
 ## The service (optional, off by default, all-people installs only)
 
 `ClaudiaServer`, automatic start, LocalService, `127.0.0.1:8765`, documents in `%ProgramData%\Claudia\documents`,
-logs in `%ProgramData%\Claudia\state\service`. The desktop apps use it when it runs (D504), so they then show *its*
-documents, not the person's own (`%LOCALAPPDATA%\Claudia\documents`). To serve other computers, edit
-`{app}\service\claudia-service.xml` (`--host`, a certificate); an update keeps your copy.
+state in `%ProgramData%\Claudia\state` (only `SYSTEM`, `Administrators` and the service may read it: its setup code is
+there, D1624), logs in `%ProgramData%\Claudia\state\service`. It is a place of its own, "Shared on this computer"
+(E8.5, D1622): the installer writes `%ProgramData%\Claudia\service.json` with its address and state folder, every
+person's apps list it after her own server ("Private on this computer", `%LOCALAPPDATA%\Claudia\documents`), and the
+uninstaller removes the marker. To serve other computers, edit `{app}\service\claudia-service.xml` (`--host`, a
+certificate); an update keeps your copy.
 
 ## Building by hand (on Windows)
 

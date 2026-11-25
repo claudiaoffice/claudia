@@ -17,7 +17,7 @@ open it like any server. Its installer writes a marker, `service.json` (`{"origi
 "<its state folder>"}`, in `/Library/Application Support/Claudia` on a Mac, `%ProgramData%\Claudia` on Windows), and
 removes it with the service; the apps read it at start.** New documents go to her private place unless she picks the shared
 one. Every person with an account on the computer may use it (no access secret by default, its administrator may set one);
-it listens on this computer only. The computer's administrators can name its first administrator (decided in the same grilling, Q17; its own entry comes with part 2).
+it listens on this computer only. The computer's administrators can name its first administrator (D1624).
 
 **Why.** The grilling of 2026-11-25 (Q13, Q16, Q18): the owner was surprised that the service simply *was* every person's
 server ("What happens if there is a server service installed AND some user on the machine installs claudia…?"), and chose a
@@ -29,5 +29,8 @@ otherwise (on 8765, loopback, its own account, off by default).
 **Alternatives.** Finding the service by probing 8765: `./start.sh` would show up as the computer's shared place. People
 adding it by hand (`127.0.0.1:8765`): the owner chose the automatic listing.
 
-**Not built yet** (2026-11-25): part 2 of E8.5 builds it (`shared-service.ts`, the installers' marker); until then the
-apps do not list the service, and since D1620 no longer use it as their own.
+**Built** (2026-11-25, E8.5 part 2): `clients/neutralino/src/shared-service.ts` reads the marker
+(`HostPlatform.sharedServiceFile`) and accepts only a loopback origin and an absolute state folder; `servers.ts` `forPage`
+lists it after her private place (`shared: true` in contract v1's server entry); a name a person gives it is remembered
+under its origin, its default name never, so it does not outlive the service. The Windows installer writes and removes
+the marker (`packaging/windows/claudia.iss`); the macOS package does with part 3.
