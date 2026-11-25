@@ -116,6 +116,7 @@ INVALID = [
     {"type": "servers", "servers": [{"origin": "https://a.example.org", "label": "x", "custom": False, "local": 1}]},
     {"type": "servers", "servers": [{"origin": "https://a.example.org", "label": "x", "custom": False, "shared": 1}]},
     {**WELCOME, "ask_administrator": "yes"},
+    {**WELCOME, "setup_code": "K7QM-4TXR-92HB", "ask_administrator": True},  # (D1624) one or the other
     {"type": "servers", "servers": [{"origin": "https://a.example.org", "label": "x", "custom": False}] * 65},
     {"type": "pick_file", "accept": []},  # (D501) no request
     {"type": "pick_file", "request": "f1", "accept": [".docx"]},

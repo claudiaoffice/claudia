@@ -162,7 +162,7 @@ export function sanitize(raw: unknown): Entry[] {
   return kept
 }
 
-export const SHARED_LABEL = 'Shared on this computer'
+const SHARED_LABEL = 'Shared on this computer' // the page names it in her language (named, D1623)
 
 /** The list the page shows: her own server first (when there is one), then the computer's shared service (when it is
  * installed), then the remembered ones. The private entry is named by the shell and never by the page (`custom`); the

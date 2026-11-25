@@ -39,11 +39,15 @@ export type CoreRequest =
 
 /** What the core tells the shell page. */
 export type CoreMessage =
-  | { kind: 'show'; origin: string; setupCode?: string; askAdministrator?: true }
+  | ({ kind: 'show'; origin: string } & Setup)
   | { kind: 'status'; title: string; details?: string; error: boolean }
   | { kind: 'servers'; servers: Entry[] }
   | { kind: 'connect_failed'; code: string; message: string }
   | FileMessage
+
+/** What the page of the server shown may know about setting it up: her own server's setup code (D1373), the shared
+ * service's when she may read it, or that she has to ask an administrator of this computer (D1624). */
+export type Setup = { setupCode?: string; askAdministrator?: true }
 
 /** Do `a` and `b` name the same origin (scheme, host and port)? */
 function sameOrigin(a: string, b: string): boolean {
@@ -77,7 +81,7 @@ export interface CoreOptions {
   dialogs?: Dialogs
   /** Where a Save dialog starts the first time (the person's Documents folder by default). */
   documents?: string
-  /** The computer's shared service, `null` for none; found by its installer's marker by default (E8.5, D1622). */
+  /** The computer's shared service, `null` for none; found by its installer's service file by default (E8.5, D1622). */
   sharedService?: SharedService | null
 }
 
@@ -94,7 +98,7 @@ export class Core {
 
   constructor(private readonly options: CoreOptions) {
     this.shared =
-      options.sharedService !== undefined ? options.sharedService : findSharedService(hostPlatform().sharedServiceFile(env))
+      options.sharedService !== undefined ? options.sharedService : findSharedService(hostPlatform().sharedServiceFile(env), options.log)
     this.book = new ServerBook(options.identity.name, options.settings, { sharedOrigin: this.shared?.origin ?? null })
     this.connector = new Connector(options.identity.name, {
       book: this.book,
@@ -127,7 +131,7 @@ export class Core {
     this.say({ kind: 'show', origin, ...this.setupOf(origin) })
   }
 
-  private setupOf(origin: string): { setupCode?: string; askAdministrator?: true } {
+  private setupOf(origin: string): Setup {
     if (this.server !== null && this.book.localOrigin !== null && sameOrigin(origin, this.book.localOrigin)) {
       const code = this.server.setupCode?.()
       return code ? { setupCode: code } : {}

@@ -1,42 +1,49 @@
 // The service of a computer, "Shared on this computer" (E8.5 part 2, D1622, D1624): a shared server that the
-// computer starts for everyone, never a person's own (D1620). Its installer writes a marker, `service.json`
-// (`{"origin": "http://127.0.0.1:8765", "state": "<its state folder>"}`, where `HostPlatform.sharedServiceFile` says),
+// computer starts for everyone, never a person's own (D1620). Its installer writes the service file `service.json`
+// (`{"origin": "http://127.0.0.1:8765", "state": "<its state folder>"}`, where `HostPlatform.sharedServiceFile` says)
 // and removes it with the service; the core reads it at start and lists the service after her private place.
 //
 // While the service has no administrator, its setup code is in its state folder, which only the computer's
 // administrators may read (the installers see to that): for them the core sends it with the service's page, as it does
 // for her own server (D1373); anyone else's page is told to ask an administrator of this computer.
 
-import { accessSync, constants, readFileSync } from 'node:fs'
-import { isAbsolute, join } from 'node:path'
-import { readSetupCode } from './private-server.js'
-
-/** What a person may learn of the service's setup code: the code, that there is none (it has an administrator), or
- * that she may not read it. */
-export type SetupCodeAccess = { kind: 'code'; code: string } | { kind: 'none' } | { kind: 'may not' }
+import { readFileSync } from 'node:fs'
+import { isAbsolute } from 'node:path'
+import { setupCodeAccess, type SetupCodeAccess } from './private-server.js'
 
 export interface SharedService {
-  /** `http://127.0.0.1:<port>`, as the marker says. */
+  /** `http://127.0.0.1:<port>`, as the service file says. */
   readonly origin: string
-  /** Read anew at every call: the service may have been started again. */
+  /** Read anew at every call: the service may have been started again, or been given an administrator. */
   setupCode(): SetupCodeAccess
 }
 
+type ServiceFile = { origin?: unknown; state?: unknown }
+
 const LOOPBACK_HOSTS = new Set(['127.0.0.1', 'localhost', '[::1]'])
 
-/** The service the marker `file` names, or `null`: no marker, or one that is broken or points away from this computer
- * (a marker can only name a server of this computer). */
-export function findSharedService(file: string): SharedService | null {
-  let marker: { origin?: unknown; state?: unknown }
+/** The service that the service file `file` names, or `null`: no file (nothing to say), or one that is broken or points
+ * away from this computer (it can only name a server of this computer), which is logged. */
+export function findSharedService(file: string, log?: (line: string) => void): SharedService | null {
+  let text: string
   try {
-    marker = JSON.parse(readFileSync(file, 'utf8')) as typeof marker
+    text = readFileSync(file, 'utf8')
   } catch {
+    return null // no service on this computer
+  }
+  let named: ServiceFile | null = null
+  try {
+    named = JSON.parse(text) as ServiceFile | null
+  } catch {
+    // reported below
+  }
+  const origin = loopbackOrigin(named?.origin)
+  const state = named?.state
+  if (origin === null || typeof state !== 'string' || !isAbsolute(state)) {
+    log?.(`The shared service is not listed: ${file} does not name a server of this computer and its state folder`)
     return null
   }
-  const origin = loopbackOrigin(marker.origin)
-  const state = marker.state
-  if (origin === null || typeof state !== 'string' || !isAbsolute(state)) return null
-  return { origin, setupCode: () => setupCodeIn(state) }
+  return { origin, setupCode: () => setupCodeAccess(state) }
 }
 
 function loopbackOrigin(value: unknown): string | null {
@@ -48,14 +55,4 @@ function loopbackOrigin(value: unknown): string | null {
   } catch {
     return null
   }
-}
-
-function setupCodeIn(state: string): SetupCodeAccess {
-  try {
-    accessSync(join(state, 'admin'), constants.R_OK | constants.X_OK)
-  } catch {
-    return { kind: 'may not' }
-  }
-  const code = readSetupCode(state)
-  return code === null ? { kind: 'none' } : { kind: 'code', code }
 }

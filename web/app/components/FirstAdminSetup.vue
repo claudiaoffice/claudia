@@ -80,13 +80,13 @@ function useAnotherCode() {
   codeError.value = ''
 }
 
-const stopListening: Array<() => void> = []
+const removers: Array<() => void> = []
 onMounted(() => {
   if (given.value) void verify(given.value)
   // the desktop app's welcome may come after the page drew
-  stopListening.push(onSetupCode((code) => void verify(code)), onAskAdministrator((ask) => (askAdministrator.value = ask)))
+  removers.push(onSetupCode((code) => void verify(code)), onAskAdministrator((ask) => (askAdministrator.value = ask)))
 })
-onUnmounted(() => stopListening.forEach((stop) => stop()))
+onUnmounted(() => removers.forEach((remove) => remove()))
 
 function refused(refusal: SetupRefusal) {
   if (refusal.kind === 'taken') return emit('taken')

@@ -147,6 +147,10 @@ describe('withBookmark / withRenamed (the same rules on a list that is not in th
     expect(after[1]).toEqual(local)
     expect(withRenamed([demo, local], demo.origin, ' Demo ')[0]).toEqual({ ...demo, label: 'Demo', custom: true })
   })
+  it('renames nothing when the name is left as it was: the shared place keeps its name in her language (D1623)', () => {
+    const shared = { origin: 'http://127.0.0.1:8765', label: 'Geteilt auf diesem Computer', custom: false, shared: true }
+    expect(withRenamed([shared], shared.origin, ' Geteilt auf diesem Computer ')).toEqual([shared])
+  })
 })
 
 describe('isBookmark', () => {

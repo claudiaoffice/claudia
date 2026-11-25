@@ -195,8 +195,11 @@ def _check_welcome(message: Message) -> None:
         raise _bad("'locale' is a BCP-47-ish tag such as 'de' or 'de-DE'")
     if "app" in message:  # the window's own app (D444)
         _token(message["app"], "'app'")
-    if "ask_administrator" in message and message["ask_administrator"] is not True:  # D1624, never sent by Linux
-        raise _bad("'ask_administrator' is true when given")
+    if "ask_administrator" in message:  # D1624, never sent by Linux
+        if message["ask_administrator"] is not True:
+            raise _bad("'ask_administrator' is true when given")
+        if "setup_code" in message:
+            raise _bad("'ask_administrator' comes without 'setup_code'")
 
 
 def _check_action(message: Message) -> None:

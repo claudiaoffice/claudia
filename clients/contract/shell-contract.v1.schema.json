@@ -52,6 +52,7 @@
       "description": "Shell to page, the answer to 'hello': the version both will speak, who the shell is and what it offers.",
       "type": "object",
       "required": ["type", "contract", "shell", "capabilities"],
+      "not": { "required": ["setup_code", "ask_administrator"] },
       "properties": {
         "type": { "const": "welcome" },
         "contract": { "type": "integer", "minimum": 1 },

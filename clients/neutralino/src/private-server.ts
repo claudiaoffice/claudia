@@ -30,6 +30,7 @@ import { mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node
 import { createServer } from 'node:net'
 import { dirname, join } from 'node:path'
 import { buildServerCommand, LocalServer, LOOPBACK, ServerStartError, serverProgramCommand, type ServerProgram } from './server.js'
+import { SETUP_CODE } from './core-protocol.js'
 import { hostPlatform } from './platform/host.js'
 import { isOwnedBy, ownerKey, type OwnerKey } from './owner-key.js'
 import { PRIVATE_PORTS, privatePort, walkFrom, type Account } from './private-port.js'
@@ -69,17 +70,29 @@ export async function probeHealth(url: string, timeoutMs = 1000): Promise<Health
 
 /** Where the server writes its setup code while it has no administrator (D1371), readable by this user only. */
 const SETUP_CODE_FILE = join('admin', 'setup-code')
-const SETUP_CODE = /^[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}$/
 
 /** The setup code the server with this state folder wrote, or `null` (an administrator exists, or the file is not a
  * code). Read anew at every call: the shared server may have been restarted by another window (D1373). */
 export function readSetupCode(state: string): string | null {
+  const access = setupCodeAccess(state)
+  return access.kind === 'code' ? access.code : null
+}
+
+/** What this account may learn of the setup code in a server's state folder: the code, that there is none (the server
+ * has an administrator, or the file holds no code), or that it may not read it (D1624). The file itself is read: on
+ * Windows, `access()` does not look at a file's ACL, so it would say yes to everyone. */
+export type SetupCodeAccess = { kind: 'code'; code: string } | { kind: 'none' } | { kind: 'may not' }
+
+export function setupCodeAccess(state: string): SetupCodeAccess {
+  let text: string
   try {
-    const code = readFileSync(join(state, SETUP_CODE_FILE), 'utf8').trim()
-    return SETUP_CODE.test(code) ? code : null
-  } catch {
-    return null
+    text = readFileSync(join(state, SETUP_CODE_FILE), 'utf8')
+  } catch (problem) {
+    const code = (problem as NodeJS.ErrnoException).code
+    return code === 'EACCES' || code === 'EPERM' ? { kind: 'may not' } : { kind: 'none' }
   }
+  const found = text.trim()
+  return SETUP_CODE.test(found) ? { kind: 'code', code: found } : { kind: 'none' }
 }
 
 /** The port her server went to instead of her own, or `null` for a missing, broken, nonsensical or older file. */

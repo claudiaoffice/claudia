@@ -50,8 +50,8 @@ export function takeCodeFromAddress(
 
 // ------------------------------------------------------------------------------------------------------ remembering
 
-/** Listeners of one kind of news, for a page that has drawn before the desktop app's welcome came. */
-function news<T>() {
+/** The listeners of one thing the desktop app's welcome says, for a page that drew before it came. */
+function listeners<T>() {
   const listeners = new Set<(value: T) => void>()
   return {
     tell: (value: T) => {
@@ -64,7 +64,7 @@ function news<T>() {
   }
 }
 
-const codes = news<GivenCode>()
+const codes = listeners<GivenCode>()
 
 function isGiven(value: unknown): value is GivenCode {
   const v = value as GivenCode | null
@@ -101,7 +101,7 @@ export function onSetupCode(listener: (given: GivenCode) => void): () => void {
 }
 
 const ASK_KEY = 'claudia.admin.ask-administrator'
-const asks = news<boolean>()
+const asks = listeners<boolean>()
 
 /** Keep for this tab whether only an administrator of this computer can set this server up (the desktop app says so
  *  in every `welcome`, D1624), and tell a page that waits for it. */

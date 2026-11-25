@@ -134,7 +134,10 @@ const CHECKS: Record<string, Check> = {
       throw bad("'locale' is a BCP-47-ish tag such as 'de' or 'de-DE'")
     }
     if ('app' in message) token(message.app, "'app'")
-    if ('ask_administrator' in message && message.ask_administrator !== true) throw bad("'ask_administrator' is true when given")
+    if ('ask_administrator' in message) {
+      if (message.ask_administrator !== true) throw bad("'ask_administrator' is true when given")
+      if ('setup_code' in message) throw bad("'ask_administrator' comes without 'setup_code'")
+    }
   },
   action(message) {
     actionId(message.action)

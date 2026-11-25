@@ -11,7 +11,7 @@
   * It keeps its own documents and state in %ProgramData%\Claudia, not in the folder of whoever is signed in, because it
     runs without anyone signed in. It is a place of its own, "Shared on this computer" (E8.5, D1622): the installer
     writes %ProgramData%\Claudia\service.json with its address and its state folder, and every person's apps list it
-    beside her own server. Change the port here, and the marker has to say it too (claudia.iss, ServiceMarker).
+    beside her own server. Its port is in that file too (claudia.iss, ServiceFile; test_windows_packaging.py holds them together).
   * No exit-when-idle option: a service stays until it is stopped.
 -->
 <service>

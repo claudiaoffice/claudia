@@ -9,7 +9,8 @@ import { Core, type CoreMessage, type ServerLike } from '../src/core.js'
 import { getIdentity } from '../src/identity.js'
 import { SetupProblem } from '../src/local-server.js'
 import { parseAddress } from '../src/servers.js'
-import type { SetupCodeAccess, SharedService } from '../src/shared-service.js'
+import type { SetupCodeAccess } from '../src/private-server.js'
+import type { SharedService } from '../src/shared-service.js'
 import { Settings } from '../src/settings.js'
 
 const tick = () => new Promise((resolve) => setTimeout(resolve, 0))

@@ -144,7 +144,7 @@ Filename: "{app}\service\claudia-service.exe"; Parameters: "uninstall"; RunOnceI
 [UninstallDelete]
 ; What the launcher copies for a window (D741) goes with the program; the documents stay (see the message at the end).
 Type: filesandordirs; Name: "{localappdata}\Claudia\run"
-; The marker of the service (D1622): with the service gone, the apps no longer list "Shared on this computer".
+; The service file (D1622): with the service gone, the apps no longer list "Shared on this computer".
 Type: files; Name: "{commonappdata}\Claudia\service.json"
 
 [Code]
@@ -185,9 +185,9 @@ begin
   end;
 end;
 
-{ The marker the apps find the service by (E8.5, D1622): its address and its state folder, as claudia-service.xml starts
+{ The service file the apps find the service by (E8.5, D1622): its address and its state folder, as claudia-service.xml starts
   it. Every person's apps list it as "Shared on this computer". }
-function ServiceMarker: String;
+function ServiceFile: String;
 var
   State: String;
 begin
@@ -199,7 +199,7 @@ end;
 procedure CurStepChanged(CurStep: TSetupStep);
 begin
   if (CurStep = ssPostInstall) and WizardIsComponentSelected('service') then
-    SaveStringToFile(ExpandConstant('{commonappdata}\Claudia\service.json'), ServiceMarker, False);
+    SaveStringToFile(ExpandConstant('{commonappdata}\Claudia\service.json'), ServiceFile, False);
 end;
 
 { A running server (the service, or the one of a window) holds its files: it is ended before they are replaced or removed. }

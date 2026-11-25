@@ -11,10 +11,10 @@
 // object or its token. It can only post messages, and this page accepts them only from its own frame and only from
 // the origin that the core told it to show.
 
-import { Bridge, type Setup } from './bridge.js'
+import { Bridge } from './bridge.js'
 import { CORE_ID, FROM_CORE, TO_CORE, isCoreMessage } from './core-protocol.js'
 import { CONNECT_FAILED_CODES, type ConnectFailedCode } from './contract.js'
-import type { CoreMessage, CoreRequest } from './core.js'
+import type { CoreMessage, CoreRequest, Setup } from './core.js'
 import type { App } from './identity.js'
 import type { WindowMenuItem } from './menu.js'
 import { applyActionStates, routeMenuClick, type ActionState, type KnownAction } from './menu-actions.js'
@@ -269,10 +269,8 @@ export class ShellPage {
       case 'show': {
         this.bridge.reset()
         this.frameOrigin = new URL(message.origin).origin
-        this.setup = {
-          ...(message.setupCode !== undefined ? { setupCode: message.setupCode } : {}),
-          ...(message.askAdministrator ? { askAdministrator: true as const } : {}),
-        }
+        const { kind: _kind, origin: _origin, ...setup } = message
+        this.setup = setup
         this.env.status.show('Opening…', undefined, false)
         this.env.frame.src = `${this.frameOrigin}/`
         return

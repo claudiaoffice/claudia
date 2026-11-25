@@ -58,6 +58,7 @@ const INVALID: Array<[string, unknown]> = [
   ['welcome with an app that is not a word', { type: 'welcome', contract: 1, shell: SHELL, capabilities: [], app: 'Creates It' }],
   ['welcome with a bad locale', { type: 'welcome', contract: 1, shell: SHELL, capabilities: [], locale: 'de_DE' }],
   ['servers with shared as text', { type: 'servers', servers: [{ ...SERVER, shared: 'yes' }] }],
+  ['welcome with a setup code and asking for an administrator', { type: 'welcome', contract: 1, shell: SHELL, capabilities: [], setup_code: 'K7QM-4TXR-92HB', ask_administrator: true }],
   ['welcome asking for an administrator with text', { type: 'welcome', contract: 1, shell: SHELL, capabilities: [], ask_administrator: 'yes' }],
   ['action without a name', { type: 'action' }],
   ['action that is not namespaced', { type: 'action', action: 'save' }],

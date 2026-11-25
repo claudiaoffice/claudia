@@ -52,12 +52,15 @@ export function withBookmark(bookmarks: Bookmark[], origin: string, defaultLabel
   return next
 }
 
-/** `bookmarks` with a person's own name for one of them, from here on kept exactly as given (see `withBookmark`). */
+/** `bookmarks` with a person's own name for one of them, from here on kept exactly as given (see `withBookmark`). A name
+ * left blank or as it was renames nothing: a name the page gave stays the page's (the shared place's follows her
+ * language, D1623). */
 export function withRenamed(bookmarks: Bookmark[], origin: string, label: string): Bookmark[] {
   const next = bookmarks.map((b) => ({ ...b }))
   const existing = next.find((b) => b.origin === origin)
-  if (existing && !existing.local) {
-    existing.label = label.trim() || existing.label
+  const name = label.trim()
+  if (existing && !existing.local && name && name !== existing.label) {
+    existing.label = name
     existing.custom = true
   }
   return next

@@ -6,6 +6,7 @@
 
 import * as contract from './contract.js'
 import { ContractError, UnknownMessageType, type Message, type ServerEntry, type ShellInfo } from './contract.js'
+import type { Setup } from './core.js'
 import type { App } from './identity.js'
 import type { ActionState, KnownAction } from './menu-actions.js'
 
@@ -38,13 +39,9 @@ export interface BridgeOptions {
   onServers?: (servers: unknown[]) => void
   /** Choosing and saving files with the shell's dialogs (D501); without it the shell does not offer `files`. */
   files?: FileDesk
-  /** What the page of the server shown now may know about setting it up, asked at every hello: her own server's setup
-   * code (D1373), the shared service's when she may read it, or that she has to ask an administrator (D1624). */
+  /** What the page of the server shown now may know about setting it up (core.ts `Setup`), asked at every hello. */
   setup?: () => Setup
 }
-
-/** What the core sends with the server it shows (core.ts `show`). */
-export type Setup = { setupCode?: string; askAdministrator?: true }
 
 export class Bridge {
   private isReady = false

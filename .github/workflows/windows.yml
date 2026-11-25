@@ -319,10 +319,10 @@ jobs:
 
       - name: The service is Shared on this computer, and only administrators read its setup code (E8.5, D1622, D1624)
         run: |
-          $marker = Get-Content "$env:ProgramData\Claudia\service.json" -Raw | ConvertFrom-Json
-          if ($marker.origin -ne 'http://127.0.0.1:8765') { throw "The marker names $($marker.origin)" }
-          if ($marker.state -ne "$env:ProgramData\Claudia\state") { throw "The marker names the state folder $($marker.state)" }
-          if (-not (Test-Path (Join-Path $marker.state 'admin\setup-code'))) { throw 'An administrator cannot read the setup code of the service' }
+          $file = Get-Content "$env:ProgramData\Claudia\service.json" -Raw | ConvertFrom-Json
+          if ($file.origin -ne 'http://127.0.0.1:8765') { throw "The service file names $($file.origin)" }
+          if ($file.state -ne "$env:ProgramData\Claudia\state") { throw "The service file names the state folder $($file.state)" }
+          if (-not (Test-Path (Join-Path $file.state 'admin\setup-code'))) { throw 'An administrator cannot read the setup code of the service' }
           $rights = icacls "$env:ProgramData\Claudia\state" | Out-String
           if ($rights -match 'BUILTIN\\Users' -or $rights -notmatch 'BUILTIN\\Administrators') { throw "The state folder of the service is open to others:`n$rights" }
 
@@ -361,7 +361,7 @@ jobs:
           Install-Claudia 'client'
           if (Get-Service ClaudiaServer -ErrorAction SilentlyContinue) { throw 'The standard install registered the service' }
           if (Test-Path "$env:INSTALL_DIR\service") { throw 'The standard install put the service files on the computer' }
-          if (Test-Path "$env:ProgramData\Claudia\service.json") { throw 'The standard install wrote the marker of a service' }
+          if (Test-Path "$env:ProgramData\Claudia\service.json") { throw 'The standard install wrote the service file of a service' }
 
       - name: The installed server runs alone, without the tools of this runner
         run: |
