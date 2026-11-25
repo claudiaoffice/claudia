@@ -60,10 +60,18 @@ def _launch(play):
     return play.chromium.launch(executable_path=where) if where else play.chromium.launch()
 
 
+#: Why nothing that serves the web app can run here (``""``: it can). The specs ask only this: they start the browser
+#: the run asked for themselves and skip with its name when it is missing (PROC-59: asking for Chromium here skipped
+#: every scenario of the Firefox job, which has no Chromium).
+NOT_BUILT = (
+    "" if (BUILT / "index.html").is_file() else "the web app is not built (run `npm install && npm run build` in web/)"
+)
+
+
 def _why_not() -> str:
     """Why this test cannot run here, or ``""`` if it can. The same words ``check_debt.py`` prints."""
-    if not (BUILT / "index.html").is_file():
-        return "the web app is not built (run `npm install && npm run build` in web/)"
+    if NOT_BUILT:
+        return NOT_BUILT
     try:
         from playwright.sync_api import sync_playwright
     except ImportError:

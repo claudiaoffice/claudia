@@ -68,3 +68,36 @@ def test_a_failed_pytest_run_names_the_tests_that_failed(run_e2e, tmp_path, caps
     finally:
         (runner.logs / "proc-52-check.log").unlink(missing_ok=True)  # the runner keeps its logs in the repo's state
     assert "test_some_specs.py::test_this_one_fails" in capsys.readouterr().out
+
+
+def _only_skips(tmp_path):
+    specs = tmp_path / "test_only_skips.py"
+    specs.write_text(
+        "".join(
+            f"import pytest\n\n@pytest.mark.skip(reason='no browser')\ndef test_{i}():\n    pass\n\n" for i in range(3)
+        )
+    )
+    return str(specs)
+
+
+def test_on_ci_a_pytest_run_in_which_nothing_passed_fails(run_e2e, tmp_path, capsys, monkeypatch):
+    """The first Firefox job on CI was green with "71 skipped": the specs looked for Chromium, which that job does not
+    install, and skipped every scenario (PROC-59). On CI a run that ran nothing is a broken setup (D1452)."""
+    monkeypatch.setenv("CI", "true")
+    runner = run_e2e.Runner(argparse.Namespace(shots=None, dry_run=False))
+    try:
+        assert not runner._record("proc-59-check", run_e2e.pytest_command(_only_skips(tmp_path)))
+    finally:
+        (runner.logs / "proc-59-check.log").unlink(missing_ok=True)
+    assert "nothing passed" in capsys.readouterr().out
+    assert not runner.results[-1].ok, "the summary at the end says it failed too"
+
+
+def test_on_a_computer_a_run_that_only_skipped_is_not_a_failure(run_e2e, tmp_path, monkeypatch):
+    """PROC-48: a computer without the browser is not a broken app; the run says what it skipped."""
+    monkeypatch.delenv("CI", raising=False)
+    runner = run_e2e.Runner(argparse.Namespace(shots=None, dry_run=False))
+    try:
+        assert runner._record("proc-59-check", run_e2e.pytest_command(_only_skips(tmp_path)))
+    finally:
+        (runner.logs / "proc-59-check.log").unlink(missing_ok=True)

@@ -22,7 +22,7 @@ from playwright.sync_api import expect
 from pytest_bdd import given, parsers, scenarios, then, when
 from test_administrators import PASSWORD as ADMIN_PASSWORD
 from test_administrators import put_administrators
-from test_greeting import BUILT, SKIP
+from test_greeting import BUILT, NOT_BUILT
 
 from claudia_ai.testing import FakeAnthropic
 
@@ -52,8 +52,8 @@ class ClaudeSite:
 
 @pytest.fixture(scope="module")
 def claude_site() -> Iterator[tuple[ClaudeSite, Live]]:
-    if SKIP:
-        pytest.skip(SKIP)
+    if NOT_BUILT:
+        pytest.skip(NOT_BUILT)
     with (
         FakeAnthropic(KEY, answer=lambda messages: "B7 divides by C7, which is empty.") as fake,
         tempfile.TemporaryDirectory(prefix="claudia-claude-") as folder,

@@ -19,7 +19,7 @@ from live import server
 from playwright.sync_api import expect
 from pytest_bdd import given, parsers, scenarios, then, when
 from test_administrators import PASSWORD, put_administrators
-from test_greeting import BUILT, SKIP
+from test_greeting import BUILT, NOT_BUILT
 
 from claudia_ai.testing import FakeAnthropic
 
@@ -65,8 +65,8 @@ class Admin:
 
 @pytest.fixture
 def admin(browser, request) -> Iterator[Admin]:
-    if SKIP:
-        pytest.skip(SKIP)
+    if NOT_BUILT:
+        pytest.skip(NOT_BUILT)
     if BROWSER == "firefox":
         pytest.skip("these scenarios are not tagged @firefox")
     with (

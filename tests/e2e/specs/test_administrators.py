@@ -30,7 +30,7 @@ import pytest
 from conftest import BROWSER, SHOTS, eventually, shot_name
 from live import server
 from pytest_bdd import given, parsers, scenarios, then, when
-from test_greeting import BUILT, SKIP
+from test_greeting import BUILT, NOT_BUILT
 
 scenarios("../../../claudiaoffice-log/specs/server/administrators.feature")
 
@@ -167,8 +167,8 @@ class Visit:
 
 @pytest.fixture
 def site(request) -> Iterator[Site]:
-    if SKIP:
-        pytest.skip(SKIP)
+    if NOT_BUILT:
+        pytest.skip(NOT_BUILT)
     if BROWSER == "firefox":
         pytest.skip("these scenarios are not tagged @firefox")
     with tempfile.TemporaryDirectory(prefix="claudia-admins-") as folder:

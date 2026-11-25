@@ -415,6 +415,11 @@ class Runner:
             lines = [line for line in log.read_text(errors="replace").splitlines() if line.strip()]
             summary = lines[-1].strip(" =") if lines and "pytest" in command[-3:] + command[:3] else ""
             note = f": {summary}" if summary else ""
+            if os.environ.get("CI") and "skipped" in summary and "passed" not in summary:
+                # a run that ran nothing is a broken setup on CI, not a green job (D1452, PROC-59)
+                self.results[-1].ok = False
+                self.say(f"   FAILED ({seconds:.0f} s): nothing passed{note}")
+                return False
             self.results[-1].note = "skipped some" if "skipped" in summary else ""
             self.say(f"   ok ({seconds:.0f} s){note}")
         return code == 0

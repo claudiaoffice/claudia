@@ -35,7 +35,7 @@ from pytest_bdd.scenario import get_step_function
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))  # tests/e2e: live.py and test_greeting.py
 
 from live import ROOT, server  # noqa: E402
-from test_greeting import BUILT, SKIP, chromium_at  # noqa: E402
+from test_greeting import BUILT, NOT_BUILT, chromium_at  # noqa: E402
 
 BROWSER = os.environ.get("CLAUDIA_E2E_BROWSER", "chromium")
 SHOTS = Path(os.environ.get("CLAUDIA_E2E_SHOTS", ROOT / ".claudia" / "e2e" / "shots"))
@@ -134,8 +134,8 @@ def pytest_bdd_apply_tag(tag: str, function) -> bool | None:
 
 def _web_server(*options: str) -> Iterator[str]:
     """A real server with the built web app, for the whole run; its URL."""
-    if SKIP:
-        pytest.skip(SKIP)
+    if NOT_BUILT:
+        pytest.skip(NOT_BUILT)
     with (
         tempfile.TemporaryDirectory(prefix="claudia-specs-") as folder,
         server(Path(folder), *options, "--web", str(BUILT)) as running,
