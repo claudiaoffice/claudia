@@ -35,7 +35,7 @@ The index is the status of record; a section below keeps the status of the round
 re-checked. **Opened** and **Fixed** are filled from 2026-11-20 on: for older items only where the status already gave
 the date.
 
-### Open (61)
+### Open (70)
 
 By priority (P1, P2, P3, then items that wait for a decision without one), then by ID.
 
@@ -52,6 +52,9 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | UX-69 | P2 | UX / all apps | A viewer is not told she can only look: greyed entries, hidden controls and object gestures are silent (only Delete on a sheet's object says so) | open (scenario `@pending:UX-69`) | 2026-11-22 |  |
 | UX-70 | P2 | UX / all apps | What an export could not keep is never shown: the losses come back with the file and no client says them | **new, open** (read; size 2) | 2026-11-22 |  |
 | UX-71 | P2 | UX / computes | Text on a workbook's slide is drawn in the workbook's Body text (13 px), tiny on a 1600-unit slide | **needs decision** (measured; size 2) | 2026-11-22 |  |
+| UX-84 | P2 | UX / collaboration | Selecting an object in computes or composes neither locked it nor showed it to colleagues, though D1223 says it does in all three apps | **new, open**; fix on `batch-2` (proposed) | 2026-11-25 |  |
+| UX-85 | P2 | UX / composes | Name & describe… on a table does not keep its description: the server refuses it with a developer sentence, in English only | **new, open** | 2026-11-25 |  |
+| UX-88 | P2 | UX / a11y | A notice (toast) is a `role=status` element made together with its text, which screen readers may not announce (BITV 4.1.3) | **new, open** (read) | 2026-11-25 |  |
 | CODE-25 | P2 | Code / Export | A renamed object loses its name in pptx and odp without the export saying so (D450) | **new, open** |  |  |
 | CODE-31 | P2 | Code / i18n | The history speaks English to everybody: command labels and summaries are not translated | **new, open** |  |  |
 | CODE-45 | P2 | Code / Import | pptx placeholders (titles, body text) are not imported at all | **new, open** |  |  |
@@ -59,6 +62,7 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | PROC-30 | P2 | Process / desktop clients | The Neutralino (Windows, macOS) tests and the GTK client were not run for `object-interaction`: the generated menus were rebuilt and the manifest unit tests pass, nothing more | **new, open** |  |  |
 | PROC-37 | P2 | Process / scope | D1272 says an export's history and chat come back in with their authors as text; slice B imports the content only (`import_state` returns the state, the `history.jsonl` and `chat.jsonl` of an export are written but never read back) | **new, open** (size 2; needs the owner's decision: build it in slice C or log it) |  |  |
 | PROC-40 | P2 | Process / E2E | Four spec files (51 scenarios) run nowhere: no step code binds them and no scenario names a unit or e2e test (`names`, `requirements`, `objects-in-composes`, `pictures-in-files`) | **new, open** (measured; size 2) | 2026-11-20 |  |
+| PROC-60 | P2 | Process / E2E | `wait_for_function` given an expression string breaks on the page's Content-Security-Policy once it has to poll; `Person.wait_until_open` uses it | **new, open** | 2026-11-25 |  |
 | UX-64 | P2 | UX / all apps | Dark mode: a part of the sidebar (History & Chat / Help) is not readable or has too little contrast; the exact symptom was not written down when it was seen (see entry) | **needs decision** (symptom to be re-stated; size 2) | 2026-11-22 |  |
 | UX-76 | P3 | UX / computes | The New sheet dialog proposes no name: the field is empty (placeholder "Forecast") and Add Sheet stays off until one is typed, though a new sheet is to get a name like "Sheet2" (E1.13) | open (scenario `@pending:UX-76`) | 2026-11-22 |  |
 | SEC-09 | P3 | Security | User names can be confusable (homoglyphs) | open (unverified) |  |  |
@@ -80,6 +84,9 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | UX-53 | P3 | UX / computes | An object keeps its pixel size when rows or columns are inserted or resized, so it no longer covers the cells it covered (E6.17, D1230) | **new, open** |  |  |
 | UX-60 | P3 | UX / composes | Dragging an object to another paragraph is "Moved an object" in the history; the mock names the object and the paragraph | **new, open** (divergence from the mock of D1352; size 3) | 2026-11-20 |  |
 | UX-65 | P3 | UX / composes | Search & replace panel, find-only state: the results list overflows its container and the "text" badge of a result is clipped at the panel edge | **new, open** (`web/app/components/SearchPanel.vue`; **measured** in the running app; size 3) | 2026-11-22 |  |
+| UX-86 | P3 | UX / computes | A colleague's name tag on a cell or an object in row 1 is hidden under the column header | **new, open** | 2026-11-25 |  |
+| UX-87 | P3 | UX / i18n | A new workbook's first sheet is "Sheet1" in every language, beside an offered "Blatt2" | **new, open** (read) | 2026-11-25 |  |
+| UX-89 | P3 | UX / a11y | A table's accessible name is "Table 1 Options…": the Options… button is inside its caption | **new, open** | 2026-11-25 |  |
 | CODE-03 | P3 | Code | README is out of date | open (not re-checked) |  |  |
 | CODE-04 | P3 | Code | Untyped functions escape the type check | verified open |  |  |
 | CODE-06 | P3 | Code | `--max-connections` is per document, not per server | open |  |  |
@@ -100,8 +107,10 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | CODE-68 | P3 | computes | Computes cannot make a text box or a shape, though a model can hold one (a file from another app) and an export reports it as `object` | **new, open** |  |  |
 | CODE-70 | P3 | computes I/O | The patch of a kept XLSX or ODS does not add pivot tables either (reported), as it does not add pictures (CODE-66) | **new, open** (D1233) |  |  |
 | CODE-74 | P3 | Code | `export_content` still answers `{format: "claudia-export 1", ...}`, a JSON that is neither the zip of D1270 nor documented anywhere; it is recorded as an export and the panel says "exported as claudia-export 1"; no window calls it | **new, open** (size 3; remove it or make it the zip) |  |  |
+| CODE-96 | P3 | Code / web | About 25 components repeat the look-only notice instead of calling `session.tellLookOnly()` | **new, open** (read) | 2026-11-25 |  |
 | PROC-22 | P3 | Process / CI | The LibreOffice job may still fail silently, though it has passed every round | **new, open** |  |  |
-| PROC-29 | P3 | Process / E2E | No scenario asserts that a second window sees a holder's outline and name tag (D1223), nor that a colleague's drag is not shown live | **new, open** |  |  |
+| PROC-29 | P3 | Process / E2E | No scenario asserts that a second window sees a holder's outline and name tag (D1223), nor that a colleague's drag is not shown live | **new, open**; fix on `batch-2` (proposed) |  |  |
+| PROC-59 | P3 | Process / CI | The scenarios tagged @firefox were never run in Firefox by CI | **new, open**; fix on `batch-2` (proposed) | 2026-11-25 |  |
 
 ### Fixed (203)
 
@@ -2995,3 +3004,57 @@ Proposed by the bug eater and agreed by the owner on 2026-11-25; the index above
 
 Also proposed for closing from the triage (`notes/bug-eater-queue.md`, section 1): CODE-35, CODE-37, CODE-69, UX-06,
 UX-09, UX-27, UX-07, WEB-02, UX-54, UX-59.
+
+## Found in batch 2 of the bug eater (2026-11-25; branch `batch-2`)
+
+### UX-84 · An object selected in computes or composes was neither locked nor shown to colleagues · P2 · size 2 · fix on `batch-2`
+**Read** while writing PROC-29: D1223 says selecting an object holds it in all three apps, and others see the holder's
+coloured outline and name tag. Only creates (and a slide in computes) did. A sheet's selected object was local to the
+grid, and a text's was only in the session's state: nobody saw it, and nothing stopped a colleague changing it.
+**Fix** on `batch-2`: `BaseSession.lockObject` locks the selected object (for a viewer it only shows it) and unlocks it
+back to where the person rests, which is nowhere in creates and composes and her cells in computes. Creates'
+`SlideActions`, computes' `SheetGrid` and composes' `TextSession.selectObject` all use it. One component,
+`OtherOnObject.vue`, draws a colleague's selection in the three apps, tables included. Composes no longer holds the words
+round the caret while an object is selected, since that would unlock it. **Tests:** `web/tests/session.test.ts`,
+`text-session-objects.test.ts` and `text-object-layer.test.ts` ("… locks it, as in creates (D1223)"), and step 1b of
+`web/e2e/objects.cjs` (PROC-29).
+
+### UX-85 · Name & describe… on a table does not keep its description · P2 · size 2 · open
+**Measured** (by the helper binding `invariants/objects-in-composes.feature`, scenario "A table has a name nobody else
+has …"). The dialog opens with the name "Table 1", but Save keeps no description. The server refuses it with the
+developer sentence "an object is described with DescribeObject, which also says whether it is decoration", in English
+only. No history entry is made, and the table's accessible description stays empty. The scenario is tagged
+`@pending:UX-85`.
+
+### UX-86 · A colleague's name tag in row 1 of a sheet is hidden · P3 · size 3 · open
+**Seen** in the screenshots of PROC-29 (`objects-computes-image-watched.png`). The tag of a colleague's cell outline, and
+now of an object she selected, sits above the box. In row 1 that is under the column header, so the outline shows but
+her name does not.
+
+### UX-87 · A new workbook's first sheet is "Sheet1" in every language · P3 · size 3 · open
+**Read** (helper, while fixing UX-76): `WorkbookModel.setup_commands` ignores `language`, so a German person gets
+"Sheet1" next to the offered "Blatt2".
+
+### UX-88 · A notice may not be announced by a screen reader · P2 · size 3 · open
+**Read** (helper, while fixing UX-69): the toast is a `role=status` element created together with its text. Screen
+readers may not announce a live region that appears with its content already in it (BITV 4.1.3).
+
+### UX-89 · A table's accessible name includes "Options…" · P3 · size 3 · open
+**Measured** (helper, PROC-40): the table is read as "Table 1 Options…", because the Options… button is inside its
+caption.
+
+### CODE-96 · The look-only notice is repeated in about 25 components · P3 · size 3 · open
+**Read** (helper, UX-69): `session.notice(t('You can only look at this document.'), 'warning')` is written out about 25
+times; `session.tellLookOnly()` says it once.
+
+### PROC-59 · The @firefox scenarios were never run in Firefox · P3 · size 2 · fix on `batch-2`
+**Read**: CI ran the specs in Chromium only, so the `@firefox` tag had no effect there. **Fix** on `batch-2`: the job
+`e2e-firefox` installs Firefox and runs `./run-e2e.sh specs --browser firefox`. **Test:**
+`tests/test_ci_workflow.py::test_ci_runs_the_firefox_specs_in_firefox`. Not run here (Firefox cannot be downloaded in
+this workspace); its first run on CI is the check.
+
+### PROC-60 · An expression given to `wait_for_function` breaks on the page's CSP once it polls · P2 · size 3 · open
+**Measured** (helper, PROC-40): Playwright evaluates a predicate given as a string with `eval`, which the page's
+Content-Security-Policy forbids. It only works when the condition already holds at the first check.
+`Person.wait_until_open` in `tests/e2e/specs/conftest.py` uses that form for `.health.open`. **Acceptance:** a test that
+opens the page with the health dot delayed.
