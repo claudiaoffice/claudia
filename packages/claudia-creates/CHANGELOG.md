@@ -5,6 +5,8 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+## [0.21.0] - 2026-11-25
+
 ### Changed
 - `SlideModel.setup_commands(language, *, translate=None)` takes the core's new `translate` (UX-87); a
   new presentation needs no word of it.
