@@ -35,7 +35,7 @@ The index is the status of record; a section below keeps the status of the round
 re-checked. **Opened** and **Fixed** are filled from 2026-11-20 on: for older items only where the status already gave
 the date.
 
-### Open (74)
+### Open (76)
 
 By priority (P1, P2, P3, then items that wait for a decision without one), then by ID.
 
