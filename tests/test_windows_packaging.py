@@ -327,6 +327,44 @@ def test_the_script_reads_only_setup_messages_that_inno_setup_defines():
     assert not unknown, f"not known to be in Default.isl: {unknown}"
 
 
+# -------------------------------------------------------------------- the service, Shared on this computer (E8.5, D1622)
+def _service_option(name: str) -> str:
+    arguments = ET.parse(WINDOWS / "service" / "claudia-service.xml").getroot().findtext("arguments")
+    return re.search(rf'--{name} "?([^" ]+)"?', arguments).group(1)
+
+
+def test_the_service_is_for_the_people_of_this_computer_to_share_documents_and_not_chosen_unless_asked_for():
+    text = iss_text()
+    assert "en.ComponentService=Claudia server as a Windows service, for the people of this computer to share documents" in text
+    assert "de.ComponentService=Claudia-Server als Windows-Dienst, damit die Personen dieses Computers Dokumente teilen" in text
+    assert re.findall(r'^Name: "(\w+)"; Description: "\{(?:cm|code):\w+\}"', text, flags=re.M)[0] == "standard"
+    assert re.search(r'^Name: "service";.*; Types: full$', text, flags=re.M), "only the type with the service has it"
+
+
+def test_the_marker_names_the_address_and_state_folder_the_service_is_started_with():
+    text = iss_text()
+    assert _service_option("host") == "127.0.0.1"
+    assert f'"origin": "http://127.0.0.1:{_service_option("port")}"' in text
+    state = _service_option("state-dir").replace("%ProgramData%", "{commonappdata}")
+    assert f"State := ExpandConstant('{state}');" in text
+    assert "SaveStringToFile(ExpandConstant('{commonappdata}\\Claudia\\service.json'), ServiceMarker, False)" in text
+    assert re.search(r"if \(CurStep = ssPostInstall\) and WizardIsComponentSelected\('service'\) then", text)
+
+
+def test_the_marker_goes_with_the_program():
+    assert 'Type: files; Name: "{commonappdata}\\Claudia\\service.json"' in iss_text()
+
+
+def test_only_the_computers_administrators_and_the_service_may_read_its_state_and_so_its_setup_code():
+    """D1624: the apps of the computer's administrators read the setup code; Users no longer inherit read access."""
+    state = _service_option("state-dir").replace("%ProgramData%", "{commonappdata}")
+    line = next(line for line in iss_text().splitlines() if line.startswith("Filename: \"{sys}\\icacls.exe\"") and state in line and "inheritance" in line)
+    for grant in ("/inheritance:r", "/grant:r", "*S-1-5-18:(OI)(CI)F", "*S-1-5-32-544:(OI)(CI)F", "*S-1-5-19:(OI)(CI)M"):
+        assert grant in line
+    assert "S-1-5-32-545" not in line, "the Users group gets nothing"
+    assert line.endswith("Components: service")
+
+
 def test_the_languages_are_those_the_suite_has_catalogs_for():
     languages = set(re.findall(r'^Name: "(\w+)"; MessagesFile', iss_text(), flags=re.M))
     assert languages == {path.stem for path in (ROOT / "po").glob("*.po") if path.stem != "xx"} | {"en"}

@@ -66,7 +66,7 @@ Name: "de"; MessagesFile: "compiler:Languages\German.isl"
 
 [CustomMessages]
 en.ComponentClient=Claudia Composes, Computes and Creates
-en.ComponentService=Claudia server as a Windows service (for sharing documents on this computer's network)
+en.ComponentService=Claudia server as a Windows service, for the people of this computer to share documents
 en.TypeStandard=Standard (the three apps)
 en.TypeFull=With the server as a Windows service
 en.TaskDesktopIcons=Create icons on the desktop
@@ -75,7 +75,7 @@ en.StatusWebView2=Installing Microsoft's WebView2 Runtime, which shows the apps'
 en.RunComposes=Start Claudia Composes
 en.DocumentsStay=Your documents were left where they are (%LOCALAPPDATA%\Claudia, and %ProgramData%\Claudia for the service). Delete those folders if you do not need them.
 de.ComponentClient=Claudia Composes, Computes und Creates
-de.ComponentService=Claudia-Server als Windows-Dienst (um Dokumente im Netzwerk dieses Computers zu teilen)
+de.ComponentService=Claudia-Server als Windows-Dienst, damit die Personen dieses Computers Dokumente teilen
 de.TypeStandard=Standard (die drei Programme)
 de.TypeFull=Mit dem Server als Windows-Dienst
 de.TaskDesktopIcons=Symbole auf dem Desktop anlegen
@@ -131,6 +131,9 @@ Filename: "{tmp}\{#WebView2Setup}"; Parameters: "/silent /install"; StatusMsg: "
 Filename: "{app}\service\claudia-service.exe"; Parameters: "install"; StatusMsg: "{cm:StatusService}"; Flags: runhidden waituntilterminated; Components: service
 Filename: "{sys}\sc.exe"; Parameters: "config {#ServiceId} obj= ""NT AUTHORITY\LocalService"""; Flags: runhidden waituntilterminated; Components: service
 Filename: "{sys}\icacls.exe"; Parameters: """{commonappdata}\Claudia"" /grant ""*S-1-5-19:(OI)(CI)M"""; Flags: runhidden waituntilterminated; Components: service
+; Its state, with its setup code while it has no administrator: for the computer's administrators and the service only, so
+; that only an administrator's app hands the code to the setup page and anyone else's says to ask one (E8.5, D1624).
+Filename: "{sys}\icacls.exe"; Parameters: """{commonappdata}\Claudia\state"" /inheritance:r /grant:r ""*S-1-5-18:(OI)(CI)F"" ""*S-1-5-32-544:(OI)(CI)F"" ""*S-1-5-19:(OI)(CI)M"""; Flags: runhidden waituntilterminated; Components: service
 Filename: "{app}\service\claudia-service.exe"; Parameters: "start"; Flags: runhidden waituntilterminated; Components: service
 Filename: "{app}\client\claudia-start.exe"; Parameters: "composes"; Description: "{cm:RunComposes}"; Flags: nowait postinstall skipifsilent
 
@@ -141,6 +144,8 @@ Filename: "{app}\service\claudia-service.exe"; Parameters: "uninstall"; RunOnceI
 [UninstallDelete]
 ; What the launcher copies for a window (D741) goes with the program; the documents stay (see the message at the end).
 Type: filesandordirs; Name: "{localappdata}\Claudia\run"
+; The marker of the service (D1622): with the service gone, the apps no longer list "Shared on this computer".
+Type: files; Name: "{commonappdata}\Claudia\service.json"
 
 [Code]
 const
@@ -178,6 +183,23 @@ begin
       WizardForm.ComponentsList.ItemEnabled[Index] := False;
     end;
   end;
+end;
+
+{ The marker the apps find the service by (E8.5, D1622): its address and its state folder, as claudia-service.xml starts
+  it. Every person's apps list it as "Shared on this computer". }
+function ServiceMarker: String;
+var
+  State: String;
+begin
+  State := ExpandConstant('{commonappdata}\Claudia\state');
+  StringChangeEx(State, '\', '\\', True);
+  Result := '{"origin": "http://127.0.0.1:8765", "state": "' + State + '"}';
+end;
+
+procedure CurStepChanged(CurStep: TSetupStep);
+begin
+  if (CurStep = ssPostInstall) and WizardIsComponentSelected('service') then
+    SaveStringToFile(ExpandConstant('{commonappdata}\Claudia\service.json'), ServiceMarker, False);
 end;
 
 { A running server (the service, or the one of a window) holds its files: it is ended before they are replaced or removed. }
