@@ -21,6 +21,7 @@ is one switch per reason. This note holds the design behind the decisions and th
 | D1641 | Paste and Paste As depend on the role only; there is no "clipboard" reason. Paste As ▸ Plain text with no text on the clipboard says so when chosen. |
 | D1642 | A notice names the first failing reason in the order role, server, client, ai, document, selection. The Shortcuts dialog has the switch "What Fits Now" / "Everything" and the tags "not for you", "not now", "not here". Text that says why is drawn in the muted ink, not in the greyed-entry grey. |
 | D1643–D1649 | The architecture: see `menus-architecture.md` §6. |
+| D1650 | A notice speaks per condition; Copy and Share… have sentences of their own. |
 
 ## The words of "fits when" (D1601)
 
@@ -106,5 +107,5 @@ Paste As ▸ Plain text with no text on the clipboard stays shown and, when chos
 2. ~~Mock-ups: an emptied menu, an emptied context menu, the shortcut notice, Preferences ▸ Shortcuts with "fits
    when".~~ Done, for review.
 3. ~~Architecture with a class diagram~~: `menus-architecture.md`, agreed (D1643–D1649).
-4. Gherkin scenarios: `specs/menus/menus-that-fit.feature`, a draft with its questions in
-   `specs/menus/menus-that-fit.review.md`, for the owner. No code before the owner says so.
+4. ~~Gherkin scenarios~~: `specs/menus/menus-that-fit.feature`, approved (2026-11-25; the words of a notice: D1650).
+5. The build, slice by slice as in `menus-architecture.md` §5, when the owner says so.

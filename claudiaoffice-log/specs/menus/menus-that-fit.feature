@@ -1,6 +1,11 @@
 # Menus show what fits the moment; what does not fit says why (E5.23, E5.24; D1600–D1607, D1612, D1615, D1619,
-# D1640–D1648). Questions and proposals: menus-that-fit.review.md.
-@draft
+# D1640–D1650). Approved by the owner 2026-11-25.
+# How the steps work (the owner's answers to the review):
+#   - Copy in the browser's own menu cannot be driven: the step makes the copy that entry makes, of the selection, and
+#     checks the clipboard. Dragging out is driven for real.
+#   - The steps never read the clipboard directly (Firefox asks the person first): they put words on it by copying from
+#     a field and check it by pasting into a field.
+#   - @desktop only on the menu bar: the shells draw the menu bar alone (D1645); context menus and keys are the page's.
 Feature: The menus offer what fits who I am and what I am doing, and what does not fit tells me why
 
   # -- the menu bar --------------------------------------------------------------------------------------

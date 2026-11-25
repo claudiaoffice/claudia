@@ -89,7 +89,8 @@ stale, as one does for the keys today.
 - **`Condition`:** one per phrase of the workbook ("role: owner", "selection: a pivot table"). It has:
   - its `reason`;
   - `holds(facts)`;
-  - `why(t)`, the notice ("Only an owner can share this document.");
+  - `why(t)`, the notice ("Only an owner can do this."); an entry of the definition may carry a sentence of its own
+    instead (D1650);
   - `plain(t)`, for the Shortcuts dialog ("owners").
 - **`CONDITIONS`:** the registry, words → condition. Adding a condition is one entry here, as D1601 asks.
 - **`Rule.parse(words)`:** splits at "·" and looks each phrase up. An unknown phrase throws, and a test parses every
@@ -198,7 +199,7 @@ app by app:
 
 ## 7. What is not decided here
 
-- The Gherkin scenarios: drafted in `specs/menus/menus-that-fit.feature`, for the owner's review.
+- The Gherkin scenarios: `specs/menus/menus-that-fit.feature`, approved 2026-11-25.
 - Whether people get the hide/grey choice after the trial (D1606).
 
 ## 8. Not verified, and risks
