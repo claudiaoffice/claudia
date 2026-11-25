@@ -39,12 +39,17 @@ the repository does).
 
 - PROC-59 was fixed in batch 2 only on paper: the first Firefox job on `main` was green with "71 skipped".
 - UX-90: about 25 other `role=status` elements appear with their text (BITV 4.1.3).
-- PERF-13: calculating a chain is quadratic in `Waiting.done`.
+- PERF-13: calculating a chain is quadratic in `Waiting.done`. It made `main`'s CI red after batch 2 (44x, 45x), so its
+  fix went to `main` ahead of this batch (`a5f5aa14`): a formula done stays in its column's list until half of it is
+  done. A timed test of letting go in order (73x before, since the work is in C) and one that the rest is still found.
+- UX-91: in Firefox the down arrow from the paragraph above a new table does not reach its first box. Found by the first
+  Firefox job that ran; open (see the tracker: Firefox cannot be run here).
 - On `main`: the stand-in for LibreOffice in PROC-22's test was a shell script, which failed on Windows (fixed on
   `main`, `7a840356`); CODE-96 was given twice the same day (the look-only item is CODE-98 now, `01bde500`).
 
 ## Say what could not be run
 
-- Firefox here (it cannot be downloaded); the Firefox job on CI is the check, now that it runs.
+- Firefox here (it cannot be downloaded); the Firefox job on CI is the check, now that it runs: 44 scenarios pass, one
+  fails (UX-91).
 - A screen reader (UX-88, UX-89 are checked through the accessibility tree only).
 - The desktop clients by hand; they load the web app.
