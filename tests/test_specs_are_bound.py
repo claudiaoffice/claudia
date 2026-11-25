@@ -25,7 +25,6 @@ TEST_TAGS = ("@unit:", "@io:", "@e2e:")
 #: Approved files that cannot be bound yet, each with the story or bug that binds it. Only ever shrinks: the test below
 #: fails when an entry is no longer needed. Adding an entry is a decision for the owner, not a way to get CI green.
 NOT_BOUND_YET = {
-    "invariants/objects-in-composes.feature": "PROC-40, recommendation 4 of notes/e2e-rework-plan.md",
 }
 HOW_TO_FIX = (
     "Bind the file in a tests/e2e/specs/test_<feature>.py with scenarios(...); or tag every scenario with the test that"
