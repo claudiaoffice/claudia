@@ -128,7 +128,7 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | PROC-31 | P3 | Process / i18n | `po/claudia.pot` goes stale at every merge of `main`: only its `#:` source lines move, no msgid changes, and the i18n check of `check_debt.py` fails on them | **new, open** (measured) |  |  |
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |  |  |
 | UX-80 | P3 | UX / a11y | The word "hidden" on its pill in the Styles dialog is light on light in dark mode (1.04:1, BITV 1.4.3) | **new**, fix on `batch-1` (proposed) | 2026-11-24 |  |
-| PROC-56 | P3 | Process / E2E | The examples of one scenario outline wrote one screenshot file, so the next example overwrote the picture of a failure | **new**, fix on `batch-1` (proposed) | 2026-11-25 |  |
+| PROC-56 | P3 | Process / E2E | The examples of one scenario outline wrote one screenshot file, so the next example overwrote the picture of a failure | **new**, fix on `batch-1` (proposed) | 2026-11-24 |  |
 | UX-06 | — | UX | Web menu differs from decisions D4/D5 | needs decision |  |  |
 
 ### Fixed (167)
@@ -2844,6 +2844,11 @@ fails every time with "Choose Table, Text or Slides first.". The password hashin
 11.7 s at most under 8 busy processes, never near 30 s). **Fix** on `batch-1`: `create` reads the kinds from the page's own
 `/api/docs` answer and clicks the kind's button, which waits for it. **Test:**
 `tests/e2e/specs/test_person.py::test_a_person_makes_a_document_of_her_kind_when_the_list_of_kinds_comes_late`.
+**Follow-ups under the same id** (the owner's yes, 2026-11-25): the step that adds a sheet expects its dialog instead of
+skipping the sheet when none is seen (the other unwaited checks were read and are not races); the test servers hash
+passwords at the lowest cost the settings allow (`tests/e2e/hashing.py`, `test_live_servers.py`), which also leaves a
+race less time to hide in. Not covered: the servers that six Node scripts, the two desktop-shell scripts and
+`test_computes_grid.py` start themselves; each makes a few documents.
 
 ### PROC-56 · The examples of one outline wrote one screenshot file · P3 · size 3 · new, fix proposed
 **Seen** while chasing PROC-55: its first failure's screenshot was overwritten by the next example. `looked_after` (and

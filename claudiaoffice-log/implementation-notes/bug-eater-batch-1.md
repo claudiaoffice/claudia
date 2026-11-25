@@ -63,8 +63,11 @@ Found while fixing PROC-55, and done on the owner's word (2026-11-25):
   and the new-sheet dialog open from the page's own state before the click returns; each "I read" of the consent specs
   follows a step that waited for the dialog. PROC-55's race needed a network answer. The new-sheet step now expects its
   dialog instead of silently skipping the sheet.
-- The test servers (`live.server`, `run_e2e.py`) hash at the lowest cost the settings allow (`quick_hashing`), unless a
-  test saved settings of its own.
+- The test servers (`live.server`, `run_e2e.py`) hash at the lowest cost the settings allow (`tests/e2e/hashing.py`),
+  unless a test chose a target of its own; other settings a test saved stay. Not covered: the servers that six Node
+  scripts (`resilience`, `recovery`, `search`, `pivots`, `passwords`, `details`), the two desktop-shell scripts and
+  `test_computes_grid.py` start themselves; each makes a few documents, and covering them would mean writing the
+  server's settings from JavaScript.
 - The glossary notes "Export-Log" as the German for **Exit record**.
 - UX-79 and PROC-53 were renumbered UX-80 and PROC-55: `win-installer-fix` gave those numbers to other items the same
   evening. The commits of patches 0037, 0040 and 0041 still say the old numbers.
