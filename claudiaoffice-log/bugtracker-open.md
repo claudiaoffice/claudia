@@ -347,6 +347,9 @@ the size and alignment a placeholder inherits (a title's 44 pt, centred) are nei
 **Measured** (reported as bug C, size 3): a run with its own `w:rFonts` (not through a style) keeps the paragraph
 style's font and is reported as `formatting`, since the text model has no direct formatting (D306). Belongs with the
 way direct formatting comes in (D379 for computes: provisional styles); until then the loss report is right.
+**Batch 4** (D2004 decided, not built): a paragraph has one style and no styled words inside it, so D2004 needs those
+first (`implementation-notes/bug-eater-batch-4.md` says what); a smaller step would give a paragraph whose words all have
+the same font of their own a provisional paragraph style. The owner decides which.
 
 ### CODE-53 · The failure text of a rendered container is clipped in a small frame · P3 · open
 **Read** (`RenderedFace.vue`, `.state` has `overflow: hidden`; the frame is as big as the picture was): a long message,
