@@ -132,7 +132,25 @@ they describe is still to do (one capitalisation rule, one question, View ▸ Fl
 drops). Entries the workbook now places in a context menu are listed as "Moves to a context menu" (21). Renamed
 context-menu entries are paired with their old words instead of being listed twice.
 
-Still open: the shortcut review (To decide #18). Ctrl+Alt+G, the owner's wish for "go", is View ▸ Grid in creates.
+## Phase 2, round 2: the last open items (2026-11-25)
+
+The owner settled the last open items, D1616–D1619:
+
+- **The shortcut review (To decide #18).** All proposed shortcuts are confirmed. Format ▸ Style ▸ Edit… gets
+  Ctrl+Shift+Alt+H, the last free letter of its block. Ctrl+Alt+X stays with Reference in chat; Ctrl+Alt+G, which
+  the owner wanted for "go", is View ▸ Grid in creates.
+- **macOS.** It gets its own shortcuts for Name & describe… (Cmd+Ctrl+N) and History & chat (Cmd+Ctrl+H), to be tried
+  on a Mac. Its app menu lists Preferences ▸ (Shortcuts, AI…, App language ▸). D1616 replaces D1613.
+- **Wording and order.**
+  - An entry that opens a dialog ends with "…".
+  - Insert ▸ Container ▸ is alphabetical.
+  - In German a style is a "Formatvorlage".
+- **Right press.** On a paragraph it opens the paragraph's context menu, not the style popover. On a slide it opens
+  the slide's context menu, the same as its tab's.
+- **"Fits when".** The column is accepted as filled.
+
+The accepted proposals are no longer blue in the workbook. With this, the workbook is the complete target for the
+rebuild (E5.23, E5.24); the decision range D1600–D1619 is used up.
 
 ## Bugs found (sizes 1 huge – 3 small)
 

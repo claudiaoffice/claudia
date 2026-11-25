@@ -75,6 +75,8 @@ until there is help (E13).
   - The Linux shell greys through GTK actions. Hiding an entry there is to be confirmed in the architecture step:
     GTK menus can hide an item whose action is off.
 - **Every "why" sentence is translated** (`po/`), like every other text.
+- **A shortcut can differ per platform** (D1616: macOS has its own keys for Name & describe… and History & chat). The
+  menu definition has to allow that; today the manifest gives an entry one shortcut on every platform.
 - **The audit (`scripts/menu_audit.py`) learns the "Fits when" column**, and its comparison becomes the test of D1605.
 
 ## Next steps
