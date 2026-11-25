@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { nextTick, ref } from 'vue'
+import { effectScope, nextTick, ref, type EffectScope } from 'vue'
 import { useNoticeSaid } from '../app/lib/notice-said'
 import type { Notice } from '../app/lib/base-session'
 
@@ -8,13 +8,18 @@ import type { Notice } from '../app/lib/base-session'
 describe('what a screen reader is told of a notice', () => {
   const notice = ref<Notice | null>(null)
   let said: ReturnType<typeof useNoticeSaid>
+  let scope: EffectScope
 
   beforeEach(() => {
     vi.useFakeTimers()
     notice.value = null
-    said = useNoticeSaid(() => notice.value)
+    scope = effectScope()
+    said = scope.run(() => useNoticeSaid(() => notice.value))!
   })
-  afterEach(() => vi.useRealTimers())
+  afterEach(() => {
+    scope.stop()
+    vi.useRealTimers()
+  })
 
   async function settle() {
     await nextTick()
@@ -48,6 +53,23 @@ describe('what a screen reader is told of a notice', () => {
     await settle()
     notice.value = null
     await settle()
+    expect(said.value).toBe('')
+  })
+
+  it('says a notice that was there before the region was', () => {
+    scope.stop()
+    notice.value = { id: 7, kind: 'warning', text: 'The connection was lost.' }
+    scope = effectScope()
+    said = scope.run(() => useNoticeSaid(() => notice.value))!
+    vi.runAllTimers()
+    expect(said.value).toBe('The connection was lost.')
+  })
+
+  it('says nothing more once its page is gone', async () => {
+    notice.value = { id: 1, kind: 'info', text: 'Checkpoint saved.' }
+    await nextTick()
+    scope.stop()
+    vi.runAllTimers()
     expect(said.value).toBe('')
   })
 
