@@ -192,6 +192,7 @@ describe('Core', () => {
       return last.servers
     }
 
+    // must not break: the key risk of D1622, the service is not where every person looks for it
     it('is listed after her private place', async () => {
       const core = await started({ sharedService: service() })
       core.handle({ kind: 'want_servers' })
@@ -219,6 +220,7 @@ describe('Core', () => {
       expect(settings.loadServers('creates')).toEqual([])
     })
 
+    // must not break (coding-standards.md): the key risk of D1624, someone who may not read the code is given it
     it('is shown with its setup code to whom may read it, and with "ask an administrator" to anyone else', async () => {
       for (const [access, extra] of [
         [{ kind: 'code', code: 'K7QM-4TXR-92HB' }, { setupCode: 'K7QM-4TXR-92HB' }],

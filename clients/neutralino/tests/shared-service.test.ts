@@ -73,6 +73,7 @@ describe('findSharedService', () => {
     expect(found?.setupCode()).toEqual({ kind: 'none' })
   })
 
+  // must not break (coding-standards.md): a file she may not read is "may not", never "none" and never the code (D1624)
   it.skipIf(process.platform === 'win32' || process.getuid?.() === 0)('says that she may not read it when the service\'s files are closed to her', () => {
     const state = serviceState('K7QM-4TXR-92HB')
     chmodSync(join(state, 'admin'), 0o000)
