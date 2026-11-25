@@ -46,8 +46,10 @@ async function copy() {
     </div>
     <div class="row">
       <button class="btn" type="button" @click="copy">{{ t('Copy') }}</button>
-      <span v-if="copied === 'yes'" class="ok" role="status">{{ t('Copied.') }}</span>
-      <span v-else-if="copied === 'no'" class="hint" role="status">{{ t('Your browser would not copy it: select the key and copy it yourself.') }}</span>
+      <span role="status">
+        <span v-if="copied === 'yes'" class="ok">{{ t('Copied.') }}</span>
+        <span v-else-if="copied === 'no'" class="hint">{{ t('Your browser would not copy it: select the key and copy it yourself.') }}</span>
+      </span>
     </div>
     <label class="confirm"><input v-model="stored" type="checkbox" > {{ t('I have stored the recovery key somewhere safe.') }}</label>
     <div class="buttons">

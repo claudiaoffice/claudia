@@ -111,6 +111,12 @@ button {
   border: 0;
 }
 
+/* A status region that says nothing yet (UX-90): it stays on the page, so a screen reader hears what comes into it, but
+   takes no room, not even a gap in a flex or grid layout. Not display: none, which would take it off the page. */
+[role="status"]:empty {
+  position: absolute;
+}
+
 /* The thing a tag in the chat just took the view to (E5.20): an outline and a tint, so it is not only a colour. */
 .pointed {
   outline: 3px solid var(--apricot);

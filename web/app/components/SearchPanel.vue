@@ -686,7 +686,9 @@ watch(() => props.replace, (on) => on && openReplace())
           <li v-for="o in left" :key="`${host.keyOf(o.at)}#${o.kind}`"><span class="row"><span class="where mono">{{ host.where(o.at) }}</span><span class="why">{{ whyLeftOut(o.why, t) }}</span></span></li>
         </ul>
       </details>
-      <p v-if="status" class="status" role="status">{{ status }}</p>
+      <div role="status">
+        <p v-if="status" class="status">{{ status }}</p>
+      </div>
     </section>
 
     <footer v-if="replacing">

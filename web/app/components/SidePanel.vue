@@ -539,7 +539,9 @@ const isAi = (user: string) => user.toLowerCase() === 'ai'
         </div>
         <label class="follow"><input type="checkbox" :checked="replay.follow" @change="session.setReplayFollow(($event.target as HTMLInputElement).checked)"> {{ t('Follow changes') }}</label>
         <label class="follow" :title="t('Mark where the document changed after this step: solid outlines are what this step changed, dashed ones what changed later')"><input type="checkbox" :checked="replay.differences" @change="session.setReplayDifferences(($event.target as HTMLInputElement).checked)"> {{ t('Show differences from now') }}</label>
-        <span v-if="replay.differences" class="differs" role="status">{{ differenceNote }}</span>
+        <span role="status">
+          <span v-if="replay.differences" class="differs">{{ differenceNote }}</span>
+        </span>
         <button v-if="canWrite && !myProposal" type="button" class="suggest" :title="t('Suggest going back to the document as it was after this step')" @click="suggestRestoreStep">{{ t('↺ restore this step') }}</button>
         <span class="where" aria-hidden="true">{{ position }}<template v-if="replay.loading"> …</template></span>
         <span v-if="replay.newer" class="newer">{{ t('{n} newer changes by others', { n: replay.newer }) }}</span>

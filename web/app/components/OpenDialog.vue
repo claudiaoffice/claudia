@@ -847,7 +847,9 @@ async function go(how: 'open' | 'create' | 'recover', from?: { upload: string; k
             <button type="button" class="btn small" @click="connecting = false">{{ t('Cancel') }}</button>
           </div>
         </form>
-        <p v-if="connectPending" class="hint" role="status">{{ t('Connecting…') }}</p>
+        <div role="status">
+          <p v-if="connectPending" class="hint">{{ t('Connecting…') }}</p>
+        </div>
         <p v-if="connectError" class="error" role="alert">{{ connectError }}</p>
         <div class="servers-title collections-title">{{ t('Collections') }}</div>
         <ul class="collections">
@@ -899,7 +901,9 @@ async function go(how: 'open' | 'create' | 'recover', from?: { upload: string; k
         </div>
         <p class="hint drop">{{ takes }}</p>
         <p v-if="refusal" class="error refusal" role="alert">{{ refusal }}</p>
-        <p v-if="notice" class="notice" role="status">{{ notice }}</p>
+        <div role="status">
+          <p v-if="notice" class="notice">{{ notice }}</p>
+        </div>
 
         <div class="cols">
           <div>
@@ -1032,9 +1036,11 @@ async function go(how: 'open' | 'create' | 'recover', from?: { upload: string; k
             <PasswordInput v-model="password" name="password" :autocomplete="recovering ? 'new-password' : 'current-password'" />
           </label>
           <p v-if="error" class="error" role="alert">{{ error }}</p>
-          <p v-if="wait.said.value" class="error wait" role="status" aria-live="polite" data-testid="login-wait">
-            {{ wait.said.value }} <span v-if="wait.waiting.value" aria-hidden="true">({{ wait.left.value }} s)</span>
-          </p>
+          <div role="status">
+            <p v-if="wait.said.value" class="error wait" data-testid="login-wait">
+              {{ wait.said.value }} <span v-if="wait.waiting.value" aria-hidden="true">({{ wait.left.value }} s)</span>
+            </p>
+          </div>
           <div class="buttons">
             <template v-if="recovering">
               <button class="btn primary" type="submit" :disabled="busy || wait.waiting.value">{{ t('Get back in') }}</button>

@@ -179,12 +179,14 @@ function submit() {
           <ul v-if="file.tags?.length" class="own-tags" :aria-label="t('Tags')"><li v-for="tag in file.tags" :key="tag">{{ tag }}</li></ul>
           <p class="hint">{{ t('They come with the file and cannot be changed here — use Details… after it is in.') }}</p>
         </div>
-        <p v-if="file.same_document" class="warn" role="status" data-testid="same-document">
-          {{ t('{place} already holds this document, as {id}. It cannot be added a second time: open the one that is here.', { place, id: file.same_document }) }}
-        </p>
-        <p v-else-if="file.exists" class="warn" role="status">
-          {{ t('{place} already holds a document called {id}. A name cannot change (it is sealed into the file): open the one that is here, or open the place you want it in first.', { place, id: file.id ?? '' }) }}
-        </p>
+        <div role="status">
+          <p v-if="file.same_document" class="warn" data-testid="same-document">
+            {{ t('{place} already holds this document, as {id}. It cannot be added a second time: open the one that is here.', { place, id: file.same_document }) }}
+          </p>
+          <p v-else-if="file.exists" class="warn">
+            {{ t('{place} already holds a document called {id}. A name cannot change (it is sealed into the file): open the one that is here, or open the place you want it in first.', { place, id: file.id ?? '' }) }}
+          </p>
+        </div>
       </template>
       <p v-if="!file.hosted" class="error" role="alert">{{ t('This place does not keep documents of this kind.') }}</p>
       <p v-if="error" class="error" role="alert">{{ error }}</p>

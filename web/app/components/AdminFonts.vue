@@ -127,7 +127,9 @@ function menuKey(event: KeyboardEvent) {
         {{ page.counts.not_usable === 1 ? t('1 file not usable') : t('{n} files not usable', { n: page.counts.not_usable }) }}
       </button>
     </p>
-    <p v-if="notice" class="notice" role="status">{{ notice }}</p>
+    <div role="status">
+      <p v-if="notice" class="notice">{{ notice }}</p>
+    </div>
     <p v-if="error" class="error" role="alert">{{ error }}</p>
 
     <h2>{{ t('Collections') }}</h2>

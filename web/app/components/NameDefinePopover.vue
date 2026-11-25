@@ -52,7 +52,9 @@ function submit() {
         <input ref="field" v-model="name" class="mono" autocomplete="off" spellcheck="false" :aria-label="t('name')" >
       </label>
       <p v-if="problem" class="problem" role="alert">{{ problem }}</p>
-      <p v-else-if="replaces" class="problem soft" role="status">{{ t('A name like this exists already and will point here.') }}</p>
+      <div role="status">
+        <p v-if="!problem && replaces" class="problem soft">{{ t('A name like this exists already and will point here.') }}</p>
+      </div>
       <TransText tag="p" class="refers" :text="t('Refers to {range}')"><template #range><span class="mono">{{ refersTo }}</span></template></TransText>
       <label class="check"><input v-model="header" type="checkbox" ><span>{{ t('First row is a header') }} <small><TransText :text="t('— a table: {structured}, {sql}')"><template #structured><span class="mono">{{ name.trim() || t('Name') }}[Column]</span></template><template #sql><span class="mono">FROM {{ name.trim() || t('Name') }}</span></template></TransText></small></span></label>
       <label class="check" :class="{ off: !header }"><input v-model="grows" type="checkbox" :disabled="!header" ><span>{{ t('Grows with its last row') }}</span></label>
