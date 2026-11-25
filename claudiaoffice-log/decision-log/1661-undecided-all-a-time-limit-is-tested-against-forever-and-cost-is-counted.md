@@ -26,8 +26,16 @@ superseded-by: []
 * **A time that is a security property** (SEC-04: a missing document costs what a wrong password does) is tested as the
   work that makes the time: the same password hashes at the same cost.
 
-**Notes.** Of the performance guards that still read the clock (six in `test_formula_performance.py` besides the one
-that must, and those of claudia-core, claudia-composes, the computes index and cell styles, and the layout library's),
-none failed in the last 200 CI runs; converting them is proposed, not done. Counted, the six computes guards measure
-10.6x, 1.0x, 9.9x, 1.0x, 10.0x and 1.0x, as stable as their bounds want; but a guard whose cost could move into C (the
-scratch copy) needs its own "breaks on purpose" test before it may count.
+* **Where the cost may hide in C, the clock is processor time, gathered in batches** (`claudia_core.testing.best_of`):
+  the time other programs take on a busy machine is not counted, and a fast case is run until it has used 0.2 s, so
+  Windows' coarse processor clock is a small part of it. A linear guard measured 61x–71x for a 10x step in wall time
+  under load; in processor time it passes.
+* **A counted guard whose data lives in lists is backed by the clock** (the kernel's log): a slice is a copy in C, and a
+  copy of the whole history per call counts as nothing. The backstop has three times the counted guard's room.
+
+**Notes.** PERF-14 (2026-11-25) applied this to every Python performance guard: core (since, execute, undo, replay:
+counted, with the clock as backstop; lookups: timed), composes (counted), computes (parse, edit, reopen, ranges, insert,
+scratch, the grid window and the cell styles: counted; letting formulas go and the sheet extent: timed). Counted, they
+measure 1.0x where flat and 9.9x–10.6x where linear. Checked against Python-level scans put in on purpose (since,
+the grid window: caught) and a copy in C (since: caught by the backstop). The layout library's two TypeScript bounds
+(4 s and 6 s for 100 pages) stay: JavaScript has no counter, and they are far from the measured time.

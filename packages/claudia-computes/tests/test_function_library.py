@@ -109,7 +109,7 @@ def test_countif_criteria(criterion, count):
 
 def test_criteria_that_accept_empty_cells_count_them_without_listing_a_column():
     """Counted, not timed (PROC-66): a million rows cost what ten do, on any machine, however busy."""
-    from test_formula_performance import work_of
+    from claudia_core.testing import work_of
 
     assert run('=COUNTIF(A1:A1000000, "<>north")', DATA) == 1_000_000 - 2
     million = work_of(lambda: run('=COUNTIF(A1:A1000000, "<>north")', DATA))
