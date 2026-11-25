@@ -15,7 +15,7 @@ from claudia_computes import WorkbookModel
 from claudia_core import ImageAsset, Rasterise, blank_png
 from claudia_odf_io import Loss, LossLog
 
-from ._placed import Placed, placed_objects
+from ._placed import Placed
 
 #: The kinds of floating object that show a picture.
 PICTURE_KINDS = ("image", "container")
@@ -68,12 +68,12 @@ def _shown(model: WorkbookModel, placed: Iterable[Placed]) -> Iterator[tuple[Pla
             yield one, (model.images.get(picture) if picture else None)
 
 
-def picture_losses(model: WorkbookModel, *, rasterised: bool) -> tuple[Loss, ...]:
-    """What cannot be kept of the pictures of ``model``: ``rendering-pending`` (a container nothing has been
-    drawn for: left out), ``image-missing`` and ``svg-fallback`` (an SVG nothing draws as a PNG, ``rasterised``: other
-    programs may show it empty or leave out what its style sheet gives)."""
+def picture_losses(model: WorkbookModel, placed: Iterable[Placed], *, rasterised: bool) -> tuple[Loss, ...]:
+    """What cannot be kept of the pictures among ``placed`` (objects of ``model``): ``rendering-pending`` (a
+    container nothing has been drawn for: left out), ``image-missing`` and ``svg-fallback`` (an SVG nothing draws as a
+    PNG, ``rasterised``: other programs may show it empty or leave out what its style sheet gives)."""
     lost = LossLog()
-    for one, asset in _shown(model, placed_objects(model)):
+    for one, asset in _shown(model, placed):
         if asset is None:
             lost.add("rendering-pending" if one.obj.body.kind == "container" else "image-missing")
         elif asset.format == "svg" and not rasterised:

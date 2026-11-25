@@ -6,6 +6,10 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 ## [Unreleased]
 
 ### Fixed
+- CODE-66: a picture added to an imported xlsx or ods, or one of its pictures moved, resized, turned, renamed,
+  described or removed, is written into the kept file by `apply_edits_to_xlsx` / `apply_edits_to_ods`, and no longer
+  reported as `object` by `xlsx_unwritten_changes` / `ods_unwritten_changes`. The patch reports what a fresh export
+  reports of such a picture (`rendering-pending`, `svg-fallback`, and in ods `decorative`).
 - CODE-67: the pictures of an xlsx or ods file are read in as image objects, on sheets and slides (D1478), and no
   longer reported as `picture`.
 

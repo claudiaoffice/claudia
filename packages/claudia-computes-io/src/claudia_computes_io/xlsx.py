@@ -66,11 +66,12 @@ from .pivot_exchange import adopt_pivots, pivot_positions, sheet_cells
 from .slide_mark import MARK, SlideMark, properties_of
 from .xlsx_boxes import box_anchor, held_box
 from .xlsx_chart_patch import Drawings, patch_charts
-from .xlsx_charts import chart_xml, drawn_anchors, file_charts
+from .xlsx_charts import FileChart, chart_xml, drawn_anchors, file_charts
 from .xlsx_layout import layout_losses
 from .xlsx_looks import XlsxLooks, read_looks
 from .xlsx_names import XlsxNamesPatch, header_losses, write_names
 from .xlsx_patch import PackagePatch, SheetNotes, SheetPatch, UnsupportedEdit, written
+from .xlsx_picture_patch import PicturePatch
 from .xlsx_pictures import held_picture
 from .xlsx_pivots import add_pivots, ask_refresh, read_pivots, written_pivots_of
 from .xlsx_read import (
@@ -163,9 +164,10 @@ def xlsx_export_losses(model: WorkbookModel, *, rasterised: bool = False) -> tup
         losses.add("look", "too-many-cells", dropped)
     for detail in chart_losses(model):
         losses.add("chart", detail)
-    for loss in picture_losses(model, rasterised=rasterised):
+    placed = placed_objects(model)
+    for loss in picture_losses(model, placed, rasterised=rasterised):
         losses.add(loss.kind, loss.detail, loss.count)
-    if authored := authorship_lost(placed_objects(model)):
+    if authored := authorship_lost(placed):
         losses.add("authorship", count=authored)
     for sheet in model.sheets.values():
         for content, value in sheet_cells(model, sheet).values():
@@ -301,7 +303,7 @@ def _model_of(package: Package) -> tuple[WorkbookModel, tuple[Loss, ...]]:
         sheet.cells.update(read.cells)
         _dress(dressing, sheet, read)
         sheets.append(sheet)
-    tabs, held = _held_in(package, sheets)
+    tabs, held = _held_in(package, sheets, file_charts(package))
     hold(model, sheets, held, tabs)
     for named in names:
         model.names.put(named)
@@ -310,10 +312,13 @@ def _model_of(package: Package) -> tuple[WorkbookModel, tuple[Loss, ...]]:
     return model, (*pivots.losses.result(), *adopt_pivots(model, pivots.found).losses)
 
 
-def _held_in(package: Package, sheets: list[Sheet]) -> tuple[FileTabs, list[FileObject]]:
+def _held_in(
+    package: Package, sheets: list[Sheet], charts_found: tuple[list[FileChart], dict[str, etree._Element]]
+) -> tuple[FileTabs, list[FileObject]]:
     """Which of ``sheets`` (the worksheets of the file, with their cells) are slides, and the charts, pictures, text
-    boxes and shapes of the file the model holds on them (D1478, D1479)."""
-    charts, roots = file_charts(package)
+    boxes and shapes of the file the model holds on them (D1478, D1479); ``charts_found`` is what
+    :func:`file_charts` found in it."""
+    charts, roots = charts_found
     drawn = list(drawn_anchors(package, roots))
     held_charts = [one for chart in charts if (one := chart.file_object()) is not None]
     found = found_objects(held_charts, drawn, (partial(held_picture, parts=package.parts), held_box))
@@ -340,7 +345,7 @@ def xlsx_import_losses(xlsx_bytes: bytes) -> tuple[Loss, ...]:
     for part, read in reads:
         sheets.append(Sheet(part.sheet_id, part.name))
         sheets[-1].cells.update(read.cells)
-    tabs, held = _held_in(package, sheets)
+    tabs, held = _held_in(package, sheets, file_charts(package))
     if looks := lost_looks(held, tabs):
         losses.add("look", count=looks)
     for part, read in reads:
@@ -424,7 +429,10 @@ def apply_edits_to_xlsx(
     part, one that was moved or made another size has its anchor changed, one that was described its alt text, and
     one whose definition or numbers changed is drawn again; a chart another program drew keeps its drawing unless its
     definition changed (``losses`` gets ``chart`` / ``look`` then, and what a file cannot keep of the charts:
-    :func:`xlsx_export_losses`; D463).
+    :func:`xlsx_export_losses`; D463). Pictures: one that was added is written as a new file writes it, one that was
+    removed is taken out with the bytes nothing else shows, one that was moved, made another size, turned, renamed or
+    described has its anchor changed (``losses`` gets what cannot be written of an added one: ``rendering-pending``,
+    ``svg-fallback``; CODE-66).
 
     Raises :class:`UnsupportedEdit` if a sheet was added, removed, renamed or reordered since
     ``baseline``, the workbook has a slide (a file has none, it would be a tab more, D1477), or a cell inside an array
@@ -462,7 +470,7 @@ def apply_edits_to_xlsx(
     if refresh:
         ask_refresh(patch, package)
     changed |= names.run()
-    changed |= patch_charts(patch, package, baseline, current, (losses or LossLog()).add)
+    changed |= _patch_drawings(patch, package, (baseline, current), losses or LossLog())
     if not changed:
         return original_bytes
     styles.finish()
@@ -470,6 +478,23 @@ def apply_edits_to_xlsx(
         patch.drop_calculation_chain()
     patch.ask_for_calculation()
     return write_parts(patch.finish())
+
+
+def _patch_drawings(
+    patch: PackagePatch, package: Package, models: tuple[WorkbookModel, WorkbookModel], losses: LossLog
+) -> bool:
+    """The charts and pictures of a kept file brought up to date (D463, CODE-66); whether anything changed."""
+    baseline, current = models
+    found = file_charts(package)
+    drawings = Drawings(patch, found[1], found[0])
+    _, held = _held_in(package, list(baseline.sheets.values()), found)
+    drawn = {one.order: one for one in drawn_anchors(package, found[1])}
+    pictures = {one.body.id: drawn[one.order] for one in held if one.kind == "picture"}
+    sheet_parts = {sheet.sheet_id: sheet.part for sheet in package.sheets}
+    changed = patch_charts(drawings, package, baseline, current, losses.add)
+    changed |= PicturePatch(drawings, sheet_parts, models, pictures, losses.add).run()
+    drawings.finish()
+    return changed
 
 
 def _resized(before: Sheet, after: Sheet) -> bool:

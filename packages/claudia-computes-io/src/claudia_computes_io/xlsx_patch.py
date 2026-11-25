@@ -464,6 +464,11 @@ class PackagePatch:
             root.remove(rel)
         self.parts[name] = serialized(root)
 
+    def reached(self, part: str) -> bool:
+        """Whether a relationship of the package points at ``part``."""
+        sources = (_source_of(name) for name in self.parts if name.endswith(".rels"))
+        return any(target == part for source in sources for _, _, target in relationships(self.parts, source))
+
     def declare(self, part: str, content_type: str) -> None:
         """``part`` in ``[Content_Types].xml`` with ``content_type``."""
         etree.SubElement(self.types, f"{{{_CT}}}Override", PartName="/" + part, ContentType=content_type)
@@ -508,6 +513,12 @@ class PackagePatch:
         if self._types is not None:
             self.parts["[Content_Types].xml"] = serialized(self._types)
         return self.parts
+
+
+def _source_of(rels: str) -> str:
+    """The part whose relationships the part ``rels`` holds (the inverse of :func:`rels_part`)."""
+    folder, name = posixpath.split(rels)
+    return posixpath.join(posixpath.dirname(folder), name.removesuffix(".rels"))
 
 
 def _relative(source: str, target: str) -> str:

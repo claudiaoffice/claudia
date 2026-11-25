@@ -429,6 +429,15 @@ a picture added in computes after an import is reported (`object`) and not in th
 or anchor; removing one takes it and its part out. **Acceptance.** Import a workbook, add, move, turn and remove a picture,
 export: the file has what the model has and `xlsx_unwritten_changes` is empty (`test_pictures.py`, a patch case for each).
 Found while building D1233.
+**Fix** on `batch-4`: `xlsx_picture_patch` and `ods_picture_patch` patch the pictures as the chart patches patch the
+charts, with the same `Drawings` (xlsx) and `SheetShapes` (ods, taken out of the chart patch) and the fresh export's
+`picture_anchor` / `picture_frame` for an added one; a moved, resized or turned picture keeps the rest of what the file
+gives it (its anchor is pinned again, its `rot` or `draw:transform` set, an ods frame in a cell taken onto the sheet),
+a removed one takes its bytes with it unless another picture shows them; pictures are no longer fresh-only in
+`_unwritten`. **Test:** "api: a picture added to an imported xlsx/ods is in the export" (`test_pictures.py`: added,
+moved and resized, turned, renamed and described, removed, removed with its bytes still shown, in an ods cell, made
+decorative beside the file's own extensions, an SVG; both formats); LibreOffice 24 reads each patched file as it reads
+the fresh export of the same model.
 
 ### UX-48 · The object clipboard copies pictures only · P3 · new, open
 D1229 gives the three apps one object clipboard (`web/app/lib/object-clipboard.ts`) for pictures. A box or a shape has

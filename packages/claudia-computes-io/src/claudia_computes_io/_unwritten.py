@@ -18,12 +18,16 @@ from ._pictures import PICTURE_KINDS
 
 #: The facets a converter writes, by the name :func:`facets` gives them: the cells with their looks, and the look
 #: definitions they name.
-ODS_WRITTEN: frozenset[str] = frozenset({"sheets", "styles", "palette", "number_formats", "names", "layout", "charts"})
-XLSX_WRITTEN: frozenset[str] = frozenset({"sheets", "styles", "palette", "number_formats", "names", "layout", "charts"})
-#: What only a fresh export writes: a pivot table, a picture and a slide's text boxes and shapes are put into a file
-#: that is made, not yet into one that is kept (an edit of an import reports them until its patch learns them; a
-#: workbook with a slide is always written anew).
-FRESH_ONLY: frozenset[str] = frozenset({"pivots", "pictures", "boxes"})
+ODS_WRITTEN: frozenset[str] = frozenset(
+    {"sheets", "styles", "palette", "number_formats", "names", "layout", "charts", "pictures"}
+)
+XLSX_WRITTEN: frozenset[str] = frozenset(
+    {"sheets", "styles", "palette", "number_formats", "names", "layout", "charts", "pictures"}
+)
+#: What only a fresh export writes: a pivot table and a slide's text boxes and shapes are put into a file that is made,
+#: not yet into one that is kept (an edit of an import reports them until its patch learns them; a workbook with a
+#: slide is always written anew).
+FRESH_ONLY: frozenset[str] = frozenset({"pivots", "boxes"})
 
 #: The code a facet is reported under, where an export reported it before the facets existed.
 KINDS: dict[str, str] = {

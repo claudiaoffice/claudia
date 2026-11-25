@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import copy
 import re
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 
 from lxml import etree
 
@@ -39,6 +39,89 @@ _AFTER_SHAPES = (
 _FOLDER = re.compile(r"Object (\d+)/")
 
 
+class SheetShapes:
+    """Where the frames a patch puts on the sheets of a kept file go: the ``table:shapes`` of a sheet of the file, one
+    made for a sheet that has none, or the table of a sheet the patch adds (charts and pictures share them)."""
+
+    def __init__(
+        self,
+        part: XmlPart,
+        tables: Mapping[SheetId, etree._Element],
+        new_tables: Mapping[SheetId, etree._Element],
+    ) -> None:
+        self.part, self.tables, self.new_tables = part, tables, new_tables
+        self.made: dict[SheetId, etree._Element] = {}  # the ``table:shapes`` made for sheets that had none
+
+    def holds(self, frame: etree._Element, sheet: SheetId) -> bool:
+        """Whether ``frame`` is among the drawings of ``sheet`` in the file (and not, say, in one of its cells)."""
+        shapes = frame.getparent()
+        table = self.tables.get(sheet)
+        return shapes is not None and local_name(shapes.tag) == "shapes" and table is not None and shapes in table
+
+    def put(self, sheet: SheetId, frame: etree._Element) -> None:
+        """Put ``frame`` among the drawings of ``sheet``, which may be a sheet this run adds."""
+        new = self.new_tables.get(sheet)
+        if new is not None:
+            shapes = new.find("table:shapes", NS)
+            if shapes is None:
+                shapes = new_shapes()
+                new.insert(0, shapes)
+            shapes.append(frame)
+            return
+        table = self.tables[sheet]
+        shapes = table.find("table:shapes", NS)
+        if shapes is not None:
+            self.part.insert_into(shapes, frame)
+        elif sheet in self.made:
+            self.made[sheet].append(frame)
+        else:
+            made = self.made[sheet] = new_shapes()
+            made.append(frame)
+            first = next(
+                (child for child in table if isinstance(child.tag, str) and local_name(child.tag) in _AFTER_SHAPES),
+                None,
+            )
+            if first is None:
+                self.part.insert_into(table, made)
+            else:
+                self.part.insert_before(first, made)
+
+    def move(
+        self, frame: etree._Element, sheet: SheetId, attributes: Mapping[str, str], remove: Iterable[str] = ()
+    ) -> etree._Element:
+        """``frame`` among the drawings of ``sheet`` with ``attributes`` (where it is: :func:`.ods_charts.place_of`)
+        and without those named in ``remove``, and returned: a frame in a cell of the file is taken out of it and a
+        copy is put there, at the corner of the cell. A place it no longer has (``svg:x`` and ``svg:y``, or
+        ``draw:transform``) is taken off."""
+        gone = [*(key for key in ("svg:x", "svg:y", "draw:transform") if key not in attributes), *remove]
+        if self.holds(frame, sheet):
+            self.part.set_attributes(frame, attributes, remove=gone)
+            return frame
+        moved = copy.deepcopy(frame)
+        for key, value in attributes.items():
+            moved.set(qname(key), value)
+        for key in gone:
+            if qname(key) in moved.attrib:
+                del moved.attrib[qname(key)]
+        self.part.remove(frame)
+        self.put(sheet, moved)
+        return moved
+
+
+def describe(part: XmlPart, frame: etree._Element, text: str) -> None:
+    """What a frame of the file (in ``part``) says to someone who cannot see it: ``svg:desc``. A description that came
+    from the title of the frame is taken from there."""
+    desc, title = frame.find("svg:desc", NS), frame.find("svg:title", NS)
+    if desc is None and title is not None:
+        part.remove(title)
+    if desc is not None and text:
+        part.replace(desc, part.make("svg:desc", text=xml_safe(text)))
+    elif desc is not None:
+        part.remove(desc)
+    elif text:
+        part.insert_into(frame, part.make("svg:desc", text=xml_safe(text)))
+
+
 class ChartPatch:
     """The charts of one run of :func:`~claudia_computes_io.apply_edits_to_ods`."""
 
@@ -49,16 +132,15 @@ class ChartPatch:
         baseline: WorkbookModel,
         current: WorkbookModel,
         charts: Sequence[FileChart],
-        tables: Mapping[SheetId, etree._Element],
-        new_tables: Mapping[SheetId, etree._Element],
+        shapes: SheetShapes,
         lose: Callable[[str, str], None],
     ) -> None:
         self.part, self.parts, self.baseline, self.current = part, parts, baseline, current
-        self.charts, self.tables, self.new_tables, self.lose = charts, tables, new_tables, lose
+        self.charts, self.shapes, self.lose = charts, shapes, lose
+        self.tables = shapes.tables
         self.by_object = {chart.object_id: chart for chart in charts if chart.held is not None}
         self.listed: dict[str, str] = {}  # the parts to list in the manifest
         self.unlisted: list[str] = []  # the folders to take off it
-        self.shapes: dict[SheetId, etree._Element] = {}  # the ``table:shapes`` made for sheets that had none
         names = [int(found.group(1)) for name in parts if (found := _FOLDER.match(name))]
         self.number = max(names, default=0) + 1
         self.changed = False
@@ -103,35 +185,6 @@ class ChartPatch:
                 self.parts[name] = data
             self.listed[name] = media
         self.changed = True
-
-    # -- where a frame goes ------------------------------------------------------------------------------------
-    def _put(self, sheet: SheetId, frame: etree._Element) -> None:
-        """Put ``frame`` among the drawings of ``sheet``, which may be a sheet this run adds."""
-        new = self.new_tables.get(sheet)
-        if new is not None:
-            shapes = new.find("table:shapes", NS)
-            if shapes is None:
-                shapes = new_shapes()
-                new.insert(0, shapes)
-            shapes.append(frame)
-            return
-        table = self.tables[sheet]
-        shapes = table.find("table:shapes", NS)
-        if shapes is not None:
-            self.part.insert_into(shapes, frame)
-        elif sheet in self.shapes:
-            self.shapes[sheet].append(frame)
-        else:
-            made = self.shapes[sheet] = new_shapes()
-            made.append(frame)
-            first = next(
-                (child for child in table if isinstance(child.tag, str) and local_name(child.tag) in _AFTER_SHAPES),
-                None,
-            )
-            if first is None:
-                self.part.insert_into(table, made)
-            else:
-                self.part.insert_before(first, made)
 
     # -- changes -----------------------------------------------------------------------------------------------
     def _remove(self, file: FileChart) -> None:
@@ -180,32 +233,12 @@ class ChartPatch:
         return True
 
     def _relocate(self, file: FileChart, now: VisualObject, place: Mapping[str, str]) -> None:
-        """The frame at another cell, or on another sheet: a frame in a cell of the file is taken out of it and a
-        copy is put among the drawings of the sheet, at the corner of the cell."""
-        sheet = now.anchor.sheet
-        shapes = file.frame.getparent()
-        if file.sheet == sheet and shapes is not None and local_name(shapes.tag) == "shapes":
-            self.part.set_attributes(file.frame, place)
-        else:
-            frame = copy.deepcopy(file.frame)
-            for key, value in place.items():
-                frame.set(qname(key), value)
-            self.part.remove(file.frame)
-            self._put(sheet, frame)
+        """The frame at another cell, or on another sheet (:meth:`SheetShapes.move`)."""
+        self.shapes.move(file.frame, now.anchor.sheet, place)
         self.changed = True
 
     def _describe(self, frame: etree._Element, text: str) -> None:
-        """What the frame says to someone who cannot see it: ``svg:desc``. A description that came from the title of
-        the frame is taken from there."""
-        desc, title = frame.find("svg:desc", NS), frame.find("svg:title", NS)
-        if desc is None and title is not None:
-            self.part.remove(title)
-        if desc is not None and text:
-            self.part.replace(desc, self.part.make("svg:desc", text=xml_safe(text)))
-        elif desc is not None:
-            self.part.remove(desc)
-        elif text:
-            self.part.insert_into(frame, self.part.make("svg:desc", text=xml_safe(text)))
+        describe(self.part, frame, text)
         self.changed = True
 
     # -- additions ---------------------------------------------------------------------------------------------
@@ -216,4 +249,4 @@ class ChartPatch:
             return  # (it shows nothing: counted among what could not be written)
         self.number += 1
         self._keep_parts(made.parts)
-        self._put(now.anchor.sheet, made.frame)
+        self.shapes.put(now.anchor.sheet, made.frame)
