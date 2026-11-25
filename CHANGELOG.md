@@ -13,9 +13,10 @@ While the major version is 0, a minor version may break the API; every break is 
   `ImageImport.from_data` keeps an empty `source_path` as `None`: the person asked not to save it.
 
 ### Added
+- `Document.now()`: the time as the document's clock says it, for what is dated outside the log (SEC-26, D2008).
 - `Command.sender` and `CommandRegistry.for_persons()` (SEC-25, D2007): a command kind says who may send it,
   `"person"` (the default) or `"server"` (made only through the server's own methods: `Import`, `Setup`,
-  `Checkpoint`, `Redaction`, `Redacted`, `Restore`, `Switch`). A registry `for_persons()` refuses a server-only kind
+  `Checkpoint`, `Redaction`, `Redacted`, `Restore`, `Switch`; claudia-computes adds `ApplyCalculated`). A registry `for_persons()` refuses a server-only kind
   with the new `ServerOnly` error, at any depth (a `Batch` decodes its commands through the same registry).
 - `OriginalLine` and `Import.original` (PROC-37, D2005): the import of an owner's export carries the history and chat
   of the original as one read-only note, text only (`when`, `who`, `what`, `said`). It is stored only when there is one,
