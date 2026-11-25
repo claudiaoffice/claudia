@@ -23,8 +23,9 @@ may tell her the code.
 administrator; everyone else could otherwise make herself the administrator of everybody's shared documents. A person
 who may not read the file is told whom to ask instead of where a file is that she cannot open.
 
-**How.** `clients/neutralino/src/shared-service.ts` reads the code anew at every `show` (`setupCode()`: the code, none, or
-"may not" when `state/admin` cannot be read); `core.ts` turns it into `setupCode` or `askAdministrator`; contract v1 gets
+**How.** `clients/neutralino/src/shared-service.ts` reads the code anew at every `show` (`setupCodeAccess` in
+`private-server.ts`: the code, none, or "may not" when reading it is refused; the file is read, since on Windows Node's
+`access()` ignores ACLs); `core.ts` turns it into `setupCode` or `askAdministrator`; contract v1 gets
 the optional `welcome.ask_administrator` (`clients/contract/shell-contract.v1.schema.json`); the page keeps it for the tab
 (`web/app/lib/setup-code.ts`) and `FirstAdminSetup.vue` shows the sentence.
 

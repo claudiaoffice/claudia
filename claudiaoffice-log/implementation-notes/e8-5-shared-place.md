@@ -34,6 +34,21 @@ D1624 (the computer's administrators read the service's setup code; anyone else 
 * **The bridge's `setupCode` option became `setup`**, one value with the code or `askAdministrator`: the two travel
   together and exclude each other.
 
+## What the code review changed (2026-11-25)
+
+* **The setup code is read, not `access()`-checked** (`setupCodeAccess` in `private-server.ts`, shared by both places):
+  on Windows Node's `access()` ignores ACLs, so a person who may not read the file would have got "none" and the usual
+  hint instead of "ask an administrator". EACCES and EPERM are "may not".
+* **A broken service file is logged** (`findSharedService(file, log)`); a missing one is not (no service is normal).
+* **One `Setup` type** (`core.ts`) for `setupCode` / `askAdministrator`; the schema (`not: required both`) and both
+  parsers refuse a `welcome` that has both.
+* **A rename that leaves the name as it was renames nothing** (`withRenamed`): opening Rename on the shared place and
+  leaving made "Shared on this computer" her own name for it, untranslated and outliving the service.
+* **"Service file", not "marker", in code**: the glossary's *Marker* is a list's bullet. The decisions keep the word
+  as plain English.
+* The tests of the two key risks (the service listed; the code given only to whom may read it) carry a
+  `// must not break` comment, the new rule of `coding-standards.md`.
+
 ## Assumptions (say if they are wrong)
 
 * A name a person gives the shared place is remembered under its origin; if the service is removed, that renamed entry
@@ -41,8 +56,28 @@ D1624 (the computer's administrators read the service's setup code; anyone else 
 * A changed service port (someone edits `claudia-service.xml`) needs the marker changed by hand; the installer writes
   8765, as the configuration it installs.
 * The setup page keeps the code field when she has to ask: an administrator may tell her the code.
+* "Must not break" is marked by a comment above the test until the test-quality branch (D1660–D1679) sets a form.
 * Reinstalling without the service component leaves an earlier service's marker until the uninstall (as it leaves the
   service itself: Inno Setup does not remove a component that is no longer chosen).
+
+## Use it before delivery (2026-11-25)
+
+A real claudia server stood in for the service (`python -m claudia_server … --port 18765 --no-tls`, its own state and
+documents folders, `admin/` 0700 as the server makes it), with a real service file pointing at it, and the built core
+(`clients/neutralino/dist`) run as root (an administrator of this computer) and as a second account made for the run:
+
+| Who | Her places | The service's page is told |
+|---|---|---|
+| root | Private on this computer, Shared on this computer | `setupCode` (the server's real code) |
+| a second account | Private on this computer, Shared on this computer | `askAdministrator` |
+| a second account, service file naming 192.0.2.7 | Private on this computer (the file is logged) | — |
+| a second account, no service file | Private on this computer | — |
+
+The run found that **a desktop window cannot connect to a server of all three apps**: the connect check of both shells
+(`connection.ts` / `connection.py` `interpret`) wants `app` in `/api/docs`, and a server of several apps (D430), like the
+service, says `"app": null, "apps": [...]` -- "That does not look like a Claudia server". Older than this branch (the
+service was never connected to before; a demo server of all three apps has the same fate); reported with part 2, not
+fixed yet. The run went on with the check stood in.
 
 ## What could not be run here
 
