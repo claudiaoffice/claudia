@@ -35,7 +35,7 @@ The index is the status of record; a section below keeps the status of the round
 re-checked. **Opened** and **Fixed** are filled from 2026-11-20 on: for older items only where the status already gave
 the date.
 
-### Open (76)
+### Open (61)
 
 By priority (P1, P2, P3, then items that wait for a decision without one), then by ID.
 
@@ -52,9 +52,6 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | UX-69 | P2 | UX / all apps | A viewer is not told she can only look: greyed entries, hidden controls and object gestures are silent (only Delete on a sheet's object says so) | open (scenario `@pending:UX-69`) | 2026-11-22 |  |
 | UX-70 | P2 | UX / all apps | What an export could not keep is never shown: the losses come back with the file and no client says them | **new, open** (read; size 2) | 2026-11-22 |  |
 | UX-71 | P2 | UX / computes | Text on a workbook's slide is drawn in the workbook's Body text (13 px), tiny on a 1600-unit slide | **needs decision** (measured; size 2) | 2026-11-22 |  |
-| UX-84 | P2 | UX / collaboration | Selecting an object in computes or composes neither locked it nor showed it to colleagues, though D1223 says it does in all three apps | **new, open**; fix on `batch-2` (proposed) | 2026-11-25 |  |
-| UX-85 | P2 | UX / composes | Name & describe… on a table does not keep its description: the server refuses it with a developer sentence, in English only | **new, open**; fix on `batch-3` (proposed) | 2026-11-25 |  |
-| UX-88 | P2 | UX / a11y | A notice (toast) is a `role=status` element made together with its text, which screen readers may not announce (BITV 4.1.3) | **new, open**; fix on `batch-3` (proposed) | 2026-11-25 |  |
 | UX-90 | P2 | UX / a11y | About 25 other `role="status"` elements appear with their text already in them (`v-if`), so screen readers may not announce them (BITV 4.1.3), as the notice did (UX-88) | **new, open** (read) | 2026-11-25 |  |
 | UX-91 | P2 | UX / composes / Firefox | In Firefox the down arrow from the paragraph above a new table does not put the caret in its first box (Chromium does) | **new, open** (measured on CI) | 2026-11-25 |  |
 | CODE-25 | P2 | Code / Export | A renamed object loses its name in pptx and odp without the export saying so (D450) | **new, open** |  |  |
@@ -65,16 +62,12 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | PROC-15 | P2 | Process | The tracker and the backlog lag the code: fixed items still "open", 64 stories at a placeholder 50 % | partly fixed 2026-11-25 (batch 1: the index guard); the backlog's placeholder 50 % stays open |  |  |
 | PROC-30 | P2 | Process / desktop clients | The Neutralino (Windows, macOS) tests and the GTK client were not run for `object-interaction`: the generated menus were rebuilt and the manifest unit tests pass, nothing more | **new, open** |  |  |
 | PROC-37 | P2 | Process / scope | D1272 says an export's history and chat come back in with their authors as text; slice B imports the content only (`import_state` returns the state, the `history.jsonl` and `chat.jsonl` of an export are written but never read back) | **new, open** (size 2; needs the owner's decision: build it in slice C or log it) |  |  |
-| PROC-40 | P2 | Process / E2E | Four spec files (51 scenarios) run nowhere: no step code binds them and no scenario names a unit or e2e test (`names`, `requirements`, `objects-in-composes`, `pictures-in-files`) | **new, open** (measured; size 2) | 2026-11-20 |  |
-| PROC-60 | P2 | Process / E2E | `wait_for_function` given an expression string breaks on the page's Content-Security-Policy once it has to poll; `Person.wait_until_open` uses it | **new, open**; fix on `batch-3` (proposed) | 2026-11-25 |  |
 | UX-64 | P2 | UX / all apps | Dark mode: a part of the sidebar (History & Chat / Help) is not readable or has too little contrast; the exact symptom was not written down when it was seen (see entry) | **needs decision** (symptom to be re-stated; size 2) | 2026-11-22 |  |
-| UX-76 | P3 | UX / computes | The New sheet dialog proposes no name: the field is empty (placeholder "Forecast") and Add Sheet stays off until one is typed, though a new sheet is to get a name like "Sheet2" (E1.13) | open (scenario `@pending:UX-76`) | 2026-11-22 |  |
 | SEC-09 | P3 | Security | User names can be confusable (homoglyphs) | open (unverified) |  |  |
 | SEC-16 | P3 | Security | The LaTeX program setting accepts any executable on the server | partly fixed 2026-11-25 (batch 1, D2002): showing the accepted program's answer on the settings page stays open |  |  |
 | PERF-06 | P3 | Performance | Threshold packing blocks the event loop (rewriting the whole zip is accepted up to ~50 MB, D1269) | verified open; narrowed 2026-11-22: the rewrite itself is accepted (D1269) |  |  |
 | PERF-07 | P3 | Performance | Structure edits recalculate the whole workbook (~12 s at 100k formulas) | verified open |  |  |
 | PERF-08 | P3 | Performance | The first chart downloads all of Plotly (4.6 MB) for a bar chart | **new, open** |  |  |
-| PERF-13 | P3 | Performance / computes | Calculating a chain of formulas is quadratic: `Waiting.done` deletes from the front of a sorted list once per formula | **new, open**; fix on `batch-3` (proposed) | 2026-11-25 |  |
 | UX-08 | P3 | UX | Open and Create sit side by side; a typo cannot be told from a wrong password | open |  |  |
 | UX-23 | P3 | UX | Panel layout and undo placement differ between the three apps | partly fixed 2026-11-12 (the suggestion list is gone from above the tabs) |  |  |
 | UX-34 | P3 | UX / AI | In computes and creates the AI refuses every change by default (suggest is the default, proposals do not exist) | deferred (owner, 2026-11-13: the AI is not fully built yet) |  |  |
@@ -89,9 +82,6 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | UX-53 | P3 | UX / computes | An object keeps its pixel size when rows or columns are inserted or resized, so it no longer covers the cells it covered (E6.17, D1230) | **new, open** |  |  |
 | UX-60 | P3 | UX / composes | Dragging an object to another paragraph is "Moved an object" in the history; the mock names the object and the paragraph | **new, open** (divergence from the mock of D1352; size 3) | 2026-11-20 |  |
 | UX-65 | P3 | UX / composes | Search & replace panel, find-only state: the results list overflows its container and the "text" badge of a result is clipped at the panel edge | **new, open** (`web/app/components/SearchPanel.vue`; **measured** in the running app; size 3) | 2026-11-22 |  |
-| UX-86 | P3 | UX / computes | A colleague's name tag on a cell or an object in row 1 is hidden under the column header | **new, open**; fix on `batch-3` (proposed) | 2026-11-25 |  |
-| UX-87 | P3 | UX / i18n | A new workbook's first sheet is "Sheet1" in every language, beside an offered "Blatt2" | **new, open**; fix on `batch-3` (proposed) | 2026-11-25 |  |
-| UX-89 | P3 | UX / a11y | A table's accessible name is "Table 1 Options…": the Options… button is inside its caption | **new, open**; fix on `batch-3` (proposed) | 2026-11-25 |  |
 | CODE-03 | P3 | Code | README is out of date | open (not re-checked) |  |  |
 | CODE-04 | P3 | Code | Untyped functions escape the type check | verified open |  |  |
 | CODE-06 | P3 | Code | `--max-connections` is per document, not per server | open |  |  |
@@ -112,13 +102,8 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | CODE-68 | P3 | computes | Computes cannot make a text box or a shape, though a model can hold one (a file from another app) and an export reports it as `object` | **new, open** |  |  |
 | CODE-70 | P3 | computes I/O | The patch of a kept XLSX or ODS does not add pivot tables either (reported), as it does not add pictures (CODE-66) | **new, open** (D1233) |  |  |
 | CODE-74 | P3 | Code | `export_content` still answers `{format: "claudia-export 1", ...}`, a JSON that is neither the zip of D1270 nor documented anywhere; it is recorded as an export and the panel says "exported as claudia-export 1"; no window calls it | **new, open** (size 3; remove it or make it the zip) |  |  |
-| CODE-98 | P3 | Code / web | About 25 components repeat the look-only notice instead of calling `session.tellLookOnly()` | **new, open**; fix on `batch-3` (proposed) | 2026-11-25 |  |
-| PROC-22 | P3 | Process / CI | The LibreOffice job may still fail silently, though it has passed every round | **new, open** |  |  |
-| PROC-29 | P3 | Process / E2E | No scenario asserts that a second window sees a holder's outline and name tag (D1223), nor that a colleague's drag is not shown live | **new, open**; fix on `batch-2` (proposed) |  |  |
-| PROC-59 | P3 | Process / CI | The scenarios tagged @firefox were never run in Firefox by CI | **new, open**; fix on `batch-2` (vacuous: its job skipped every scenario) and again on `batch-3` (proposed) | 2026-11-25 |  |
-| PROC-61 | P3 | Process / CI | `test_calculating_a_long_chain_is_linear` failed on CI's Ubuntu runner (44x for a 10x chain, after its own second try) and passed on a rerun; here it measures 14x to 16x | **new, open**; fix on `batch-3` (proposed) | 2026-11-25 |  |
 
-### Fixed (205)
+### Fixed (220)
 
 By ID. Items closed without a fix (superseded, wontfix) are here too.
 
@@ -149,6 +134,7 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | PERF-05 | P2 | Performance | `sheets` recomputes the extent by scanning every cell | **fixed** (re-measured 2026-11-12) |  |  |
 | PERF-09 | P2 | Performance | Making a webfont (WOFF2) blocked every request of every document for seconds | **fixed** 2026-11-13 |  | 2026-11-13 |
 | PERF-11 | P3 | Performance | Search preview and replace have no time budget at all | **fixed** 2026-11-13 |  | 2026-11-13 |
+| PERF-13 | P3 | Performance / computes | Calculating a chain of formulas is quadratic: `Waiting.done` deletes from the front of a sorted list once per formula | **fixed** 2026-11-25 (on `main` ahead of batch 3, `a5f5aa14`) | 2026-11-25 | 2026-11-25 |
 | UX-01 | P2 | UX | Menus cannot be operated with the keyboard | fixed (read 2026-11-12, not screen-reader tested) |  |  |
 | UX-02 | P2 | UX | The grid has no accessible structure | fixed, merged at `cfa2d91` (`grid-a11y.cjs` passes; no screen reader run yet) |  |  |
 | UX-03 | P2 | UX | Dialogs do not manage focus | fixed (native `<dialog>`, read 2026-11-12) |  |  |
@@ -202,10 +188,17 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | UX-73 | P2 | UX / computes | While a slide is shown, the print bar offers "This sheet" and counts the slide as a sheet | **fixed** 2026-11-22 on `e6-31-slides-in-computes` | 2026-11-22 | 2026-11-22 |
 | UX-74 | P3 | UX / AI | While the administrator has Claude off, the owners' dialog shows no check box, so an owner cannot withdraw a consent given earlier; it resumes when Claude is switched on again | **fixed** 2026-11-25 (batch 1 of the bug eater, `batch-1`) | 2026-11-22 |  |
 | UX-75 | P3 | UX / AI | A window that is open when the administrator changes the provider keeps its old badge until the next consent change or reload | **fixed** 2026-11-25 (batch 1 of the bug eater, `batch-1`) | 2026-11-22 |  |
+| UX-76 | P3 | UX / computes | The New sheet dialog proposes no name: the field is empty (placeholder "Forecast") and Add Sheet stays off until one is typed, though a new sheet is to get a name like "Sheet2" (E1.13) | **fixed** 2026-11-25 (batch 2 of the bug eater, `batch-2`) | 2026-11-22 | 2026-11-25 |
 | UX-80 | P3 | UX / a11y | The word "hidden" on its pill in the Styles dialog is light on light in dark mode (1.04:1, BITV 1.4.3) | **fixed** 2026-11-25 (batch 1 of the bug eater, `batch-1`) | 2026-11-24 |  |
 | UX-81 | P2 | UX / Windows | The window opens at the configured size in physical pixels, so on a scaled display (200%) it is half the size the page needs | **fixed** 2026-11-24 on `win-installer-fix` (D749; second attempt after the first had no effect; not run on Windows) | 2026-11-24 | 2026-11-24 |
 | UX-82 | P2 | UX / Windows | A console window of node stays open for as long as an app of the Windows client runs, and shows only start-up lines | **fixed** 2026-11-24 on `win-installer-fix` (D750) | 2026-11-24 | 2026-11-24 |
 | UX-83 | P3 | UX / Windows | The setup file and the entry in Programs show the icon of composes, not the suite's three-dot icon | **fixed** 2026-11-24 on `win-installer-fix` (D751; not run on Windows) | 2026-11-24 | 2026-11-24 |
+| UX-84 | P2 | UX / collaboration | Selecting an object in computes or composes neither locked it nor showed it to colleagues, though D1223 says it does in all three apps | **fixed** 2026-11-25 (batch 2 of the bug eater, `batch-2`) | 2026-11-25 | 2026-11-25 |
+| UX-85 | P2 | UX / composes | Name & describe… on a table does not keep its description: the server refuses it with a developer sentence, in English only | **fixed** 2026-11-25 (batch 3 of the bug eater, `batch-3`) | 2026-11-25 | 2026-11-25 |
+| UX-86 | P3 | UX / computes | A colleague's name tag on a cell or an object in row 1 is hidden under the column header | **fixed** 2026-11-25 (batch 3 of the bug eater, `batch-3`) | 2026-11-25 | 2026-11-25 |
+| UX-87 | P3 | UX / i18n | A new workbook's first sheet is "Sheet1" in every language, beside an offered "Blatt2" | **fixed** 2026-11-25 (batch 3 of the bug eater, `batch-3`) | 2026-11-25 | 2026-11-25 |
+| UX-88 | P2 | UX / a11y | A notice (toast) is a `role=status` element made together with its text, which screen readers may not announce (BITV 4.1.3) | **fixed** 2026-11-25 (batch 3 of the bug eater, `batch-3`) | 2026-11-25 | 2026-11-25 |
+| UX-89 | P3 | UX / a11y | A table's accessible name is "Table 1 Options…": the Options… button is inside its caption | **fixed** 2026-11-25 (batch 3 of the bug eater, `batch-3`) | 2026-11-25 | 2026-11-25 |
 | CODE-01 | P2 | Code | No coverage, no web lint; Playwright not declared | **fixed** |  |  |
 | CODE-02 | P3 | Code | 26 build files tracked in `web/dist` | fixed |  |  |
 | CODE-05 | P3 | Code | Dead branch in `Gateway.admit`; stale docstring in `state.py` | **fixed** (the branch was not dead: comment corrected) |  |  |
@@ -273,6 +266,7 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | CODE-96 | P3 | Code / Windows | Neutralino logged two errors on every start of a desktop app: `NE_RS_TREEGER` (no resources.neu) and `NE_RS_UNBLDRE` (/favicon.ico) | **fixed** 2026-11-25 on `win-installer-fix` (D752) | 2026-11-25 | 2026-11-25 |
 | CODE-97 | P2 | Code / Windows | A node.exe (the core of a window) stayed running after its window was killed: Neutralino does not end its extension and the link to it did not break | **fixed** 2026-11-25 on `win-installer-fix` (D753) | 2026-11-25 | 2026-11-25 |
 | CODE-92 | P2 | Code / i18n | The server settings answer only in English: the administrator API's refusals were plain text, not messages | **fixed** 2026-11-25 (batch 1 of the bug eater, `batch-1`), D2003 | 2026-11-24 |  |
+| CODE-98 | P3 | Code / web | About 25 components repeat the look-only notice instead of calling `session.tellLookOnly()` | **fixed** 2026-11-25 (batch 3 of the bug eater, `batch-3`) | 2026-11-25 | 2026-11-25 |
 | PROC-01 | P1 | Process | No CI workflow in the repository | fixed (verified at `54d1245`) |  |  |
 | PROC-02 | P2 | Process | The quality gate prints "everything is clean" when half of it was skipped | fixed |  |  |
 | PROC-03 | P2 | Process | Work described as delivered is not in the repository | fixed |  |  |
@@ -293,12 +287,14 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | PROC-19 | P2 | Process / CI | Six browser scripts and the macOS client's own tests ran nowhere; image and .deb ignored `layout/` | **fixed** 2026-11-13 |  | 2026-11-13 |
 | PROC-20 | **P1** | Process / CI | Two end-to-end tests on `main` fail: `demo.cjs` (the grid's blank active cell) and the Linux client (D915) | **fixed** 2026-11-13 |  | 2026-11-13 |
 | PROC-21 | P2 | Process / CD | The demo deployment checks `demo.claudiaoffice.de`, a domain that is not ours | **fixed** 2026-11-13 |  | 2026-11-13 |
+| PROC-22 | P3 | Process / CI | The LibreOffice job may still fail silently, though it has passed every round | **fixed** 2026-11-25 (batch 2 of the bug eater, `batch-2`); its test made Windows-proof on `main` | 2026-11-25 | 2026-11-25 |
 | PROC-23 | **P1** | Process / CI | Three web e2e scripts on `main` fail after the dock merge (`demo`, `composes`: the chat box; `keys`: the View menu); `details.cjs` never ran in CI | **fixed** 2026-11-15 |  | 2026-11-15 |
 | PROC-24 | **P1** | Process / CI | `main` after the last merge was red: two tests (a story id and decision numbers D730–D735 used twice) | **fixed** 2026-11-17 |  | 2026-11-17 |
 | PROC-25 | P2 | Process / CD | The demo deployment was not gated on CI: it deployed whatever an image push produced, also from a red `main` | **fixed** 2026-11-17 |  | 2026-11-17 |
 | PROC-26 | P3 | Process / Supply chain | No dependabot: five lockfiles and the workflows were never watched | **fixed** 2026-11-17 |  | 2026-11-17 |
 | PROC-27 | P2 | Process / Supply chain | Actions are pinned by tag, not SHA; the `latest` image tag follows a red `main`; CI has no CodeQL and no `pip-audit` | **fixed** 2026-11-17 (D762); first runs unseen |  | 2026-11-17 |
 | PROC-28 | P2 | Process / E2E | `web/e2e/objects.cjs` (D1231) was written and never run: the sandbox had no browser. Its first run is the proof of D1221–D1232 on screen | **fixed** 2026-11-20: first run on `fix-table-exit-object-sizes`; its red steps are app bugs, UX-56 to UX-58 |  | 2026-11-20 |
+| PROC-29 | P3 | Process / E2E | No scenario asserts that a second window sees a holder's outline and name tag (D1223), nor that a colleague's drag is not shown live | **fixed** 2026-11-25 (batch 2 of the bug eater, `batch-2`) | 2026-11-25 | 2026-11-25 |
 | PROC-31 | P3 | Process / i18n | `po/claudia.pot` goes stale at every merge of `main`: only its `#:` source lines move, no msgid changes, and the i18n check of `check_debt.py` fails on them | **fixed** 2026-11-25 (batch 1 of the bug eater, `batch-1`) |  |  |
 | PROC-32 | P3 | Process / docs | `claudiaoffice-log/notes/claudia-menus.xlsx` is not in the repo: the keys of this round are only in the generated key table, and the rows the contract note lists "for the workbook" are not settled | **fixed** 2026-11-19 (in the repo since `496b3db`; the keys of the later rounds are in it) |  | 2026-11-19 |
 | PROC-33 | P3 | Process / gate | Patches 9–11 had ruff failures (lines over 120 characters in three files) that only the gate on the merged tree found | **fixed** 2026-11-19 (patch 12) |  | 2026-11-19 |
@@ -307,6 +303,7 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | PROC-36 | P3 | Process / tooling | A `ruff` installed outside the project (0.16.9) rewrites `except (A, B):` into `except A, B:` and reformats unrelated files; the project pins `ruff<0.15` for this | **fixed** 2026-11-19 (a rule in `CONTRIBUTING.md`, rule 5) |  | 2026-11-19 |
 | PROC-38 | P3 | Process / tests | `test_another_window_is_answered_quickly_while_a_password_is_hashed` assumed that hashing takes more than 0.15 s: on the CI runners it took 0.12 s and the test failed on all three systems | **fixed** 2026-11-21 (the test measures this machine and takes as many passes as it needs; size 3) |  | 2026-11-21 |
 | PROC-39 | P2 | Process / e2e | The test server's output went to a pipe nobody read (`tests/e2e/live.py`); after about 64 KiB the server blocked on its next write and the whole event loop stood still, so page loads timed out (three `test_viewer` scenarios failed in a full run of `tests/e2e/specs` and passed alone) | **fixed** 2026-11-19 on branch `e2-document-sec` (the output goes to `server.log`; `test_greeting.py` and `test_computes_grid.py` still use a pipe but stop their servers within a minute) |  | 2026-11-19 |
+| PROC-40 | P2 | Process / E2E | Four spec files (51 scenarios) run nowhere: no step code binds them and no scenario names a unit or e2e test (`names`, `requirements`, `objects-in-composes`, `pictures-in-files`) | **fixed** 2026-11-25 (batch 2 of the bug eater, `batch-2`): every approved spec file is bound; the six scenarios of `requirements.feature` still skip until their steps have code | 2026-11-20 | 2026-11-25 |
 | PROC-41 | P3 | Process / E2E | `test_computes_grid.py` stopped its launcher but not the server the launcher had started, which lived on after the run | **fixed** 2026-11-21 (the whole process group is stopped; size 3) | 2026-11-21 | 2026-11-21 |
 | PROC-42 | P2 | Process / CI | The CI step "Server settings ▸ Fonts" did not give `e2e:admin-fonts` the setup code that SEC-12 made necessary: it would have been the next red step | **fixed** 2026-11-21 (the step reads the code from the state folder; size 2) | 2026-11-21 | 2026-11-21 |
 | PROC-43 | P2 | Process / E2E | The job "End to end (Chromium)" was red from 2026-11-17: each first failure hid the next, and four lines of `objects.cjs` were stale (proportions of a free rectangle, the name of a table's menu, "Edit text" for a picture in creates, a race on the history entry of Delete) | **fixed** 2026-11-21 (the script follows the contract; it ran six times in a row; size 2) | 2026-11-21 | 2026-11-21 |
@@ -323,6 +320,9 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | PROC-58 | P2 | Process / CI | The Windows install test failed at *Uninstall, standard* on both images: the window step left the core's node running, which held the installation's files | **fixed** 2026-11-24 on `win-installer-fix` | 2026-11-24 | 2026-11-24 |
 | PROC-55 | P2 | Process / E2E | A spec could press Create before the page had listed the kinds of document, then waited 30 s for a recovery key that never came (flaky) | **fixed** 2026-11-25 (batch 1 of the bug eater, `batch-1`) | 2026-11-24 |  |
 | PROC-56 | P3 | Process / E2E | The examples of one scenario outline wrote one screenshot file, so the next example overwrote the picture of a failure | **fixed** 2026-11-25 (batch 1 of the bug eater, `batch-1`) | 2026-11-24 |  |
+| PROC-59 | P3 | Process / CI | The scenarios tagged @firefox were never run in Firefox by CI | **fixed** 2026-11-25 (batch 3 of the bug eater, `batch-3`; batch 2's job had run nothing) | 2026-11-25 | 2026-11-25 |
+| PROC-60 | P2 | Process / E2E | `wait_for_function` given an expression string breaks on the page's Content-Security-Policy once it has to poll; `Person.wait_until_open` uses it | **fixed** 2026-11-25 (batch 3 of the bug eater, `batch-3`) | 2026-11-25 | 2026-11-25 |
+| PROC-61 | P3 | Process / CI | `test_calculating_a_long_chain_is_linear` failed on CI's Ubuntu runner (44x for a 10x chain, after its own second try) and passed on a rerun; here it measures 14x to 16x | **fixed** 2026-11-25 (batch 3 of the bug eater, `batch-3`) | 2026-11-25 | 2026-11-25 |
 | DOC-01 | P2 | Docs | Decision numbers D70–D82 and D97–D99 are used twice for different decisions | fixed |  |  |
 | DOC-02 | P3 | Docs | `start-client.sh` was renamed; the Linux README and the other launchers still named it | **fixed** 2026-11-13 |  | 2026-11-13 |
 | DOC-03 | P3 | Docs | Current decisions that later ones contradict (D2, D44, D84, D115, D242); a stale row in `ranges.md`; stale lines in two notes | **fixed** 2026-11-17 (log audit: D44, D84, D115 superseded; D2, D242 noted) |  | 2026-11-17 |
@@ -3037,7 +3037,7 @@ UX-09, UX-27, UX-07, WEB-02, UX-54, UX-59.
 The object lock was called UX-81 in chat (2026-11-25). `win-installer-fix` reached `main` the same day with UX-81 to UX-83,
 CODE-93 to CODE-95, PROC-57 and PROC-58, so this batch's items were renumbered before anything was pushed.
 
-### UX-84 · An object selected in computes or composes was neither locked nor shown to colleagues · P2 · size 2 · fix on `batch-2`
+### UX-84 · An object selected in computes or composes was neither locked nor shown to colleagues · P2 · size 2 · fixed
 **Read** while writing PROC-29: D1223 says selecting an object holds it in all three apps, and others see the holder's
 coloured outline and name tag. Only creates (and a slide in computes) did. A sheet's selected object was local to the
 grid, and a text's was only in the session's state: nobody saw it, and nothing stopped a colleague changing it.
@@ -3049,19 +3049,19 @@ round the caret while an object is selected, since that would unlock it. **Tests
 `text-session-objects.test.ts` and `text-object-layer.test.ts` ("… locks it, as in creates (D1223)"), and step 1b of
 `web/e2e/objects.cjs` (PROC-29).
 
-### UX-85 · Name & describe… on a table does not keep its description · P2 · size 2 · fix on `batch-3`
+### UX-85 · Name & describe… on a table does not keep its description · P2 · size 2 · fixed
 **Measured** (by the helper binding `invariants/objects-in-composes.feature`, scenario "A table has a name nobody else
 has …"). The dialog opens with the name "Table 1", but Save keeps no description. The server refuses it with the
 developer sentence "an object is described with DescribeObject, which also says whether it is decoration", in English
 only. No history entry is made, and the table's accessible description stays empty. The scenario is tagged
 `@pending:UX-85`. **Fix** on `batch-3`: `name_and_describe` describes every object with `DescribeObject`; a table gets words and never the tick. **Test:** `test_server_thing_names.py::test_a_table_is_named_and_described_and_one_undo_takes_both_back`; the composes invariant runs again (no longer `@pending`).
 
-### UX-86 · A colleague's name tag in row 1 of a sheet is hidden · P3 · size 3 · fix on `batch-3`
+### UX-86 · A colleague's name tag in row 1 of a sheet is hidden · P3 · size 3 · fixed
 **Seen** in the screenshots of PROC-29 (`objects-computes-image-watched.png`). The tag of a colleague's cell outline, and
 now of an object she selected, sits above the box. In row 1 that is under the column header, so the outline shows but
 her name does not. **Fix** on `batch-3`: where a box's top is less than a tag's height below the top of the sheet area, the tag goes inside its top edge (`lib/name-tag.ts`, for cell outlines and objects). **Test:** `web/tests/name-tag.test.ts`.
 
-### UX-87 · A new workbook's first sheet is "Sheet1" in every language · P3 · size 3 · fix on `batch-3`
+### UX-87 · A new workbook's first sheet is "Sheet1" in every language · P3 · size 3 · fixed
 **Read** (helper, while fixing UX-76): `WorkbookModel.setup_commands` ignores `language`, so a German person gets
 "Sheet1" next to the offered "Blatt2". **Fix** on `batch-3`: `DocumentModel.setup_commands` takes `translate` (the
 packages carry no catalog; the server passes its own in, as for the function help, D323), and computes calls the first
@@ -3070,32 +3070,32 @@ sheet by the catalog's "Sheet" (the web's word for the next one) with a 1: "Blat
 and the two `first_sheet` tests of `test_computes_thing_names.py`. **Escaped** because: spec gap, the setup tests only
 asked a text and a deck for the maker's language.
 
-### UX-88 · A notice may not be announced by a screen reader · P2 · size 3 · fix on `batch-3`
+### UX-88 · A notice may not be announced by a screen reader · P2 · size 3 · fixed
 **Read** (helper, while fixing UX-69): the toast is a `role=status` element created together with its text. Screen
 readers may not announce a live region that appears with its content already in it (BITV 4.1.3). **Fix** on `batch-3`: a `role=status` region that is always on the page says the notice (`lib/notice-said.ts`: emptied, then filled, so the same words twice are said twice); the visible toast is `aria-hidden`. **Test:** `web/tests/notice-said.test.ts`. Not heard with a screen reader.
 
-### UX-89 · A table's accessible name includes "Options…" · P3 · size 3 · fix on `batch-3`
+### UX-89 · A table's accessible name includes "Options…" · P3 · size 3 · fixed
 **Measured** (helper, PROC-40): the table is read as "Table 1 Options…", because the Options… button is inside its
 caption. **Fix** on `batch-3`: the table is labelled by its tab and described by its description. **Test:** the invariant's step asks for the exact name and the description (`test_objects_in_composes.py`).
 
-### CODE-98 · The look-only notice is repeated in about 25 components · P3 · size 3 · fix on `batch-3`
+### CODE-98 · The look-only notice is repeated in about 25 components · P3 · size 3 · fixed
 (Called CODE-96 in the batch-2 commit that logged it; `win-installer-fix` reached `main` with another CODE-96 the same day.)
 **Read** (helper, UX-69): `session.notice(t('You can only look at this document.'), 'warning')` is written out about 25
 times; `session.tellLookOnly()` says it once. **Fix** on `batch-3`: `BaseSession.tellLookOnly()`, used in 21 places; a guard test lets no other file say the sentence. **Test:** `web/tests/look-only.test.ts`.
 
-### PROC-59 · The @firefox scenarios were never run in Firefox · P3 · size 2 · fix on `batch-2`
+### PROC-59 · The @firefox scenarios were never run in Firefox · P3 · size 2 · fixed
 **Read**: CI ran the specs in Chromium only, so the `@firefox` tag had no effect there. **Fix** on `batch-2`: the job
 `e2e-firefox` installs Firefox and runs `./run-e2e.sh specs --browser firefox`. **Test:**
 `tests/test_ci_workflow.py::test_ci_runs_the_firefox_specs_in_firefox`. Not run here (Firefox cannot be downloaded in
 this workspace); its first run on CI is the check.
 
-### PROC-60 · An expression given to `wait_for_function` breaks on the page's CSP once it polls · P2 · size 3 · fix on `batch-3`
+### PROC-60 · An expression given to `wait_for_function` breaks on the page's CSP once it polls · P2 · size 3 · fixed
 **Measured** (helper, PROC-40): Playwright evaluates a predicate given as a string with `eval`, which the page's
 Content-Security-Policy forbids. It only works when the condition already holds at the first check.
 `Person.wait_until_open` in `tests/e2e/specs/conftest.py` uses that form for `.health.open`. **Acceptance:** a test that
 opens the page with the health dot delayed. **Fix** on `batch-3`: the eight such waits wait for a locator or give a function. **Test:** `tests/test_e2e_waits.py` reads the browser tests for the bare form; measured against a page served with `script-src 'self'`.
 
-### PROC-61 · The chain test of computes' performance fails now and then on CI · P3 · size 3 · fix on `batch-3`
+### PROC-61 · The chain test of computes' performance fails now and then on CI · P3 · size 3 · fixed
 **Measured:** CI of `main` at `e5bb76fa`, job "Python (ubuntu-latest)": "a chain 10x as long took 44x as long to
 calculate", after the test's own second try. The rerun of the job passed. On this workspace the ratio is 14x to 16x.
 Either a shared runner stalls both tries, or the slope really is steeper on a smaller machine (cache, garbage
@@ -3148,7 +3148,7 @@ them `AdminFonts.vue`, `AdminLogin.vue`, `OpenDialog.vue`, `PrintPreview.vue`, `
 `StylesDialog.vue`, `FontReportBanner.vue` and the redaction banner in `DocumentFrame.vue`. A live region that appears
 with its content may not be read out (BITV 4.1.3). UX-88 fixed the notice only.
 
-### PERF-13 · Calculating a chain of formulas is quadratic · P3 · size 3 · fix on `batch-3`
+### PERF-13 · Calculating a chain of formulas is quadratic · P3 · size 3 · fixed
 **Measured** (helper, PROC-61): `Waiting.done` in `claudia_computes/calc.py` deletes from the front of a sorted list once
 per formula. Per formula a chain costs 3.4 µs at 1,000 formulas, 6.3 µs at 10,000 and 11.4 µs at 30,000; without that
 step 2.8 µs and 4.9 µs. It is 0.2 s of 0.83 s in a profile of a 30,000-formula chain. The counting guard of PROC-61
@@ -3166,3 +3166,29 @@ the last line of the paragraph from the rectangle of the collapsed selection (`o
 Firefox reports differently at the end of a line. A first guess (the table not there yet when it was inserted) was
 tried on CI and was wrong. **Until it is fixed** (the owner, 2026-11-25) the scenario "I can work in a new <kind>
 straight away" of `invariants/objects-in-composes.feature` carries no `@firefox` tag; put it back with the fix.
+
+## Rounds of 2026-11-25 (bug eater, batches 2 and 3; branches `batch-2`, `batch-3`): marked 2026-11-25 with the owner's agreement
+
+Proposed by the bug eater and agreed by the owner on 2026-11-25; the index above says so. Each item has its commit and a
+test that was seen to fail first; the details are in `implementation-notes/bug-eater-batch-2.md` and `-batch-3.md`.
+
+| Item | Batch | Evidence |
+|---|---|---|
+| PROC-22 | 2 | `tests/test_ci_workflow.py`, `tests/test_odf_libreoffice_check.py` |
+| UX-76 | 2 | `web/tests/tags.test.ts`, `web/tests/session.test.ts`; the names scenario |
+| PROC-40 | 2 | every approved spec file bound (`NOT_BOUND_YET` is empty); `requirements.feature` still skips for want of step code |
+| UX-84 | 2 (scenario in 3) | `web/tests/session.test.ts`, `text-session-objects.test.ts`, the object battery, the approved scenario |
+| PROC-29 | 2 | step 1b of `web/e2e/objects.cjs` |
+| PROC-59 | 3 (2 ran nothing) | `tests/test_run_e2e.py`; the Firefox job on `main`: 44 passed |
+| UX-85 | 3 | `test_server_thing_names.py`; the composes invariant |
+| UX-89 | 3 | the composes invariant's step |
+| PROC-60 | 3 | `tests/test_e2e_waits.py` |
+| UX-86 | 3 | `web/tests/name-tag.test.ts` |
+| UX-88 | 3 | `web/tests/notice-said.test.ts` (no screen reader was heard) |
+| CODE-98 | 3 | `web/tests/look-only.test.ts` |
+| UX-87 | 3 | `test_server_setup.py`, `test_computes_thing_names.py` |
+| PROC-61 | 3 | `test_formula_performance.py` (counted work) |
+| PERF-13 | on `main` before 3 | `test_formula_performance.py` (timed, 73x before) |
+
+Still open from these batches: UX-90 (other status messages, BITV 4.1.3) and UX-91 (Firefox, the down arrow into a new
+table). Released with them on 2026-11-25: claudia-core 0.38.0, -computes 0.13.0, -composes 0.19.0, -creates 0.21.0.
