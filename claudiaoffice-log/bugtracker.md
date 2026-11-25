@@ -52,9 +52,6 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | UX-69 | P2 | UX / all apps | A viewer is not told she can only look: greyed entries, hidden controls and object gestures are silent (only Delete on a sheet's object says so) | open (scenario `@pending:UX-69`) | 2026-11-22 |  |
 | UX-70 | P2 | UX / all apps | What an export could not keep is never shown: the losses come back with the file and no client says them | **new, open** (read; size 2) | 2026-11-22 |  |
 | UX-71 | P2 | UX / computes | Text on a workbook's slide is drawn in the workbook's Body text (13 px), tiny on a 1600-unit slide | **needs decision** (measured; size 2) | 2026-11-22 |  |
-| UX-81 | P2 | UX / Windows | The window opens at the configured size in physical pixels, so on a scaled display (200%) it is half the size the page needs | **fixed** 2026-11-24 on `win-installer-fix` (D749; second attempt after the first had no effect; not run on Windows) | 2026-11-24 | 2026-11-24 |
-| UX-82 | P2 | UX / Windows | A console window of node stays open for as long as an app of the Windows client runs, and shows only start-up lines | **fixed** 2026-11-24 on `win-installer-fix` (D750) | 2026-11-24 | 2026-11-24 |
-| UX-83 | P3 | UX / Windows | The setup file and the entry in Programs show the icon of composes, not the suite's three-dot icon | **fixed** 2026-11-24 on `win-installer-fix` (D751; not run on Windows) | 2026-11-24 | 2026-11-24 |
 | CODE-25 | P2 | Code / Export | A renamed object loses its name in pptx and odp without the export saying so (D450) | **new, open** |  |  |
 | CODE-31 | P2 | Code / i18n | The history speaks English to everybody: command labels and summaries are not translated | **new, open** |  |  |
 | CODE-45 | P2 | Code / Import | pptx placeholders (titles, body text) are not imported at all | **new, open** |  |  |
@@ -191,6 +188,9 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | UX-74 | P3 | UX / AI | While the administrator has Claude off, the owners' dialog shows no check box, so an owner cannot withdraw a consent given earlier; it resumes when Claude is switched on again | **fixed** 2026-11-25 (batch 1 of the bug eater, `batch-1`) | 2026-11-22 |  |
 | UX-75 | P3 | UX / AI | A window that is open when the administrator changes the provider keeps its old badge until the next consent change or reload | **fixed** 2026-11-25 (batch 1 of the bug eater, `batch-1`) | 2026-11-22 |  |
 | UX-80 | P3 | UX / a11y | The word "hidden" on its pill in the Styles dialog is light on light in dark mode (1.04:1, BITV 1.4.3) | **fixed** 2026-11-25 (batch 1 of the bug eater, `batch-1`) | 2026-11-24 |  |
+| UX-81 | P2 | UX / Windows | The window opens at the configured size in physical pixels, so on a scaled display (200%) it is half the size the page needs | **fixed** 2026-11-24 on `win-installer-fix` (D749; second attempt after the first had no effect; not run on Windows) | 2026-11-24 | 2026-11-24 |
+| UX-82 | P2 | UX / Windows | A console window of node stays open for as long as an app of the Windows client runs, and shows only start-up lines | **fixed** 2026-11-24 on `win-installer-fix` (D750) | 2026-11-24 | 2026-11-24 |
+| UX-83 | P3 | UX / Windows | The setup file and the entry in Programs show the icon of composes, not the suite's three-dot icon | **fixed** 2026-11-24 on `win-installer-fix` (D751; not run on Windows) | 2026-11-24 | 2026-11-24 |
 | CODE-01 | P2 | Code | No coverage, no web lint; Playwright not declared | **fixed** |  |  |
 | CODE-02 | P3 | Code | 26 build files tracked in `web/dist` | fixed |  |  |
 | CODE-05 | P3 | Code | Dead branch in `Gateway.admit`; stale docstring in `state.py` | **fixed** (the branch was not dead: comment corrected) |  |  |
