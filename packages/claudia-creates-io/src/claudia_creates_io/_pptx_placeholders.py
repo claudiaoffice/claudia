@@ -21,7 +21,7 @@ def for_words(shape: Any) -> bool:  # noqa: ANN401 (python-pptx's own shape clas
     return shape.is_placeholder and shape.has_text_frame and shape.placeholder_format.type in _FOR_WORDS
 
 
-def list_styles(shape: Any) -> tuple[etree._Element, ...]:  # noqa: ANN401
+def inherited_list_styles(shape: Any) -> tuple[etree._Element, ...]:  # noqa: ANN401 (python-pptx's own shape classes are not one type)
     """The list styles the paragraphs of ``shape`` take their look from, nearest first: for a placeholder, the
     ``a:lstStyle`` of its layout's and its master's placeholder and the master's title or body style. A text box
     takes its look from the deck's default style, which has no bullet: none."""
@@ -30,10 +30,10 @@ def list_styles(shape: Any) -> tuple[etree._Element, ...]:  # noqa: ANN401
     found = []
     base = shape
     while (base := getattr(base, "_base_placeholder", None)) is not None:
-        style = base._element.find(f"{_P}txBody/{_A}lstStyle")  # noqa: SLF001
+        style = base._element.find(f"{_P}txBody/{_A}lstStyle")  # noqa: SLF001 (python-pptx has no reader for lstStyle)
         if style is not None:
             found.append(style)
-    master = shape.part.slide.slide_layout.slide_master._element  # noqa: SLF001
+    master = shape.part.slide.slide_layout.slide_master._element  # noqa: SLF001 (nor for the master's txStyles)
     kind = "titleStyle" if shape.placeholder_format.type in TITLES else "bodyStyle"
     style = master.find(f"{_P}txStyles/{_P}{kind}")
     return (*found, style) if style is not None else tuple(found)

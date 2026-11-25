@@ -85,7 +85,7 @@ from ._names import FileNames
 from ._notes import BULLET, Line, Run, lines_to_markdown, markdown_to_lines
 from ._pptx_fonts import deck_theme, mixes_fonts, shape_font, write_body_font
 from ._pptx_looks import Theme, read_look
-from ._pptx_placeholders import for_words, list_styles
+from ._pptx_placeholders import for_words, inherited_list_styles
 from ._styling import colour_of, is_bold, look, page_colour, points_of, style_for_font, take_body_font
 from ._unwritten import PPTX_WRITTEN, authored_objects, notes_losses, slides_unwritten_changes
 from .pptx_pictures import alt_text_of, held_picture
@@ -201,9 +201,9 @@ def _finish(shape, body: ObjectBody) -> None:  # noqa: ANN001 (python-pptx's own
     _call(shape, body.name)
 
 
-def _call_slide(slide, name: str) -> None:  # noqa: ANN001
+def _call_slide(slide, name: str) -> None:  # noqa: ANN001 (python-pptx exports no type for a slide)
     """Write what people call the slide (``p:cSld/@name``, D550, CODE-25); ``""`` takes the name away."""
-    page = slide._element.find(_qn("cSld"))  # noqa: SLF001
+    page = slide._element.find(_qn("cSld"))  # noqa: SLF001 (python-pptx has no reader for the slide's own name)
     if name:
         page.set("name", name)
     else:
@@ -532,7 +532,7 @@ def _classify(shape) -> str | None:  # noqa: ANN001 (python-pptx's own shape cla
     a footer -- left as beyond-claudia content, same as a table that claudia has no model for at all -- and a title or
     body placeholder with no words, which shows nothing). A title or body placeholder with words is a text box
     (CODE-45)."""
-    if shape.shape_type == MSO_SHAPE_TYPE.TEXT_BOX or (for_words(shape) and shape.text_frame.text):
+    if shape.shape_type == MSO_SHAPE_TYPE.TEXT_BOX or (for_words(shape) and shape.text_frame.text.strip()):
         return "text"
     if shape.shape_type == MSO_SHAPE_TYPE.AUTO_SHAPE and shape.auto_shape_type in _SHAPE_ID:
         return "shape"
@@ -608,7 +608,7 @@ def pptx_to_slides(pptx_bytes: bytes) -> SlideModel:
             w, h = round(shape.width / scale_x), round(shape.height / scale_y)
             text = shape.text_frame.text if shape.has_text_frame else ""
             said = (
-                read_pptx_mark(shape.text_frame.paragraphs[0]._p, list_styles(shape))  # noqa: SLF001
+                read_pptx_mark(shape.text_frame.paragraphs[0]._p, inherited_list_styles(shape))  # noqa: SLF001
                 if shape.has_text_frame
                 else None
             )
@@ -661,11 +661,11 @@ def pptx_to_slides(pptx_bytes: bytes) -> SlideModel:
     return _with_setup(model, prs)
 
 
-def _read_slide(model: SlideModel, slide_id: str, pptx_slide, names: FileNames) -> None:  # noqa: ANN001
+def _read_slide(model: SlideModel, slide_id: str, pptx_slide, names: FileNames) -> None:  # noqa: ANN001 (as above)
     """Add the slide ``slide_id`` with what the file calls it (``p:cSld/@name``, CODE-25) and its notes; notes longer
     than the model holds are left in the file and out of the model (see the patch)."""
     model.insert_slide(slide_id)
-    named = names.take(pptx_slide._element.find(_qn("cSld")).get("name"))  # noqa: SLF001
+    named = names.take(pptx_slide._element.find(_qn("cSld")).get("name"))  # noqa: SLF001 (as above)
     if named:
         model.slides.rename(slide_id, named)
     notes = _notes_markdown(pptx_slide)
@@ -841,7 +841,7 @@ def apply_edits_to_pptx(original_bytes: bytes, baseline: SlideModel, current: Sl
             _patch_shape(shape, before, after, (scale_x, scale_y), pt_per_unit, current)
             if after.body.kind != "image":
                 paragraph = shape.text_frame.paragraphs[0]._p  # noqa: SLF001
-                write_pptx_mark(paragraph, marks_after.get(object_id), list_styles(shape))
+                write_pptx_mark(paragraph, marks_after.get(object_id), inherited_list_styles(shape))
             touched_parts.add(_slide_part(members, slide_number))
 
     if baseline.print_setup != current.print_setup:

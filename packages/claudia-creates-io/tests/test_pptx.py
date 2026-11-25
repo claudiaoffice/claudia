@@ -860,6 +860,9 @@ def test_placeholders_with_words_are_no_import_loss_and_empty_ones_are_nothing()
     empty = _title_and_content_deck(title="", body="")
     assert pptx_import_losses(empty) == ()
     assert pptx_to_slides(empty).objects_on("s1") == []
+    spaces = _title_and_content_deck(title="   ", body="")  # shows nothing either
+    assert pptx_import_losses(spaces) == ()
+    assert pptx_to_slides(spaces).objects_on("s1") == []
 
 
 def test_an_edited_title_is_patched_into_its_placeholder():
