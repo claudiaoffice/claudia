@@ -6,6 +6,8 @@ While the major version is 0, a minor version may break the API; every break is 
 
 ## [Unreleased]
 
+## [0.38.0] - 2026-11-25
+
 ### Added
 - The words of an object are typed by the core (CODE-83): `ObjectModel.insert_text`, `remove_text`, `text_regions` and
   `text_moved` (the `TypingHost` of `InsertText` and `DeleteText`), which creates had; a workbook's slides use them.

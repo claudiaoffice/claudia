@@ -5,6 +5,8 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-11-25
+
 ### Changed
 - `WorkbookModel.setup_commands(language, *, translate=None)` (UX-87): a new workbook's first sheet is
   called by the word "Sheet" said by `translate` ("Blatt1" for a German person), no longer "Sheet1" for everybody.
