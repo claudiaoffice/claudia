@@ -17,7 +17,7 @@ const SPAN = PRIVATE_PORTS.last - PRIVATE_PORTS.first + 1
  * the second one is held like any port that somebody else holds. */
 export function privatePort(account: Account): number {
   const number = 'uid' in account ? account.uid : fnv1a(account.profileFolder.toLowerCase())
-  return PRIVATE_PORTS.first + (number % SPAN)
+  return PRIVATE_PORTS.first + (((number % SPAN) + SPAN) % SPAN) // in her range for any number, -1 included
 }
 
 /** The other ports of her range, in the order her apps try them while hers is held: the ones after it, then from the

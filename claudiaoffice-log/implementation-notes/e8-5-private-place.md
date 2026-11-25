@@ -50,8 +50,9 @@ CODE-100 (in review). The design is `notes/e8-5-architecture.md`, part 1; the sc
 
 ## Assumptions (please check)
 
-* `process.getuid()` is the account number on a Mac (it is, for the person who runs the app); on Windows `os.homedir()` is
-  the profile folder of the person who runs it.
+* `os.userInfo().uid` is the account number on a Mac (it is, for the person who runs the app; on Windows it is -1, which
+  only the tests of the Mac's platform object see, and `privatePort` keeps any number in her range); on Windows
+  `os.homedir()` is the profile folder of the person who runs it.
 * A Windows profile folder may differ only in case between two spellings (`C:\Users\Anna`, `c:\users\anna`): lower-cased
   before hashing.
 * The `instead` port is written by the window that starts the server there; a second window that starts at the same
@@ -60,9 +61,9 @@ CODE-100 (in review). The design is `notes/e8-5-architecture.md`, part 1; the sc
 ## Tests
 
 * Server: `tests/test_server_owner.py` (13).
-* macOS/Windows client: `tests/private-port.test.ts` (15), `tests/private-server.test.ts` (rewritten: a fake computer with
+* macOS/Windows client: `tests/private-port.test.ts` (16), `tests/private-server.test.ts` (rewritten: a fake computer with
   people, shared servers, programs, silent holders and the documents' lock; 36 with the real health check, port check and
-  setup code); `local-server.test.ts`, `server.test.ts`, `connector.test.ts` updated. All 572 pass.
+  setup code); `local-server.test.ts`, `server.test.ts`, `connector.test.ts` updated. All 573 pass (CI's Windows job found that the Mac's platform object called `process.getuid`, which Windows lacks).
 * Linux client: `tests/test_private_port.py` (11), `tests/test_private_server.py` (rewritten, same scenarios),
   `test_launch.py`, `test_server.py`, `test_connect_flow.py` updated; `test_e2e.py` now also checks the real proof of the
   real server with the key in her state folder.

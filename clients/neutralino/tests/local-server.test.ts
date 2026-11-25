@@ -3,7 +3,7 @@
 // E8.5), not started yet; which port, which command and what happens when two windows start at once are tested in
 // private-server.test.ts, and the real process start in server.test.ts.
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
+import { tmpdir, userInfo } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { PrivateServer } from '../src/private-server.js'
@@ -61,7 +61,7 @@ describe.each(PLATFORMS)('prepareServer on $platform.id', ({ platform, folder, p
   it('her server is on the port of her account (E8.5, D1621), or on the port of CLAUDIA_SERVER_PORT', async () => {
     const usual = await prepareServer('creates', { repo, home, env: {} })
     const { account, port } = (usual as unknown as { options: { account: Parameters<typeof privatePort>[0]; port?: number } }).options
-    expect(account).toEqual(platform.id === 'windows' ? { profileFolder: home } : { uid: process.getuid!() })
+    expect(account).toEqual(platform.id === 'windows' ? { profileFolder: home } : { uid: userInfo().uid })
     expect(port).toBeUndefined() // the port of her account
     const other = await prepareServer('creates', { repo, home, env: { CLAUDIA_SERVER_PORT: '18765' } })
     expect((other as unknown as { options: { port?: number } }).options.port).toBe(18765)

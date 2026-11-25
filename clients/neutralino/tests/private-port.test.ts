@@ -25,6 +25,11 @@ describe('the port of a private server', () => {
     expect(privatePort({ profileFolder })).toBe(port)
   })
 
+  it('stays in her range whatever number it is given (Windows says -1 for an account number)', () => {
+    expect(privatePort({ uid: -1 })).toBe(29999)
+    expect(privatePort({ uid: -10001 })).toBe(29999)
+  })
+
   it('is never 8765, the port of every shared server, and stays below the ports the systems hand out', () => {
     expect(PRIVATE_PORTS).toEqual({ first: 20000, last: 29999 })
   })
