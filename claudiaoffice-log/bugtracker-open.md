@@ -42,18 +42,18 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | UX-51 | P2 | UX / composes | The words go round the unturned frame of a turned object, not its bounding box (D1226 decides the box); turning is on screen in composes since D1232 | **new, open** (read) |  |  |
 | UX-68 | P2 | UX / computes | A sheet or a chart tab (after E6.31: a slide) cannot be deleted: nothing in the menus or the tab strip reaches `RemoveSheet` or `remove_chart` | **new, open** (read; size 2) | 2026-11-22 |  |
 | UX-69 | P2 | UX / all apps | A viewer is not told she can only look: greyed entries, hidden controls and object gestures are silent (only Delete on a sheet's object says so) | open (scenario `@pending:UX-69`) | 2026-11-22 |  |
-| UX-70 | P2 | UX / all apps | What an export could not keep is never shown: the losses come back with the file and no client says them | **new, open** (read; size 2) | 2026-11-22 |  |
+| UX-70 | P2 | UX / all apps | What an export could not keep is never shown: the losses come back with the file and no client says them | **fix on `batch-4`** (proposed: fixed) | 2026-11-22 |  |
 | UX-71 | P2 | UX / computes | Text on a workbook's slide is drawn in the workbook's Body text (13 px), tiny on a 1600-unit slide | **needs decision** (measured; size 2) | 2026-11-22 |  |
-| UX-90 | P2 | UX / a11y | About 25 other `role="status"` elements appear with their text already in them (`v-if`), so screen readers may not announce them (BITV 4.1.3), as the notice did (UX-88) | **new, open** (read) | 2026-11-25 |  |
+| UX-90 | P2 | UX / a11y | About 25 other `role="status"` elements appear with their text already in them (`v-if`), so screen readers may not announce them (BITV 4.1.3), as the notice did (UX-88) | **fix on `batch-4`** (proposed: fixed) | 2026-11-25 |  |
 | UX-91 | P2 | UX / composes / Firefox | In Firefox the down arrow from the paragraph above a new table does not put the caret in its first box (Chromium does) | **new, open** (measured on CI) | 2026-11-25 |  |
-| CODE-25 | P2 | Code / Export | A renamed object loses its name in pptx and odp without the export saying so (D450) | **new, open** |  |  |
+| CODE-25 | P2 | Code / Export | A renamed object loses its name in pptx and odp without the export saying so (D450) | **fix on `batch-4`** (proposed: fixed) |  |  |
 | CODE-31 | P2 | Code / i18n | The history speaks English to everybody: command labels and summaries are not translated | **new, open** |  |  |
-| CODE-45 | P2 | Code / Import | pptx placeholders (titles, body text) are not imported at all | **new, open** |  |  |
+| CODE-45 | P2 | Code / Import | pptx placeholders (titles, body text) are not imported at all | **fix on `batch-4`** (proposed: fixed) |  |  |
 | CODE-99 | P2 | Code / desktop clients | A person's apps use any Claudia server on port 8765 of the computer as their own, also another person's or a service's: with two people logged in, the second one's documents are saved in the first one's home folder | **new, open** (read); fix on the macOS installer branch (E8.5) | 2026-11-25 |  |
 | CODE-100 | P2 | Code / desktop clients | Next to a service of another version, the apps refuse to start and say it stops after ten minutes, which a service never does | **new, open** (read); fix on the macOS installer branch (E8.5) | 2026-11-25 |  |
 | PROC-15 | P2 | Process | The tracker and the backlog lag the code: fixed items still "open", 64 stories at a placeholder 50 % | partly fixed 2026-11-25 (batch 1: the index guard); the backlog's placeholder 50 % stays open |  |  |
 | PROC-30 | P2 | Process / desktop clients | The Neutralino (Windows, macOS) tests and the GTK client were not run for `object-interaction`: the generated menus were rebuilt and the manifest unit tests pass, nothing more | **new, open** |  |  |
-| PROC-37 | P2 | Process / scope | D1272 says an export's history and chat come back in with their authors as text; slice B imports the content only (`import_state` returns the state, the `history.jsonl` and `chat.jsonl` of an export are written but never read back) | **in progress** (size 2; the owner chose (a), D2005; fix on `batch-4`, not yet on `main`) |  |  |
+| PROC-37 | P2 | Process / scope | D1272 says an export's history and chat come back in with their authors as text; slice B imports the content only (`import_state` returns the state, the `history.jsonl` and `chat.jsonl` of an export are written but never read back) | **fix on `batch-4`** (proposed: fixed) |  |  |
 | UX-64 | P2 | UX / all apps | Dark mode: a part of the sidebar (History & Chat / Help) is not readable or has too little contrast; the exact symptom was not written down when it was seen (see entry) | **needs decision** (symptom to be re-stated; size 2) | 2026-11-22 |  |
 | SEC-09 | P3 | Security | User names can be confusable (homoglyphs) | open (unverified) |  |  |
 | SEC-16 | P3 | Security | The LaTeX program setting accepts any executable on the server | partly fixed 2026-11-25 (batch 1, D2002): showing the accepted program's answer on the settings page stays open |  |  |
@@ -90,11 +90,11 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | CODE-53 | P3 | Code / web | The failure text of a rendered container is clipped in a small frame and cannot be read in full | open |  |  |
 | CODE-62 | P3 | Code / Linux client | A window that revives the shared server while the old one still holds the port starts it on a random port, not the remembered one | **new, open** |  |  |
 | CODE-63 | P3 | Code / composes | The Format ▸ Styles menu lists composes' built-in `contents-title` and `contents-1` to `contents-9` as "custom" styles | **new, open** (read) |  |  |
-| CODE-66 | P3 | computes I/O | A picture added to an imported XLSX or ODS is not written into it: the patch of a kept file does not add pictures (reported as `object`) | **new, open** (D1233) |  |  |
+| CODE-66 | P3 | computes I/O | A picture added to an imported XLSX or ODS is not written into it: the patch of a kept file does not add pictures (reported as `object`) | **fix on `batch-4`** (proposed: fixed) |  |  |
 | CODE-68 | P3 | computes | Computes cannot make a text box or a shape, though a model can hold one (a file from another app) and an export reports it as `object` | **new, open** |  |  |
-| CODE-70 | P3 | computes I/O | The patch of a kept XLSX or ODS does not add pivot tables either (reported), as it does not add pictures (CODE-66) | **new, open** (D1233) |  |  |
+| CODE-70 | P3 | computes I/O | The patch of a kept XLSX or ODS does not add pivot tables either (reported), as it does not add pictures (CODE-66) | **fix on `batch-4`** (proposed: fixed) |  |  |
 | CODE-74 | P3 | Code | `export_content` still answers `{format: "claudia-export 1", ...}`, a JSON that is neither the zip of D1270 nor documented anywhere; it is recorded as an export and the panel says "exported as claudia-export 1"; no window calls it | **new, open** (size 3; remove it or make it the zip) |  |  |
-| PROC-62 | P3 | Process / CI | A test of the Neutralino client failed once on Windows CI and passed when the job was run again: "opens a PDF to print in the computer's viewer…" (`clients/neutralino/tests/files.test.ts`) | **new, open** (measured) | 2026-11-25 |  |
+| PROC-62 | P3 | Process / CI | A test of the Neutralino client failed once on Windows CI and passed when the job was run again: "opens a PDF to print in the computer's viewer…" (`clients/neutralino/tests/files.test.ts`) | **fix on `batch-4`** (proposed: fixed) | 2026-11-25 |  |
 
 ## Security
 
@@ -329,7 +329,7 @@ to rename a sheet as commands.
 **Recommendation:** let a command say how it moves a region (a method, or a table keyed by command kind) and move
 command construction out of the model; then turn PLC0415 on per package with named exceptions.
 
-### CODE-45 · pptx placeholders (titles, body text) are not imported at all · P2 · new, open
+### CODE-45 · pptx placeholders (titles, body text) are not imported at all · P2 · fix on `batch-4`
 **Measured** (found while fixing CODE-44, reported to the owner as bug A, size 1): `pptx._classify` takes text boxes,
 auto shapes and pictures only, so a placeholder — the title and the body text of nearly every slide made from a
 layout — is left out of the model, and with it its words and its font. Most decks from PowerPoint come in nearly empty.
@@ -421,7 +421,7 @@ from the manifest instead of a typed string.
 Delete is in the generated key table, and selecting an object and pressing it removes the object in one history entry
 (`objects.cjs`, step "delete"). Found while auditing rotation and key coverage 2026-11-19.
 
-### CODE-66 · A picture added to an imported workbook is not written into it · P3 · new, open
+### CODE-66 · A picture added to an imported workbook is not written into it · P3 · fix on `batch-4`
 `apply_edits_to_xlsx` / `apply_edits_to_ods` change only the cells, looks, names, widths and charts of the original file's XML;
 a picture added in computes after an import is reported (`object`) and not in the file (a fresh export has it, D1233).
 **Fix.** The patch adds an `xdr:pic` and its media part to the sheet's drawing (`Drawings.add_picture` is there for it) and a
@@ -484,7 +484,7 @@ there is no Insert entry and no host support for writing in it from the sheet. *
 computes manifest (the same entries as creates and composes), Edit text through D1232, XLSX `xdr:sp` and ODS `draw:custom-shape` export.
 **Acceptance.** Insert a box and a shape in computes, write in them, export to XLSX and ODS and reimport: the same words; the loss report no longer says `object` for them.
 
-### CODE-70 · The patch of a kept file does not add pivot tables · P3 · new, open
+### CODE-70 · The patch of a kept file does not add pivot tables · P3 · fix on `batch-4`
 Same cause and same shape as CODE-66: `apply_edits_to_xlsx` / `_ods` change what the file already has. A pivot table
 defined in computes after an import is reported and not written. **Acceptance.** Import a workbook, define a pivot, export:
 the file has it, or `xlsx_unwritten_changes` names it and the test says so.
@@ -514,7 +514,7 @@ file (a viewer's snapshot would be written without them: a second snapshot); (b)
 so in D1261. **Proposal:** (b) until the owner says otherwise, because masking in the snapshot means the content is stored
 twice. Not built either way.
 
-### PROC-37 · The history and chat of an export are not read back · P2 · in progress (fix on `batch-4`)
+### PROC-37 · The history and chat of an export are not read back · P2 · fix on `batch-4`
 **Evidence (read, measured by the tests).** `write_export` puts `history.jsonl` and `chat.jsonl` in the zip for an owner and
 `read_export` returns them, but `import_state` takes only `state`; the new document starts with one `core.Import` step. D1272
 says the history comes in with its authors as plain text ("former people"). **Not built** because the history of an export
@@ -637,16 +637,19 @@ person's apps start her own server and open.
 
 ## Found in batch 3 of the bug eater (2026-11-25; branch `batch-3`)
 
-### UX-90 · Other status messages may not be announced either · P2 · size 3 · open
+### UX-90 · Other status messages may not be announced either · P2 · size 3 · fix on `batch-4`
 **Read** (helper, UX-88): about 25 elements with `role="status"` are made with `v-if` together with their text, among
 them `AdminFonts.vue`, `AdminLogin.vue`, `OpenDialog.vue`, `PrintPreview.vue`, `RecoveryKeyDialog.vue`,
 `StylesDialog.vue`, `FontReportBanner.vue` and the redaction banner in `DocumentFrame.vue`. A live region that appears
 with its content may not be read out (BITV 4.1.3). UX-88 fixed the notice only.
-**Fix** on `batch-4`: 27 such regions in 22 components. The `role="status"` is now on a wrapper that is always on the page,
+**Fix** on `batch-4`: 28 such regions in 23 components (one with a bound role: `ContainerFace.vue`, status or alert). The
+`role="status"` is now on a wrapper that is always on the page,
 and the condition is on what it says inside it; an empty one takes no room (`[role="status"]:empty` is placed
 absolutely in `app.css`, not hidden, so it stays in the accessibility tree). **Test:** `web/tests/live-regions.test.ts`
 reads every template with Vue's own parser and finds no `role="status"` or `aria-live="polite"` element made or shown by
-a condition. `role="alert"` is left as it is: an alert is announced when it appears. Not heard with a screen reader.
+a condition, written out or bound. `role="alert"` is left as it is: an alert is announced when it appears. A region
+that comes with a whole new view (a dialog that opens, the part of the Import dialog for a chosen file) is read with that
+view and is not changed. Not heard with a screen reader.
 
 ### UX-91 · In Firefox the down arrow does not go into a new table · P2 · size 2 · open
 **Measured** by the first Firefox job that ran (CI on `batch-3`, twice): `test_objects_in_composes.py::
@@ -660,7 +663,7 @@ straight away" of `invariants/objects-in-composes.feature` carries no `@firefox`
 
 ## Found after batch 3 of the bug eater (2026-11-25)
 
-### PROC-62 · A test of the Neutralino client fails now and then on Windows · P3 · size 3 · open
+### PROC-62 · A test of the Neutralino client fails now and then on Windows · P3 · size 3 · fix on `batch-4`
 **Measured:** CI of `main` at `ebeed301`, job "Neutralino client on Windows": `tests/files.test.ts` › Files › "opens a
 PDF to print in the computer's viewer, from a folder of its own, without asking where (D502)" failed with
 `expected [] to deeply equal [ Array(1) ]` (432 ms). The push did not touch `clients/`, the same test passed at
