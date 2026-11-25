@@ -73,6 +73,9 @@ async function opened(objects: object[] = [], text = 'a😀b') {
     renderings: () => [{ format: 1, id: 'r1', type: 'latex', source: 'x', params: {}, image: null, renderer: '' }],
     objects: () => ({ revision: 'main:2', objects }),
     shapes: () => ({ library: [CIRCLE, STAR], document: [CIRCLE] }),
+    lock: () => ({}),
+    unlock: () => ({}),
+    presence: () => ({}),
     add_object: () => ({ object: 'o8', revision: 'main:3' }),
     set_wrap: () => ({ revision: 'main:3' }),
     add_image: () => ({ object: 'o7', revision: 'main:3' }),
@@ -148,6 +151,8 @@ describe('the object layer of a text', () => {
     expect(await session.addImage(picture, { paragraph: 'b1', offset: 3 }, { w: 300, h: 200 })).toBe('o7')
     expect(link.last('add_image')).toEqual({ paragraph: 'b1', offset: 2, w: 300, h: 200, data: 'AAAA', alt: 'a cat', source_name: 'cat.png', source_path: null, base: 'main:2' })
     expect(state.selectedObject).toBe('o7')
+    // locked (D1223) at the paragraph it hangs from, though the server has not yet told of the object itself
+    expect(link.last('lock').regions).toEqual([{ kind: 'objects', holder: 'b1', ids: ['o7'] }])
   })
   it('asks the server to size a picture from a file, and only then (D1332)', async () => {
     const { link, session } = await opened()

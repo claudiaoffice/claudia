@@ -703,6 +703,31 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     }
   }
 
+  /**
+   * Lock the object I select, in all three apps (D1223): the others see my colour round it and my name, and nobody
+   * else changes it until I let go. `null` unlocks, and the others see me where I rest (`restingRegions`). False when a
+   * colleague has it locked (the person was told why). Only looking, the selection is shown, not locked. `holder` is
+   * the slide, sheet or paragraph the object is on, for an object this session has not been told of yet.
+   */
+  async lockObject(id: string | null, holder = id === null ? undefined : this.state.objects[id]?.anchor.holder): Promise<boolean> {
+    if (id === null) {
+      await this.releaseRegions()
+      const resting = this.restingRegions()
+      await this.showRegions(JSON.stringify(resting), resting)
+      return true
+    }
+    if (holder === undefined) return false
+    const regions: Region[] = [{ kind: 'objects', holder, ids: [id] }]
+    if (!this.readOnly) return this.holdRegions(regions)
+    await this.showRegions(`select ${id}`, regions)
+    return true
+  }
+
+  /** Where the others see me when I lock no object: nowhere, unless the app has a place of its own (computes' cells). */
+  protected restingRegions(): Region[] {
+    return []
+  }
+
   protected need(): LinkLike {
     if (!this.link) throw new ProtocolError('closed', 'not connected')
     if (this.state.replay) return (this.replayLink ??= new PastLink(this.link, () => this.replayShown))

@@ -26,6 +26,7 @@ import { canTurn, degreesText, stepTurn } from '~/lib/turning'
 import { stepsFor, type Place, type Spot } from '~/lib/text-object-host'
 import { lookOf, type ObjectLook } from '~/lib/text-object-look'
 import { useI18n } from '~/lib/i18n'
+import { colorOf } from '~/lib/people'
 import { anchorMark, wordAt } from '~/lib/anchor-mark'
 import type { TextSession } from '~/lib/text-session'
 import { grabbable, wrapLabel, wrapOf } from '~/lib/wrap'
@@ -223,6 +224,10 @@ const placed = computed<Placed[]>(() => {
   }
   return out
 })
+
+const placedById = computed(() => Object.fromEntries(placed.value.map((p) => [p.id, p])))
+/** What colleagues have selected in this text (D1223). */
+const others = computed(() => session.selectedByOthers())
 
 const faceOf = (id: string) => {
   const o = state.objects[id]
@@ -441,6 +446,10 @@ const turnable = (id: string) => !!state.objects[id] && canTurn(state.objects[id
         @turn-key="(e) => onTurnKey(e, p.id)"
       />
     </div>
+    <!-- what colleagues have selected: their colour and name (D1223) -->
+    <template v-for="o in others" :key="`${o.user}:${o.id}`">
+      <OtherOnObject v-if="placedById[o.id]" :other="o" :color="colorOf(state, o.user)" :style="placedById[o.id]!.style" />
+    </template>
     <!-- where the selected object hangs (D1352): never printed, not read out (its description says it in words) -->
     <template v-if="mark">
       <svg class="anchor-line" aria-hidden="true">

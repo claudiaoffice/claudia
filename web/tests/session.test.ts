@@ -462,6 +462,32 @@ describe('floating objects (images, E6.17)', () => {
   })
 })
 
+describe('selecting a floating object locks it, as in creates (D1223)', () => {
+  const count = (link: FakeLink, method: string) => link.calls.filter((c) => c.method === method).length
+  async function withPicture() {
+    const opened_ = await opened()
+    opened_.link.push('objects', { type: 'objects', holder: 's1', changed: [image('i1')], removed: [], order: ['i1'] })
+    return opened_
+  }
+  it('locks the selected object of a sheet, and unlocks it back to the cells', async () => {
+    const { link, session } = await withPicture()
+    await session.show('s1', 2, 1)
+    expect(await session.lockObject('i1')).toBe(true)
+    expect(link.last('lock').regions).toEqual([{ kind: 'objects', holder: 's1', ids: ['i1'] }])
+    expect(await session.lockObject(null)).toBe(true)
+    expect(count(link, 'unlock')).toBe(1)
+    expect(link.last('presence').regions).toEqual([{ kind: 'cells', range: { first: { row: 2, col: 1, sheet: 's1' }, last: { row: 2, col: 1, sheet: 's1' } } }])
+  })
+  it('is refused an object a colleague has locked, and says why', async () => {
+    const { link, session } = await withPicture()
+    link.handlers.lock = () => {
+      throw new ProtocolError('locked', 'ben is working on that')
+    }
+    expect(await session.lockObject('i1')).toBe(false)
+    expect(session.state.notice).toMatchObject({ kind: 'warning', text: 'ben is working on that' })
+  })
+})
+
 describe('row and column sizes', () => {
   it('shows every line at the default until the sizes are loaded', async () => {
     const { session } = await opened()

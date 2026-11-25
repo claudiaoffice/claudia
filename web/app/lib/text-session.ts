@@ -25,7 +25,7 @@ import {
   type TextEvent,
 } from './paragraphs'
 import { NEW_OBJECT_CAP, type ImageAsset } from './images'
-import type { ParagraphAnchor, PaletteEvent, StyleModel, StyleTarget, VisualObject } from './objects'
+import { othersOn, type Other, type ParagraphAnchor, type PaletteEvent, type StyleModel, type StyleTarget, type VisualObject } from './objects'
 import { NEW_OBJECT_WRAP, nextWrap, wrapOf, wrapParams, type Wrap } from './wrap'
 import { DEFAULT_STYLE, type PageSetupData, type ShapeOutline, type TextObject } from '@claudia/layout'
 import type { LinkLike, Region, WireData } from './protocol'
@@ -177,8 +177,23 @@ export class TextSession extends BaseSession<TextState> {
     return paragraph ? { paragraph: paragraph.id, offset: Math.min(unitOf(paragraph.text, o.anchor.offset), paragraph.text.length) } : null
   }
 
-  selectObject(id: string | null): void {
-    this.state.selectedObject = id
+  /** Select an object (`null`: none), which locks it as in the other apps (D1223); a colleague who has it locked keeps
+   * it, and the person is told. The lock replaces the words held round the caret, which are held again once no object
+   * is selected.
+   * `paragraph` is the one a new object hangs from, before the server has told of it. */
+  async selectObject(id: string | null, paragraph?: string): Promise<void> {
+    const s = this.state
+    if (id === s.selectedObject) return
+    s.selectedObject = id
+    this.placed = ''
+    if (!(await this.lockObject(id, paragraph)) && s.selectedObject === id) s.selectedObject = null
+    if (s.selectedObject === null) this.place()
+  }
+
+  /** The objects of this text that colleagues have selected, and whether they have them locked. */
+  selectedByOthers(): Other[] {
+    const holders = new Set(Object.values(this.state.objects).map((o) => o.anchor.holder))
+    return [...holders].flatMap((holder) => othersOn(this.state, holder))
   }
 
   /** Hang a container of `type` from `place` (a paragraph and a place in it, in screen units); its id, or `null` after
@@ -187,7 +202,7 @@ export class TextSession extends BaseSession<TextState> {
   async addContainer(type: string, place: { paragraph: string; offset: number }, size: { w: number; h: number }): Promise<string | null> {
     await this.flush()
     const id = await this.addContainerAt(type, this.newObjectAt(place), size, undefined, true)
-    if (id) this.state.selectedObject = id
+    if (id) await this.selectObject(id, place.paragraph)
     return id
   }
 
@@ -203,7 +218,7 @@ export class TextSession extends BaseSession<TextState> {
     if (!fenced) return null
     await this.flush()
     const id = await this.addContainerAt(fenced.type, this.newObjectAt(place), NEW_OBJECT_CAP, fenced.source, true)
-    if (id) this.state.selectedObject = id
+    if (id) await this.selectObject(id, place.paragraph)
     return id
   }
 
@@ -220,7 +235,7 @@ export class TextSession extends BaseSession<TextState> {
     wrap?: Wrap,
   ): Promise<string | null> {
     const id = await this.putPicture(picture, { ...this.placeOnWire(place), ...(wrap ? wrapParams(wrap) : {}), ...size })
-    if (id) this.state.selectedObject = id
+    if (id) await this.selectObject(id, place.paragraph)
     return id
   }
 
@@ -234,7 +249,7 @@ export class TextSession extends BaseSession<TextState> {
   ): Promise<string | null> {
     const done = await this.write('add_object', { ...this.placeOnWire(place), ...(wrap ? wrapParams(wrap) : {}), ...kind, ...size })
     if (done === false) return null
-    this.state.selectedObject = done.object as string
+    await this.selectObject(done.object as string, place.paragraph)
     return done.object as string
   }
 
@@ -599,7 +614,8 @@ export class TextSession extends BaseSession<TextState> {
   async placeNow(): Promise<void> {
     this.placing = null
     const sel = this.state.selection
-    if (!sel || this.state.status !== 'open') return
+    // a selected object is locked, and holding the words would let go of it (D1223)
+    if (!sel || this.state.status !== 'open' || this.state.selectedObject) return
     const text = this.textOf(sel.focus.paragraph)
     const params = { paragraph: sel.focus.paragraph, offset: pointOf(text, sel.focus.offset), words: ZONE_WORDS }
     const where = JSON.stringify(params)

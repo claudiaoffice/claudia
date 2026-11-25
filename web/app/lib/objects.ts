@@ -12,6 +12,7 @@ import type { ObjectKind } from '@claudia/layout'
 import type { ImageImport } from './images'
 import type { Toc } from './contents'
 import type { RefField } from './references'
+import type { BaseState } from './base-session'
 
 /** Where an object sits, in the terms of one app. `holder` is its slide, sheet or paragraph. */
 export interface SlideAnchor {
@@ -244,4 +245,24 @@ export type StyleTarget = { object: string } | { paragraph: string } | { sheet: 
  * object without words. */
 export function wordsCssOf(styles: Record<string, StyleDef>, body: ObjectBody): Record<string, string> {
   return body.paragraph ? (styles[body.paragraph.style]?.resolved ?? {}) : {}
+}
+
+/** A colleague's selection of an object, and whether they hold it (D1223): the same in all three apps. */
+export interface Other {
+  id: string
+  user: string
+  locked: boolean
+}
+
+/** The objects of `holder` that colleagues have selected, and whether they hold them: what `selectedByOthers` says in
+ * all three apps. */
+export function othersOn(state: Pick<BaseState, 'presence' | 'me'>, holder: string): Other[] {
+  const found: Other[] = []
+  for (const [user, here] of Object.entries(state.presence)) {
+    if (user === state.me.user) continue
+    for (const region of here.regions) {
+      if (region.kind === 'objects' && region.holder === holder) for (const id of region.ids) found.push({ id, user, locked: here.locked })
+    }
+  }
+  return found
 }

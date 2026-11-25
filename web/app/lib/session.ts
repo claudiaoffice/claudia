@@ -3,16 +3,16 @@
 import { BaseSession, type BaseState, type SessionOptions } from './base-session'
 import { translate as t } from './i18n'
 import { ProtocolError, type LinkLike, type Region, type WireData } from './protocol'
-import { holderOf, firstFocus, lookOnly } from './replay'
+import { holderOf, firstFocus } from './replay'
 import type { Thing } from './tags'
 import { MAX_COLS, MAX_ROWS, type Content } from './cells'
 import type { CellRange } from './cell-styles'
 import type { NumberFormatDef } from './number-format'
 import type { ImageAsset } from './images'
-import type { CellAnchor, ObjectsEvent, PaletteEvent, StyleDef, StyleModel, StyleTarget, VisualObject } from './objects'
+import { othersOn, type CellAnchor, type ObjectsEvent, type Other, type PaletteEvent, type StyleDef, type StyleModel, type StyleTarget, type VisualObject } from './objects'
 import type { Frame } from './geometry'
 import type { Shown } from './references'
-import { isOnSlide, othersOn, SlideActions, type Other, type PictureImport, type ShapeDef, type SlideHost, type SlideObject } from './slide-host'
+import { isOnSlide, SlideActions, type PictureImport, type ShapeDef, type SlideHost, type SlideObject } from './slide-host'
 import type { CssEdit } from './style-css'
 import { type Axis, lineSize } from './line-sizes'
 import type { ChartDraft, ChartFigure, ChartFigures, ChartSpec } from './charts'
@@ -187,10 +187,7 @@ export class Session extends BaseSession<State> implements SlideHost {
   private readonly slide = new SlideActions({
     state: this.state,
     write: (method, params) => this.write(method, params),
-    show: (where, regions) => this.showRegions(where, regions),
-    hold: (regions) => this.holdRegions(regions),
-    release: () => this.releaseRegions(),
-    looking: () => lookOnly(this.state),
+    lockObject: (id, holder) => this.lockObject(id, holder),
   })
   /** A range like `A1:B5` (or one cell) on the sheet on show, as the part of an imported workbook to blank (D723). */
   override redactionRangePart(range: string): string | null {
@@ -954,8 +951,16 @@ export class Session extends BaseSession<State> implements SlideHost {
     return { kind: 'cells', range: { first: ref(Math.min(r0, r1), Math.min(c0, c1)), last: ref(Math.max(r0, r1), Math.max(c0, c1)) } }
   }
 
+  /** The cells last shown to the others: where I am again when I let go of an object. */
+  private here: Region[] = []
+
   async show(sheet: string, r0: number, c0: number, r1 = r0, c1 = c0): Promise<void> {
-    await this.showRegions(JSON.stringify([sheet, r0, c0, r1, c1]), [this.region(sheet, r0, c0, r1, c1)])
+    this.here = [this.region(sheet, r0, c0, r1, c1)]
+    await this.showRegions(JSON.stringify([sheet, r0, c0, r1, c1]), this.here)
+  }
+
+  protected override restingRegions(): Region[] {
+    return this.here
   }
 
   beginEdit(sheet: string, row: number, col: number): Promise<boolean> {

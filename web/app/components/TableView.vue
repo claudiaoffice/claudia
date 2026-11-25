@@ -19,6 +19,7 @@ import { nearestGap } from '~/lib/text-object-host'
 import type { ParagraphAnchor, VisualObject } from '~/lib/objects'
 import type { TextSession } from '~/lib/text-session'
 import { useI18n } from '~/lib/i18n'
+import { colorOf } from '~/lib/people'
 
 const { t } = useI18n()
 const props = defineProps<{ session: TextSession; object: VisualObject<ParagraphAnchor>; table: TableInfo }>()
@@ -172,6 +173,9 @@ const DRAG_START = 3 // screen pixels the pointer must travel before a press on 
 const dragging = ref<{ x: number; y: number; moved: boolean; after: string | null; line: { left: number; top: number; width: number } | null } | null>(null)
 
 const select = () => props.session.selectObject(props.object.id)
+/** The colleagues who have this table selected (D1223), drawn inside its frame, their names at its top right. */
+const others = computed(() => props.session.selectedByOthers().filter((o) => o.id === props.object.id))
+const OTHER_INSIDE = { inset: '0', '--tag-top': '2px', '--tag-left': 'auto', '--tag-right': '2px' }
 const tab = ref<HTMLElement | null>(null)
 
 // A selected table has the keys: Delete takes it away, Esc leaves it, however it was selected (a press on the tab or
@@ -277,6 +281,8 @@ defineExpose({ focusBox, enter })
     @pointerdown="onIslandDown"
     @contextmenu="onContext"
   >
+    <!-- what colleagues have selected: their colour and name (D1223), inside the frame, which scrolls -->
+    <OtherOnObject v-for="other in others" :key="other.user" :other="other" :color="colorOf(state, other.user)" :style="OTHER_INSIDE" />
     <table :class="`look-${table.look}`" :style="tableCss">
       <caption>
         <button
@@ -349,6 +355,7 @@ defineExpose({ focusBox, enter })
 
 <style scoped>
 .table-island {
+  position: relative;
   margin: 0.4em 0 0.9em;
   overflow-x: auto;
   /* the faint frame, always on: where the table starts and ends, whatever its look draws (D1224) */

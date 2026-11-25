@@ -11497,7 +11497,7 @@ msgstr "{type}-Container: {words}"
 msgid "{user} (you)"
 msgstr "{user} (Sie)"
 
-#: web/app/components/SlideCanvas.vue
+#: web/app/components/OtherOnObject.vue
 msgid "{user} is working on this"
 msgstr "{user} arbeitet daran"
 
@@ -11513,7 +11513,7 @@ msgstr "{user} hat dieses Dokument verlassen."
 msgid "{user} may now “{role}”."
 msgstr "{user} darf jetzt „{role}“."
 
-#: web/app/components/SlideCanvas.vue
+#: web/app/components/OtherOnObject.vue
 msgid "{user} selected this"
 msgstr "{user} hat dies ausgewählt"
 

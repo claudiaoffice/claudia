@@ -8,8 +8,8 @@ import type { ChartFigures } from './charts'
 import type { ContentsEntry } from './contents'
 import type { Frame } from './geometry'
 import type { Shown } from './references'
-import type { Region, WireData } from './protocol'
-import type { Anchor, SlideAnchor, StyleDef, StyleModel, StyleTarget, VisualObject } from './objects'
+import type { WireData } from './protocol'
+import type { Anchor, Other, SlideAnchor, StyleDef, StyleModel, StyleTarget, VisualObject } from './objects'
 import type { CssEdit } from './style-css'
 
 /** An object on a slide: the shared body and where on its slide it sits (D177). */
@@ -38,13 +38,6 @@ export interface SlideHostState extends BaseState {
   styleModel: StyleModel | null
   /** What the references in the words of each object read as, by object id (step H; none in a workbook). */
   referenced: Record<string, Shown[]>
-}
-
-/** A colleague's selection on a slide, and whether they hold it. */
-export interface Other {
-  id: string
-  user: string
-  locked: boolean
 }
 
 /** A picture from a file, as `addImage` takes it. */
@@ -107,12 +100,8 @@ export function isOnSlide(object: VisualObject<Anchor> | undefined): object is S
 export interface SlidePort {
   readonly state: { activeSlide: string; selected: string | null; objects: Record<string, VisualObject<Anchor>> }
   write(method: string, params: Record<string, unknown>): Promise<WireData | false>
-  /** show the others where I am, hold regions, let go of them (`BaseSession`) */
-  show(where: string, regions: Region[]): Promise<void>
-  hold(regions: Region[]): Promise<boolean>
-  release(): Promise<void>
-  /** only looking (a viewer, a replay, a preview): a selection is shown, not held */
-  looking(): boolean
+  /** lock the object selected, or unlock (`null`); false when a colleague has it locked (`BaseSession.lockObject`) */
+  lockObject(id: string | null, holder?: string): Promise<boolean>
 }
 
 /** What creates and computes do the same way on a slide (D1473): show one, select an object on it (shown to the others
@@ -132,17 +121,15 @@ export class SlideActions {
     const s = this.port.state
     if (id === s.selected) return
     s.selected = id
-    if (id === null) return this.letGo()
-    const regions: Region[] = [{ kind: 'objects', holder: s.objects[id]?.anchor.holder ?? s.activeSlide, ids: [id] }]
-    if (this.port.looking()) return this.port.show(`select ${id}`, regions)
-    if (!(await this.port.hold(regions)) && s.selected === id) s.selected = null
+    const locked = await this.port.lockObject(id, id === null ? undefined : (s.objects[id]?.anchor.holder ?? s.activeSlide))
+    if (!locked && s.selected === id) s.selected = null
   }
 
   /** The selected object went (somebody removed it): it is let go of. */
   async gone(removed: readonly string[]): Promise<void> {
     if (!removed.includes(this.port.state.selected ?? '')) return
     this.port.state.selected = null
-    await this.letGo()
+    await this.port.lockObject(null)
   }
 
   async move(id: string, x: number, y: number): Promise<boolean> {
@@ -161,22 +148,4 @@ export class SlideActions {
     await this.select(done.object)
     return done.object
   }
-
-  private async letGo(): Promise<void> {
-    await this.port.release()
-    await this.port.show('nothing', [])
-  }
-}
-
-/** The objects of `holder` that colleagues have selected, and whether they hold them: what `selectedByOthers` says in
- * both apps. */
-export function othersOn(state: Pick<BaseState, 'presence' | 'me'>, holder: string): Other[] {
-  const found: Other[] = []
-  for (const [user, here] of Object.entries(state.presence)) {
-    if (user === state.me.user) continue
-    for (const region of here.regions) {
-      if (region.kind === 'objects' && region.holder === holder) for (const id of region.ids) found.push({ id, user, locked: here.locked })
-    }
-  }
-  return found
 }

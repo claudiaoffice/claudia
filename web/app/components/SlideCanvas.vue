@@ -19,7 +19,7 @@ import { imageDataUrl } from '~/lib/images'
 import { cssOf as computedCss, pointer, slideFrame, wordsCssOf, wordsOf } from '~/lib/objects'
 import { contextMenuItems } from '~/lib/object-menu'
 import { objectStyleHost } from '~/lib/object-style-host'
-import { colorOf, inkOn } from '~/lib/people'
+import { colorOf } from '~/lib/people'
 import { facetCss, scaleCss } from '~/lib/slide-style'
 import { withDisplayInk } from '~/lib/style-css'
 import type { SlideObject } from '~/lib/slide-session'
@@ -649,14 +649,7 @@ defineExpose({ paste: () => clip.paste(), focus: () => area.value?.focus(), begi
 
       <!-- what colleagues have selected: their colour and name -->
       <template v-for="other in others" :key="`${other.user}:${other.id}`">
-        <div
-          v-if="slideObject(other.id)"
-          class="other"
-          :style="{ ...boxStyle(slideObject(other.id)!), borderColor: colorOf(state, other.user) }"
-          :title="other.locked ? t('{user} is working on this', { user: other.user }) : t('{user} selected this', { user: other.user })"
-        >
-          <span class="tag" :style="{ background: colorOf(state, other.user), color: inkOn(colorOf(state, other.user)) }">{{ other.user }}</span>
-        </div>
+        <OtherOnObject v-if="slideObject(other.id)" :other="other" :color="colorOf(state, other.user)" :style="boxStyle(slideObject(other.id)!)" />
       </template>
 
       <!-- my selection and its handles -->
@@ -768,21 +761,6 @@ defineExpose({ paste: () => clip.paste(), focus: () => area.value?.focus(), begi
   margin: -1px;
   overflow: hidden;
   clip-path: inset(50%);
-  white-space: nowrap;
-}
-.other {
-  position: absolute;
-  border: 2px solid;
-  pointer-events: none;
-}
-.tag {
-  position: absolute;
-  top: -20px;
-  left: -2px;
-  font-size: 11px;
-  font-weight: 500;
-  padding: 1px 7px;
-  border-radius: 999px;
   white-space: nowrap;
 }
 </style>

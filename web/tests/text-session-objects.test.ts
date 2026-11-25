@@ -122,3 +122,55 @@ describe('the floating objects of a text, as the object interaction asks for the
     expect(state.selectedObject).toBeNull()
   })
 })
+
+describe('selecting an object locks it, as in creates (D1223)', () => {
+  async function holding() {
+    const opened_ = await opened()
+    Object.assign(opened_.link.handlers, { lock: () => ({}), unlock: () => ({}), presence: () => ({}), hold: () => ({}) })
+    return opened_
+  }
+  const count = (link: FakeLink, method: string) => link.calls.filter((c) => c.method === method).length
+
+  it('locks the selected object so that nobody else changes it, and unlocks it', async () => {
+    const { link, session, state } = await holding()
+    await session.selectObject('o1')
+    expect(state.selectedObject).toBe('o1')
+    expect(link.last('lock').regions).toEqual([{ kind: 'objects', holder: 'b1', ids: ['o1'] }])
+    await session.selectObject(null)
+    expect(state.selectedObject).toBeNull()
+    expect(count(link, 'unlock')).toBe(1)
+    expect(link.last('presence').regions).toEqual([])
+  })
+  it('does not keep a selection a colleague has locked, and says why', async () => {
+    const { link, session, state } = await holding()
+    link.handlers.lock = () => {
+      throw new ProtocolError('locked', 'ben is working on that')
+    }
+    await session.selectObject('o1')
+    expect(state.selectedObject).toBeNull()
+    expect(state.notice).toMatchObject({ kind: 'warning', text: 'ben is working on that' })
+  })
+  it('tells which objects colleagues have selected, whatever paragraph they hang from', async () => {
+    const { link, session } = await holding()
+    link.push('ephemeral', { kind: 'presence', sender: 'ben', data: { regions: [{ kind: 'objects', holder: 'b1', ids: ['t1'] }], locked: true } })
+    expect(session.selectedByOthers()).toEqual([{ id: 't1', user: 'ben', locked: true }])
+    link.push('ephemeral', { kind: 'presence', sender: 'ben', data: { regions: [], locked: false } })
+    expect(session.selectedByOthers()).toEqual([])
+  })
+  it('does not hold the words round the caret while an object is selected, which would unlock it', async () => {
+    const { link, session, state } = await holding()
+    state.selection = { anchor: { paragraph: 'b2', offset: 1 }, focus: { paragraph: 'b2', offset: 1 } } as never
+    await session.selectObject('o1')
+    await session.placeNow()
+    expect(count(link, 'hold')).toBe(0)
+  })
+  it('holds the words round the caret again after an object was unlocked', async () => {
+    const { link, session, state } = await holding()
+    state.selection = { anchor: { paragraph: 'b2', offset: 1 }, focus: { paragraph: 'b2', offset: 1 } } as never
+    await session.placeNow()
+    await session.selectObject('o1')
+    await session.selectObject(null)
+    await session.placeNow()
+    expect(count(link, 'hold')).toBe(2)
+  })
+})

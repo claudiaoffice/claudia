@@ -426,11 +426,21 @@ const replayClass = (id: string) => {
 }
 
 // ------------------------------------------------------------------------------ floating objects (images)
-/** Selecting an image is local to this view (not shared with colleagues, unlike cell presence): E6.17 only
- * asked that an image never resizes on a structural edit and takes click priority over the cells beneath it. */
+/** The object selected on this sheet. Selecting it locks it, as in the other apps (D1223): a colleague who has it
+ * locked keeps it, and the person is told; letting go shows the others my cells again. */
 const selectedObject = ref<string | null>(null)
+watch(selectedObject, async (id) => {
+  if (!(await props.session.lockObject(id)) && selectedObject.value === id) selectedObject.value = null
+})
+/** Another sheet shown, or the grid gone: the object of this one is let go of. */
+watch(() => props.sheet, () => (selectedObject.value = null))
+onBeforeUnmount(() => {
+  if (selectedObject.value !== null) void props.session.lockObject(null)
+})
 
 const objects = computed(() => props.session.sheetObjects(props.sheet))
+/** What colleagues have selected on this sheet (D1223). */
+const others = computed(() => props.session.selectedByOthers(props.sheet))
 
 /** The frame an object is drawn in: the preview of the gesture under way, else its own (sheet pixels from the first cell,
  * without the headers or the scroll), and the angle it is drawn at. */
@@ -1350,6 +1360,11 @@ defineExpose({
           <ChartView v-else-if="o.kind === 'chart' && o.ref" :session="session" :chart-id="o.ref" :width="o.w" :height="o.h" />
           <img v-else-if="pictureSrc(o)" :src="pictureSrc(o)!" :alt="''" draggable="false" >
         </div>
+
+        <!-- what colleagues have selected: their colour and name (D1223) -->
+        <template v-for="other in others" :key="`${other.user}:${other.id}`">
+          <OtherOnObject v-if="session.sheetObject(other.id)" :other="other" :color="colorOf(state, other.user)" :style="objectStyle(session.sheetObject(other.id)!)" />
+        </template>
 
         <!-- my selection: the handles, drawn once for the three apps (the outline is the object's own) -->
         <!-- the handles are the object's: their mousedown, which follows the pointerdown, is no cell selection either -->

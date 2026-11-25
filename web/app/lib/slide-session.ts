@@ -2,20 +2,20 @@
 // server's events. What every document has in common (connection, history, chat, people, undo) is in BaseSession.
 import type { LinkLike, Region, WireData } from './protocol'
 import { parseFence } from './containers'
-import { holderOf, firstFocus, lookOnly } from './replay'
+import { holderOf, firstFocus } from './replay'
 import type { Thing } from './tags'
 import { BaseSession, type BaseState, type SessionOptions } from './base-session'
 import { translate as t } from './i18n'
 import type { Frame } from './geometry'
 import type { ImageAsset } from './images'
-import type { ObjectsEvent, PaletteEvent, StyleDef, StyleModel, StyleTarget } from './objects'
+import { othersOn, type ObjectsEvent, type Other, type PaletteEvent, type StyleDef, type StyleModel, type StyleTarget } from './objects'
 import type { CssEdit } from './style-css'
 import type { PrintSetupData } from '@claudia/layout'
 import { pointOf, type Label } from './paragraphs'
 import type { ListInfo, SchemeInfo } from './numbering'
 import type { ContentsEntry } from './contents'
 import type { ReferenceTarget, RefField, Show, Shown } from './references'
-import { othersOn, SlideActions, type Other, type PictureImport, type ShapeDef, type SlideHost, type SlideObject } from './slide-host'
+import { SlideActions, type PictureImport, type ShapeDef, type SlideHost, type SlideObject } from './slide-host'
 
 // `ImageAsset`/`ImageImport` moved to `./images` (shared with computes' `session.ts`, E6.17); re-exported here
 // so existing imports of them from this module keep working.
@@ -65,10 +65,7 @@ export class SlideSession extends BaseSession<SlideState> implements SlideHost {
   private readonly slide = new SlideActions({
     state: this.state,
     write: (method, params) => this.write(method, params),
-    show: (where, regions) => this.showRegions(where, regions),
-    hold: (regions) => this.holdRegions(regions),
-    release: () => this.releaseRegions(),
-    looking: () => lookOnly(this.state),
+    lockObject: (id, holder) => this.lockObject(id, holder),
   })
 
   constructor(makeLink: () => LinkLike, options: SessionOptions = {}) {
