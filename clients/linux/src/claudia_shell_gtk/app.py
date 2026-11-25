@@ -19,12 +19,13 @@ from importlib import resources
 from pathlib import Path
 from typing import Any, Protocol
 
+from claudia_menus.manifest import KeyOwner, Manifest, for_app
+
 from ._gi import Adw, Gdk, Gio, GLib, Gtk
 from .i18n import detect_system_locale
 from .i18n import translate as _
 from .identity import AppIdentity
 from .launch import SetupProblem, prepare_server
-from .manifest import KeyOwner, Manifest, for_app
 from .server import ServerStartError
 from .servers import Address
 from .window import ClaudiaWindow, PageFactory

@@ -14,14 +14,18 @@ from __future__ import annotations
 
 import json
 import re
+import subprocess
+import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Any
 
 import pytest
 
-from claudia_shell_gtk import contract, manifest
-from claudia_shell_gtk.manifest import Action, KeyOwner, Kind, Submenu
+from claudia_menus import manifest
+from claudia_menus.manifest import Action, KeyOwner, Kind, Submenu
+from claudia_shell_gtk import contract
+from claudia_shell_gtk.menu_xml import menu_xml
 
 REPO = Path(__file__).resolve().parents[3]
 WEB_SOURCES = {
@@ -721,13 +725,13 @@ def test_every_page_and_editing_action_id_is_in_the_matching_web_source(app_name
 
 
 def test_the_gmenu_xml_has_one_menu_per_manifest_menu_in_order(app: manifest.Manifest) -> None:
-    root = ET.fromstring(manifest.menu_xml(app))
+    root = ET.fromstring(menu_xml(app))
     assert root.tag == "interface"
     assert [m.get("id") for m in root.findall("menu")] == [menu.id for menu in app.menus]
 
 
 def test_menu_items_call_window_actions_and_are_translatable(app: manifest.Manifest) -> None:
-    root = ET.fromstring(manifest.menu_xml(app))
+    root = ET.fromstring(menu_xml(app))
     items = root.findall(".//item")
     assert len(items) == sum(1 for menu in app.menus for _ in menu.all_actions())
     for item in items:
@@ -739,7 +743,7 @@ def test_menu_items_call_window_actions_and_are_translatable(app: manifest.Manif
 def test_a_submenu_renders_as_a_nested_gmenu_submenu_with_its_own_section(computes: manifest.Manifest) -> None:
     """D130/the schema's one new capability: ``<submenu>`` nested in a ``<section>``, GTK's own flyout shape — the
     same thing ``MenuBar.vue``'s ``items`` property draws on the web side."""
-    root = ET.fromstring(manifest.menu_xml(computes))
+    root = ET.fromstring(menu_xml(computes))
     edit_menu = root.find("menu[@id='menu-edit']")
     assert edit_menu is not None
     submenus = edit_menu.findall(".//submenu")
@@ -752,7 +756,7 @@ def test_a_submenu_renders_as_a_nested_gmenu_submenu_with_its_own_section(comput
 
 
 def test_sections_become_gmenu_sections_so_that_separators_are_drawn(app: manifest.Manifest) -> None:
-    root = ET.fromstring(manifest.menu_xml(app))
+    root = ET.fromstring(menu_xml(app))
     file_menu = root.find("menu[@id='menu-file']")
     assert file_menu is not None
     assert len(file_menu.findall("section")) == len(app.menu("File").sections) > 1
@@ -761,14 +765,14 @@ def test_sections_become_gmenu_sections_so_that_separators_are_drawn(app: manife
 def test_menu_xml_defaults_to_no_translation_at_all() -> None:
     """Every other test in this module calls ``menu_xml``/``menu_elements`` with no ``translate`` and still gets
     plain English back — the default is the identity function, so none of this module needs a locale installed."""
-    root = ET.fromstring(manifest.menu_xml(manifest.composes()))
+    root = ET.fromstring(menu_xml(manifest.composes()))
     label = root.find(".//menu[@id='menu-file']//item/attribute[@name='label']")
     assert label is not None and label.text == "New"
 
 
 def test_a_translate_function_is_applied_to_item_and_submenu_labels() -> None:
     loud = {"New": "NEW", "Manage": "MANAGE"}.get
-    root = ET.fromstring(manifest.menu_xml(manifest.composes(), translate=lambda s: loud(s) or s))
+    root = ET.fromstring(menu_xml(manifest.composes(), translate=lambda s: loud(s) or s))
     new_item = root.find(".//menu[@id='menu-file']//item/attribute[@name='label']")
     assert new_item is not None and new_item.text == "NEW"
     manage_submenu = root.find(".//menu[@id='menu-file']//submenu/attribute[@name='label']")
@@ -779,7 +783,7 @@ def test_a_translate_function_never_touches_the_language_pickers_own_autonyms() 
     """``config.language.en``/``config.language.de``'s labels are ``LANGUAGES``' own autonyms, not English UI text —
     translating them would be exactly the mistake this module's docstring calls out."""
     shout_everything = str.upper
-    root = ET.fromstring(manifest.menu_xml(manifest.composes(), translate=shout_everything))
+    root = ET.fromstring(menu_xml(manifest.composes(), translate=shout_everything))
     preferences_menu = root.find(".//menu[@id='menu-preferences']")
     assert preferences_menu is not None
     language_labels = {
@@ -795,7 +799,7 @@ def test_special_characters_in_a_label_are_escaped() -> None:
         app="composes",
         menus=(manifest.Menu("Tools", ((manifest.Action("tools.odd", "Fish & <Chips>", Kind.SHELL),),)),),
     )
-    root = ET.fromstring(manifest.menu_xml(odd))
+    root = ET.fromstring(menu_xml(odd))
     label = root.find(".//item/attribute[@name='label']")
     assert label is not None and label.text == "Fish & <Chips>"
 
@@ -895,10 +899,21 @@ def test_the_registry_knows_exactly_the_apps_that_have_an_identity() -> None:
     assert set(identity.names()) == set(APPS)
 
 
-def test_an_app_without_a_manifest_is_a_clear_error_naming_the_available_ones() -> None:
-    from claudia_shell_gtk import identity
+def test_the_definition_needs_nothing_but_its_own_folder() -> None:
+    """D1643: the definition is pure data that every client reads, so it imports with no Linux client, no GTK and
+    nothing installed: a fresh interpreter with only ``clients/contract/src`` on its path builds every app's menus."""
+    script = (
+        "import sys; from claudia_menus import manifest; "
+        "[manifest.for_app(app).describe() for app in ('composes', 'computes', 'creates')]; "
+        "print(sorted(name for name in sys.modules if name.split('.')[0] in ('gi', 'claudia_shell_gtk')))"
+    )
+    env = {"PYTHONPATH": str(REPO / "clients" / "contract" / "src")}
+    done = subprocess.run([sys.executable, "-c", script], capture_output=True, text=True, env=env, check=True)
+    assert done.stdout.strip() == "[]"
 
-    with pytest.raises(identity.UnknownApp) as problem:
+
+def test_an_app_without_a_manifest_is_a_clear_error_naming_the_available_ones() -> None:
+    with pytest.raises(manifest.UnknownApp) as problem:
         manifest.for_app("drawbook")
     assert "composes" in str(problem.value)
 
@@ -976,7 +991,7 @@ def test_every_web_menu_entry_is_in_the_desktop_menus_too(app_name: str) -> None
 def test_the_gmenu_xml_shows_every_key_whoever_listens_for_it(app: manifest.Manifest) -> None:
     """GTK draws an item's ``accel`` attribute beside its label without binding it: the menu shows the page's keys too
     (UX-35), which before only the web menu did."""
-    root = ET.fromstring(manifest.menu_xml(app))
+    root = ET.fromstring(menu_xml(app))
     shown = {}
     for item in root.iter("item"):
         attributes = {a.get("name"): a.text for a in item.findall("attribute")}

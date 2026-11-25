@@ -54,8 +54,10 @@ disagree about what fits. That is the definition of done's "web app and desktop 
 ### 3.1 The one definition (diagram, column 1)
 
 **The definition moves to `clients/contract/` (D1643)**, beside the shell contract, as a small package of its own:
-`clients/contract/pyproject.toml` (project `claudia-menus`), `src/claudia_menus/`, `tests/`. It is pure data with no
-dependencies, and it runs on Python 3.12 like the Linux client.
+`clients/contract/pyproject.toml` (project `claudia-menus`) and `src/claudia_menus/`. It is pure data with no
+dependencies, and it runs on Python 3.12 like the Linux client. Its tests stay in the Linux client
+(`clients/linux/tests/test_manifest.py`), because they also check it against that client's contract module and app
+identities; one of them checks that the package imports with nothing but its own folder on the path.
 - **Moves:** the dataclasses, the per-app manifests, `for_start` and `on_start`, and `describe()`.
 - **Stays in the Linux client:** `menu_xml` and `menu_elements`, which turn the definition into GTK's menu XML.
 - **Changes:** `UnknownApp`, which the manifest takes from the client's `identity.py`, becomes the package's own

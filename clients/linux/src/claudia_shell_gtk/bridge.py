@@ -11,9 +11,10 @@ import logging
 from collections.abc import Callable
 from typing import Any, Protocol
 
+from claudia_menus.manifest import Kind, Manifest
+
 from . import contract
 from .contract import ContractError, UnknownMessageType
-from .manifest import Kind, Manifest
 
 __all__ = ["Bridge", "FileDesk"]
 

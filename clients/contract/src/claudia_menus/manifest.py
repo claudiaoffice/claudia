@@ -1,4 +1,9 @@
-"""The menu and action manifest of the Linux client (E5.1 / E5.10): one list from which the native menus are built.
+"""The menu and action manifest of every client (E5.1 / E5.10, D1643): one list from which all menus are built.
+
+It lives in ``clients/contract`` beside the shell contract because it belongs to every client: the Linux client turns
+it into GtkBuilder XML (``claudia_shell_gtk/menu_xml.py``), ``clients/neutralino/tools/generate_menu.py`` into the
+macOS and Windows menus, and ``scripts/generate_keys.py`` into the web app's key table.
+
 
 D120 gives every app the same seven header-bar menus — File, Edit, Format, View, Tools, Preferences (called Config
 until E7.11; its action ids still start with ``config.``), Help — superseding D4's four. An action has an id that
@@ -6,7 +11,7 @@ names *what it does* (``file.save``, ``view.page``) and not where it sits, so a 
 touching the shell contract, and so the *same* id means the same thing on the web side
 (``web/app/lib/menu-dispatch.ts``) and here. Each action is carried out by one party (:class:`Kind`).
 
-Nothing here imports GTK: the menus are described as data and turned into GtkBuilder XML by :func:`menu_xml`, so the
+Nothing here imports GTK: the menus are described as data and turned into GtkBuilder XML by the Linux client, so the
 layout stays in XML (D27) and the manifest can be tested anywhere. :func:`composes` already shipped; :func:`computes`
 and :func:`creates` are new (D121) — neither has a GTK window or application class yet (E5.1's scope cut, see
 ``claudiaoffice-log/notes/e5-1-e5-10-menus-and-accessibility.md``), so these two are exercised only as data today.
@@ -24,23 +29,20 @@ ordinary ``Kind.PAGE`` actions the shell greys out the moment the page connects 
 page's own ``collectStates`` — nothing shell-side needs to know they are permanent stubs rather than temporarily
 disabled ones).
 
-A second note, added for Preferences ▸ App Language (E5.7, D31/D148's groundwork, D160): translation itself is
-applied by :func:`menu_xml`/:func:`menu_elements`, not here — this module still imports no gettext, stays pure data,
-and is tested without any locale installed. The one deliberate exception is :data:`LANGUAGES` itself: each entry's
-own name is its autonym ("Deutsch", not "German" from an English catalog) and is never run through ``translate``,
-the same universal convention every OS and browser language picker already follows, so ``_item_element`` and
+A second note, added for Preferences ▸ App Language (E5.7, D31/D148's groundwork, D160): translation itself is applied
+by the Linux client's ``menu_xml``/``menu_elements``, not here — this module still imports no gettext, stays pure data,
+and is tested without any locale installed. The one deliberate exception is :data:`LANGUAGES` itself: each entry's own
+name is its autonym ("Deutsch", not "German" from an English catalog) and is never run through ``translate``, the same
+universal convention every OS and browser language picker already follows, so ``_item_element`` and
 ``scripts/extract_i18n.py``'s manifest walk both skip any action whose id starts with ``"config.language."``.
 """
 
 from __future__ import annotations
 
 import enum
-import xml.etree.ElementTree as ET
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field, replace
 from typing import Any
-
-from .identity import UnknownApp
 
 __all__ = [
     "Action",
@@ -50,17 +52,20 @@ __all__ = [
     "Manifest",
     "Menu",
     "Submenu",
+    "UnknownApp",
     "composes",
     "computes",
     "creates",
     "for_app",
     "for_start",
-    "menu_button_id",
     "on_start",
-    "menu_elements",
-    "menu_xml",
     "about_links",
 ]
+
+
+class UnknownApp(KeyError):
+    """There is no manifest for the app asked for; the message names the ones there are."""
+
 
 Translate = Callable[[str], str]
 """A label translator, usually ``i18n.translate`` — defaults to the identity everywhere below, so every function
@@ -1315,86 +1320,10 @@ def creates() -> Manifest:
 def for_app(name: str) -> Manifest:
     """The manifest of the app called ``name`` — what a shell started for that app builds its menus from.
 
-    :class:`~claudia_shell_gtk.identity.UnknownApp` (naming the available apps) if there is none.
+    :class:`UnknownApp` (naming the available apps) if there is none.
     """
     builders: dict[str, Callable[[], Manifest]] = {"composes": composes, "computes": computes, "creates": creates}
     try:
         return builders[name]()
     except KeyError:
-        raise UnknownApp(
-            f"there is no Linux client for '{name}' yet; available: {', '.join(sorted(builders))}"
-        ) from None
-
-
-# ----------------------------------------------------------------------------------------------------- GtkBuilder XML
-
-
-def _translatable(action: Action) -> bool:
-    """Everything except :data:`LANGUAGES`' own autonyms (see this module's docstring)."""
-    return not action.id.startswith("config.language.")
-
-
-def _item_element(parent: ET.Element, action: Action, translate: Translate) -> None:
-    item = ET.SubElement(parent, "item")
-    label = ET.SubElement(item, "attribute", name="label", translatable="yes")
-    label.text = translate(action.label) if _translatable(action) else action.label
-    target = ET.SubElement(item, "attribute", name="action")
-    target.text = f"win.{action.id}"
-    if action.accelerators:
-        # Shown, whoever listens for it: GTK draws the ``accel`` attribute next to the label without binding it.
-        accel = ET.SubElement(item, "attribute", name="accel")
-        accel.text = action.accelerators[0]
-
-
-def _submenu_element(parent: ET.Element, submenu: Submenu, translate: Translate) -> None:
-    """``<submenu>``: GTK's own nested-flyout element, holding one ``<section>`` of items — the GMenu-XML shape for
-    exactly what ``MenuBar.vue``'s ``items`` property draws as a flyout on the web side."""
-    element = ET.SubElement(parent, "submenu")
-    label = ET.SubElement(element, "attribute", name="label", translatable="yes")
-    label.text = translate(submenu.label)
-    section = ET.SubElement(element, "section")
-    for action in submenu.items:
-        _item_element(section, action, translate)
-
-
-def _menu_tree(manifest: Manifest, translate: Translate) -> ET.Element:
-    interface = ET.Element("interface")
-    for menu in manifest.menus:
-        menu_element = ET.SubElement(interface, "menu", id=menu.id)
-        for section in menu.sections:
-            section_element = ET.SubElement(menu_element, "section")
-            for entry in section:
-                if isinstance(entry, Submenu):
-                    _submenu_element(section_element, entry, translate)
-                else:
-                    _item_element(section_element, entry, translate)
-    ET.indent(interface)
-    return interface
-
-
-def menu_button_id(menu_id: str) -> str:
-    """The id that ``data/window.ui`` gives the menu button of the menu ``menu_id`` (``menu-file`` → ``menu_file``)."""
-    return menu_id.replace("-", "_")
-
-
-def menu_elements(manifest: Manifest, *, translate: Translate = lambda text: text) -> str:
-    """Only the ``<menu>`` elements, to be merged into the layout file of a window (see ``window.ui``).
-
-    ``translate`` is applied here, while the XML is built, rather than through GtkBuilder's own translation-domain
-    machinery: the shell installs exactly one gettext mechanism (``i18n.install_translation``, bound to Python's own
-    ``_()``), and calling ``translate`` directly reuses it instead of also wiring ``Gtk.Builder.set_translation_domain``
-    and glibc's ``bindtextdomain`` for a second, parallel one. Left at the default identity function, this (and
-    everything it calls) needs no locale installed at all — which is what every test below does.
-    """
-    return "\n  ".join(ET.tostring(menu, encoding="unicode").strip() for menu in _menu_tree(manifest, translate))
-
-
-def menu_xml(manifest: Manifest, *, translate: Translate = lambda text: text) -> str:
-    """GtkBuilder XML for the menus of ``manifest``: one ``<menu id="menu-file">`` and so on.
-
-    Every item calls the window action ``win.<id>``; ``translatable="yes"`` on its label is a GtkBuilder hint for
-    any future tooling (xgettext and the like) that reads this XML directly; translation itself has already
-    happened by the time this text is written, under ``menu_elements``'s own ``translate`` parameter above (E5.7).
-    """
-    elements = menu_elements(manifest, translate=translate)
-    return f'<?xml version="1.0" encoding="UTF-8"?>\n<interface>\n  {elements}\n</interface>\n'
+        raise UnknownApp(f"there is no manifest for '{name}'; available: {', '.join(sorted(builders))}") from None

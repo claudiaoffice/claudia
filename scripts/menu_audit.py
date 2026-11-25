@@ -9,7 +9,7 @@ Three sources, per app (coding standards §12: menus come from the workbook):
 
 * the **workbook** (sheets "Menus" and "Context menus"): the target. A row names the action it replaces by today's id
   ("Today's action id"), or none for an entry that does not exist yet.
-* the **manifest** (``clients/linux/src/claudia_shell_gtk/manifest.py``): what the desktop clients show. The Linux
+* the **manifest** (``clients/contract/src/claudia_menus/manifest.py``): what the desktop clients show. The Linux
   client builds its menus from it, the Windows and macOS clients from the menus generated from it.
 * the **web capture** (``menu_capture.py``): what a person sees in the browser, per role and in German. Its keys:
   ``owner``, ``editor``, ``viewer`` and ``owner (de)`` hold the menu bars, ``contexts (<role>)`` and
@@ -273,10 +273,10 @@ def workbook_texts(workbook: Workbook) -> list[tuple[str, str]]:
 
 def manifest_entries(app: str) -> list[Entry]:
     """The desktop clients' menus of ``app``, from the manifest, with shortcuts as the web menus write them."""
-    for folder in (ROOT / "scripts", ROOT / "clients" / "linux" / "src"):
+    for folder in (ROOT / "scripts", ROOT / "clients" / "contract" / "src"):
         if str(folder) not in sys.path:
             sys.path.insert(0, str(folder))
-    from claudia_shell_gtk import manifest  # pure data, no GTK (its own docstring says so)
+    from claudia_menus import manifest  # pure data, no GTK (its own docstring says so)
     from generate_keys import shown  # the web menus' own notation of a GTK accelerator
 
     entries: list[Entry] = []

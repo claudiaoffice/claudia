@@ -6,7 +6,9 @@ import json
 
 import pytest
 
-from claudia_shell_gtk import identity, manifest
+from claudia_menus import manifest
+from claudia_shell_gtk import identity
+from claudia_shell_gtk.menu_xml import menu_button_id
 
 pytestmark = pytest.mark.gtk
 
@@ -100,11 +102,7 @@ def test_page_actions_are_disabled_until_the_page_has_said_hello(window) -> None
 
 
 def visible_menus(window) -> list[str]:
-    return [
-        menu.label
-        for menu in manifest.composes().menus
-        if getattr(window, manifest.menu_button_id(menu.id)).get_visible()
-    ]
+    return [menu.label for menu in manifest.composes().menus if getattr(window, menu_button_id(menu.id)).get_visible()]
 
 
 def test_the_front_page_gets_the_short_menu_and_a_document_the_whole_one(window) -> None:
@@ -302,7 +300,7 @@ def test_about_shows_the_apps_own_icon_name_title_and_version(window) -> None:
 
 
 def test_about_offers_the_same_three_links_as_the_web_dialog(window) -> None:
-    from claudia_shell_gtk.manifest import about_links
+    from claudia_menus.manifest import about_links
 
     window.lookup_action("help.about").activate(None)
     body = window.about_dialog.get_child().get_content()
@@ -368,7 +366,7 @@ def test_every_app_gets_its_own_title_menus_and_actions(app: str, tmp_path) -> N
         for action in spec.actions:
             assert win.lookup_action(action.id) is not None, action.id
         for menu in spec.menus:
-            button = getattr(win, manifest.menu_button_id(menu.id))
+            button = getattr(win, menu_button_id(menu.id))
             assert button.get_menu_model() is not None, menu.id
             assert button.get_menu_model().get_n_items() > 0, menu.id
     finally:

@@ -17,7 +17,7 @@ from pathlib import Path
 import pytest
 from support import evaluate, pump, pump_for
 
-from claudia_shell_gtk import manifest
+from claudia_menus import manifest
 from claudia_shell_gtk.bridge import Bridge
 
 pytestmark = pytest.mark.gtk

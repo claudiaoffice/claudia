@@ -11,7 +11,8 @@ from pathlib import Path
 
 import pytest
 
-from claudia_shell_gtk import identity, manifest
+from claudia_menus import manifest
+from claudia_shell_gtk import identity
 
 APPS = Path(identity.__file__).resolve().parents[2] / "apps"
 

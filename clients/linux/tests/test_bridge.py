@@ -10,7 +10,8 @@ import json
 
 import pytest
 
-from claudia_shell_gtk import contract, manifest
+from claudia_menus import manifest
+from claudia_shell_gtk import contract
 from claudia_shell_gtk.bridge import Bridge
 
 

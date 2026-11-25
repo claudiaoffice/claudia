@@ -23,6 +23,8 @@ from importlib import resources
 from pathlib import Path
 from typing import Any, Protocol
 
+from claudia_menus.manifest import Action, Kind, Manifest, about_links, for_start, on_start
+
 from ._gi import Adw, Gdk, Gio, GLib, Gtk
 from ._version import __version__
 from .bridge import Bridge
@@ -33,7 +35,7 @@ from .desktop_server import setup_code_for_page
 from .files import Chosen, Dialogs, Failed, Files
 from .i18n import translate as _
 from .identity import AppIdentity
-from .manifest import Action, Kind, Manifest, about_links, for_start, menu_button_id, menu_xml, on_start
+from .menu_xml import menu_button_id, menu_xml
 from .settings import save_shell_locale
 from .trust import TrustStore
 

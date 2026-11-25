@@ -1,5 +1,5 @@
 // Turns one app's generated manifest (tools/generate_menu.py's JSON, itself clients/linux's
-// claudia_shell_gtk.manifest.<app>().describe()) into Neutralino's own WindowMenuItem tree
+// claudia_menus.manifest.<app>().describe()) into Neutralino's own WindowMenuItem tree
 // (Neutralino.window.setMainMenu). No Neutralino import here -- same discipline as manifest.py's own "nothing here
 // imports GTK" -- so this is testable with plain fixture data (tests/menu.test.ts).
 //
