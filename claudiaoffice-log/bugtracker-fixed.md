@@ -20,7 +20,7 @@ PROC-24 to PROC-27, CODE-58 to CODE-61, SEC-19, UX-44; SEC-15 fixed (see "Round 
 
 ## Index
 
-### Fixed (228)
+### Fixed (232)
 
 By ID. Items closed without a fix (superseded, wontfix) are here too.
 
@@ -248,6 +248,10 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | PROC-60 | P2 | Process / E2E | `wait_for_function` given an expression string breaks on the page's Content-Security-Policy once it has to poll; `Person.wait_until_open` uses it | **fixed** 2026-11-25 (batch 3 of the bug eater, `batch-3`) | 2026-11-25 | 2026-11-25 |
 | PROC-61 | P3 | Process / CI | `test_calculating_a_long_chain_is_linear` failed on CI's Ubuntu runner (44x for a 10x chain, after its own second try) and passed on a rerun; here it measures 14x to 16x | **fixed** 2026-11-25 (batch 3 of the bug eater, `batch-3`) | 2026-11-25 | 2026-11-25 |
 | PROC-62 | P3 | Process / CI | A test of the Neutralino client failed once on Windows CI and passed when the job was run again: "opens a PDF to print in the computer's viewer…" (`clients/neutralino/tests/files.test.ts`) | **fixed** 2026-11-25 (batch 4 of the bug eater, `batch-4`) | 2026-11-25 | 2026-11-25 |
+| PROC-63 | P3 | Process / CI | `test_a_real_server_stops_by_itself_once_nobody_uses_it` timed out on Windows CI ("did not stop in 30 s"): the test read the server's output only after it had stopped, so a server that fills the pipe blocks on its own output | **fixed** 2026-11-25 (`test-quality`) | 2026-11-25 | 2026-11-25 |
+| PROC-64 | P3 | Process / CI | The chain test of computes' performance fails now and then (reported from CI runs before the fix reached `main`) | **wontfix**: a duplicate of PROC-61, fixed on `batch-3` | 2026-11-25 | 2026-11-25 |
+| PROC-65 | P3 | Process / CI | `test_the_check_names_the_libreoffice_it_ran_against` failed on CI (reported from runs before the fix reached `main`) | **wontfix**: the Windows stand-in of PROC-22, fixed the same day | 2026-11-25 | 2026-11-25 |
+| PROC-66 | P2 | Process / CI | Tests wait by the clock: sleeps as synchronisation, stopwatch bounds near the measured time, a 0.2 s nap for background rendering; on a busy runner they fail a sound build | **fixed** 2026-11-25 (`test-quality`, D1660–D1662) | 2026-11-25 | 2026-11-25 |
 | DOC-01 | P2 | Docs | Decision numbers D70–D82 and D97–D99 are used twice for different decisions | fixed |  |  |
 | DOC-02 | P3 | Docs | `start-client.sh` was renamed; the Linux README and the other launchers still named it | **fixed** 2026-11-13 |  | 2026-11-13 |
 | DOC-03 | P3 | Docs | Current decisions that later ones contradict (D2, D44, D84, D115, D242); a stale row in `ranges.md`; stale lines in two notes | **fixed** 2026-11-17 (log audit: D44, D84, D115 superseded; D2, D242 noted) |  | 2026-11-17 |
@@ -2775,3 +2779,47 @@ the import's step ("History of the original"); the import dialog now says the mo
 export brings a history (`with_history` in the upload answer), and "Nobody else is given access." otherwise. **Test:**
 "importing an owner's export adds one note with who did what" (`test_server_export_import.py`), and "the upload says
 whether the export brings a history".
+
+## Test quality (2026-11-25; branch `test-quality`, D1660–D1662)
+
+Started from chapter 5 of *Build High Value Software Systems* (Griffin), "Testing as waste prevention", and the owner's
+new line in coding standards §2: tests check behaviour, not implementation. The inventory and the audit are in
+`implementation-notes/test-quality.md`.
+
+### PROC-63 · The real server that stops when idle timed out on Windows · P3 · size 3 · fixed
+**Measured** (CI of `main`, job "Python (windows-latest)", run 45629903442): `subprocess.TimeoutExpired` after 30 s in
+`server.wait()`. The idle logic itself is tested with a fake clock and passed. The test started the server with
+`stdout=PIPE` and read the pipe only after `wait()`: a server that writes more than the pipe holds (4 KiB on Windows;
+1.4 KiB here, more on Windows with its warnings and longer paths) blocks on its own output and never stops. Not
+reproduced: the Linux pipe holds 64 KiB. **Fix:** `communicate(timeout=60)` reads while it waits; the health poll is a
+helper with a deadline. **Test:** the test itself.
+
+### PROC-64, PROC-65 · wontfix
+Reported in chat from CI runs of the morning; both were fixed on `main` before this branch began: PROC-64 is PROC-61
+(the chain guard counts work since `batch-3`), PROC-65 is the Windows stand-in of PROC-22 (`7a84035`).
+
+### PROC-66 · Tests wait by the clock · P2 · size 2 · fixed
+**Measured.** 58 sleep calls in test code; 145 of the last 200 CI runs failed, and the tests that failed scattered over the
+history (not a breakage and its fix) were all clock-bound: `test_another_window_is_answered_quickly_while_a_password_is_hashed`
+(13 failures in 3 clusters, all three systems), the chain guard (PROC-61), the idle server (PROC-63), the Linux client's
+`test_the_server_dies_when_the_shell_is_killed…` (a `/proc` read racing the exit: `ProcessLookupError`). Run under a
+loaded machine (6 busy loops on 2 cores), more failed: `test_a_missing_document_costs_as_much_time_as_a_wrong_password`
+(a ratio of two stopwatches), the search time-budget tests in claudia-search, claudia-computes and the server (0.6 s bound
+for a 0.2 s deadline, measured 0.66–0.78 s).
+**Fix** (D1660–D1662): a test waits for the thing, not the clock.
+* Work the test must act *during* is **held** until the test lets it go (`claudia_ai.testing.Hold`: the fake model, the
+  fake Anthropic, the slow directory, the slow release, the password hash). "The loop was not blocked" is then a fact,
+  not a time: code after `await held.begun()` ran while the work was held.
+* Background work has an awaitable end: `HostedDocument.rendered()` (new) beside `Assistant.idle()`.
+* Times are injected where the code reads a clock: `ModelRunner(clock=)`, `FakeModel(clock=FakeTime)`,
+  `MemoryProvider` stamps a new document with its `clock`.
+* Cost is counted, not timed, where it is spent in Python (`work_of`): COUNTIF over a million rows; the SEC-04 decoy is
+  checked as "the same password hashes at the same cost".
+* A bound that guards "it stops at all" is far below forever (`claudia_search.testing.STOPPED_IN_TIME`, 5 s), not near
+  the deadline.
+* A sleep left in test code is a poll's pace, a yield (`sleep(0)`), or says on its line that it is `# work:` or
+  `# must not happen:`. **Test:** `tests/test_no_sleeps_as_waits.py`.
+Every rewritten test was checked against the bug it guards (the code broken on purpose, the test red; listed in the
+implementation note). Also: two assertions that could not fail (`isinstance(x, (CommandApplied, object))`,
+`isinstance(SandboxError("x"), Exception)`), the housekeeping test that checked nothing, and the stalled-Claude test that
+waited 30 s for its read timeout (now 1 s; the AI router's tests take 1.5 s instead of 39 s).
