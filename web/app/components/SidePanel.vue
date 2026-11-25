@@ -581,13 +581,13 @@ const isAi = (user: string) => user.toLowerCase() === 'ai'
               </span>
               <time>{{ clock(row.entry.time) }}</time>
             </component>
-            <details v-if="row.entry.original?.length && !row.entry.redacted" class="original" data-testid="original-history">
+            <details v-if="row.entry.original?.length" class="original" data-testid="original-history">
               <summary>{{ t('History of the original') }}</summary>
               <p class="originalHint">{{ t('The names are people of the original document: they have no access to this one.') }}</p>
               <ol :aria-label="t('History of the original')">
                 <li v-for="(line, j) in row.entry.original" :key="j">
                   <time>{{ dayAndClock(line.when) }}</time>
-                  <span class="who">{{ line.who ?? '?' }}</span>
+                  <span class="who">{{ line.who ?? t('Unknown') }}</span>
                   <span class="what">{{ line.said ? t('in the chat: {words}', { words: line.what || t('(words taken away)') }) : line.what }}</span>
                 </li>
               </ol>
