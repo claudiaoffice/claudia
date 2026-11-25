@@ -78,16 +78,12 @@ def _catalog(language: str) -> gettext.NullTranslations:
     return gettext.translation(DOMAIN, localedir=localedir, languages=[language], fallback=True)
 
 
-def _lookup(template: str, locale: str) -> str:
-    """The translation of ``template`` for ``locale``: ``template`` itself where there is none."""
-    language = _language_of(locale)
-    return template if language is None else _catalog(language).gettext(template)
-
-
 def translate(text: str, locale: str) -> str:
     """``text`` in ``locale`` by the catalog, where it has a translation, else as it is. For a text that is data of a
-    package (a function's description) and so has no :class:`Message` of its own (E13.8)."""
-    return _lookup(text, locale)
+    package (a function's description) and so has no :class:`Message` of its own (E13.8), and for the template of a
+    :class:`Message` (:func:`localized`)."""
+    language = _language_of(locale)
+    return text if language is None else _catalog(language).gettext(text)
 
 
 def localized(text: str, locale: str) -> str:
@@ -96,7 +92,7 @@ def localized(text: str, locale: str) -> str:
     translation whose placeholders do not fit the parameters is never an error: the English text is said instead."""
     if not isinstance(text, Message):
         return text
-    translated = _lookup(text.template, locale)
+    translated = translate(text.template, locale)
     if not text.params:
         return translated
     params = {

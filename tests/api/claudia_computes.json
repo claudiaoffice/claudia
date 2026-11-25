@@ -1114,6 +1114,7 @@
    "anchor_from_data": "(self, data: 'dict') -> 'CellAnchor | SlideAnchor'",
    "blank": "(self, parts: 'frozenset[str] | None') -> 'None'",
    "blank_chart": "(definition: 'dict') -> 'dict'",
+   "calculate_loaded": "(self) -> 'None'",
    "chart_cells": "(self, chart_id: 'str') -> 'tuple[RangeRef, bool] | None'",
    "chart_figure": "(self, chart_id: 'str') -> 'dict'",
    "chart_from_data": "(self, data: 'dict') -> 'ChartSpec'",

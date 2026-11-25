@@ -287,7 +287,7 @@ def test_a_failure_to_edit_in_place_falls_back_to_rebuilding_the_text(monkeypatc
     # if the opcodes were ever wrong, the paragraph must still end up with the right text, losing only its markup
     from claudia_odf_io import paragraph
 
-    monkeypatch.setattr(paragraph, "_opcodes", lambda old, new: [])
+    monkeypatch.setattr(paragraph, "_opcodes", lambda old, new: [])  # breaks on purpose: the guard is what is tested
     p = para('a <text:span text:style-name="B">b</text:span> c<text:bookmark text:name="m"/>')
     set_text(p, "a x c")
     assert read_text(p) == "a x c"

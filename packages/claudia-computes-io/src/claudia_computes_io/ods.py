@@ -650,7 +650,7 @@ def _model_of(
     places = _places(_spreadsheet(content))
     for named in read_names(_spreadsheet(content), places).names:
         model.names.put(named)
-    model._calculate_loaded()  # noqa: SLF001 (the restore()-mirroring construction idiom; see xlsx_to_workbook)
+    model.calculate_loaded()
     read = read_pivots(_spreadsheet(content), places)
     adoption = adopt_pivots(model, read.found)
     for loss in adoption.losses:

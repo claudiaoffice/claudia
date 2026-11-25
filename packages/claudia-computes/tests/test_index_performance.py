@@ -2,14 +2,14 @@
 not what the sheet holds (QA review 2026-11-06, PERF-01, PERF-05). Before the index, both scaled with every cell on
 the sheet: a 64x16 window cost 21.08 ms and the extent 37.97 ms at 500k cells, against 0.12 ms and 0.06 ms at 1k.
 
-Scaling tests, not stopwatches: see test_formula_performance.py. The tolerance here is tighter than the "roughly
+Scaling tests, not stopwatches: see test_formula_performance.py. The window is counted work (PERF-14); the extent is
+timed, as a scan for it would hide in C. The tolerance here is tighter than the "roughly
 linear is fine" guards elsewhere (4x) because these two are meant to be flat, not merely sub-linear.
 """
 
-from test_formula_performance import best_of
-
 from claudia_computes import AddSheet, SetCells, WorkbookModel, parse_input
 from claudia_core import Document, MemoryStore
+from claudia_core.testing import best_of, work_of
 
 S1 = "s1"
 FLAT = 3.0  # 50x more cells may cost at most 3x per call; O(1)/O(log n) shows close to 1x
@@ -30,7 +30,7 @@ def test_a_grid_window_costs_what_the_window_costs_not_the_sheet():
     def windows(n):
         sheet = filled_sheet(n)
         # stays inside the first 450 rows, which are populated whether the sheet holds 10k cells or 500k
-        return best_of(5, lambda: [sheet.cells_in(r, r + 63, 0, 15) for r in range(0, 400, 64)])
+        return work_of(lambda: [sheet.cells_in(r, r + 63, 0, 15) for r in range(0, 400, 64)])
 
     ratio = windows(500_000) / windows(10_000)
     assert ratio < FLAT, f"a 64x16 window cost {ratio:.1f}x as much with 50x more cells on the sheet"
@@ -39,6 +39,7 @@ def test_a_grid_window_costs_what_the_window_costs_not_the_sheet():
 def test_the_sheet_extent_costs_what_it_costs_not_the_sheet():
     def extents(n):
         sheet = filled_sheet(n)
+        # timed, not counted: a scan for the extent would be ``max`` over the cells, which runs in C (D1661)
         return best_of(5, lambda: [sheet.extent() for _ in range(1_000)])
 
     ratio = extents(500_000) / extents(10_000)

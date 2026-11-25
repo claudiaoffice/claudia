@@ -17,6 +17,7 @@ import threading
 import time
 import unicodedata
 from collections import OrderedDict
+from collections.abc import Callable
 from dataclasses import dataclass, field
 
 from cryptography.exceptions import InvalidTag
@@ -159,8 +160,8 @@ _WARM_KEY = os.urandom(32)  # lives and dies with the process: nothing kept unde
 _warm: OrderedDict[bytes, tuple[float, LoginMaterial]] = OrderedDict()
 
 
-def _now() -> float:
-    return time.monotonic()
+warm_clock: Callable[[], float] = time.monotonic
+"""The clock warm material expires on (``WARM_SECONDS``); a test sets another (CODE-106)."""
 
 
 def _warm_key(password: str, name: str, doc_salt: bytes, params: KdfParams) -> bytes:
@@ -180,7 +181,7 @@ def _warm_key(password: str, name: str, doc_salt: bytes, params: KdfParams) -> b
 def _take_warm(key: bytes) -> LoginMaterial | None:
     with _WARM_LOCK:
         entry = _warm.pop(key, None)
-    if entry is None or entry[0] < _now():
+    if entry is None or entry[0] < warm_clock():
         return None
     return entry[1]
 
@@ -196,7 +197,7 @@ def warm_login_material(password: str, name: str, doc_salt: bytes, params: KdfPa
     material = _derive(password, name, doc_salt, params)
     key = _warm_key(password, name, doc_salt, params)
     with _WARM_LOCK:
-        _warm[key] = (_now() + WARM_SECONDS, material)
+        _warm[key] = (warm_clock() + WARM_SECONDS, material)
         _warm.move_to_end(key)
         while len(_warm) > WARM_MOST:
             _warm.popitem(last=False)
@@ -206,6 +207,12 @@ def warm_material_count() -> int:
     """How many logins are waiting hashed (for tests and the threat model's bound)."""
     with _WARM_LOCK:
         return len(_warm)
+
+
+def warm_material_names() -> list[bytes]:
+    """What the waiting logins are filed under (for tests and the threat model: never a password or a name)."""
+    with _WARM_LOCK:
+        return list(_warm)
 
 
 def forget_warm_material() -> None:

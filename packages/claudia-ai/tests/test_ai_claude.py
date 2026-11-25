@@ -100,6 +100,24 @@ def test_a_server_that_goes_quiet_is_a_timeout(anthropic):
     assert time.monotonic() - started < 5
 
 
+def test_a_question_stopped_while_anthropic_is_silent_ends_at_once_not_at_the_read_timeout(anthropic):
+    """PROC-67: the server's shutdown (or a switch of provider) waited for the read timeout, 30 s, when Anthropic had
+    sent the headers and then nothing. The read timeout here is an hour: only a stop that cuts the read ends it."""
+    anthropic.go_quiet()
+    stopping, answers = threading.Event(), []
+    model = claude(anthropic, read_timeout=3600)
+    asking = threading.Thread(target=lambda: answers.append(ask(model, stop=stopping.is_set)))
+    asking.start()
+    for _ in range(500):  # polls: the request reaches the fake at once, on a busy machine a little later
+        if anthropic.requests:
+            break
+        time.sleep(0.01)
+    stopping.set()
+    asking.join(10)
+    assert not asking.is_alive(), "the stopped question still waited for Anthropic"
+    assert answers == [""], "what there is of the answer: nothing"
+
+
 def test_the_person_is_told_in_one_sentence_and_the_key_is_never_in_it(anthropic):
     anthropic.fail("key_refused")
     with pytest.raises(ProviderError) as caught:

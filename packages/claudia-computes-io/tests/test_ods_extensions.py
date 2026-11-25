@@ -26,7 +26,7 @@ def model_of(cells: dict[tuple[int, int], dict]) -> WorkbookModel:
     sheet = Sheet(SheetId("s1"), "Pricing")
     sheet.cells.update(cells)
     model.add_sheet(sheet, None)
-    model._calculate_loaded()  # noqa: SLF001
+    model.calculate_loaded()
     return model
 
 
@@ -136,7 +136,7 @@ def test_an_edited_import_writes_alternatives_and_draws_the_same_way():
     sheet = current.sheets[SheetId("s1")]
     sheet.cells[(0, 1)] = formula("=ALTERNATIVES(5,6,7)")
     sheet.cells[(0, 2)] = formula('=RANDOM("lognormal",0,0.5)')
-    current._calculate_loaded()  # noqa: SLF001
+    current.calculate_loaded()
     patched = apply_edits_to_ods(original, baseline, current)
     xml = content_xml(patched)
     assert "claudia alternatives: {5, 6, 7}" in xml and "LOGINV(RAND();0;0.5)" in xml
@@ -149,7 +149,7 @@ def test_changing_alternatives_back_to_a_number_takes_the_note_away():
     original = workbook_to_ods(model_of({(0, 0): formula("=ALTERNATIVES(5,6,7)")}))
     baseline, current = ods_to_workbook(original), ods_to_workbook(original)
     current.sheets[SheetId("s1")].cells[(0, 0)] = {"t": "int", "v": 9}
-    current._calculate_loaded()  # noqa: SLF001
+    current.calculate_loaded()
     patched = apply_edits_to_ods(original, baseline, current)
     assert "claudia alternatives" not in content_xml(patched)
     assert cells(ods_to_workbook(patched))[(0, 0)] == {"t": "int", "v": 9}

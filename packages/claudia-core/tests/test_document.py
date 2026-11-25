@@ -5,7 +5,6 @@ from helpers import histories_of, random_session
 
 from claudia_core import (
     Batch,
-    CommandApplied,
     CommandLog,
     Document,
     MemoryStore,
@@ -41,12 +40,11 @@ def test_failed_command_changes_nothing_and_logs_nothing(doc):
     assert doc.model.settled == 2  # the first insert, and one settle for the rolled-back batch
 
 
-def test_events_arrive_as_one_batch_ending_with_command_applied(doc):
+def test_the_events_of_one_command_arrive_as_one_batch_that_starts_with_command_applied(doc):
     batches = []
     doc.subscribe_batches(batches.append)
     doc.execute(Insert(0, 1), author="ana")
     (batch,) = batches
-    assert isinstance(batch[-2] if len(batch) > 1 else batch[-1], (CommandApplied, object))
     kinds = [type(e).__name__ for e in batch]
     assert kinds[0] == "CommandApplied" and "HistoryChanged" in kinds
 

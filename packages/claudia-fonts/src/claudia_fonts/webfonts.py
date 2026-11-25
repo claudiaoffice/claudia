@@ -29,7 +29,8 @@ def _quote(text: str) -> str:
     return f'"{escaped}"'
 
 
-def _woff2(data: bytes) -> bytes:
+def to_woff2(data: bytes) -> bytes:
+    """The font file ``data`` as WOFF2: seconds for an ordinary font (2.4 s for DejaVu Sans, PERF-09)."""
     font = TTFont(io.BytesIO(data))
     font.flavor = "woff2"
     out = io.BytesIO()
@@ -41,8 +42,10 @@ class WebFontCache:
     """Folder of ``<sha256>.woff2`` files, made on first use and kept. The name is the hash of the font file, so
     a file can be cached by browsers for ever: other bytes would have another name."""
 
-    def __init__(self, directory: str | Path) -> None:
+    def __init__(self, directory: str | Path, *, compress: Callable[[bytes], bytes] = to_woff2) -> None:
+        """``compress`` makes a WOFF2 file of a font file (a test gives a slow one, CODE-106)."""
         self._directory = Path(directory)
+        self._compress = compress
 
     def get(self, font: FontFile, *, local: bool = False) -> Path:
         """The WOFF2 file of ``font``, made now if it does not exist yet. ``local``: it is for one of the server's own
@@ -61,7 +64,7 @@ class WebFontCache:
         self._directory.mkdir(parents=True, exist_ok=True)
         # Another request may make the same file at once, and on Windows the first one's may be being sent: the name is
         # the hash, so whichever is there is right (CODE-34).
-        write_once(target, _woff2(data))
+        write_once(target, self._compress(data))
         return target
 
 

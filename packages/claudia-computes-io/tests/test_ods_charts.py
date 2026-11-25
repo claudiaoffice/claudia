@@ -52,7 +52,7 @@ def a_workbook() -> WorkbookModel:
         model.store(sheet, row, 0, {"t": "text", "v": region})
         model.store(sheet, row, 1, {"t": "int", "v": amount})
         model.store(sheet, row, 2, {"t": "int", "v": cost})
-    model._calculate_loaded()  # noqa: SLF001
+    model.calculate_loaded()
     return model
 
 
@@ -420,7 +420,7 @@ def test_a_chart_whose_definition_changed_is_drawn_again_the_way_it_was_before()
 def test_a_chart_whose_numbers_changed_carries_the_new_ones():
     original, baseline, current = a_kept_file()
     current.store(current.sheets[S1], 1, 1, {"t": "int", "v": 777})
-    current._calculate_loaded()  # noqa: SLF001
+    current.calculate_loaded()
     patched = apply_edits_to_ods(original, baseline, current)
     rows = [
         [cell.findtext("text:p", namespaces=NS) for cell in row.iterfind("table:table-cell", NS)]
@@ -508,6 +508,6 @@ def test_a_chart_libreoffice_saved_whose_numbers_changed_keeps_its_own_drawing()
     original = LIBRARY.read_bytes()
     baseline, current = ods_to_workbook(original), ods_to_workbook(original)
     current.store(current.sheets[S1], 1, 1, {"t": "int", "v": 5})
-    current._calculate_loaded()  # noqa: SLF001
+    current.calculate_loaded()
     patched = apply_edits_to_ods(original, baseline, current)
     assert read_parts(patched)["Object 1/content.xml"] == read_parts(original)["Object 1/content.xml"]

@@ -173,11 +173,13 @@ def test_undoing_a_join_brings_the_removed_paragraphs_own_item_back(listed):
     assert markers(listed) == {"b2": "▪"}
 
 
-def test_a_join_that_changes_nothing_about_the_item_has_the_plain_inverse(listed):
+def test_undoing_a_join_that_changed_nothing_about_the_item_brings_both_items_back(listed):
     listed.execute(SetListItem("b1", ListItem("l1")), author="ann")
     listed.execute(SetListItem("b2", ListItem("l1")), author="ann")
-    applied = listed.execute(JoinParagraphs("b2", "b1", 3), author="ann")
-    assert isinstance(applied.inverse, SplitParagraph)
+    before = (texts(listed), [p.item for p in listed.model.paragraphs], markers(listed))
+    listed.execute(JoinParagraphs("b2", "b1", 3), author="ann")
+    listed.undo("ann")
+    assert (texts(listed), [p.item for p in listed.model.paragraphs], markers(listed)) == before
 
 
 def test_undoing_a_change_of_an_item_that_was_joined_away_is_refused(listed):

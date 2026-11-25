@@ -42,7 +42,7 @@ def flat(model: WorkbookModel, *, shift: int = 0, filter_row: bool = False) -> W
     for named in model.names:
         if not named.is_result:
             out.names.put(named)
-    out._calculate_loaded()
+    out.calculate_loaded()
     return out
 
 
@@ -176,7 +176,7 @@ def test_a_header_that_says_row_labels_is_read_and_said():
     file = flat(model)
     file.sheet(PIVOT).cells[(1, 0)] = {"t": "text", "v": "Row Labels"}
     file.sheet(PIVOT).cells[(0, 1)] = {"t": "text", "v": "Column Labels"}
-    file._calculate_loaded()
+    file.calculate_loaded()
     done = adopt_pivots(file, [as_read(model, pivot)])
     assert done.adopted == 1
     assert kinds(done.losses) == {"pivot-table:layout": 1}
@@ -187,7 +187,7 @@ def test_a_pivot_whose_numbers_are_not_the_engines_stays_cells():
     [pivot] = written_pivots(model).pivots
     file = flat(model)
     file.sheet(PIVOT).cells[(3, 1)] = {"t": "int", "v": 901}  # North, Q1 was 900... in the file
-    file._calculate_loaded()
+    file.calculate_loaded()
     before = dict(file.sheet(PIVOT).cells)
     done = adopt_pivots(file, [as_read(model, pivot)])
     assert (done.adopted, kinds(done.losses)) == (0, {"pivot-table:different": 1})
