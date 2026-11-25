@@ -218,8 +218,7 @@ def test_a_stalled_anthropic_ends_the_question_in_time_and_is_its_own_cause(anth
         assert desk.health.last.reason.value == "timed_out"
 
     desk = ProviderDesk()
-    # read_timeout: the stalled read is let go after a second, not after the default 30 s it would hold the test's end
-    desk.install(provider=CLAUDE, claude=claude_runner(anthropic, timeout=0.5, read_timeout=1), approved=True)
+    desk.install(provider=CLAUDE, claude=claude_runner(anthropic, timeout=0.5), approved=True)
     served(test, desk)
 
 

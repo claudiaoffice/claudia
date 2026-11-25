@@ -14,7 +14,11 @@ The provider key is sent in a request header and nowhere else: it is not in any 
 
 from __future__ import annotations
 
+import contextlib
 import json
+import os
+import socket
+import threading
 import urllib.error
 import urllib.request
 from collections.abc import Callable, Iterator
@@ -83,7 +87,7 @@ class Response(Protocol):
         ...
 
     def close(self) -> None:
-        """Give the connection up."""
+        """Give the connection up. May be called from another thread while ``lines`` waits: that wait ends."""
         ...
 
 
@@ -104,6 +108,13 @@ class _UrllibResponse:
         yield from self._raw  # type: ignore[misc]  # an http.client.HTTPResponse is an iterator of lines
 
     def close(self) -> None:
+        # A read that waits in another thread is not woken by closing the file, only by shutting the connection down
+        # (PROC-67); that is done on a duplicate of the socket, which shuts the one connection both name.
+        with (
+            contextlib.suppress(OSError, ValueError, AttributeError),  # (already closed, or an error answer)
+            socket.socket(fileno=os.dup(self._raw.fileno())) as same,  # type: ignore[attr-defined]
+        ):
+            same.shutdown(socket.SHUT_RDWR)
         self._raw.close()  # type: ignore[attr-defined]
 
 
@@ -188,16 +199,25 @@ class ClaudeModel:
             raise ProviderError(FailureReason.TIMED_OUT) from exc
         except OSError as exc:  # no route, refused, no DNS: whatever it is, it cannot be reached
             raise ProviderError(FailureReason.UNREACHABLE, type(exc).__name__) from exc
+        stopped = threading.Event()  # set when the question was stopped and the read was cut for it
+        threading.Thread(target=_cut_when_stopped, args=(stop, stopped, response), daemon=True).start()
+        pieces: list[str] = []
         try:
             if response.status != 200:
                 raise self._refusal(response)
-            return self._read(response, stop)
-        except TimeoutError as exc:
-            raise ProviderError(FailureReason.TIMED_OUT) from exc
-        except OSError as exc:  # the connection broke in the middle
-            raise ProviderError(FailureReason.UNREACHABLE, type(exc).__name__) from exc
+            self._read(response, stop, pieces)
+        except Exception as exc:
+            if stopped.is_set():  # the read broke because it was cut: what there is of the answer (PROC-67)
+                return "".join(pieces)
+            if isinstance(exc, TimeoutError):
+                raise ProviderError(FailureReason.TIMED_OUT) from exc
+            if isinstance(exc, OSError):  # the connection broke in the middle
+                raise ProviderError(FailureReason.UNREACHABLE, type(exc).__name__) from exc
+            raise
         finally:
+            stopped.set()  # (ends the watch too)
             response.close()
+        return "".join(pieces)
 
     def _refusal(self, response: Response) -> ProviderError:
         text = b"".join(response.lines()).decode("utf-8", "replace")
@@ -210,8 +230,8 @@ class ClaudeModel:
             reason_of(response.status, str(error.get("type", "")), message), message or f"HTTP {response.status}"
         )
 
-    def _read(self, response: Response, stop: Callable[[], bool]) -> str:
-        pieces: list[str] = []
+    def _read(self, response: Response, stop: Callable[[], bool], pieces: list[str]) -> None:
+        """Add the answer's text to ``pieces`` as it streams in, until it ends or ``stop()`` turns true."""
         for line in response.lines():
             if stop():
                 break
@@ -227,4 +247,13 @@ class ClaudeModel:
                     raise ProviderError(reason_of(0, str(error.get("type", "")), message), message)
                 case "message_stop":
                     break
-        return "".join(pieces)
+
+
+def _cut_when_stopped(stop: Callable[[], bool], stopped: threading.Event, response: Response) -> None:
+    """Watch ``stop()`` while the answer is read; once it turns true, cut the read, which may be waiting for a silent
+    Anthropic for as long as the read timeout. Ends when ``stopped`` is set by the reader."""
+    while not stopped.wait(0.05):  # the pace of the watch
+        if stop():
+            stopped.set()
+            response.close()
+            return
