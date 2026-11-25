@@ -13,4 +13,4 @@ superseded-by: []
 
 **composes' View has one switch, Page View: ticked shows pages, unticked the flow. The web's two entries Flow and Page become this one entry, as the desktop menus have it.**
 
-**Notes.** One of the differences between web and desktop of UX-92.
+**Notes.** One of the differences between web and desktop of UX-94.

@@ -70,7 +70,7 @@ until there is help (E13).
 ## What follows for the build (input for the architecture step)
 
 - **One menu definition for every client.** The definition carries each action's rule. Today the web defines its menus
-  apart from the manifest, which is the cause of UX-92. The audit and the decisions on the menu work agreed one
+  apart from the manifest, which is the cause of UX-94. The audit and the decisions on the menu work agreed one
   definition.
 - **The client works out what fits.** It knows the role, the selection, the document's state, the server's tools and
   the ai's provider from what the server already sends. The answer also goes to a native shell:

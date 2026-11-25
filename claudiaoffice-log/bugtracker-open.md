@@ -27,7 +27,7 @@ The index is the status of record; a section below keeps the status of the round
 re-checked. **Opened** and **Fixed** are filled from 2026-11-20 on: for older items only where the status already gave
 the date.
 
-### Open (63)
+### Open (64)
 
 By priority (P1, P2, P3, then items that wait for a decision without one), then by ID.
 
@@ -72,6 +72,7 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | UX-53 | P3 | UX / computes | An object keeps its pixel size when rows or columns are inserted or resized, so it no longer covers the cells it covered (E6.17, D1230) | **new, open** |  |  |
 | UX-60 | P3 | UX / composes | Dragging an object to another paragraph is "Moved an object" in the history; the mock names the object and the paragraph | **new, open** (divergence from the mock of D1352; size 3) | 2026-11-20 |  |
 | UX-65 | P3 | UX / composes | Search & replace panel, find-only state: the results list overflows its container and the "text" badge of a result is clipped at the panel edge | **new, open** (`web/app/components/SearchPanel.vue`; **measured** in the running app; size 3) | 2026-11-22 |  |
+| UX-94 | P3 | UX / clients | The web menus and the desktop menus disagree in six places: the About entry's words, where Clear Cell Style sits, Flow and Page in composes' View, and the order of two pivot entries | **new, open** (measured, menu audit) | 2026-11-25 |  |
 | CODE-03 | P3 | Code | README is out of date | open (not re-checked) |  |  |
 | CODE-04 | P3 | Code | Untyped functions escape the type check | verified open |  |  |
 | CODE-06 | P3 | Code | `--max-connections` is per document, not per server | open |  |  |
@@ -627,3 +628,21 @@ LibreOffice saved comes in at its place.
 which Word writes for nearly every paragraph) is counted as a `formatting` loss, though the properties of the mark are
 not visible in the text. So the import over-counts what it leaves out. **Acceptance:** a docx whose only run properties
 are those of paragraph marks reports no `formatting` loss.
+
+## Found by the menu audit (2026-11-25; branch `menus`)
+
+### UX-94 · The web menus and the desktop menus disagree in six places · P3 · size 3 · open
+**Measured** by the menu audit (phase 1 of the menu work, branch `menus`; `scripts/menu_capture.py` and
+`scripts/menu_audit.py`, rows "Web and desktop differ" of the Diagnosis sheet in `notes/claudia-menus.xlsx`). The
+desktop clients take their menus from the manifest (then `clients/linux/src/claudia_shell_gtk/manifest.py`, now `clients/contract/src/claudia_menus/manifest.py`, D1643), the web client
+from `web/app/lib/document-menus.ts` and each workspace, and they differ:
+
+- Help ▸ About is "About claudia" on the web and "About Claudia Composes" / "… Computes" / "… Creates" on the desktop
+  (all three apps).
+- computes: Clear Cell Style is inside Format ▸ Apply Style ▸ on the web, directly in Format on the desktop.
+- composes: View has two entries, Flow and Page, on the web, one switch, Page, on the desktop.
+- computes: Tools has Value Field Settings… before Pivot Fields on the web, the other way round on the desktop.
+
+Not part of it, by design: Quit (desktop only), Apply Style (D301), and the shapes of the library in Edit (web only;
+the workbook makes them fixed entries, Insert ▸ Shape ▸ …). **Fixed with the menu rebuild** on `menus` (the owner,
+2026-11-25): one menu definition for every client ends this kind of drift; until then the audit finds it.

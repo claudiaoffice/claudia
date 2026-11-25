@@ -329,7 +329,7 @@ msgstr ""
 msgid "A heading starts a part of the text at its level: the title above all, then level 1, level 2 and so on"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "A hyphen the line is never broken at"
 msgstr ""
 
@@ -349,7 +349,7 @@ msgstr ""
 msgid "A list name is one line of 1 to {limit} characters, got {name!r}"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "A list of the headings, each a link to its place; it follows them by itself"
 msgstr ""
 
@@ -489,7 +489,7 @@ msgstr ""
 msgid "A text as a number with the decimal and group separators you name (. and , unless given); spaces are ignored and each % divides by 100."
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "A text box listing the slide titles with their numbers; it follows them by itself"
 msgstr ""
 
@@ -521,19 +521,19 @@ msgstr ""
 msgid "AI provider"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/lib/document-menus.ts
 msgid "AI…"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "About Claudia Composes"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "About Claudia Computes"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "About Claudia Creates"
 msgstr ""
 
@@ -557,11 +557,11 @@ msgstr ""
 msgid "Accept"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/lib/document-menus.ts
 msgid "Accept Ownership…"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Accept a document that was handed over to you"
 msgstr ""
 
@@ -597,7 +597,7 @@ msgstr ""
 msgid "Add Sheet"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Add a chart of the selected cells"
 msgstr ""
 
@@ -605,11 +605,11 @@ msgstr ""
 msgid "Add a condition"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Add a new sheet to the document"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Add a new slide to the presentation"
 msgstr ""
 
@@ -621,11 +621,11 @@ msgstr ""
 msgid "Add a tag…"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Add a text box to the slide"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Add a text box to the text"
 msgstr ""
 
@@ -701,7 +701,7 @@ msgstr ""
 msgid "After"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/SlideWorkspace.vue
 msgid "Agenda"
 msgstr ""
 
@@ -725,11 +725,11 @@ msgstr ""
 msgid "All Numbering"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/format-menu.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/lib/format-menu.ts
 msgid "All Numbering…"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/StyleMenu.vue web/app/lib/format-menu.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/StyleMenu.vue web/app/lib/format-menu.ts
 msgid "All Styles…"
 msgstr ""
 
@@ -841,7 +841,7 @@ msgstr ""
 msgid "Answering now:"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Answers to what people often want to do"
 msgstr ""
 
@@ -889,7 +889,7 @@ msgstr ""
 msgid "Anywhere"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/lib/document-menus.ts
 msgid "App Language"
 msgstr ""
 
@@ -901,7 +901,7 @@ msgstr ""
 msgid "Apply Style"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Apply Style…"
 msgstr ""
 
@@ -941,11 +941,11 @@ msgstr ""
 msgid "As “{name}”: {numbering}"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/table-menu.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/lib/table-menu.ts
 msgid "Ascending"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/lib/document-menus.ts
 msgid "Ask ai"
 msgstr ""
 
@@ -961,7 +961,7 @@ msgstr ""
 msgid "Ask an owner in the chat:"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/lib/document-menus.ts
 msgid "Ask the Assistant…"
 msgstr ""
 
@@ -969,7 +969,7 @@ msgstr ""
 msgid "Ask them to take over"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/lib/document-menus.ts
 msgid "Assign New Owner…"
 msgstr ""
 
@@ -1041,7 +1041,7 @@ msgstr ""
 msgid "Back to the documents"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Back to the list of documents"
 msgstr ""
 
@@ -1053,7 +1053,7 @@ msgstr ""
 msgid "Back to {place} (Esc)"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/lib/document-menus.ts
 msgid "Back where I was"
 msgstr ""
 
@@ -1149,7 +1149,7 @@ msgstr ""
 msgid "Bullet of level {level}"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/TextWorkspace.vue web/app/lib/format-menu.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/TextWorkspace.vue web/app/lib/format-menu.ts
 msgid "Bulleted List"
 msgstr ""
 
@@ -1249,15 +1249,15 @@ msgstr ""
 msgid "Chain"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/lib/document-menus.ts
 msgid "Change Password…"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Change how the object you have selected looks"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Change how this kind of paragraph looks"
 msgstr ""
 
@@ -1305,7 +1305,7 @@ msgstr ""
 msgid "Charts"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/Workspace.vue
 msgid "Chart…"
 msgstr ""
 
@@ -1337,11 +1337,11 @@ msgstr ""
 msgid "Choose a file…"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Choose a new password of your own for this document"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Choose a style for the selection, each drawn in its own look"
 msgstr ""
 
@@ -1401,11 +1401,11 @@ msgstr ""
 msgid "Clear"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/Workspace.vue
 msgid "Clear Cell Style"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/Workspace.vue
 msgid "Clear Cells"
 msgstr ""
 
@@ -1417,7 +1417,7 @@ msgstr ""
 msgid "Clear the pick"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Clear the selected cells"
 msgstr ""
 
@@ -1437,19 +1437,19 @@ msgstr ""
 msgid "Close"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Close Claudia Composes"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Close Claudia Computes"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Close Claudia Creates"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/lib/document-menus.ts
 msgid "Close Document"
 msgstr ""
 
@@ -1493,7 +1493,7 @@ msgstr ""
 msgid "Colour roles"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Colour the text by the person who wrote it"
 msgstr ""
 
@@ -1501,11 +1501,11 @@ msgstr ""
 msgid "Colours"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/format-menu.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/lib/format-menu.ts
 msgid "Colours…"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/TableOptionsDialog.vue web/app/components/Workspace.vue web/app/lib/table-menu.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/TableOptionsDialog.vue web/app/components/Workspace.vue web/app/lib/table-menu.ts
 msgid "Column"
 msgstr ""
 
@@ -1573,7 +1573,7 @@ msgstr ""
 msgid "Connection to {label}: {word}. Show details."
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py packages/claudia-server/src/claudia_server/thing_names.py web/app/components/SidePanel.vue web/app/lib/document-menus.ts
+#: clients/contract/src/claudia_menus/manifest.py packages/claudia-server/src/claudia_server/thing_names.py web/app/components/SidePanel.vue web/app/lib/document-menus.ts
 msgid "Container"
 msgstr ""
 
@@ -1593,7 +1593,7 @@ msgstr ""
 msgid "Continue"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/format-menu.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/lib/format-menu.ts
 msgid "Continue Previous List"
 msgstr ""
 
@@ -1625,7 +1625,7 @@ msgstr ""
 msgid "Copies, downloads, exports and backups made before keep it."
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/RecoveryKeyDialog.vue web/app/lib/document-menus.ts web/app/lib/object-menu.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/RecoveryKeyDialog.vue web/app/lib/document-menus.ts web/app/lib/object-menu.ts
 msgid "Copy"
 msgstr ""
 
@@ -1641,7 +1641,7 @@ msgstr ""
 msgid "Copy as values"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Copy the selection to the clipboard"
 msgstr ""
 
@@ -1701,7 +1701,7 @@ msgstr ""
 msgid "Cross-Reference"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/lib/document-menus.ts
 msgid "Cross-Reference…"
 msgstr ""
 
@@ -1745,7 +1745,7 @@ msgstr ""
 msgid "Custom…"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts web/app/lib/object-menu.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/lib/document-menus.ts web/app/lib/object-menu.ts
 msgid "Cut"
 msgstr ""
 
@@ -1757,7 +1757,7 @@ msgstr ""
 msgid "Cuts a number off after a number of decimals."
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/lib/document-menus.ts
 msgid "Dark Mode"
 msgstr ""
 
@@ -1789,7 +1789,7 @@ msgstr ""
 msgid "Del"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/NamesDialog.vue web/app/components/PivotDeleteDialog.vue web/app/components/SlideWorkspace.vue web/app/components/Workspace.vue web/app/lib/object-menu.ts web/app/lib/table-menu.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/NamesDialog.vue web/app/components/PivotDeleteDialog.vue web/app/components/SlideWorkspace.vue web/app/components/Workspace.vue web/app/lib/object-menu.ts web/app/lib/table-menu.ts
 msgid "Delete"
 msgstr ""
 
@@ -1801,11 +1801,11 @@ msgstr ""
 msgid "Delete Columns"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/lib/document-menus.ts
 msgid "Delete From Server…"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/Workspace.vue
 msgid "Delete Pivot Table…"
 msgstr ""
 
@@ -1837,7 +1837,7 @@ msgstr ""
 msgid "Delete the pivot table {name}? Its cells go empty and the table it reads is not touched. You can undo it."
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Delete the selected columns"
 msgstr ""
 
@@ -1845,7 +1845,7 @@ msgstr ""
 msgid "Delete the selected object (Del)"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Delete the selected rows"
 msgstr ""
 
@@ -1865,7 +1865,7 @@ msgstr ""
 msgid "Delete…"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/table-menu.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/lib/table-menu.ts
 msgid "Descending"
 msgstr ""
 
@@ -1941,7 +1941,7 @@ msgstr ""
 msgid "Do not keep this part"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Do your last undone step again"
 msgstr ""
 
@@ -1953,7 +1953,7 @@ msgstr ""
 msgid "Document content is sent to Anthropic when someone asks @ai."
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/HelpPanel.vue web/app/lib/document-menus.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/HelpPanel.vue web/app/lib/document-menus.ts
 msgid "Documentation"
 msgstr ""
 
@@ -1989,7 +1989,7 @@ msgstr ""
 msgid "Double-click, Enter"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/DownloadDialog.vue web/app/lib/document-menus.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/DownloadDialog.vue web/app/lib/document-menus.ts
 msgid "Download"
 msgstr ""
 
@@ -1997,7 +1997,7 @@ msgstr ""
 msgid "Download PDF"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Download the document to this computer"
 msgstr ""
 
@@ -2025,7 +2025,7 @@ msgstr ""
 msgid "Draw new random numbers ({key})"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Draw new random numbers for everybody"
 msgstr ""
 
@@ -2053,15 +2053,15 @@ msgstr ""
 msgid "Easy to see"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue web/app/components/StylesDialog.vue web/app/components/TextWorkspace.vue web/app/components/Workspace.vue
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/SlideWorkspace.vue web/app/components/StylesDialog.vue web/app/components/TextWorkspace.vue web/app/components/Workspace.vue
 msgid "Edit"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/SlideWorkspace.vue
 msgid "Edit Text"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/StylePicker.vue web/app/components/TextWorkspace.vue web/app/components/Workspace.vue web/app/lib/format-menu.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/StylePicker.vue web/app/components/TextWorkspace.vue web/app/components/Workspace.vue web/app/lib/format-menu.ts
 msgid "Edit This Style…"
 msgstr ""
 
@@ -2125,7 +2125,7 @@ msgstr ""
 msgid "Esc lets go of this"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Every function and feature, to look up"
 msgstr ""
 
@@ -2133,7 +2133,7 @@ msgstr ""
 msgid "Every number must be filled in."
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Every outcome of the alternatives this cell depends on"
 msgstr ""
 
@@ -2209,7 +2209,7 @@ msgstr ""
 msgid "Exported."
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/lib/document-menus.ts
 msgid "Export…"
 msgstr ""
 
@@ -2237,7 +2237,7 @@ msgstr ""
 msgid "Fields of the source"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/lib/document-menus.ts
 msgid "File"
 msgstr ""
 
@@ -2297,15 +2297,15 @@ msgstr ""
 msgid "Find a name or cells"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Find text, formulas and values, and replace them"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Find words, headings, remarks and what is said in objects, and replace them"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Find words, labels, speaker notes and descriptions, and replace them"
 msgstr ""
 
@@ -2373,7 +2373,7 @@ msgstr ""
 msgid "Flow: the text runs to the width of the window"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/Workspace.vue
 msgid "Follow Computation"
 msgstr ""
 
@@ -2381,7 +2381,7 @@ msgstr ""
 msgid "Follow changes"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Follow or override the system's light/dark setting"
 msgstr ""
 
@@ -2449,7 +2449,7 @@ msgstr ""
 msgid "Forget every hidden branch"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/ImagePropertiesDialog.vue web/app/components/SlideWorkspace.vue web/app/components/TextWorkspace.vue web/app/components/Workspace.vue
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/ImagePropertiesDialog.vue web/app/components/SlideWorkspace.vue web/app/components/TextWorkspace.vue web/app/components/Workspace.vue
 msgid "Format"
 msgstr ""
 
@@ -2517,15 +2517,15 @@ msgstr ""
 msgid "Give names to {n} things without one"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Give the sheet you are on another name; the formulas that read it follow"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Give the slide you are on another name; a tag in the chat keeps pointing at it"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Give the thing you have selected a name, and say what it shows to someone who cannot see it"
 msgstr ""
 
@@ -2537,11 +2537,11 @@ msgstr ""
 msgid "Go back"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Go back to where you were before a tag in the chat took you somewhere else"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Go on counting where the list before this one stopped"
 msgstr ""
 
@@ -2549,7 +2549,7 @@ msgstr ""
 msgid "Go to"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/TextWorkspace.vue web/app/lib/document-menus.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/TextWorkspace.vue web/app/lib/document-menus.ts
 msgid "Go to Target"
 msgstr ""
 
@@ -2585,7 +2585,7 @@ msgstr ""
 msgid "Go to this"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Go to what the reference at the caret points at (Ctrl+click on a reference does the same)"
 msgstr ""
 
@@ -2629,7 +2629,7 @@ msgstr ""
 msgid "Half the width of the confidence interval for a mean from a sample (Student t distribution)."
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Hand this document over to somebody else"
 msgstr ""
 
@@ -2653,7 +2653,7 @@ msgstr ""
 msgid "Header rows (repeated on every page)"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Header rows, banding, look, width and the columns of this table"
 msgstr ""
 
@@ -2669,7 +2669,7 @@ msgstr ""
 msgid "Headings numbered in one list count together as one outline: 1, 1.1, 1.2, 2 …"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SidePanel.vue web/app/lib/document-menus.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/SidePanel.vue web/app/lib/document-menus.ts
 msgid "Help"
 msgstr ""
 
@@ -2697,7 +2697,7 @@ msgstr ""
 msgid "History & chat"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/lib/document-menus.ts
 msgid "History and Chat"
 msgstr ""
 
@@ -2713,7 +2713,7 @@ msgstr ""
 msgid "Holds"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/HelpPanel.vue web/app/lib/document-menus.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/HelpPanel.vue web/app/lib/document-menus.ts
 msgid "How Do I…?"
 msgstr ""
 
@@ -2745,7 +2745,7 @@ msgstr ""
 msgid "How it is printed: margins and page numbers"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "How long you want to spend on this slide; the bar below the slides adds the times up"
 msgstr ""
 
@@ -2813,7 +2813,7 @@ msgstr ""
 msgid "How the inputs combine"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "How the values of a pivot table field are put together"
 msgstr ""
 
@@ -2857,7 +2857,7 @@ msgstr ""
 msgid "Image properties"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue web/app/components/TextWorkspace.vue web/app/components/Workspace.vue
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/SlideWorkspace.vue web/app/components/TextWorkspace.vue web/app/components/Workspace.vue
 msgid "Image…"
 msgstr ""
 
@@ -2909,7 +2909,7 @@ msgstr ""
 msgid "Include history and chat"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/StyleBar.vue web/app/lib/format-menu.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/StyleBar.vue web/app/lib/format-menu.ts
 msgid "Indent"
 msgstr ""
 
@@ -2937,15 +2937,15 @@ msgstr ""
 msgid "Input {n}"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/ImageImportDialog.vue web/app/components/SheetChartInsertDialog.vue web/app/components/TableDialog.vue web/app/components/TextWorkspace.vue web/app/lib/document-menus.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/ImageImportDialog.vue web/app/components/SheetChartInsertDialog.vue web/app/components/TableDialog.vue web/app/components/TextWorkspace.vue web/app/lib/document-menus.ts
 msgid "Insert"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue web/app/lib/table-menu.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/Workspace.vue web/app/lib/table-menu.ts
 msgid "Insert Above"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue web/app/lib/table-menu.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/Workspace.vue web/app/lib/table-menu.ts
 msgid "Insert Below"
 msgstr ""
 
@@ -2957,11 +2957,11 @@ msgstr ""
 msgid "Insert Column Right"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue web/app/lib/table-menu.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/Workspace.vue web/app/lib/table-menu.ts
 msgid "Insert Left"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue web/app/lib/table-menu.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/Workspace.vue web/app/lib/table-menu.ts
 msgid "Insert Right"
 msgstr ""
 
@@ -2973,19 +2973,19 @@ msgstr ""
 msgid "Insert Row Below"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Insert a column to the left of the selection"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Insert a column to the right of the selection"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Insert a row above the selection"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Insert a row below the selection"
 msgstr ""
 
@@ -3005,11 +3005,11 @@ msgstr ""
 msgid "Insert table"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Insert the clipboard"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Insert the clipboard without formatting"
 msgstr ""
 
@@ -3125,7 +3125,7 @@ msgstr ""
 msgid "Kind of the new document"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "LaTeX"
 msgstr ""
 
@@ -3177,7 +3177,7 @@ msgstr ""
 msgid "Leader"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/lib/document-menus.ts
 msgid "Leave Document…"
 msgstr ""
 
@@ -3201,7 +3201,7 @@ msgstr ""
 msgid "Left out ({count})"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/AboutDialog.vue
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/AboutDialog.vue
 msgid "Legal"
 msgstr ""
 
@@ -3217,7 +3217,7 @@ msgstr ""
 msgid "Less time"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Let other people into the document"
 msgstr ""
 
@@ -3241,7 +3241,7 @@ msgstr ""
 msgid "Licence, in your words"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Light up the cells that take part in this cell's computation"
 msgstr ""
 
@@ -3253,7 +3253,7 @@ msgstr ""
 msgid "Links in speaker notes"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/StyleBar.vue web/app/lib/format-menu.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/StyleBar.vue web/app/lib/format-menu.ts
 msgid "List"
 msgstr ""
 
@@ -3265,7 +3265,7 @@ msgstr ""
 msgid "List marks"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "List, rename, delete and hide the styles of this document"
 msgstr ""
 
@@ -3293,7 +3293,7 @@ msgstr ""
 msgid "Look at the backslash at character {position}. Nothing is replaced."
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Look at the document as it was, step by step (the mouse wheel over the history does the same)"
 msgstr ""
 
@@ -3333,15 +3333,15 @@ msgstr ""
 msgid "Make"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Make a checkpoint and give it a name"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Make a checkpoint of the document"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Make a merged cell into single cells again"
 msgstr ""
 
@@ -3349,23 +3349,23 @@ msgstr ""
 msgid "Make a new recovery key"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Make a pivot table from a table"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Make the paragraphs a list with bullets, or plain again"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Make the paragraphs a numbered list, or plain again"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Make this cell and the one next to it one cell"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/lib/document-menus.ts
 msgid "Manage"
 msgstr ""
 
@@ -3441,7 +3441,7 @@ msgstr ""
 msgid "Members of {field}"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/table-menu.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/lib/table-menu.ts
 msgid "Merge Cells"
 msgstr ""
 
@@ -3449,7 +3449,7 @@ msgstr ""
 msgid "Merge cells"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Mermaid"
 msgstr ""
 
@@ -3513,19 +3513,19 @@ msgstr ""
 msgid "Move name"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Move the item one level in"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Move the item one level out"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Move the object you have selected to the next way of letting the text flow round it"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Move the selection to the clipboard"
 msgstr ""
 
@@ -3561,7 +3561,7 @@ msgstr ""
 msgid "Name & describe"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue web/app/components/TextWorkspace.vue web/app/components/Workspace.vue web/app/lib/descriptions.ts web/app/lib/object-menu.ts web/app/lib/table-menu.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/SlideWorkspace.vue web/app/components/TextWorkspace.vue web/app/components/Workspace.vue web/app/lib/descriptions.ts web/app/lib/object-menu.ts web/app/lib/table-menu.ts
 msgid "Name & describe…"
 msgstr ""
 
@@ -3629,19 +3629,19 @@ msgstr ""
 msgid "Names, charts or rules this program does not show still name the old sheet: check them in the file."
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/FormulaBar.vue web/app/components/Workspace.vue
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/FormulaBar.vue web/app/components/Workspace.vue
 msgid "Names…"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/lib/document-menus.ts
 msgid "New"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/Workspace.vue
 msgid "New Sheet…"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/SlideWorkspace.vue
 msgid "New Slide"
 msgstr ""
 
@@ -3773,7 +3773,7 @@ msgstr ""
 msgid "Nobody edits this document yet. Make somebody an editor first (File ▸ Manage ▸ Share…)."
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/TextWorkspace.vue
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/TextWorkspace.vue
 msgid "Non-breaking Hyphen"
 msgstr ""
 
@@ -3797,7 +3797,7 @@ msgstr ""
 msgid "Not a font that can be read."
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Not available yet"
 msgstr ""
 
@@ -3945,11 +3945,11 @@ msgstr ""
 msgid "Number"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/SlideWorkspace.vue
 msgid "Number All Slide Titles"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/TextWorkspace.vue web/app/lib/format-menu.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/TextWorkspace.vue web/app/lib/format-menu.ts
 msgid "Number Headings"
 msgstr ""
 
@@ -3957,7 +3957,7 @@ msgstr ""
 msgid "Number and Text"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Number every heading style: 1, 1.1, 1.2, 2 …"
 msgstr ""
 
@@ -3965,11 +3965,11 @@ msgstr ""
 msgid "Number of level {level}"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Number the title of every slide: 1, 2, 3 …"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/TextWorkspace.vue web/app/lib/format-menu.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/TextWorkspace.vue web/app/lib/format-menu.ts
 msgid "Numbered List"
 msgstr ""
 
@@ -4145,15 +4145,15 @@ msgstr ""
 msgid "Open a File"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/OpenDialog.vue web/app/lib/document-menus.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/OpenDialog.vue web/app/lib/document-menus.ts
 msgid "Open a File…"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Open a Word, Excel, PowerPoint, OpenDocument or Claudia file from this computer"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Open a document from one of your places, a collection or Mine"
 msgstr ""
 
@@ -4177,7 +4177,7 @@ msgstr ""
 msgid "Open suggestions are not in the file"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Open the chat with an empty prompt"
 msgstr ""
 
@@ -4213,7 +4213,7 @@ msgstr ""
 msgid "Opening {name}"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/lib/document-menus.ts
 msgid "Open…"
 msgstr ""
 
@@ -4229,11 +4229,11 @@ msgstr ""
 msgid "Orange"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Order the rows of the table by the column the caret is in, largest first"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Order the rows of the table by the column the caret is in, smallest first"
 msgstr ""
 
@@ -4245,7 +4245,7 @@ msgstr ""
 msgid "Other arguments are handed to GTK."
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/Workspace.vue
 msgid "Outcomes of This Cell…"
 msgstr ""
 
@@ -4253,7 +4253,7 @@ msgstr ""
 msgid "Outcomes of {cell}"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/StyleBar.vue web/app/lib/format-menu.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/StyleBar.vue web/app/lib/format-menu.ts
 msgid "Outdent"
 msgstr ""
 
@@ -4297,7 +4297,7 @@ msgstr ""
 msgid "Padding"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/StyleBar.vue web/app/components/TextWorkspace.vue web/app/lib/reference-labels.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/StyleBar.vue web/app/components/TextWorkspace.vue web/app/lib/reference-labels.ts
 msgid "Page"
 msgstr ""
 
@@ -4357,11 +4357,11 @@ msgstr ""
 msgid "Password hashing"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/lib/document-menus.ts
 msgid "Paste"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/lib/document-menus.ts
 msgid "Paste As"
 msgstr ""
 
@@ -4381,7 +4381,7 @@ msgstr ""
 msgid "People using this server"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Pick a distribution and put RANDOM into the cell"
 msgstr ""
 
@@ -4445,11 +4445,11 @@ msgstr ""
 msgid "Pivot"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/Workspace.vue
 msgid "Pivot Fields"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/Workspace.vue
 msgid "Pivot Table…"
 msgstr ""
 
@@ -4477,7 +4477,7 @@ msgstr ""
 msgid "Plain"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/lib/document-menus.ts
 msgid "Plain Text"
 msgstr ""
 
@@ -4489,7 +4489,7 @@ msgstr ""
 msgid "Plan a time for this slide"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue web/app/lib/present-keys.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/SlideWorkspace.vue web/app/lib/present-keys.ts
 msgid "Plan the Time of This Slide…"
 msgstr ""
 
@@ -4537,7 +4537,7 @@ msgstr ""
 msgid "PowerPoint, OpenDocument or Claudia slides, or drop one anywhere on this page."
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/lib/document-menus.ts
 msgid "Preferences"
 msgstr ""
 
@@ -4545,11 +4545,11 @@ msgstr ""
 msgid "Present"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue web/app/lib/present-keys.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/SlideWorkspace.vue web/app/lib/present-keys.ts
 msgid "Present from This Slide"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue web/app/lib/present-keys.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/SlideWorkspace.vue web/app/lib/present-keys.ts
 msgid "Present from the First Slide"
 msgstr ""
 
@@ -4605,7 +4605,7 @@ msgstr ""
 msgid "Printing and saving a PDF are recorded in the document's exit record: who, when and how many pages. It is written when the file is saved or the page is sent, not when the preview opens."
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/PrintPreview.vue web/app/lib/document-menus.ts web/app/lib/print/use-print.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/PrintPreview.vue web/app/lib/document-menus.ts web/app/lib/print/use-print.ts
 msgid "Print…"
 msgstr ""
 
@@ -4613,7 +4613,7 @@ msgstr ""
 msgid "Provider key"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Put a diagram written in Mermaid here"
 msgstr ""
 
@@ -4621,31 +4621,31 @@ msgstr ""
 msgid "Put a field into Values to see numbers."
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Put a formula or text written in LaTeX here"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Put a page of text written in Typst here"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Put a picture in the text"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Put a picture on the sheet"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Put a picture on the slide"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Put a reference to a heading, an item or a named thing at the caret; it follows what it points at"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Put a table into the text at the caret"
 msgstr ""
 
@@ -4661,7 +4661,7 @@ msgstr ""
 msgid "Put the cursor in a pivot table first."
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Put the result of a query on the selected cell"
 msgstr ""
 
@@ -4689,7 +4689,7 @@ msgstr ""
 msgid "Quick turns"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Quit"
 msgstr ""
 
@@ -4697,7 +4697,7 @@ msgstr ""
 msgid "Quotes in speaker notes"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/Workspace.vue
 msgid "Random Generator…"
 msgstr ""
 
@@ -4757,7 +4757,7 @@ msgstr ""
 msgid "Redact ({n})"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/lib/document-menus.ts
 msgid "Redact History…"
 msgstr ""
 
@@ -4785,7 +4785,7 @@ msgstr ""
 msgid "Redact… ({n} picked)"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts web/app/lib/shortcuts.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/lib/document-menus.ts web/app/lib/shortcuts.ts
 msgid "Redo"
 msgstr ""
 
@@ -4793,7 +4793,7 @@ msgstr ""
 msgid "Redo {label}"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/lib/document-menus.ts
 msgid "Reference in Chat"
 msgstr ""
 
@@ -4869,7 +4869,7 @@ msgstr ""
 msgid "Remove this condition"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Remove this document from the server for good"
 msgstr ""
 
@@ -4877,7 +4877,7 @@ msgstr ""
 msgid "Remove this part"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Remove yourself from this document"
 msgstr ""
 
@@ -4909,11 +4909,11 @@ msgstr ""
 msgid "Rename"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/Workspace.vue
 msgid "Rename Sheet…"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/SlideWorkspace.vue
 msgid "Rename Slide…"
 msgstr ""
 
@@ -5009,7 +5009,7 @@ msgstr ""
 msgid "Replay"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/lib/document-menus.ts
 msgid "Replay History…"
 msgstr ""
 
@@ -5017,7 +5017,7 @@ msgstr ""
 msgid "Replay the history: wheel over this panel, or Alt+Page Up"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/AboutDialog.vue
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/AboutDialog.vue
 msgid "Report an Issue"
 msgstr ""
 
@@ -5025,7 +5025,7 @@ msgstr ""
 msgid "Require a secret to create or list documents"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/Workspace.vue
 msgid "Resample Random Numbers"
 msgstr ""
 
@@ -5061,19 +5061,19 @@ msgstr ""
 msgid "Rose"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/rotate-menu.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/lib/rotate-menu.ts
 msgid "Rotate"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/rotate-menu.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/lib/rotate-menu.ts
 msgid "Rotate By…"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/rotate-menu.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/lib/rotate-menu.ts
 msgid "Rotate Left 90°"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/rotate-menu.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/lib/rotate-menu.ts
 msgid "Rotate Right 90°"
 msgstr ""
 
@@ -5141,7 +5141,7 @@ msgstr ""
 msgid "Rounds up to a multiple of the significance (1 unless given; its sign is ignored)."
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue web/app/lib/table-menu.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/Workspace.vue web/app/lib/table-menu.ts
 msgid "Row"
 msgstr ""
 
@@ -5189,7 +5189,7 @@ msgstr ""
 msgid "SQL"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/Workspace.vue
 msgid "SQL Query…"
 msgstr ""
 
@@ -5217,11 +5217,11 @@ msgstr ""
 msgid "Sandboxed execution"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/files.py clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/AdminAccessDocuments.vue web/app/components/AiConsentDialog.vue web/app/components/DocumentFrame.vue web/app/components/NameAndDescribeDialog.vue web/app/components/StylesDialog.vue web/app/components/TextObjectMenu.vue web/app/lib/document-menus.ts web/app/lib/shortcuts.ts
+#: clients/contract/src/claudia_menus/manifest.py clients/linux/src/claudia_shell_gtk/files.py web/app/components/AdminAccessDocuments.vue web/app/components/AiConsentDialog.vue web/app/components/DocumentFrame.vue web/app/components/NameAndDescribeDialog.vue web/app/components/StylesDialog.vue web/app/components/TextObjectMenu.vue web/app/lib/document-menus.ts web/app/lib/shortcuts.ts
 msgid "Save"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/lib/document-menus.ts
 msgid "Save New Checkpoint…"
 msgstr ""
 
@@ -5237,7 +5237,7 @@ msgstr ""
 msgid "Save new checkpoint"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Save the document's content in Claudia's own format"
 msgstr ""
 
@@ -5285,7 +5285,7 @@ msgstr ""
 msgid "Search & Replace"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/lib/document-menus.ts
 msgid "Search & Replace…"
 msgstr ""
 
@@ -5321,7 +5321,7 @@ msgstr ""
 msgid "Security"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "See the pages and print them"
 msgstr ""
 
@@ -5425,7 +5425,7 @@ msgstr ""
 msgid "Share this document"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/lib/document-menus.ts
 msgid "Share…"
 msgstr ""
 
@@ -5457,7 +5457,7 @@ msgstr ""
 msgid "Shift+Del"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/ShortcutsDialog.vue web/app/lib/document-menus.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/ShortcutsDialog.vue web/app/lib/document-menus.ts
 msgid "Shortcuts"
 msgstr ""
 
@@ -5469,15 +5469,15 @@ msgstr ""
 msgid "Show As"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/SlideWorkspace.vue
 msgid "Show Grid"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/Workspace.vue
 msgid "Show Pivot Table as SQL…"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/StyleBar.vue web/app/components/TextWorkspace.vue web/app/lib/document-menus.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/StyleBar.vue web/app/components/TextWorkspace.vue web/app/lib/document-menus.ts
 msgid "Show Who Wrote What"
 msgstr ""
 
@@ -5505,15 +5505,15 @@ msgstr ""
 msgid "Show more"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Show or hide the history and the chat"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Show or hide the notes under the slide"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Show or hide the panel with the fields of the pivot table"
 msgstr ""
 
@@ -5525,19 +5525,19 @@ msgstr ""
 msgid "Show the document as it was at this message"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Show the grid that objects snap to"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Show the presentation full screen, beginning with the first slide"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Show the presentation full screen, beginning with the slide you are on"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Show the text as pages instead of a flowing text"
 msgstr ""
 
@@ -5629,7 +5629,7 @@ msgstr ""
 msgid "So what this program does not show of the original is not in it."
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/TextWorkspace.vue
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/TextWorkspace.vue
 msgid "Soft Hyphen"
 msgstr ""
 
@@ -5657,7 +5657,7 @@ msgstr ""
 msgid "Something went wrong."
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/table-menu.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/lib/table-menu.ts
 msgid "Sort"
 msgstr ""
 
@@ -5685,7 +5685,7 @@ msgstr ""
 msgid "Source field"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue web/app/lib/present-keys.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/SlideWorkspace.vue web/app/lib/present-keys.ts
 msgid "Speaker Notes"
 msgstr ""
 
@@ -5697,7 +5697,7 @@ msgstr ""
 msgid "Speaker notes of slide {n}"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/table-menu.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/lib/table-menu.ts
 msgid "Split Cell"
 msgstr ""
 
@@ -5721,11 +5721,11 @@ msgstr ""
 msgid "Start"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/format-menu.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/lib/format-menu.ts
 msgid "Start At…"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Start a new document"
 msgstr ""
 
@@ -5905,7 +5905,7 @@ msgstr ""
 msgid "Table"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/table-menu.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/lib/table-menu.ts
 msgid "Table Options…"
 msgstr ""
 
@@ -5913,7 +5913,7 @@ msgstr ""
 msgid "Table menu"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/TextWorkspace.vue web/app/lib/document-menus.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/TextWorkspace.vue web/app/lib/document-menus.ts
 msgid "Table of Contents"
 msgstr ""
 
@@ -5945,7 +5945,7 @@ msgstr ""
 msgid "Tables, texts and slides on this place, and the documents you opened before."
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Table…"
 msgstr ""
 
@@ -5957,23 +5957,23 @@ msgstr ""
 msgid "Take away"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Take back your last step"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Take content out of the document's history and chat for good"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Take the pivot table away; its source stays"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Take the selected cells' own style off, back to the table's"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Take the selected object off the slide"
 msgstr ""
 
@@ -6009,7 +6009,7 @@ msgstr ""
 msgid "Text"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/InsertBar.vue web/app/components/SlideWorkspace.vue web/app/components/TextWorkspace.vue
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/InsertBar.vue web/app/components/SlideWorkspace.vue web/app/components/TextWorkspace.vue
 msgid "Text Box"
 msgstr ""
 
@@ -6197,7 +6197,7 @@ msgstr ""
 msgid "The colours it started with"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "The colours of this document, by what each one means"
 msgstr ""
 
@@ -6525,7 +6525,7 @@ msgstr ""
 msgid "The key you had before no longer works."
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "The keyboard shortcuts this app uses"
 msgstr ""
 
@@ -6657,7 +6657,7 @@ msgstr ""
 msgid "The name “{name}” belongs to the AI assistant. Choose another name."
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "The named ranges and tables of this workbook"
 msgstr ""
 
@@ -6737,11 +6737,11 @@ msgstr ""
 msgid "The number that occurs most often (the old name of MODE.SNGL)."
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "The number this list starts at"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "The numbering schemes of this document: how each level of a list is drawn"
 msgstr ""
 
@@ -6845,7 +6845,7 @@ msgstr ""
 msgid "The query could not be copied. Select it and copy it with the keyboard."
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "The query the pivot table asks of its source"
 msgstr ""
 
@@ -7733,7 +7733,7 @@ msgstr ""
 msgid "Too many tries. Try again in {seconds} seconds."
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue web/app/components/TextWorkspace.vue web/app/components/Workspace.vue
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/SlideWorkspace.vue web/app/components/TextWorkspace.vue web/app/components/Workspace.vue
 msgid "Tools"
 msgstr ""
 
@@ -7769,15 +7769,15 @@ msgstr ""
 msgid "Trying again every few seconds…"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Turn the object you have selected a quarter turn clockwise"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Turn the object you have selected a quarter turn counter-clockwise"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Turn the object you have selected to an angle, in whole degrees"
 msgstr ""
 
@@ -7825,7 +7825,7 @@ msgstr ""
 msgid "Typesetting"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Typst"
 msgstr ""
 
@@ -7837,7 +7837,7 @@ msgstr ""
 msgid "Underline"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/StylesDialog.vue web/app/lib/document-menus.ts web/app/lib/shortcuts.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/StylesDialog.vue web/app/lib/document-menus.ts web/app/lib/shortcuts.ts
 msgid "Undo"
 msgstr ""
 
@@ -7893,7 +7893,7 @@ msgstr ""
 msgid "Valid."
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/PivotPanel.vue web/app/components/Workspace.vue
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/PivotPanel.vue web/app/components/Workspace.vue
 msgid "Value Field Settings…"
 msgstr ""
 
@@ -7929,7 +7929,7 @@ msgstr ""
 msgid "Vector pictures without a plain picture beside them"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Version, authors and licence"
 msgstr ""
 
@@ -7941,7 +7941,7 @@ msgstr ""
 msgid "Vertical alignment"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue web/app/components/StyleBar.vue web/app/components/TextWorkspace.vue web/app/components/Workspace.vue
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/SlideWorkspace.vue web/app/components/StyleBar.vue web/app/components/TextWorkspace.vue web/app/components/Workspace.vue
 msgid "View"
 msgstr ""
 
@@ -7961,7 +7961,7 @@ msgstr ""
 msgid "Want to change it by hand?"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/AboutDialog.vue
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/AboutDialog.vue
 msgid "Website"
 msgstr ""
 
@@ -8077,7 +8077,7 @@ msgstr ""
 msgid "Where the text is found in another text (from 1; capitals matter). #VALUE! if it is not."
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Where the word may be broken at the end of a line"
 msgstr ""
 
@@ -8121,7 +8121,7 @@ msgstr ""
 msgid "Who answers @ai in this document now"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Who may answer @ai in this document, and what is sent to Anthropic if Claude does (E7.11)"
 msgstr ""
 
@@ -8225,7 +8225,7 @@ msgstr ""
 msgid "Works on"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/TextWorkspace.vue
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/TextWorkspace.vue
 msgid "Wrap Text"
 msgstr ""
 
@@ -8253,11 +8253,11 @@ msgstr ""
 msgid "Write a range like A1:B5."
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Write a tag for the selected object into the chat, so that everybody can go to it"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Write in the selected text box"
 msgstr ""
 
@@ -8273,7 +8273,7 @@ msgstr ""
 msgid "Write to everybody, or {ask} to ask the assistant. Say {help} to see what it can do."
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Write to the assistant in the chat"
 msgstr ""
 
