@@ -93,11 +93,15 @@ def workbook_places(rows: list[Row], app: str) -> list[Place]:
     return _ranked(wanted)
 
 
-def _mac(accelerator: str) -> str:
-    """A macOS key of its own (``Keys.macos``): ``<Primary>`` is Cmd, ``<Control>`` is Ctrl, Alt is Option."""
-    control = "<Control>" in accelerator
-    cmd = mac_shortcut(normal_shortcut(shown(accelerator.replace("<Control>", ""))))
-    return cmd.replace("Cmd+", "Cmd+Ctrl+", 1) if control and cmd else cmd
+def _mac(accelerator: str) -> str | None:
+    """A macOS key of its own (``Keys.macos``), as the workbook writes it: ``<Primary>`` is Cmd, ``<Control>`` is Ctrl,
+    Alt is Option, in the order Cmd, Ctrl, Shift, Option."""
+    rest = mac_shortcut(normal_shortcut(shown(accelerator.replace("<Control>", ""))))
+    if "<Control>" not in accelerator or rest is None:
+        return rest
+    if rest.startswith("Cmd+"):
+        return rest.replace("Cmd+", "Cmd+Ctrl+", 1)
+    return f"Ctrl+{rest}"
 
 
 def _keys(action: manifest.Action) -> tuple[str | None, ...]:
@@ -190,10 +194,10 @@ def rows() -> list[Row]:
     return workbook_rows(openpyxl.load_workbook(WORKBOOK, read_only=True)["Menus"])
 
 
+@pytest.mark.must_not_break
 @pytest.mark.parametrize("app", APPS)
 def test_the_menus_are_what_the_workbook_says(app: str, rows: list[Row]) -> None:
-    """Must not break (coding standards, tests): the key risk of the menu rebuild (E5.23) is a client whose menus are
-    not what the owner decided in the workbook."""
+    """The key risk of the menu rebuild (E5.23): a client whose menus are not what the owner decided in the workbook."""
     wanted, have = workbook_places(rows, app), definition_places(app)
     missing = [str(p) for p in wanted if p not in have]
     extra = [str(p) for p in have if p not in wanted]

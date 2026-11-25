@@ -53,6 +53,9 @@ dev = [
 [tool.pytest.ini_options]
 testpaths = ["packages", "tests"]
 addopts = "-q"
+markers = [
+    "must_not_break: the test that covers a feature's key risk (coding standards §2, D1652); `pytest -m must_not_break`",
+]
 
 [tool.ruff]
 line-length = 120

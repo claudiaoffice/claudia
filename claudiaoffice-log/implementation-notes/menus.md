@@ -94,7 +94,7 @@ Both lists only shrink:
 - **Six notes** named the moved file `claudia_shell_gtk/manifest.py` as built, so `test_notes_claim_built_files.py`
   failed after slice 1 (not run then). They name the new path now.
 
-**Assumptions** (asked in the delivery):
+**Assumptions**, confirmed by the owner afterwards (D1651):
 - **Ask ai…** in Tools and in Help is one action, `tools.ask`, because the workbook gives both Ctrl+F1; Help's entry
   keeps its own rule. The web's `help.ask` goes in slice 4.
 - **About** is "About", as the workbook's words say, not "About Claudia Composes".
@@ -118,3 +118,12 @@ Both lists only shrink:
 - the 64 tests that need GTK 4 (no window opens in this workspace);
 - Firefox (not installed here);
 - the Neutralino clients on a real Mac or Windows.
+
+## After slice 2 · The owner's answers (D1651, D1652), 2026-11-25
+
+- **Present on macOS.** Present ▸ From Slide and From Beginning have the letter keys of D344 on macOS
+  (Ctrl+Shift+Option+H, Ctrl+Option+P): in the workbook's macOS column, then in the definition (`Keys.macos`, with
+  `<Control>` for Ctrl). The workbook test failed on the edited workbook, then passed.
+- **Must not break.** The test that covers a feature's key risk carries `@pytest.mark.must_not_break`. The marker is
+  registered in the root and the Linux client's `pyproject.toml`, and the convention, with its TypeScript form, is in
+  `coding-standards.md` §2. The menu workbook test is the first.

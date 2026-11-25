@@ -1407,7 +1407,8 @@ def creates() -> Manifest:
             ),
         ),
     )
-    # The show (E10.2, D344): F5 and Shift+F5, as in every presentation program.
+    # The show (E10.2, D344): F5 and Shift+F5, as in every presentation program; on a Mac, where they are the
+    # system's, a letter (D1651), which the page also listens for (``lib/present-keys.ts``).
     tools = Menu(
         "Tools",
         (
@@ -1421,6 +1422,7 @@ def creates() -> Manifest:
                             "From Slide",
                             "Show the presentation full screen, beginning with the slide you are on",
                             key="<Shift>F5",
+                            mac="<Control><Alt><Shift>h",
                             fits=ANYONE,
                         ),
                         _page(
@@ -1428,6 +1430,7 @@ def creates() -> Manifest:
                             "From Beginning",
                             "Show the presentation full screen, beginning with the first slide",
                             key="F5",
+                            mac="<Control><Alt>p",
                             fits=ANYONE,
                         ),
                     ),
