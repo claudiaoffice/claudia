@@ -4,9 +4,9 @@ The shell shows the web frontend served by a Claudia server on this computer's l
 separate process on its own interpreter (3.14); the shell runs on the distribution's Python and must never ask for a
 newer one. Nothing here imports GTK.
 
-Since D445 the three desktop apps share one server that outlives its windows and stops by itself
-(``desktop_server``); it is started with ``outlives_shell=True``. A server started without it is tied to the shell, as
-before, by three rules:
+Since D445 her three desktop apps share one server that outlives its windows and stops by itself
+(``private_server``, E8.5); it is started with ``outlives_shell=True``. A server started without it is tied to the
+shell, as before, by three rules:
 
 * it is started in its own process group, and :meth:`LocalServer.stop` ends the whole group (a worker that the server
   started is not left behind);
@@ -23,7 +23,6 @@ from __future__ import annotations
 import contextlib
 import os
 import signal
-import socket
 import subprocess
 import sys
 import tempfile
@@ -36,7 +35,7 @@ from pathlib import Path
 from .i18n import translate as _
 from .paths import default_repo
 
-__all__ = ["LocalServer", "ServerStartError", "find_server_python", "free_port", "server_command"]
+__all__ = ["LocalServer", "ServerStartError", "find_server_python", "server_command"]
 
 LOOPBACK = "127.0.0.1"
 HEALTH_PATH = "/api/health"
@@ -56,18 +55,11 @@ class ServerStartError(RuntimeError):
     """The server did not come up. The message says why and quotes the end of what the server printed.
 
     ``exited`` is true when the process ended by itself at start-up (a port or a folder that another server holds, a
-    crash): then another server may have won, and a caller that shares the server (``desktop_server``) looks for it."""
+    crash): then another server may have won, and a caller that shares the server (``private_server``) looks for it."""
 
     def __init__(self, message: str, *, exited: bool = False) -> None:
         super().__init__(message)
         self.exited = exited
-
-
-def free_port(host: str = LOOPBACK) -> int:
-    """A port on ``host`` that nobody is listening on right now."""
-    with socket.socket() as probe:
-        probe.bind((host, 0))
-        return int(probe.getsockname()[1])
 
 
 def find_server_python(*, repo: Path | None = None) -> str | None:
@@ -83,9 +75,12 @@ def find_server_python(*, repo: Path | None = None) -> str | None:
     return str(candidate) if candidate.is_file() and os.access(candidate, os.X_OK) else None
 
 
-def server_command(python: str, *, port: int, documents: Path, web: Path, state: Path, idle_seconds: int) -> list[str]:
-    """The command line of the desktop server on this computer (D445): all three apps (no ``--model``; each app's
-    documents go to ``DIR/<app>``, D431), stopping by itself once nothing has used it for ``idle_seconds`` (D434).
+def server_command(
+    python: str, *, port: int, documents: Path, web: Path, state: Path, idle_seconds: int, owner_key_file: Path
+) -> list[str]:
+    """The command line of her private server on this computer (D445, E8.5): all three apps (no ``--model``; each
+    app's documents go to ``DIR/<app>``, D431), stopping by itself once nothing has used it for ``idle_seconds``
+    (D434), and proving to be hers with the key in ``owner_key_file`` (D1620).
 
     It listens on the loopback address only, so the connection is plain (as in ``start.sh``); it serves the bundled web
     frontend itself, so the page and its WebSocket have the same origin and no ``--allow-origin`` is needed.
@@ -107,6 +102,8 @@ def server_command(python: str, *, port: int, documents: Path, web: Path, state:
         str(web),
         "--exit-when-idle",
         str(idle_seconds),
+        "--owner-key-file",
+        str(owner_key_file),
     ]
 
 

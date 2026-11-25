@@ -41,4 +41,5 @@ export const MACOS_HOST: HostPlatform = {
   // A Mac has no short names; a path with a space in it cannot go on the core's command line.
   shortPath: () => null,
   endTheServer: 'Or quit its Python process in Activity Monitor.',
+  account: () => ({ uid: process.getuid!() }),
 }

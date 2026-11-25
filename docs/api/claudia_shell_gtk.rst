@@ -31,8 +31,14 @@ Local server
 .. automodule:: claudia_shell_gtk.server
    :members:
 
-.. automodule:: claudia_shell_gtk.desktop_server
-   :members: DesktopServer, SERVER_PORT, probe_health, read_port, write_port, is_port_free, server_version
+.. automodule:: claudia_shell_gtk.private_server
+   :members: PrivateServer, probe_health, read_instead, write_instead, is_port_free, server_version
+
+.. automodule:: claudia_shell_gtk.private_port
+   :members:
+
+.. automodule:: claudia_shell_gtk.owner_key
+   :members:
 
 .. automodule:: claudia_shell_gtk.launch
    :members:

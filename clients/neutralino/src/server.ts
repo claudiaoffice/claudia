@@ -17,12 +17,11 @@
 //    claudia_server does on SIGTERM, which this client has not checked. Not verified on a real Windows machine.
 //  - Since D445 this class is only the mechanics of one server process: starting it, asking whether it answers, ending it
 //    when it did not come up. Which server a window uses, and the fact that a server that came up is *not* ended with its
-//    window (it stops itself, `--exit-when-idle`), is desktop-server.ts's business. The server.log is shared by every
+//    window (it stops itself, `--exit-when-idle`), is private-server.ts's business. The server.log is shared by every
 //    start, so a start-up error quotes only what this start wrote.
 
 import { spawn as nodeSpawn, type ChildProcess } from 'node:child_process'
 import { closeSync, existsSync, mkdirSync, openSync, readFileSync, statSync } from 'node:fs'
-import { createServer } from 'node:net'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { randomBytes } from 'node:crypto'
@@ -35,30 +34,13 @@ const LOG_TAIL = 2000
 
 export class ServerStartError extends Error {
   /** `true` when the process ended by itself at start-up (a port or a folder that another server holds, a crash); then
-   * another server may have won, and a caller that shares the server (desktop-server.ts) looks for it. */
+   * another server may have won, and a caller that shares the server (private-server.ts) looks for it. */
   readonly exited: boolean
 
   constructor(message: string, options: { exited?: boolean } = {}) {
     super(message)
     this.exited = options.exited === true
   }
-}
-
-/** A port on `host` nobody is listening on right now (mirrors `free_port()` in the Linux client's server.py). The
- * port can in principle be taken by something else between this call returning and the server actually binding it
- * -- same race the Linux version accepts, not solved here either. */
-export function freePort(host: string = LOOPBACK): Promise<number> {
-  return new Promise((resolve, reject) => {
-    const probe = createServer()
-    probe.once('error', reject)
-    probe.listen(0, host, () => {
-      const address = probe.address()
-      probe.close(() => {
-        if (address && typeof address === 'object') resolve(address.port)
-        else reject(new Error('could not read the probed port back from the OS'))
-      })
-    })
-  })
 }
 
 export interface ServerCommandOptions {
@@ -68,6 +50,8 @@ export interface ServerCommandOptions {
   state: string
   /** `--exit-when-idle`: the server stops itself once nothing has used it for this long (D434, D445). */
   idleSeconds: number
+  /** `--owner-key-file`: the key that makes it a person's private server (E8.5, D1620; owner-key.ts). */
+  ownerKeyFile: string
 }
 
 /** What starts the server: the Python 3.14 that runs `-m claudia_server`, or the one self-contained program of the
@@ -98,6 +82,8 @@ export function buildServerCommand(program: ServerProgram, options: ServerComman
     options.web,
     '--exit-when-idle',
     String(options.idleSeconds),
+    '--owner-key-file',
+    options.ownerKeyFile,
   ]
 }
 

@@ -1,5 +1,5 @@
 {
- "version": "0.45.0",
+ "version": "0.46.0",
  "AI_USER": {
   "value": "'ai'"
  },
@@ -814,7 +814,7 @@
   "value": "<MethodTable>"
  },
  "create_app": {
-  "function": "(hub: 'Hub | Suite', directory: 'UserDirectory | None' = None, *, allowed_origins: 'Iterable[str]' = (), allowed_hosts: 'Iterable[str]' = (), access_secret: 'str | None' = None, max_waiting: 'int' = 256, max_waiting_per_address: 'int' = 64, proxy_hops: 'int' = 0, login_throttle: 'LoginThrottle | None' = None, web_dir: 'str | Path | None' = None, list_documents: 'bool' = True, admin: 'AdminContext | None' = None, fonts: 'FontService | None' = None, hyphenation: 'HyphenationService | None' = None, idle: 'IdleWatch | None' = None, api_docs: 'bool' = False) -> 'FastAPI'"
+  "function": "(hub: 'Hub | Suite', directory: 'UserDirectory | None' = None, *, allowed_origins: 'Iterable[str]' = (), allowed_hosts: 'Iterable[str]' = (), access_secret: 'str | None' = None, max_waiting: 'int' = 256, max_waiting_per_address: 'int' = 64, proxy_hops: 'int' = 0, login_throttle: 'LoginThrottle | None' = None, web_dir: 'str | Path | None' = None, list_documents: 'bool' = True, admin: 'AdminContext | None' = None, fonts: 'FontService | None' = None, hyphenation: 'HyphenationService | None' = None, idle: 'IdleWatch | None' = None, api_docs: 'bool' = False, owner_key: 'bytes | None' = None) -> 'FastAPI'"
  },
  "creates_methods": {
   "value": "<MethodTable>"

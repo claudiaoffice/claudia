@@ -45,9 +45,9 @@ earlier demo was the web app's own). So the window is built the other way round:
   its parent window and hears only the parent, and only when that is a page on this computer's loopback.
 * **The native core** (`core.ts`, bundled to `ext/core.mjs`) is a Node process that Neutralino starts with the window
   (an *extension*). It runs `connection.ts` (the checks), `connector.ts`/`servers.ts`/`settings.ts` (the list),
-  `desktop-server.ts`/`local-server.ts`/`server.ts` (the local server of the three apps, D445) and `files.ts` with the
-  platform's dialogs (the page's files, D501). When the window ends, so does the core: it lets go of the shared server, which stops by
-  itself once nothing is connected.
+  `private-server.ts`/`private-port.ts`/`owner-key.ts`/`local-server.ts`/`server.ts` (her private server, which her three apps
+  share, D445, E8.5) and `files.ts` with the platform's dialogs (the page's files, D501). When the window ends, so does the core: it
+  lets go of her server, which stops by itself once nothing is connected.
 * **The launcher** (`launch.ts`, `cli.ts`) finds the Neutralino binary, on a Mac wraps it in a minimal `.app` (so macOS
   shows the app's name, see `platform/macos-app-bundle.ts`), puts the core's command into the app's
   `neutralino.config.json` for the run (the absolute `node` -- on Windows its 8.3 short name when the path has a space --,
@@ -65,7 +65,7 @@ src/
   core.ts             the native core                                               core-entry.ts   the extension program (core-command.ts: its command)
   core-protocol.ts    page <-> core messages                                        extension.ts    the Neutralino extension link (WebSocket)
   local-server.ts     the local server, put together                                server.ts       start, wait for, stop one server process
-  desktop-server.ts   the one server of the three apps (D445)                       files.ts        the page's files (D501, D502)
+  private-server.ts   her private server, for her three apps (D445, E8.5)          files.ts        the page's files (D501, D502)
   file-protocol.ts    page <-> core file messages                                   menu.ts / menu-actions.ts   the native menu from the shared manifest
   shell-page.ts       the shell page's logic                                        shell-page-entry.ts  its wiring to the browser
   platform/           what is macOS' or Windows' own (D660), and nothing else:
@@ -125,7 +125,7 @@ a command line that contains the folder; the launcher refuses a path with a spac
 | --- | --- |
 | `CLAUDIA_SERVER_PYTHON` | The Python 3.14 that runs the server. Default: `.venv/bin/python` of the checkout. |
 | `CLAUDIA_WEB_DIR` | The built web frontend. Default: `web/.output/public`. If set, it is the only candidate: a wrong path is reported. |
-| `CLAUDIA_SERVER_PORT` | The port of the local server. Default: 8765, the port of `./start.sh` (D504); a Claudia server already there is used. |
+| `CLAUDIA_SERVER_PORT` | The port of her private server. Default: a port of her account, 20000–29999 (D1621); a Claudia server there is used only when it proves to be hers (D1620). |
 | `CLAUDIA_NEUTRALINO_BIN` | The compiled Neutralino binary. Default: `apps/<app>/bin/neutralino-mac_<arch>`, where `neu update` puts it. |
 
 The three apps share one local server (D445, as on Windows): documents are in
@@ -163,7 +163,7 @@ command line that contains the folder; the launcher refuses a path with a space 
 | --- | --- |
 | `CLAUDIA_SERVER_PYTHON` | The Python 3.14 that runs the server. Default: `.venv\Scripts\python.exe` of the checkout. |
 | `CLAUDIA_WEB_DIR` | The built web frontend. Default: `web\.output\public`. If set, it is the only candidate: a wrong path is reported. |
-| `CLAUDIA_SERVER_PORT` | The port of the local server. Default: 8765, the port of `./start.sh` (D504); a Claudia server already there is used. |
+| `CLAUDIA_SERVER_PORT` | The port of her private server. Default: a port of her account, 20000–29999 (D1621); a Claudia server there is used only when it proves to be hers (D1620). |
 | `CLAUDIA_NEUTRALINO_BIN` | The compiled Neutralino binary. Default: `apps\<app>\bin\neutralino-win_x64.exe`, where `neu update` puts it. |
 
 If the window stays on "Starting…" the core could not be reached: the page says so after 20 seconds and names the logs

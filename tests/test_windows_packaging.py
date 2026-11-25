@@ -403,12 +403,15 @@ def test_the_service_has_one_name_in_the_script_and_in_its_configuration():
     assert f'#define ServiceId "{service.findtext("id")}"' in iss_text()
 
 
-def test_the_service_takes_the_port_that_every_desktop_app_looks_at():
-    """The desktop apps use a Claudia server they find on this port (D504): the service must be where they look."""
+def test_the_service_takes_the_port_of_every_shared_server_which_no_private_server_uses():
+    """The service is a shared server, on 8765 like every one (D504); a person's private server is on a port of her
+    own, from a range without 8765 (E8.5, D1621), so the two are never taken for each other."""
     service = ET.parse(WINDOWS / "service" / "claudia-service.xml").getroot()
-    port = re.search(r"--port (\d+)", service.findtext("arguments")).group(1)
-    shell = (ROOT / "clients" / "neutralino" / "src" / "desktop-server.ts").read_text(encoding="utf-8")
-    assert f"SERVER_PORT = {port}" in shell
+    port = int(re.search(r"--port (\d+)", service.findtext("arguments")).group(1))
+    assert port == 8765
+    ports = (ROOT / "clients" / "neutralino" / "src" / "private-port.ts").read_text(encoding="utf-8")
+    first, last = map(int, re.search(r"PRIVATE_PORTS = \{ first: (\d+), last: (\d+) \}", ports).groups())
+    assert not first <= port <= last
 
 
 def test_the_service_listens_on_this_computer_only_and_does_not_stop_when_idle():

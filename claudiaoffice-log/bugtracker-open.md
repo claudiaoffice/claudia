@@ -49,8 +49,8 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | CODE-25 | P2 | Code / Export | A renamed object loses its name in pptx and odp without the export saying so (D450) | **new, open** |  |  |
 | CODE-31 | P2 | Code / i18n | The history speaks English to everybody: command labels and summaries are not translated | **new, open** |  |  |
 | CODE-45 | P2 | Code / Import | pptx placeholders (titles, body text) are not imported at all | **new, open** |  |  |
-| CODE-99 | P2 | Code / desktop clients | A person's apps use any Claudia server on port 8765 of the computer as their own, also another person's or a service's: with two people logged in, the second one's documents are saved in the first one's home folder | **new, open** (read); fix on the macOS installer branch (E8.5) | 2026-11-25 |  |
-| CODE-100 | P2 | Code / desktop clients | Next to a service of another version, the apps refuse to start and say it stops after ten minutes, which a service never does | **new, open** (read); fix on the macOS installer branch (E8.5) | 2026-11-25 |  |
+| CODE-99 | P2 | Code / desktop clients | A person's apps use any Claudia server on port 8765 of the computer as their own, also another person's or a service's: with two people logged in, the second one's documents are saved in the first one's home folder | **in review on `mac-installer`** (E8.5 part 1, D1620, D1621; waits for the owner's acceptance) | 2026-11-25 |  |
+| CODE-100 | P2 | Code / desktop clients | Next to a service of another version, the apps refuse to start and say it stops after ten minutes, which a service never does | **in review on `mac-installer`** (E8.5 part 1, D1620, D1621; waits for the owner's acceptance) | 2026-11-25 |  |
 | PROC-15 | P2 | Process | The tracker and the backlog lag the code: fixed items still "open", 64 stories at a placeholder 50 % | partly fixed 2026-11-25 (batch 1: the index guard); the backlog's placeholder 50 % stays open |  |  |
 | PROC-30 | P2 | Process / desktop clients | The Neutralino (Windows, macOS) tests and the GTK client were not run for `object-interaction`: the generated menus were rebuilt and the manifest unit tests pass, nothing more | **new, open** |  |  |
 | PROC-37 | P2 | Process / scope | D1272 says an export's history and chat come back in with their authors as text; slice B imports the content only (`import_state` returns the state, the `history.jsonl` and `chat.jsonl` of an export are written but never read back) | **new, open** (size 2; needs the owner's decision: build it in slice C or log it) |  |  |
@@ -360,16 +360,19 @@ three hand-written ids. **Acceptance.** A new text's Format ▸ Styles menu has 
 ### CODE-62 · A window that revives the shared server while the old one still holds the port starts it on a random port · P3 · new, open
 **Measured** (found while fixing the `deb.yml` job on 2026-11-17, reported to the owner as a size 3 bug): D445 says
 every app of the suite talks to one shared local server on the same port. When the server is gone, a shell window
-revives it (`_keep_presence` in `clients/linux/src/claudia_shell_gtk/desktop_server.py`). If the old server process
+revives it (`_keep_presence` in `clients/linux/src/claudia_shell_gtk/private_server.py`, then `desktop_server.py`). If the old server process
 is still shutting down and holds the port, `free_port` chooses a random one, so the revived server lives on a port
 nobody has remembered and `desktop-server.json` and `CLAUDIA_SERVER_PORT` no longer agree with it. The CI job showed
 it: the window was ended after the server, revived it on a random port, and the new server then found the folder lock
-of the old one ("another Claudia server uses …/documents"). The Neutralino twin, `clients/neutralino/src/desktop-server.ts`,
+of the old one ("another Claudia server uses …/documents"). The Neutralino twin, `clients/neutralino/src/private-server.ts` (then `desktop-server.ts`),
 is built the same way and is likely affected (**read**, not run).
 **Acceptance:** a test in which the first server still holds the port while a window revives it: the revived server
 waits for the port (a bounded time) and starts on the same one; only when the port stays taken does it say so, instead
 of silently using another.
 **Worked around** in `deb.yml` (the window is ended first, then the server is waited for); the cause is not fixed.
+**Since E8.5 part 1 (2026-11-25, `mac-installer`):** a revived server is started again on the port its page is on when
+that is free; when it is held, on the next port of her range (D1621), written down as `instead`, so her apps agree on
+it. The bounded wait the acceptance asks for is not built.
 
 ### SEC-19 · Imports have no memory cap · P2 · open
 Imports run on `hub.workers`; `check_package` refuses bombs by declared size, but a 512 MiB package may still build a
@@ -572,6 +575,9 @@ scale. Until then a person makes the text larger with a style of her own.
 ## Reported 2026-11-25, while designing the macOS installer (E8.5)
 
 ### CODE-99 · Another person's server is taken for one's own · P2 · size 2 · open
+**Built on `mac-installer` (2026-11-25, E8.5 part 1), in review:** a person's apps use only a server that proves to be hers (D1620), on
+a port of her account (D1621); scenarios of `desktop/private-place.feature` marked `# CODE-99`, tests in
+`clients/neutralino/tests/private-server.test.ts` and `clients/linux/tests/test_private_server.py`.
 **Read:** `DesktopServer.ensure()` takes any Claudia server that answers on 8765 (or the remembered port) and serves the
 window's app at the same version as this computer's server, "whoever started it". On a computer with two people logged in
 (fast user switching on macOS and Windows, two sessions on Linux), the second person's windows use the first person's
@@ -582,6 +588,8 @@ documents instead of their own. **Acceptance:** a scenario with two people on on
 where neither sees the other's list and each finds her own documents again after the other has logged out.
 
 ### CODE-100 · A service of another version locks the apps out · P2 · size 2 · open
+**Built on `mac-installer` (2026-11-25, E8.5 part 1), in review:** a server that is not hers is never compared with her version
+(D1620); scenario of `desktop/private-place.feature` marked `# CODE-100`, same tests.
 **Read:** `checkIsOurs` refuses a Claudia server of another version and tells the person that it "stops by itself ten
 minutes after its last window has closed". A service never does. Windows: an install "only for me" that is newer than an
 all-users install with the service; macOS: `./start-mac-client.sh` next to an installed service. The apps cannot start

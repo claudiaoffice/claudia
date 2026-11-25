@@ -24,7 +24,7 @@ export class ServerBook {
     options: { localOrigin?: string | null; localLabel?: string } = {},
   ) {
     this.localOrigin = options.localOrigin ?? null
-    this.localLabel = options.localLabel ?? 'This computer'
+    this.localLabel = options.localLabel ?? 'Private on this computer' // the page names it in her language (named, E8.5)
   }
   private readonly localLabel: string
 

@@ -1,0 +1,36 @@
+{
+  "about": "Test vectors for a person's private server (E8.5, D1620, D1621), read by the tests of the server (Python), the macOS and Windows client (TypeScript) and the Linux client (Python), so that the three cannot drift apart. The expected values were worked out once with the standard library alone (hmac, hashlib, a hand-written FNV-1a), not with the code they test.",
+  "ports": {
+    "rule": "macOS and Linux: 20000 + uid % 10000. Windows (no uid): 20000 + FNV-1a-32(the profile folder, lower-cased, UTF-8) % 10000.",
+    "byUid": [
+      { "uid": 501, "port": 20501 },
+      { "uid": 502, "port": 20502 },
+      { "uid": 1000, "port": 21000 },
+      { "uid": 10501, "port": 20501 },
+      { "uid": 0, "port": 20000 }
+    ],
+    "byProfileFolder": [
+      { "profileFolder": "C:\\Users\\Anna", "port": 29510 },
+      { "profileFolder": "c:\\users\\anna", "port": 29510 },
+      { "profileFolder": "C:\\Users\\Ben", "port": 23709 },
+      { "profileFolder": "C:\\Users\\Jürgen", "port": 22337 }
+    ]
+  },
+  "proofs": {
+    "rule": "answer = hex(HMAC-SHA256(key, \"claudia owner proof\\n\" + the port the server listens on + \"\\n\" + challenge)); key: 32 bytes, kept as 64 hex digits; challenge: 64 lower-case hex digits.",
+    "cases": [
+      {
+        "key": "6b6579206f6620616e6e6120666f722074686520746573747320303132333435",
+        "port": 20501,
+        "challenge": "00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff",
+        "answer": "890b7e611464fd7de3044ca2fbe531539f897c9d4809c0797cab6528ec529b96"
+      },
+      {
+        "key": "6b6579206f6620616e6e6120666f722074686520746573747320303132333435",
+        "port": 20502,
+        "challenge": "00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff",
+        "answer": "095661d09b5d41a2a9b79d9aca2be8d31efa7470f7c9b69378ba11cd5d83e663"
+      }
+    ]
+  }
+}

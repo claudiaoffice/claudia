@@ -1,39 +1,44 @@
-// The one local server that the three desktop apps share (D445). The twin of clients/linux/.../desktop_server.py; only
-// the words that name the operating system's tools differ between macOS and Windows (src/platform/host.ts).
+// A person's private server, which her three desktop apps share ("Private on this computer"; E8.5, D1620, D1621; before
+// E8.5: the desktop's one server, D445). The twin of clients/linux/.../private_server.py; only the words that name the
+// operating system's tools differ between macOS and Windows (src/platform/host.ts).
 //
-//  - **One server for the suite.** It serves all three apps (no `--model`), keeps one folder of documents and one of
-//    state, and stops by itself (`--exit-when-idle`, D434) ten minutes after nothing was connected. The first window
-//    that needs it starts it; the others find it.
-//  - **Found by its port: 8765, the port of every Claudia server** (D504; `./start.sh` and a cloud server use it too), so
-//    the address -- and what the page keeps for that address -- stays the same. Only when something that is not a
-//    Claudia server holds 8765 does the suite go to another port, remembered in `desktop-server.json` in the state
-//    folder. A running server is recognised by `/api/health` (its apps; its version, for a request from this computer):
-//    nothing else is asked of it, so a Claudia server of this version on 8765 is this computer's server, whoever
-//    started it.
+//  - **One server for her three apps.** It serves all three (no `--model`), keeps her folder of documents and her
+//    folder of state, and stops by itself (`--exit-when-idle`, D434) ten minutes after nothing was connected. Her first
+//    window that needs it starts it; her others find it.
+//  - **On a port of her own** (private-port.ts): from her account, the same at every start, so the address -- and what
+//    the page keeps for it -- stays hers; never 8765, the port of every shared server (D1621).
+//  - **Hers, proven.** Her apps start it with a key from her state folder (owner-key.ts) and use a server they find on
+//    her port only when it answers a fresh challenge with that key: another person's server, a shared one (the service,
+//    8765 and all), or a program on her port is never taken for hers (CODE-99), and its version is no business of hers
+//    (CODE-100).
+//  - **Her port held by something else** (a program, or a Claudia server that is not hers): her server goes to the next
+//    free port of her range (`walkFrom`, the same order for every window of hers) for as long as that lasts, written
+//    down as `instead` in `desktop-server.json` so that her other apps find it. A start uses her server where it is,
+//    and starts one on her own port again (and forgets `instead`) once her server is gone and her port is free.
 //  - **Two windows starting at once** both start a server on the same port; the one that loses (the port, or the
-//    server's own lock on its folder, D435) exits at start-up, and its window then uses the one that won.
+//    server's own lock on its folder, D435) exits at start-up, and its window then uses the one that won, when it is hers.
 //  - **A window never ends the server.** Closing it only lets go of the connection it keeps (`/api/presence`) so the
 //    server is never taken for idle while a window is open -- an open front page holds nothing else. A window that finds
-//    the server gone (it stopped, or somebody ended it) starts it again on the same port, where the page reconnects.
+//    the server gone (it stopped, or somebody ended it) starts it again, where the page reconnects.
 //
 // What is an operating system's own: little. The server is started `detached`, so neither the window nor the launcher's
 // terminal takes it down; it ends by itself, or `server.ts` stops one that never came up (with signals to its process
 // group on a Mac, with taskkill for its process tree on Windows).
 
 import { execFile } from 'node:child_process'
-import { randomBytes } from 'node:crypto'
-import { linkSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs'
+import { mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs'
 import { createServer } from 'node:net'
 import { dirname, join } from 'node:path'
-import { buildServerCommand, freePort, LocalServer, LOOPBACK, ServerStartError, serverProgramCommand, type ServerProgram } from './server.js'
+import { buildServerCommand, LocalServer, LOOPBACK, ServerStartError, serverProgramCommand, type ServerProgram } from './server.js'
 import { hostPlatform } from './platform/host.js'
+import { isOwnedBy, ownerKey, type OwnerKey } from './owner-key.js'
+import { PRIVATE_PORTS, privatePort, walkFrom, type Account } from './private-port.js'
 
 /** `--exit-when-idle`: ten minutes (D445). The clock starts only when the last page has closed. */
 export const IDLE_SECONDS = 600
-/** In the server's state folder: `{"port": N}`, the port the server went to when 8765 was taken. */
+/** In the server's state folder: `{"instead": N}`, the port her server went to while her own port is held by something
+ * else; no file while it is not. (A file from before E8.5 says `{"port": N}` and is not read.) */
 export const STATE_FILE = 'desktop-server.json'
-/** The port of every Claudia server unless told otherwise (D504): ./start.sh, a cloud server, the desktop's own. */
-export const SERVER_PORT = 8765
 
 /** What is listening where the server should be. */
 export type Health =
@@ -77,53 +82,27 @@ export function readSetupCode(state: string): string | null {
   }
 }
 
-/** The remembered port, or `null` for a missing, broken or nonsensical file. */
-export function readPort(file: string): number | null {
+/** The port her server went to instead of her own, or `null` for a missing, broken, nonsensical or older file. */
+export function readInstead(file: string): number | null {
   try {
-    const port = (JSON.parse(readFileSync(file, 'utf8')) as { port?: unknown }).port
+    const port = (JSON.parse(readFileSync(file, 'utf8')) as { instead?: unknown }).instead
     return typeof port === 'number' && Number.isInteger(port) && port >= 1 && port <= 65535 ? port : null
   } catch {
     return null
   }
 }
 
-/** Remember `port`. `exclusive` writes only when there is no file yet (`false` when somebody was first); `overwrite`
- * always writes. The folder is made. */
-export function writePort(file: string, port: number, mode: 'exclusive' | 'overwrite'): boolean {
+/** Write down where her server went instead (written whole under another name first, so that her other windows never
+ * read half a file), or, with `null`, that it is on her own port again. The folder is made. */
+export function writeInstead(file: string, port: number | null): void {
+  if (port === null) {
+    rmSync(file, { force: true })
+    return
+  }
   mkdirSync(dirname(file), { recursive: true })
-  const text = JSON.stringify({ port }) + '\n'
-  if (mode === 'overwrite') {
-    writeFileSync(file, text)
-    return true
-  }
-  // Written whole under another name and then linked into place: a second window that loses never reads a file that is
-  // there but not written yet (two first starts at once are exactly when this is asked). Where the folder cannot hold
-  // links, the exclusive create is the fallback.
-  const temporary = join(dirname(file), `.desktop-server-${process.pid}-${randomBytes(4).toString('hex')}`)
-  try {
-    writeFileSync(temporary, text)
-    try {
-      linkSync(temporary, file)
-      return true
-    } catch (problem) {
-      const code = (problem as NodeJS.ErrnoException).code
-      if (code === 'EEXIST') return false
-      if (code !== 'EPERM' && code !== 'ENOTSUP' && code !== 'ENOSYS') throw problem
-    }
-    try {
-      writeFileSync(file, text, { flag: 'wx' })
-      return true
-    } catch (problem) {
-      if ((problem as NodeJS.ErrnoException).code === 'EEXIST') return false
-      throw problem
-    }
-  } finally {
-    try {
-      unlinkSync(temporary)
-    } catch {
-      // gone already
-    }
-  }
+  const temporary = `${file}.${process.pid}`
+  writeFileSync(temporary, JSON.stringify({ instead: port }) + '\n')
+  renameSync(temporary, file)
 }
 
 /** Can a server listen on `port` of this computer's loopback address right now? */
@@ -162,27 +141,30 @@ export interface ServerProcess {
   stop(): Promise<void>
 }
 
-export interface DesktopServerOptions {
+export interface PrivateServerOptions {
   /** The app of this window: the server must serve it. */
   app: string
   /** What starts the server: an interpreter (it runs `-m claudia_server`) or the installer's `claudia-server.exe`. */
   program: ServerProgram
   web: string
   documents: string
-  /** The server's state folder: `desktop-server.json` and `server.log` are in it. */
+  /** The server's state folder: `desktop-server.json`, `owner.key` and `server.log` are in it. */
   state: string
+  /** Who she is on this computer: her port follows from it (private-port.ts). */
+  account: Account
   idleSeconds?: number
   log?: (message: string) => void
   /** How long a start that lost to another one looks for the winner. */
   raceWaitMs?: number
-  /** The port to use when it is free (`SERVER_PORT`). */
+  /** Her port, when it is not the one of her account (`CLAUDIA_SERVER_PORT`). */
   port?: number
   /** How a person stops a server that will not go, in this operating system's words (src/platform/host.ts). */
   endTheServer?: string
   // What the tests replace:
   probe?: (url: string) => Promise<Health>
+  /** Does the Claudia server at `url` prove to be hers? (owner-key.ts's `isOwnedBy` with her key) */
+  isMine?: (url: string) => Promise<boolean>
   makeServer?: (command: string[], url: string, log: string) => ServerProcess
-  pickPort?: () => Promise<number>
   portFree?: (port: number) => Promise<boolean>
   version?: () => Promise<string | null>
   connect?: (url: string) => PresenceSocket
@@ -193,14 +175,15 @@ const PRESENCE_PAUSE_MS = 1000
 const PRESENCE_PAUSE_MAX_MS = 10_000
 const RACE_POLL_MS = 300
 
-export class DesktopServer {
-  private readonly options: DesktopServerOptions
+export class PrivateServer {
+  private readonly options: PrivateServerOptions
   private readonly stateFile: string
+  private key: OwnerKey | null = null
   private origin: string | null = null
   private letGo = false
   private socket: PresenceSocket | null = null
 
-  constructor(options: DesktopServerOptions) {
+  constructor(options: PrivateServerOptions) {
     this.options = options
     this.stateFile = join(options.state, STATE_FILE)
   }
@@ -214,12 +197,12 @@ export class DesktopServer {
     return join(this.options.state, 'server.log')
   }
 
-  /** Where the server answers, once `start()` has returned. */
   /** The server's setup code while it has no administrator (D1373). */
   setupCode(): string | null {
     return readSetupCode(this.options.state)
   }
 
+  /** Where the server answers, once `start()` has returned. */
   get url(): string | null {
     return this.origin
   }
@@ -245,36 +228,63 @@ export class DesktopServer {
     this.options.log?.(message)
   }
 
-  private async ensure(): Promise<string> {
-    const preferred = this.options.port ?? SERVER_PORT
-    const remembered = readPort(this.stateFile)
-    // A server that runs already: on the port of every Claudia server, or where an earlier start had to go instead.
-    let preferredTaken = false
-    for (const port of remembered !== null && remembered !== preferred ? [preferred, remembered] : [preferred]) {
-      const url = `http://${LOOPBACK}:${port}`
-      const found = await this.probe(url)
-      if (found.kind === 'claudia') {
-        await this.checkIsOurs(found, port)
-        this.remember(port)
-        return url
-      }
-      if (port === preferred) preferredTaken = found.kind === 'other' || !(await this.portFree(port))
-    }
-    // None runs: start one, on the usual port unless something that is not a Claudia server holds it.
-    let port = preferred
-    if (preferredTaken) {
-      port = remembered !== null && remembered !== preferred && (await this.portFree(remembered)) ? remembered : await this.pickPort()
-      this.log(`port ${preferred} is used by something that is not a Claudia server; the local server goes to port ${port}`)
-    }
-    this.remember(port)
-    return this.startServer(`http://${LOOPBACK}:${port}`, port)
+  /** Her port, by her account unless told otherwise. */
+  private get usual(): number {
+    return this.options.port ?? privatePort(this.options.account)
   }
 
-  /** Write down where the server is, if that is not what the file says already. */
-  private remember(port: number): void {
-    if (readPort(this.stateFile) === port) return
+  /** Find her server or start it. `stay`: the port the page is on, tried first when her server has gone (`keepPresence`),
+   * so that it comes back where the page reconnects. */
+  private async ensure(stay?: number): Promise<string> {
+    if (stay !== undefined) {
+      const there = await this.find(stay)
+      if (there === 'hers') return urlOf(stay)
+      if (there === 'free') return this.startServer(stay)
+    }
+    const usual = this.usual
+    const atUsual = await this.find(usual)
+    if (atUsual === 'hers') {
+      this.goneBack()
+      return urlOf(usual)
+    }
+    // Her server may still run where it went while her port was held, and it keeps her documents (D435): use it there.
+    const instead = readInstead(this.stateFile)
+    if (instead !== null && instead !== usual && (await this.find(instead)) === 'hers') return urlOf(instead)
+    if (atUsual === 'free') {
+      this.goneBack()
+      return this.startServer(usual)
+    }
+    this.log(`port ${usual}, hers, is held by ${atUsual === 'held' ? 'something that is not a Claudia server' : 'a Claudia server that is not hers'}; her server uses another port of her range while that lasts`)
+    for (const port of walkFrom(usual)) {
+      const there = await this.find(port)
+      if (there === 'hers' || there === 'free') {
+        this.write(port)
+        return there === 'hers' ? urlOf(port) : this.startServer(port)
+      }
+    }
+    throw new ServerStartError(`No port from ${PRIVATE_PORTS.first} to ${PRIVATE_PORTS.last} is free for your Claudia server on this computer.`)
+  }
+
+  /** What is on `port`: her server (checked to serve this app at this version), nothing (`free`), a Claudia server that
+   * is not hers (`not hers`), or something else that holds it (`held`). */
+  private async find(port: number): Promise<'hers' | 'free' | 'not hers' | 'held'> {
+    const found = await this.probe(urlOf(port))
+    if (found.kind === 'claudia') {
+      if (!(await this.isMine(urlOf(port)))) return 'not hers'
+      await this.checkIsOurs(found, port)
+      return 'hers'
+    }
+    return found.kind === 'none' && (await this.portFree(port)) ? 'free' : 'held'
+  }
+
+  /** Her server is on her own port: `instead` is no longer needed. */
+  private goneBack(): void {
+    if (readInstead(this.stateFile) !== null) this.write(null)
+  }
+
+  private write(instead: number | null): void {
     try {
-      writePort(this.stateFile, port, 'overwrite')
+      writeInstead(this.stateFile, instead)
     } catch (problem) {
       this.log(`${this.stateFile} could not be written: ${(problem as Error).message}`)
     }
@@ -284,7 +294,7 @@ export class DesktopServer {
     const { app } = this.options
     if (!found.apps.includes(app)) {
       throw new ServerStartError(
-        `The Claudia server on this computer (port ${port}) does not serve ${app}; it serves ${found.apps.join(', ') || 'no app'}.\n` +
+        `Your Claudia server on this computer (port ${port}) does not serve ${app}; it serves ${found.apps.join(', ') || 'no app'}.\n` +
           `It stops by itself ten minutes after its last window has closed. ${this.endTheServer} Then start again.`,
       )
     }
@@ -292,24 +302,36 @@ export class DesktopServer {
     const own = await (this.options.version ?? (() => serverVersion(this.options.program)))()
     if (own !== null && own !== found.version) {
       throw new ServerStartError(
-        `A Claudia server of another version (${found.version}, this app belongs to ${own}) is running on this computer (port ${port}).\n` +
+        `Your Claudia server of another version (${found.version}, this app belongs to ${own}) is still running on this computer (port ${port}).\n` +
           `It stops by itself ten minutes after its last window has closed. ${this.endTheServer} Then start again.`,
       )
     }
   }
 
-  private async startServer(url: string, port: number): Promise<string> {
+  private async startServer(port: number): Promise<string> {
     const { program, web, documents, state } = this.options
-    const command = buildServerCommand(program, { port, documents, web, state, idleSeconds: this.options.idleSeconds ?? IDLE_SECONDS })
+    const url = urlOf(port)
+    const idleSeconds = this.options.idleSeconds ?? IDLE_SECONDS
+    const command = buildServerCommand(program, { port, documents, web, state, idleSeconds, ownerKeyFile: this.ownerKey().file })
     const server = (this.options.makeServer ?? defaultMakeServer)(command, url, this.logPath)
     try {
       return await server.start()
     } catch (problem) {
-      // Another window may have started it a moment before: its server holds the folder's lock (D435), and ours
-      // exited. Then that one is the server.
-      if (problem instanceof ServerStartError && problem.exited && (await this.winnerAnswers(url))) {
-        this.log(`another start was first; using its server at ${url}`)
-        return url
+      // Another of her windows may have started it a moment before: its server holds the folder's lock (D435), and
+      // ours exited. Then that one is the server -- when it proves to be hers.
+      if (problem instanceof ServerStartError && problem.exited) {
+        if (await this.winnerAnswers(url)) {
+          this.log(`another start was first; using its server at ${url}`)
+          return url
+        }
+        // Her documents are held by a server that is not on her port and cannot prove to be hers: her own from before
+        // E8.5 (on 8765, with no key), still running after an update (CODE-100's twin for the upgrade).
+        if (FOLDER_HELD.test(problem.message)) {
+          throw new ServerStartError(
+            'Your documents are in use by another Claudia server on this computer: most likely your own, of an older version, which is still running.\n' +
+              `It stops by itself ten minutes after its last window has closed. ${this.endTheServer} Then start again.`,
+          )
+        }
       }
       throw problem
     }
@@ -320,7 +342,7 @@ export class DesktopServer {
     const until = Date.now() + (this.options.raceWaitMs ?? 30_000)
     for (;;) {
       const found = await this.probe(url)
-      if (found.kind === 'claudia' && found.apps.includes(this.options.app)) return true
+      if (found.kind === 'claudia' && found.apps.includes(this.options.app)) return this.isMine(url)
       if (Date.now() >= until) return false
       await sleep(RACE_POLL_MS)
     }
@@ -338,7 +360,8 @@ export class DesktopServer {
         await this.hold()
         pause = PRESENCE_PAUSE_MS
         if (this.letGo) return
-        this.origin = await this.ensure() // gone? then up again; there, nothing happens
+        // gone? then up again, where the page is; there, nothing happens
+        this.origin = await this.ensure(this.origin === null ? undefined : portOf(this.origin))
       } catch (problem) {
         this.log(`the local server is not there and could not be started again: ${(problem as Error).message}`)
         pause = Math.min(pause * 2, PRESENCE_PAUSE_MAX_MS)
@@ -363,14 +386,31 @@ export class DesktopServer {
     return (this.options.probe ?? ((target) => probeHealth(target)))(url)
   }
 
-  private pickPort(): Promise<number> {
-    return (this.options.pickPort ?? (() => freePort()))()
+  private ownerKey(): OwnerKey {
+    this.key ??= ownerKey(this.options.state)
+    return this.key
+  }
+
+  private isMine(url: string): Promise<boolean> {
+    if (this.options.isMine) return this.options.isMine(url)
+    return isOwnedBy(portOf(url), this.ownerKey().key)
   }
 
   private portFree(port: number): Promise<boolean> {
     return (this.options.portFree ?? ((p) => isPortFree(p)))(port)
   }
 }
+
+function urlOf(port: number): string {
+  return `http://${LOOPBACK}:${port}`
+}
+
+function portOf(url: string): number {
+  return Number(new URL(url).port)
+}
+
+/** What a server says when another one holds its folder of documents (claudia_server/folder_lock.py, D435). */
+const FOLDER_HELD = /another Claudia server uses /
 
 function defaultMakeServer(command: string[], url: string, log: string): ServerProcess {
   return new LocalServer(command, { url, log })

@@ -27,6 +27,7 @@ Without `--dir` documents are kept in memory and are gone when the server stops.
 | `WebSocket /api/docs/{doc}/ws` | the live connection without the app (the address before D431) |
 | `WebSocket /api/presence` | carries nothing; a page without a document keeps it open so the server knows it is in use |
 | `GET /api/health` | liveness: `{ok, apps}`, and `version` to a request from this computer to `127.0.0.1`/`localhost` (D445) |
+| `GET /api/owner?challenge=…` | only with `--owner-key-file`, only to this computer: proves to a person's desktop apps that this is her private server, `{answer}` (D1620) |
 | `GET /api/docs` | the documents of every app on this server |
 | `GET /api/{app}/docs` | the documents of one app |
 | `POST /api/docs/lookup` | the document with exactly this uid, in any app (D535) |
@@ -309,6 +310,12 @@ Then only those who know it can make a document (`"access"` in `hello`) or read 
 people who already have a document still log in with their name and password. Somebody without the secret who asks to
 make a document is answered like somebody who asked for one that does not exist, so nothing is learned about which
 documents there are. The secret is compared in constant time and never printed. The web app has no field for it yet.
+
+**A person's private server (E8.5, D1620).** `--owner-key-file FILE` (64 hex digits, made by her desktop apps in the
+state folder) makes the server answer `GET /api/owner?challenge=<64 lower-case hex digits>` with
+`hex(HMAC-SHA256(key, "claudia owner proof\n" + port + "\n" + challenge))`, where the port is the one it listens on.
+Her apps use a server they find on her port only when its answer is right; a shared server has no key and no such
+address. The answers are pinned by `clients/contract/private-port.vectors.json`.
 
 Redaction rewrites the document file and its journal (D725; `redaction_plan` and `redact`, owners on anything and editors on their own work, D727). Not there yet: unencrypted export and import (E2.9), the sealed inbox that gives everybody renewed keys after a role change or key renewal (E2.3, slice C).
 

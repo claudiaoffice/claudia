@@ -171,7 +171,7 @@ describe('ShellBridge server list', () => {
     const bridge = new ShellBridge('computes', sink)
     expect(bridge.servers).toBeNull()
     bridge.receive(JSON.stringify({ type: 'servers', servers: [LOCAL, DEMO, { origin: 3 }, 'x'] }))
-    expect(bridge.servers).toEqual([LOCAL, DEMO])
+    expect(bridge.servers).toEqual([{ ...LOCAL, label: 'Private on this computer' }, DEMO])
   })
   it('never sends a list before the shell has sent its own (an empty page must not wipe what the shell keeps)', () => {
     const { sink, posted } = fakeSink()

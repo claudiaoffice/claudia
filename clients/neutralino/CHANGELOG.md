@@ -5,6 +5,15 @@ two systems had a package each, `clients/macos` and `clients/windows`; their his
 
 ## [0.3.0] - unreleased
 
+### Changed (E8.5, D1620, D1621, D1623; CODE-99, CODE-100): her private server
+- The desktop's one shared server is now a person's private server, "Private on this computer":
+  `desktop-server.ts`/`DesktopServer` became `private-server.ts`/`PrivateServer`. It is on a port of her account
+  (20000–29999, `private-port.ts`; `CLAUDIA_SERVER_PORT` still takes its place), started with `--owner-key-file`
+  (`owner-key.ts`), and used only when it proves to be hers. While something else holds her port it goes to the next
+  free port of her range, written down as `{"instead": N}` in `desktop-server.json` (older files are not read).
+- `SERVER_PORT`, `readPort`, `writePort` and `freePort` are gone. The shell's own label for the entry is "Private on
+  this computer"; the page names it in her language.
+
 ### Added (SEC-12, D1373): the setup code of the desktop's own server
 - The core sends its own server's setup code with `show` (`setupCode`, read in the state folder whenever it shows that
   server); the shell page hands it to the page in `welcome` (`setup_code`), never for another server.

@@ -5,7 +5,7 @@
 //
 // There are two ways to start (the same two as on Linux):
 //  - **the local server** (the default): the window shows a "starting" status at once; the one local server of the
-//    three apps is found or started (desktop-server.ts, D445) and the shell page is told to show it when it answers.
+//    three apps is found or started (private-server.ts, D445, E8.5) and the shell page is told to show it when it answers.
 //    When the core ends, the server is only let go of: it is shared, and stops by itself when nothing is connected;
 //  - **a given server** (`--server URL`): no server is started. The core connects to it like it does when the
 //    person types the address into the page, with the same checks -- https, the right app, a certificate that this
@@ -168,7 +168,7 @@ export class Core {
       this.server = server
       const url = await server.start()
       if (this.stopped) return
-      this.book.localOrigin = url // "This computer" in the page's list, from now on
+      this.book.localOrigin = url // "Private on this computer" in the page's list, from now on
       this.show(url)
     } catch (problem) {
       if (this.stopped) return

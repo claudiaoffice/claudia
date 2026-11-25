@@ -1,5 +1,9 @@
+import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { adminUrl, defaultLabel, isBookmark, list, normalizeServerInput, rename, upsert, withBookmark, withRenamed } from '~/lib/server-bookmarks'
+import { createTranslator } from '~/lib/i18n'
+import { adminUrl, defaultLabel, isBookmark, list, named, normalizeServerInput, rename, upsert, withBookmark, withRenamed } from '~/lib/server-bookmarks'
+
+const german = createTranslator(JSON.parse(readFileSync(new URL('../public/i18n/de.json', import.meta.url), 'utf8')))
 
 function memoryStorage() {
   const map = new Map<string, string>()
@@ -13,12 +17,27 @@ describe('defaultLabel', () => {
   it('falls back to the host when there is no administrator yet', () => {
     expect(defaultLabel('https://docs.example.org:8420', null)).toBe('docs.example.org:8420')
   })
-  it('calls a server on this computer "This computer" (D243, sheet 10)', () => {
-    expect(defaultLabel('http://127.0.0.1:8420', null)).toBe('This computer')
-    expect(defaultLabel('http://localhost:8765', null)).toBe('This computer')
+  it('calls a server on this computer, seen from a plain browser tab, "Shared on this computer" (E8.5, D1623)', () => {
+    expect(defaultLabel('http://127.0.0.1:8420', null)).toBe('Shared on this computer')
+    expect(defaultLabel('http://localhost:8765', null)).toBe('Shared on this computer')
+    expect(defaultLabel('http://127.0.0.1:8765', null, german)).toBe('Geteilt auf diesem Computer')
   })
   it('falls back to the origin itself if it cannot be parsed as a URL', () => {
     expect(defaultLabel('not a url', null)).toBe('not a url')
+  })
+})
+
+describe('named: the name the page gives a place (E8.5, D1623)', () => {
+  const sent = { origin: 'http://127.0.0.1:20501', label: 'This computer', custom: true, local: true }
+  it('calls her own server "Private on this computer", whatever the shell called it', () => {
+    expect(named(sent)).toEqual({ ...sent, label: 'Private on this computer' })
+  })
+  it('says it in her language', () => {
+    expect(named(sent, german).label).toBe('Privat auf diesem Computer')
+  })
+  it('leaves every other place as it is', () => {
+    const demo = { origin: 'https://demo.example.org', label: 'Demo', custom: true }
+    expect(named(demo)).toEqual(demo)
   })
 })
 

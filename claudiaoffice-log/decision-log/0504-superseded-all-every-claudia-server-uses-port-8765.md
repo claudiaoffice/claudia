@@ -1,12 +1,12 @@
 ---
 id: D504
 title: "Every Claudia server on a computer uses port 8765: the desktop apps' shared server and ./start.sh alike"
-status: current
+status: superseded
 applies-to: all
 date: 2026-11-15
 round: "The three desktop clients: one server, files, printing (branch clients)"
 supersedes: [D115]
-superseded-by: []
+superseded-by: [D1621]
 ---
 
 # D504 · Every Claudia server on a computer uses port 8765: the desktop apps' shared server and ./start.sh alike

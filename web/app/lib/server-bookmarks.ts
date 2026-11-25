@@ -4,7 +4,7 @@
 // in-page fetch to another origin: the same "page and socket share one origin" choice the project already made for
 // the Linux shell (D115), and it means none of this ever has to think about CORS.
 
-import { translate as t } from './i18n'
+import { translate } from './i18n'
 import { safeStorage } from './storage'
 
 export interface Bookmark {
@@ -13,7 +13,8 @@ export interface Bookmark {
   label: string
   /** `true` once a person has renamed it: a renamed label is theirs to keep, and `upsert` stops refreshing it. */
   custom: boolean
-  /** `true` for the server on this very computer, which only a Linux shell lists (the entry is the shell's, not renameable). */
+  /** `true` for her own server on this computer ("Private on this computer"), which only a desktop shell lists (the entry
+   * is the shell's, not renameable, and named by the page: `named`). */
   local?: boolean
 }
 
@@ -73,17 +74,24 @@ export function rename(origin: string, label: string, storage: Pick<Storage, 'ge
   return bookmarks
 }
 
-/** The label a fresh bookmark gets: the administrator's name if the server has one; "This computer" for a server on
- *  this computer (D243, sheet 10); else its own host. */
-export function defaultLabel(origin: string, administrator: string | null): string {
+/** The label a fresh bookmark gets: the administrator's name if the server has one; "Shared on this computer" for a
+ *  server on this computer seen from a plain browser tab, which cannot tell whose it is (E8.5, D1623; it was "This
+ *  computer", D243); else its own host. `t` is the translator (the language now, unless a test gives another). */
+export function defaultLabel(origin: string, administrator: string | null, t: typeof translate = translate): string {
   if (administrator) return t('{administrator}\'s server', { administrator })
   try {
     const host = new URL(origin).hostname
-    if (host === 'localhost' || host === '[::1]' || /^127\./.test(host)) return t('This computer')
+    if (host === 'localhost' || host === '[::1]' || /^127\./.test(host)) return t('Shared on this computer')
     return new URL(origin).host
   } catch {
     return origin
   }
+}
+
+/** A place as the page names it: her own server, whatever a desktop shell called it, is "Private on this computer" in
+ *  her language (E8.5, D1623); every other place keeps its label. */
+export function named(bookmark: Bookmark, t: typeof translate = translate): Bookmark {
+  return bookmark.local ? { ...bookmark, label: t('Private on this computer') } : bookmark
 }
 
 /** Where that server's settings pages are: a plain navigation, same origin as everything they serve (D115-style). */

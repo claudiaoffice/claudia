@@ -12,7 +12,7 @@ const { t } = useI18n()
 const props = defineProps<{
   /** The place's tags and how often they are used, for suggestions. */
   counts: { tag: string; count: number }[]
-  /** The place in the sidebar's words ("This computer"). */
+  /** The place in the sidebar's words ("Private on this computer"). */
   place: string
   readonly?: boolean
   /** The start values came from the file: "from the file: Comments". */

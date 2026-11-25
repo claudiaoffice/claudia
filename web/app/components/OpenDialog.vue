@@ -40,7 +40,7 @@ const emit = defineEmits<{ opened: [session: AnySession]; close: [] }>()
 const server = ref(new URLSearchParams(location.search).get('server') ?? location.host)
 const origin = computed(() => `${location.protocol}//${server.value}`)
 // Where the servers come from. In a plain browser they are this browser's own bookmarks (`localStorage`, per origin).
-// In a Claudia desktop shell the shell keeps them — one list per app, across servers, with "This computer" first when
+// In a Claudia desktop shell the shell keeps them — one list per app, across servers, with her private place first when
 // the shell started a server — and connecting to one is the shell's job: it checks the server, then shows it in this
 // same window. (A page that navigated there itself would be handed to the person's browser: the shell never lets its
 // view leave the server it showed.)

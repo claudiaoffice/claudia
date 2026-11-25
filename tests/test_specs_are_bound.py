@@ -25,7 +25,6 @@ TEST_TAGS = ("@unit:", "@io:", "@e2e:")
 #: Approved files that cannot be bound yet, each with the story or bug that binds it. Only ever shrinks: the test below
 #: fails when an entry is no longer needed. Adding an entry is a decision for the owner, not a way to get CI green.
 NOT_BOUND_YET = {
-    "desktop/private-place.feature": "E8.5 macOS installer (part 1, Private on this computer)",
     "desktop/shared-place.feature": "E8.5 macOS installer (part 2, Shared on this computer)",
     "desktop/macos-installer.feature": "E8.5 macOS installer (part 3, the package)",
 }

@@ -10,7 +10,7 @@
 // `nativeMenu` stays `false`.
 import { rememberSetupCode } from './setup-code'
 import type { WireData } from './protocol'
-import { isBookmark, type Bookmark } from './server-bookmarks'
+import { isBookmark, named, type Bookmark } from './server-bookmarks'
 
 
 export const SHELL_CONTRACT_VERSION = 1
@@ -321,7 +321,7 @@ export class ShellBridge {
     } else if (message.type === 'action' && typeof message.action === 'string') {
       for (const handler of this.handlers) handler(message.action, message.target)
     } else if (message.type === 'servers' && Array.isArray(message.servers)) {
-      this.servers = message.servers.filter(isBookmark)
+      this.servers = message.servers.filter(isBookmark).map((bookmark: Bookmark) => named(bookmark))
     } else if (message.type === 'connect_failed' && typeof message.message === 'string') {
       for (const handler of this.failureHandlers) handler(String(message.code), message.message)
     } else if (['file_result', 'file_chunk', 'file_done', 'offer_file'].includes(String(message.type))) {

@@ -9,6 +9,7 @@ from __future__ import annotations
 import contextlib
 import os
 import signal
+import socket
 import subprocess
 import sys
 import textwrap
@@ -19,6 +20,14 @@ import pytest
 
 from claudia_shell_gtk import server
 from claudia_shell_gtk.server import LocalServer, ServerStartError
+
+
+def _free_port() -> int:
+    """A port of this computer nobody listens on right now, for the fake servers of these tests."""
+    with socket.socket() as probe:
+        probe.bind(("127.0.0.1", 0))
+        return int(probe.getsockname()[1])
+
 
 SRC = str(Path(server.__file__).resolve().parents[1])
 
@@ -56,7 +65,7 @@ def fake(tmp_path: Path):
     script.write_text(FAKE, encoding="utf-8")
 
     def make(mode: str = "ok", **options: object) -> LocalServer:
-        port = server.free_port()
+        port = _free_port()
         return LocalServer(
             [sys.executable, str(script), str(port), mode],
             url=f"http://127.0.0.1:{port}",
@@ -85,14 +94,6 @@ def wait_gone(pid: int, seconds: float = 5.0) -> bool:
             return True
         time.sleep(0.05)
     return not alive(pid)
-
-
-def test_a_free_port_can_be_bound_straight_away() -> None:
-    import socket
-
-    port = server.free_port()
-    with socket.socket() as probe:
-        probe.bind(("127.0.0.1", port))
 
 
 def test_start_waits_for_the_health_check_and_returns_the_address(fake) -> None:
@@ -156,7 +157,7 @@ def test_the_server_dies_when_the_shell_is_killed_without_a_chance_to_clean_up(t
     """The shell crashing (or being killed from the task manager) must not leave a server running."""
     script = tmp_path / "fake_server.py"
     script.write_text(FAKE, encoding="utf-8")
-    port = server.free_port()
+    port = _free_port()
     shell = subprocess.Popen(
         [
             sys.executable,
@@ -194,7 +195,7 @@ def test_a_server_that_outlives_the_shell_survives_its_death(tmp_path: Path) -> 
     """The shared desktop server (D445) is started with ``outlives_shell``: no death signal, it stops by itself."""
     script = tmp_path / "fake_server.py"
     script.write_text(FAKE, encoding="utf-8")
-    port = server.free_port()
+    port = _free_port()
     shell = subprocess.Popen(
         [
             sys.executable,
@@ -255,8 +256,9 @@ def test_a_start_that_never_answered_did_not_end_by_itself(fake) -> None:
 # --------------------------------------------------------------------------------------------- the command line
 
 
-def test_the_server_command_is_the_one_server_of_the_suite_on_loopback_only(tmp_path: Path) -> None:
-    """D445: all three apps (no ``--model``), and stopping by itself once nobody has used it for a while (D434)."""
+def test_the_server_command_is_her_private_server_on_loopback_only(tmp_path: Path) -> None:
+    """D445: all three apps (no ``--model``), stopping by itself once nobody has used it for a while (D434), and
+    proving to be hers with her key (E8.5, D1620)."""
     command = server.server_command(
         "/opt/claudia/python",
         port=8123,
@@ -264,6 +266,7 @@ def test_the_server_command_is_the_one_server_of_the_suite_on_loopback_only(tmp_
         web=tmp_path / "web",
         state=tmp_path / "state",
         idle_seconds=600,
+        owner_key_file=tmp_path / "state" / "owner.key",
     )
     assert command[:3] == ["/opt/claudia/python", "-m", "claudia_server"]
     joined = " ".join(command)
@@ -274,6 +277,7 @@ def test_the_server_command_is_the_one_server_of_the_suite_on_loopback_only(tmp_
     assert f"--dir {tmp_path / 'docs'}" in joined
     assert f"--web {tmp_path / 'web'}" in joined
     assert f"--state-dir {tmp_path / 'state'}" in joined
+    assert f"--owner-key-file {tmp_path / 'state' / 'owner.key'}" in joined
     assert "--no-tls" in command  # plain on the loopback address, as `start.sh` does
     assert "--allow-origin" not in joined  # the page comes from the server itself: same origin
 

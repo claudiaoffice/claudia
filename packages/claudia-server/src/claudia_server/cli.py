@@ -87,6 +87,7 @@ from .hub import DEFAULT_MAX_DOCUMENTS, DocumentProvider, Hub, MemoryProvider
 from .hyphenation import HyphenationService
 from .idle import IdleWatch
 from .kdf_policy import KdfPolicy
+from .owner_proof import load_key
 from .protocol import Limits
 from .rasterise import svg_rasteriser
 from .sealed import SealedDocuments
@@ -156,6 +157,12 @@ def build_parser() -> argparse.ArgumentParser:
         metavar="SECONDS",
         help="stop once nothing has used the server for SECONDS: no open socket, no request (the desktop apps' "
         "local server)",
+    )
+    parser.add_argument(
+        "--owner-key-file",
+        metavar="FILE",
+        help="a person's private server: prove to her own apps that it is hers, with the key in FILE (64 hex digits; "
+        "the desktop apps make it, E8.5)",
     )
     parser.add_argument("--web", metavar="DIR", help="serve the built web app from DIR")
     parser.add_argument(
@@ -377,6 +384,17 @@ def _operator_access_secret(args: argparse.Namespace) -> str | None:
     if len(secret) < MIN_ACCESS_SECRET:
         raise UsageError(f"the access secret needs at least {MIN_ACCESS_SECRET} characters")
     return secret
+
+
+def owner_key_of(args: argparse.Namespace) -> bytes | None:
+    """The key of ``--owner-key-file`` (``owner_proof.load_key``), or none without the option; a file that cannot be
+    read or holds no key stops the server with a word (E8.5, D1620)."""
+    if not args.owner_key_file:
+        return None
+    try:
+        return load_key(Path(args.owner_key_file).expanduser())
+    except (OSError, UnicodeDecodeError, ValueError) as exc:
+        raise UsageError(f"--owner-key-file: {exc}") from exc
 
 
 def _access_secret(args: argparse.Namespace, settings: ServerSettings) -> str | None:
@@ -763,6 +781,7 @@ def make_plan(argv: list[str] | None = None) -> Plan:
     hosts = _hosts(args)
     state_dir, settings, admins = _server_state(args)
     secret = _access_secret(args, settings)
+    owner_key = owner_key_of(args)
     _check_places(args)
     limits = Limits()
     library = _shapes(args, models)
@@ -811,6 +830,7 @@ def make_plan(argv: list[str] | None = None) -> Plan:
         fonts=fonts,
         hyphenation=hyphenation,
         idle=idle,
+        owner_key=owner_key,
     )
     scheme, ws_scheme = ("http", "ws") if certificate is None else ("https", "wss")
     banner = [
