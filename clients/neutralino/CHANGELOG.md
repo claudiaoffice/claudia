@@ -5,6 +5,10 @@ two systems had a package each, `clients/macos` and `clients/windows`; their his
 
 ## [0.3.0] - unreleased
 
+### Added (SEC-27): where a picked file is
+- The core's `file_result` `picked` carries `path`, the chosen file's full path, and the shell page hands it to the
+  page (contract version 1, an optional field), for Insert ▸ Image's "Don't save the path".
+
 ### Added (SEC-12, D1373): the setup code of the desktop's own server
 - The core sends its own server's setup code with `show` (`setupCode`, read in the state folder whenever it shows that
   server); the shell page hands it to the page in `welcome` (`setup_code`), never for another server.

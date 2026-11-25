@@ -245,19 +245,11 @@ class ObjectBody:
         return self._pointing("table")
 
     def to_data(self) -> dict:
-        """The plain-data form: what the log stores. Carries ``imported`` unmasked (the log is not a client)."""
+        """The plain-data form: what the log stores and every reader is sent."""
         skip = ("imported", "paragraph")
         data: dict[str, Any] = {name: getattr(self, name) for name in _BODY_FIELDS if name not in skip}
         data["imported"] = None if self.imported is None else self.imported.to_data()
         data["paragraph"] = None if self.paragraph is None else self.paragraph.to_data()
-        return data
-
-    def to_data_for(self, viewer: str) -> dict:
-        """What ``viewer`` is sent: as :meth:`to_data`, but an image's import record is masked for anyone but the
-        person who imported it (a colleague sees "imported from disk", not the importer's own filesystem path)."""
-        data = self.to_data()
-        if self.imported is not None:
-            data["imported"] = self.imported.masked(viewer).to_data()
         return data
 
     @classmethod
@@ -319,10 +311,6 @@ class VisualObject[A: Anchor]:
     def to_data(self) -> dict:
         """The plain-data form: the body's fields plus ``anchor``, the one app-specific part."""
         return {**self.body.to_data(), "anchor": self.anchor.to_data()}
-
-    def to_data_for(self, viewer: str) -> dict:
-        """What ``viewer`` is sent (see :meth:`ObjectBody.to_data_for`)."""
-        return {**self.body.to_data_for(viewer), "anchor": self.anchor.to_data()}
 
     @classmethod
     def from_data(cls, data: dict, read_anchor: ReadAnchor[A]) -> VisualObject[A]:
@@ -414,9 +402,7 @@ class ObjectsChanged:
     order: tuple[str, ...]
 
     def to_data(self) -> dict:
-        """The plain-data form of the event. Carries every ``changed`` object's import record unmasked; a client
-        that goes straight to this (rather than through :meth:`to_data_for`) is trusted with the full record, as
-        the log is."""
+        """The plain-data form of the event, the same for everyone it is sent to."""
         return {
             "type": "objects",
             "holder": self.holder,
@@ -424,11 +410,6 @@ class ObjectsChanged:
             "removed": list(self.removed),
             "order": list(self.order),
         }
-
-    def to_data_for(self, viewer: str) -> dict:
-        """What ``viewer`` is sent: as :meth:`to_data`, with each changed image's import record masked for anyone
-        but the person who imported it (``hub.py`` calls this per connection when an event offers it)."""
-        return {**self.to_data(), "changed": [obj.to_data_for(viewer) for obj in self.changed]}
 
 
 # --------------------------------------------------------------------------- the model mixin

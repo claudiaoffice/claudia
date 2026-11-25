@@ -5,6 +5,10 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+### Changed
+- **Breaking** — `SlideObject.to_data_for` and `ObjectsChanged.to_data_for` are gone with claudia-core's per-person mask of a picture's
+  path (SEC-27): `to_data()` is what everyone is sent.
+
 ## [0.21.0] - 2026-11-25
 
 ### Changed

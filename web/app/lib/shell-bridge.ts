@@ -87,13 +87,22 @@ function fromBase64(data: string): Uint8Array {
   return bytes
 }
 
+/** A file the person chose with the shell's Open dialog (D501), and its full path on this computer when the shell says
+ * it (SEC-27: Insert ▸ Image offers to save it with the picture); `null` from a shell that does not. */
+export interface PickedFile {
+  file: File
+  path: string | null
+}
+
 /** A file on its way from the shell to the page, or from the page to the shell. */
 interface Transfer {
-  /** `pick`: chunks arrive and the promise gets a `File`; `save`: the shell answers with where it went; `offer`: a
+  /** `pick`: chunks arrive and the promise gets a `PickedFile`; `save`: the shell answers with where it went; `offer`: a
    * file the person dropped on the window, which the shell sends unasked (D505). */
   kind: 'pick' | 'save' | 'offer'
   name: string
   size: number
+  /** Where a picked file is on this computer, if the shell said. */
+  path?: string
   chunks: Uint8Array[]
   resolve: (value: never) => void
   reject: (problem: Error) => void
@@ -212,9 +221,9 @@ export class ShellBridge {
 
   /** Ask the shell for a file of this computer, with its own Open dialog showing the `extensions` (D501). `null` when
    * the person cancelled; an `Error` with a message for the person when the shell could not read it. */
-  pickFile(extensions: readonly string[], title?: string): Promise<File | null> {
+  pickFile(extensions: readonly string[], title?: string): Promise<PickedFile | null> {
     const request = this.nextRequest()
-    return new Promise<File | null>((resolve, reject) => {
+    return new Promise<PickedFile | null>((resolve, reject) => {
       this.transfers.set(request, { kind: 'pick', name: '', size: 0, chunks: [], resolve: resolve as (value: never) => void, reject })
       this.sink.post({ type: 'pick_file', request, accept: [...extensions], ...(title ? { title } : {}) })
     })
@@ -287,6 +296,7 @@ export class ShellBridge {
       } else if (message.outcome === 'picked' && transfer.kind === 'pick') {
         transfer.name = typeof message.name === 'string' ? message.name : 'file'
         transfer.size = typeof message.size === 'number' ? message.size : 0
+        if (typeof message.path === 'string' && message.path) transfer.path = message.path
         if (transfer.size > MAX_FILE_BYTES) fail(`the file is larger than ${MAX_FILE_BYTES / 1024 / 1024} MB`)
       }
     } else if (message.type === 'file_chunk' && transfer.kind !== 'save' && typeof message.data === 'string') {
@@ -300,7 +310,7 @@ export class ShellBridge {
       this.transfers.delete(request)
       const file = new File(transfer.chunks as BlobPart[], transfer.name)
       if (file.size !== transfer.size) return transfer.reject(new Error('the file did not arrive whole'))
-      transfer.resolve(file as never)
+      transfer.resolve((transfer.kind === 'pick' ? { file, path: transfer.path ?? null } : file) as never)
     }
   }
 

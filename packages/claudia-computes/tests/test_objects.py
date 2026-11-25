@@ -188,29 +188,13 @@ def test_views_hear_about_images(doc):
     }
 
 
-def test_an_objects_changed_event_masks_the_source_path_for_everyone_but_the_importer(doc):
+def test_an_objects_changed_event_carries_the_saved_source_path(doc):
     seen = collect(doc)
-    put_image(doc)  # imported by "ana" (the default author of put_image)
-    expected_path = doc.model.get_object("i1").body.imported.source_path
-    told = next(e for e in seen if isinstance(e, ObjectsChanged) and e.changed)
-
-    for_importer = told.to_data_for("ana")["changed"][0]["imported"]
-    assert for_importer["source_path"] == expected_path
-
-    for_colleague = told.to_data_for("ben")["changed"][0]["imported"]
-    assert for_colleague["source_path"] is None
-    assert for_colleague["source"] == "disk"  # not hidden: only where on disk
-    assert for_colleague["imported_by"] == "ana"  # not hidden either
-
-    # to_data() (the log's own view) is never masked
-    assert told.to_data()["changed"][0]["imported"]["source_path"] == expected_path
-
-
-def test_a_sheet_objects_to_data_for_masks_only_the_image_it_carries(doc):
     put_image(doc)
-    stored = doc.model.get_object("i1")
-    assert stored.to_data_for("ben")["imported"]["source_path"] is None
-    assert stored.to_data_for("ana")["imported"]["source_path"] == stored.body.imported.source_path
+    told = next(e for e in seen if isinstance(e, ObjectsChanged) and e.changed)
+    assert (
+        told.to_data()["changed"][0]["imported"]["source_path"] == doc.model.get_object("i1").body.imported.source_path
+    )
 
 
 # -- the history reads like sentences -----------------------------------------------------------------------

@@ -543,13 +543,8 @@ class HostedDocument:
         if isinstance(event, EphemeralPublished) and event.message.kind == "role_changed":
             self._apply_people_change("role_changed", event.message.data)  # before it is delivered
         event_type = data.get("type", "state")
-        # An event may offer `to_data_for(viewer)` to mask part of its payload per connection (e.g. an imported
-        # image's source path, hidden from everyone but the person who imported it). Duck-typed, not imported by
-        # name, so this stays app-agnostic: no app's event types are known here.
-        to_data_for = getattr(event, "to_data_for", None)
         for connection in self._audience(event):
-            payload = data if to_data_for is None else to_data_for(connection.account.user)
-            connection.deliver({"event": event_type, "data": payload})
+            connection.deliver({"event": event_type, "data": data})
         if isinstance(event, EphemeralPublished) and event.message.kind == "person_removed":
             self._apply_people_change("person_removed", event.message.data)  # after: she is told, then cut off
 

@@ -1969,6 +1969,10 @@ msgstr "[Dôcûménts àré éncryptéd ôn thîs sérvér. Clàûdé réàds wh
 msgid "Documents are encrypted on this server; Claude reads what it is shown in plain text."
 msgstr "[Dôcûménts àré éncryptéd ôn thîs sérvér; Clàûdé réàds whàt ît îs shôwn în plàîn téxt.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
+#: web/app/components/ImageImportDialog.vue
+msgid "Don't save the path"
+msgstr "[Dôn't sàvé thé pàth~~~~~~~~]"
+
 #: web/app/components/AcceptOwnershipDialog.vue web/app/components/AssignOwnerDialog.vue web/app/components/DownloadDialog.vue web/app/components/ExportFormatDialog.vue web/app/components/PaletteDialog.vue web/app/components/RedactionDialog.vue web/app/components/RotatePopover.vue web/app/components/ShareDialog.vue
 msgid "Done"
 msgstr "[Dôné~~]"
@@ -2148,6 +2152,10 @@ msgstr "[Évérybôdy àgrééd: nôw àt {label}.~~~~~~~~~~~~~]"
 #: web/app/components/RedactionDialog.vue
 msgid "Everybody sees that you redacted something, how much and when, never what it held. How long each piece was stays visible."
 msgstr "[Évérybôdy séés thàt yôû rédàctéd sôméthîng, hôw mûch ànd whén, névér whàt ît héld. Hôw lông éàch pîécé wàs stàys vîsîblé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+
+#: web/app/components/ImageImportDialog.vue
+msgid "Everyone who can open this document sees it."
+msgstr "[Évéryôné whô càn ôpén thîs dôcûmént séés ît.~~~~~~~~~~~~~~~~~~]"
 
 #: web/app/lib/search.ts
 msgid "Everything ({count})"

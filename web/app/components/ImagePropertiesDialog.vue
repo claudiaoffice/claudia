@@ -1,10 +1,9 @@
 <script setup lang="ts">
 // Right-click an image ▸ Properties (follow-up to the context-menu fix, 2026-11-07): everything already known
 // about one imported picture, read-only — the asset's own `format`/`width`/`height`/`data` (`creates.images`) and
-// the object's own `imported` record (who, when, from where; `claudia_core.ImageImport`). `source_path` is simply
-// absent here when the server has masked it (`hub.py`'s per-viewer `to_data_for`) — there is nothing to tell that
-// case apart from a browser that could not supply a path to begin with, and that is by design (D141): the person
-// reading this dialog is told the same thing either way. Nothing here is editable yet; "Replace Image…" and a few
+// the object's own `imported` record (who, when, from where; `claudia_core.ImageImport`). `source_path` is shown when
+// the picture was imported with its path saved (SEC-27), to everyone who can open the document; it is absent when a
+// browser could not know it or the person chose not to save it. Nothing here is editable yet; "Replace Image…" and a few
 // other actions sat in the design mockup for this dialog but are not built (undecided, like most of the context
 // menu's own next steps) — this shows what the picture already carries, and closes.
 import { computed } from 'vue'

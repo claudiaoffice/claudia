@@ -431,8 +431,8 @@ def servers(entries: Iterable[Mapping[str, Any]]) -> Message:
 
 
 def file_result(request: str, outcome: str, **details: Any) -> Message:
-    """What became of a file transfer (D501, D502): ``name`` and ``size`` with ``picked``, ``path`` with ``saved`` and
-    ``opened``, ``message`` (for the person) with ``failed``. Texts that are too long are cut."""
+    """What became of a file transfer (D501, D502): ``name``, ``size`` and ``path`` (SEC-27) with ``picked``, ``path``
+    with ``saved`` and ``opened``, ``message`` (for the person) with ``failed``. Texts that are too long are cut."""
     built: Message = {"type": "file_result", "request": request, "outcome": outcome}
     for key, limit in (("name", _MAX_ADDRESS), ("path", 4096), ("message", _MAX_TEXT)):
         if details.get(key) is not None:

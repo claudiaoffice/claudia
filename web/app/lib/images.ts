@@ -5,9 +5,9 @@
 // preview `<img>`, so there is nothing for this module to duplicate beyond getting the bytes across the wire and
 // back.
 
-/** How an image object's picture got here (E10.8). `source_path` is sent only to the person who imported it —
- * everyone else sees it as `null`, same as the server keeps it (`claudia_server`'s per-viewer masking in
- * `hub.py`). Shared by every app's own image object (`claudia_creates.SlideObject`, `claudia_computes.SheetObject`). */
+/** How an image object's picture got here (E10.8). `source_path` is the file's full path if it was saved on import
+ * (SEC-27), the same for everyone who can open the document, and `null` if not. Shared by every app's own image object
+ * (`claudia_creates.SlideObject`, `claudia_computes.SheetObject`). */
 export interface ImageImport {
   asset: string
   alt: string
@@ -79,7 +79,7 @@ export function formatByteSize(bytes: number): string {
 
 /** What the person told the importer about a picture they chose (`ImageImportDialog.vue`): the file's bytes, base64
  * (`fileToBase64`), what it shows, and where it came from. `sourcePath` is `null` from a plain web browser, which
- * cannot know a file's full path. */
+ * cannot know a file's full path, and `''` when the person asked not to save it (`sourcePathToSend`). */
 export interface PictureImport {
   data: string
   /** The picture's own size in pixels, as the browser read it; it is never sent, only used to cap the size it is shown at. */
@@ -88,6 +88,19 @@ export interface PictureImport {
   sourceName: string
   sourcePath: string | null
   decorative?: boolean
+}
+
+/** Insert ▸ Image offers "Don't save the path" only when it knows the path: a desktop shell's Open dialog says it, a
+ * plain browser never does (SEC-27). */
+export function offersPathChoice(path: string | null): path is string {
+  return path !== null && path !== ''
+}
+
+/** The `sourcePath` Insert ▸ Image sends: the picked file's path, unless the person ticked "Don't save the path" — then
+ * an empty one, which the server keeps as none (SEC-27). A saved path is read by everyone who can open the document. */
+export function sourcePathToSend(path: string | null, dontSave: boolean): string | null {
+  if (path === null) return null
+  return dontSave ? '' : path
 }
 
 /** The most a new picture or container takes when it is put in a document (the owner, 2026-11-19): so that an import

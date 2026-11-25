@@ -249,7 +249,7 @@
       }
     },
     "file_result": {
-      "description": "Shell to page (D501, D502): what became of a transfer. 'picked' comes before the pieces of the chosen file and names it ('name', 'size'); 'saved' and 'opened' give the 'path' it went to; 'cancelled' means the person closed the dialog; 'failed' has a 'message' fit to show to the person.",
+      "description": "Shell to page (D501, D502): what became of a transfer. 'picked' comes before the pieces of the chosen file and names it ('name', 'size', and its full 'path', SEC-27); 'saved' and 'opened' give the 'path' it went to; 'cancelled' means the person closed the dialog; 'failed' has a 'message' fit to show to the person.",
       "type": "object",
       "required": ["type", "request", "outcome"],
       "properties": {

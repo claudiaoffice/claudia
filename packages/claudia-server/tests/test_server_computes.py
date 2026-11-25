@@ -541,17 +541,12 @@ def test_resizing_rows_or_columns_never_resizes_an_object(book):
     assert (obj["w"], obj["h"]) == (400, 200)
 
 
-def test_the_source_path_is_sent_only_to_the_person_who_imported_the_image(book):
+def test_a_saved_source_path_is_the_same_for_everyone(book):
     call(book, "add_sheet", {"name": "S"})
-    box = add_image(book, source_path="/Users/ann/Documents/chart.gif")  # imported by ANN
-    (seen_by_importer,) = objects(book, account=ANN)
-    assert seen_by_importer["imported"]["source_path"] == "/Users/ann/Documents/chart.gif"
-
-    (seen_by_colleague,) = objects(book, account=BEN)
-    assert seen_by_colleague["imported"]["source_path"] is None
-    assert seen_by_colleague["imported"]["source"] == "disk"  # not hidden: only the path is
-    assert seen_by_colleague["imported"]["imported_by"] == "ann"  # not hidden either
-    assert seen_by_colleague["id"] == box
+    add_image(book, source_path="/Users/ann/Documents/chart.gif")  # imported by ANN
+    for account in (ANN, BEN, VERA):
+        (seen,) = objects(book, account=account)
+        assert seen["imported"]["source_path"] == "/Users/ann/Documents/chart.gif", account.user
 
 
 def test_viewers_may_look_at_images_but_not_add_one(book):

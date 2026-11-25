@@ -385,7 +385,7 @@ def test_a_presentation_comes_back_after_a_restart_with_its_shapes_and_order(tmp
     assert objects(back)[0]["anchor"]["x"] == 30 and objects(back)[0]["paragraph"]["text"] == "Agenda"
 
 
-# -- images (E10.8): add_image, the plain-image style, and masking source_path per viewer ---------------------
+# -- images (E10.8): add_image, the plain-image style, and the source path ---------------------
 def test_an_image_is_imported_with_the_plain_image_style(deck):
     added = add_image(deck)
     (obj,) = objects(deck)
@@ -496,16 +496,11 @@ def test_add_object_refuses_the_kinds_it_cannot_make_and_says_where_they_come_fr
     assert objects(deck) == [], "a refused request changes nothing"
 
 
-def test_the_source_path_is_sent_only_to_the_person_who_imported_the_image(deck):
-    box = add_image(deck, source_path="/Users/ann/Documents/chart.gif")  # imported by ANN (the default account)
-    (seen_by_importer,) = call(deck, "slide", {"slide": "s1"}, account=ANN)["objects"]
-    assert seen_by_importer["imported"]["source_path"] == "/Users/ann/Documents/chart.gif"
-
-    (seen_by_colleague,) = call(deck, "slide", {"slide": "s1"}, account=BEN)["objects"]
-    assert seen_by_colleague["imported"]["source_path"] is None
-    assert seen_by_colleague["imported"]["source"] == "disk"  # not hidden: only the path is
-    assert seen_by_colleague["imported"]["imported_by"] == "ann"  # not hidden either
-    assert seen_by_colleague["id"] == box
+def test_a_saved_source_path_is_the_same_for_everyone(deck):
+    add_image(deck, source_path="/Users/ann/Documents/chart.gif")  # imported by ANN (the default account)
+    for account in (ANN, BEN, VERA):
+        (seen,) = call(deck, "slide", {"slide": "s1"}, account=account)["objects"]
+        assert seen["imported"]["source_path"] == "/Users/ann/Documents/chart.gif", account.user
 
 
 def test_viewers_may_look_at_images_but_not_add_one(deck):

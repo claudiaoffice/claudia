@@ -2,11 +2,12 @@
 // Edit ▸ Image… (E10.8, E6.17, E10.16): choose a picture from disk, describe it, put it in the document — on the slide,
 // at a cell of the sheet, or at the caret of the text. The one dialog of all three apps: it asks the person and decodes
 // the picture, and the app's workspace says where it goes (`add`). Only the "browse a file" path — clipboard and
-// drag-and-drop import are not built yet, by the same decision that kept `add_image` to just that. A plain web browser cannot tell us a chosen file's full path (only its name), so `sourcePath` is always
-// null from here; a desktop client that can read the real path would pass it instead, and the server would mask it
-// the same way for everyone but the importer (`hub.py`'s per-viewer `to_data_for`).
-import { computed, onBeforeUnmount, ref } from 'vue'
-import { IMAGE_FILE_ACCEPT, MAX_IMAGE_BYTES, fileToBase64, type PictureImport } from '~/lib/images'
+// drag-and-drop import are not built yet, by the same decision that kept `add_image` to just that. A plain web browser
+// cannot tell us a chosen file's full path (only its name), so `sourcePath` is null there; a desktop shell's Open
+// dialog says it (SEC-27), and then the person may tick "Don't save the path": a saved one is read by everyone who can
+// open the document.
+import { computed, onBeforeUnmount, ref, useId } from 'vue'
+import { IMAGE_FILE_ACCEPT, MAX_IMAGE_BYTES, fileToBase64, offersPathChoice, sourcePathToSend, type PictureImport } from '~/lib/images'
 import { chooseLocalFile } from '~/lib/local-files'
 import { useI18n } from '~/lib/i18n'
 
@@ -22,6 +23,10 @@ const emit = defineEmits<{ close: []; inserted: [id: string] }>()
 
 const fileInput = ref<HTMLInputElement | null>(null)
 const file = ref<File | null>(null)
+/** Where the chosen file is on this computer, when the shell said it; never in a plain browser. */
+const path = ref<string | null>(null)
+const dontSavePath = ref(false)
+const pathHintId = useId()
 const previewUrl = ref('')
 const naturalSize = ref<{ width: number; height: number } | null>(null)
 const alt = ref('')
@@ -37,6 +42,7 @@ function reset() {
   previewUrl.value = ''
   naturalSize.value = null
   file.value = null
+  path.value = null
 }
 onBeforeUnmount(reset)
 
@@ -49,7 +55,7 @@ function onFileChange(event: Event) {
   take((event.target as HTMLInputElement).files?.[0] ?? null)
 }
 
-function take(picked: File | null) {
+function take(picked: File | null, pickedPath: string | null = null) {
   reset()
   fileError.value = ''
   if (!picked) return
@@ -58,6 +64,7 @@ function take(picked: File | null) {
     return
   }
   file.value = picked
+  path.value = pickedPath
   previewUrl.value = URL.createObjectURL(picked)
 }
 
@@ -78,7 +85,7 @@ async function submit() {
   busy.value = true
   const data = await fileToBase64(file.value)
   const aspect = naturalSize.value.width / naturalSize.value.height
-  const id = await props.add({ data, alt: decorative.value ? '' : alt.value.trim(), decorative: decorative.value, sourceName: file.value.name, sourcePath: null, natural: naturalSize.value }, aspect)
+  const id = await props.add({ data, alt: decorative.value ? '' : alt.value.trim(), decorative: decorative.value, sourceName: file.value.name, sourcePath: sourcePathToSend(path.value, dontSavePath.value), natural: naturalSize.value }, aspect)
   busy.value = false
   if (id) emit('inserted', id) // a failure already told the person why, via the session's own notice
 }
@@ -98,6 +105,10 @@ async function submit() {
       </div>
       <label class="field">{{ t('Description (read aloud to someone who cannot see it)') }}<input v-model="alt" autocomplete="off" maxlength="300" :disabled="decorative" ></label>
       <label class="check"><input v-model="decorative" type="checkbox" > {{ t('Decorative: only for looks, a screen reader skips it') }}</label>
+      <div v-if="offersPathChoice(path)" class="path-choice">
+        <label class="check"><input v-model="dontSavePath" type="checkbox" :aria-describedby="pathHintId" > {{ t("Don't save the path") }}</label>
+        <p :id="pathHintId" class="hint">{{ t('Everyone who can open this document sees it.') }}</p>
+      </div>
       <div class="buttons">
         <button class="btn primary" type="submit" :disabled="!canSubmit">{{ busy ? t('Inserting…') : t('Insert') }}</button>
         <button class="btn" type="button" @click="emit('close')">{{ t('Cancel') }}</button>
@@ -115,6 +126,15 @@ async function submit() {
 .form {
   display: grid;
   gap: 14px;
+}
+.path-choice {
+  display: grid;
+  gap: 4px;
+}
+.hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
 }
 .hidden-input {
   position: absolute;

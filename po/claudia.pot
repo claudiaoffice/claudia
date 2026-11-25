@@ -1969,6 +1969,10 @@ msgstr ""
 msgid "Documents are encrypted on this server; Claude reads what it is shown in plain text."
 msgstr ""
 
+#: web/app/components/ImageImportDialog.vue
+msgid "Don't save the path"
+msgstr ""
+
 #: web/app/components/AcceptOwnershipDialog.vue web/app/components/AssignOwnerDialog.vue web/app/components/DownloadDialog.vue web/app/components/ExportFormatDialog.vue web/app/components/PaletteDialog.vue web/app/components/RedactionDialog.vue web/app/components/RotatePopover.vue web/app/components/ShareDialog.vue
 msgid "Done"
 msgstr ""
@@ -2147,6 +2151,10 @@ msgstr ""
 
 #: web/app/components/RedactionDialog.vue
 msgid "Everybody sees that you redacted something, how much and when, never what it held. How long each piece was stays visible."
+msgstr ""
+
+#: web/app/components/ImageImportDialog.vue
+msgid "Everyone who can open this document sees it."
 msgstr ""
 
 #: web/app/lib/search.ts

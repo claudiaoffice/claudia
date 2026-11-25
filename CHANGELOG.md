@@ -6,6 +6,12 @@ While the major version is 0, a minor version may break the API; every break is 
 
 ## [Unreleased]
 
+### Security
+- **Breaking** — a picture's saved path is part of the document (SEC-27): everyone who can open it reads the same
+  `source_path`, as `snapshot` and the export always gave it. `ImageImport.masked` and the per-person
+  `ObjectBody.to_data_for`, `VisualObject.to_data_for` and `ObjectsChanged.to_data_for` are gone; use `to_data()`.
+  `ImageImport.from_data` keeps an empty `source_path` as `None`: the person asked not to save it.
+
 ### Added
 - `Command.sender` and `CommandRegistry.for_persons()` (SEC-25, D2007): a command kind says who may send it,
   `"person"` (the default) or `"server"` (made only through the server's own methods: `Import`, `Setup`,

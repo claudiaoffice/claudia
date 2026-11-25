@@ -16,7 +16,7 @@ function shellThatAnswers() {
       const answer = (reply: Record<string, unknown>) => queueMicrotask(() => bridge?.receive(JSON.stringify(reply)))
       if (m.type === 'file_done') answer({ type: 'file_result', request: m.request, outcome: 'saved', path: '/home/ann/out' })
       if (m.type === 'pick_file') {
-        answer({ type: 'file_result', request: m.request, outcome: 'picked', name: 'a.docx', size: 2 })
+        answer({ type: 'file_result', request: m.request, outcome: 'picked', name: 'a.docx', size: 2, path: '/home/ann/a.docx' })
         answer({ type: 'file_chunk', request: m.request, index: 0, data: btoa('hi') })
         answer({ type: 'file_done', request: m.request, chunks: 1 })
       }
@@ -56,12 +56,12 @@ describe('saving a file', () => {
 describe('choosing a file', () => {
   it('in a desktop window asks the shell, with the extensions of the input', async () => {
     const { bridge, posted } = shellThatAnswers()
-    const taken: File[] = []
+    const taken: Array<[string, string | null]> = []
     const input = { accept: '.docx,.odt', click: vi.fn() } as unknown as HTMLInputElement
-    await chooseLocalFile(input, (file) => taken.push(file))
+    await chooseLocalFile(input, (file, path) => taken.push([file.name, path]))
     expect(input.click).not.toHaveBeenCalled()
     expect(posted.find((m) => m.type === 'pick_file')).toMatchObject({ accept: ['docx', 'odt'] })
-    expect(taken.map((f) => f.name)).toEqual(['a.docx'])
+    expect(taken).toEqual([['a.docx', '/home/ann/a.docx']]) // the path, for "Don't save the path" (SEC-27)
     bridge.detach()
   })
 

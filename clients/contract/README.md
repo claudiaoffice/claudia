@@ -24,7 +24,7 @@ All messages are JSON objects with a `type`. A message is at most 64 KiB. A rece
 | `file_chunk` | either | (D501) One piece of a transfer's file, in order from `index` 0, as base64 `data` (at most 48 KiB: 36 KiB of bytes). |
 | `file_done` | either | (D501) All pieces of a transfer have been sent: `chunks` says how many. |
 | `offer_file` | shell | (D505) The person dropped a file on the window's front page, which the web view did not hand to the page (WebKitGTK): `request` (the shell's name for the transfer), `name` and `size`; the pieces follow in `file_chunk` and `file_done`. The page imports it as if dropped on its own drop area. A page that does not know it ignores it. |
-| `file_result` | shell | (D501, D502) What became of a transfer: `picked` (before the pieces of the chosen file, with `name` and `size`), `saved` or `opened` (with the `path`), `cancelled`, or `failed` (with a `message` fit to show to the person). |
+| `file_result` | shell | (D501, D502) What became of a transfer: `picked` (before the pieces of the chosen file, with `name`, `size` and, SEC-27, its full `path`), `saved` or `opened` (with the `path`), `cancelled`, or `failed` (with a `message` fit to show to the person). |
 | `error` | either | Something in the other side's message was wrong: `code` (`bad_json`, `bad_message`, `unsupported_contract`, `unknown_action`, `internal`) and a `message` for the log. `unsupported_contract` lists what the sender supports. |
 
 Action ids say what an action *does*, not where it sits in a menu (`file.save`, `view.page`, `assistant.ask`): lower

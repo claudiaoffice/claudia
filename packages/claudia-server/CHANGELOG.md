@@ -13,6 +13,13 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 - `apply` refuses with `forbidden` a change only the server makes (SEC-25, D2007), also inside a batch: an editor could
   replace the document with a raw `core.Import` and write checkpoint, redaction and restore records that skip their
   methods' checks. `tests/command_senders.json` lists who may send each kind of change, so a new kind is reviewed.
+- A picture's path is saved only when the person wants it, and then everyone who can open the document reads it
+  (SEC-27, D2009). `add_image` with an empty `source_path` stores no path (not in the state, the history or an export). A
+  saved one is the same in `slide`, `objects`, the `objects` event, `snapshot` and the exports; before, the event and
+  `objects` hid it from all but the importer while `snapshot` and the exports did not. The hub sends every event's
+  `to_data()` to everyone again (no per-person `to_data_for`). In the web app, Insert ▸ Image has "Don't save the
+  path" (unticked) with the hint "Everyone who can open this document sees it." when a desktop shell said where the
+  picked file is; a browser never knows it and shows no box.
 
 ### Added
 - An owner's export that is imported brings the history and chat of the original as one read-only note of its

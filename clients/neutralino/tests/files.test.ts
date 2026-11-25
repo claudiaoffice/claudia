@@ -54,7 +54,7 @@ describe('Files', () => {
     files.handle({ kind: 'save_done', request, chunks: index })
   }
 
-  it('reads the chosen file and sends it in pieces, after saying its name and size', async () => {
+  it('reads the chosen file and sends it in pieces, after saying its name, size and path (SEC-27)', async () => {
     const path = join(dir, 'Budget.docx')
     const bytes = Buffer.alloc(FILE_CHUNK_BYTES + 10, 7)
     writeFileSync(path, bytes)
@@ -62,7 +62,7 @@ describe('Files', () => {
     files.handle({ kind: 'pick_file', request: 'f1', accept: ['docx', 'odt'] })
     await answered(sent)
     expect(asked[0]).toEqual({ kind: 'open', options: { title: 'Open a File', extensions: ['docx', 'odt'], folder: null } })
-    expect(sent[0]).toEqual({ kind: 'file_result', request: 'f1', outcome: 'picked', name: 'Budget.docx', size: bytes.length })
+    expect(sent[0]).toEqual({ kind: 'file_result', request: 'f1', outcome: 'picked', name: 'Budget.docx', size: bytes.length, path })
     const pieces = sent.filter((m) => m.kind === 'file_chunk')
     expect(pieces.map((m) => m.index)).toEqual([0, 1])
     expect(Buffer.concat(pieces.map((m) => Buffer.from(m.data, 'base64')))).toEqual(bytes)

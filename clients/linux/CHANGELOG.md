@@ -4,6 +4,10 @@ Newest first. The shell contract has its own version (`clients/contract/`); this
 
 ## [0.1.0] - unreleased
 
+### Added (SEC-27): where a picked file is
+- The shell contract's `file_result` `picked` carries `path`, the chosen file's full path (optional, so version 1
+  stays), for Insert ▸ Image's "Don't save the path". `Files.pick` sends it.
+
 ### Added (SEC-12, D1373): the setup code of the desktop's own server
 - The shell contract's `welcome` may carry `setup_code` (optional, so version 1 stays): the setup code of the shell's
   own server while it has no administrator, read in its state folder at every `hello`, and only for a page of that
