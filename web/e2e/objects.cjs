@@ -235,9 +235,18 @@ const selectedCount = (page, app) => page.locator(`${APPS[app].objects}.selected
 const turnAngle = async (page) => Number(await page.locator('[data-handle=turn]').getAttribute('aria-valuenow'))
 
 // -- what a second window sees while ann has an object selected (D1223, D1231, PROC-29): ann's colour round it and her
-// name; its own change of the object is refused and nothing changes (`tryIt` is that change, made in ben's window); ann
-// lets go (`letGo`, in her window), and her name goes
+// name; its own change of the object is refused and nothing changes (`tryIt` is that change, made in ben's window,
+// which returns once ben was told no); ann lets go (`letGo`, in her window), and her name goes
 const ANN_MARK = '[data-testid=other-on-object][data-user=ann]'
+/** Ben is told that ann is working there: the server's answer to what he tried. */
+async function toldNo(ben) {
+  await ben.waitForFunction(() => document.querySelector('.toast')?.textContent.includes('ann'), null, { timeout: 8000 })
+}
+/** Ben's notice is cleared, so that the next one is the answer to what he tries next. */
+async function noNotice(ben) {
+  await ben.evaluate(() => document.querySelector('.toast')?.click())
+  await ben.waitForFunction(() => !document.querySelector('.toast'), null, { timeout: 8000 })
+}
 async function watched(where, ann, ben, { tryIt, unchanged, letGo }) {
   await ben.waitForSelector(ANN_MARK, { timeout: 8000 })
   const hers = await ann.$eval('ul.people li', (e) => getComputedStyle(e).backgroundColor)
@@ -246,8 +255,8 @@ async function watched(where, ann, ben, { tryIt, unchanged, letGo }) {
   fs.mkdirSync(SHOTS, { recursive: true })
   await ben.screenshot({ path: `${SHOTS}/objects-${where.replace(' ', '-')}-watched.png` })
   const h = await entries(ann)
+  await noNotice(ben)
   await tryIt()
-  await ben.waitForTimeout(600)
   await unchanged()
   assert.equal(await entries(ann), h, `${where}: what ben tried while ann has it is not in the history`)
   await letGo()
@@ -285,8 +294,18 @@ async function battery(app, kind, ann, ben) {
     const was = await box(obj)
     await watched(where, ann, ben, {
       tryIt: async () => {
-        const at = centre(await box(ben.locator(a.objects)))
-        await drag(ben, at, { x: at.x + 80, y: at.y + 40 })
+        const before = await box(ben.locator(a.objects))
+        await drag(ben, centre(before), { x: centre(before).x + 80, y: centre(before).y + 40 })
+        await toldNo(ben)
+        // and his own window shows it where it is
+        await ben.waitForFunction(
+          ([sel, x, y]) => {
+            const r = document.querySelector(sel).getBoundingClientRect()
+            return Math.hypot(r.x - x, r.y - y) < 2
+          },
+          [a.objects, before.x, before.y],
+          { timeout: 8000 },
+        )
       },
       unchanged: async () => assert.ok(moved(was, await box(obj)) < 2, `${where}: ben's drag did not move what ann has selected`),
       letGo: async () => {
@@ -521,7 +540,10 @@ async function tables(ann, ben) {
     await watched(where, ann, ben, {
       tryIt: async () => {
         await ben.locator('[data-testid=table-tab]').click()
+        await toldNo(ben)
+        await noNotice(ben)
         await ben.keyboard.press('Delete')
+        await toldNo(ben)
       },
       unchanged: async () => assert.equal(await table.count(), 1, `${where}: ben's Delete did not take away what ann has selected`),
       letGo: async () => {
