@@ -2,7 +2,7 @@
 // Windows the link to Neutralino does not always break when Neutralino is killed (seen in CI, 2026-11-25: the core of a
 // killed window was still there 90 seconds later), so the core also looks at the process that started it.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { watchParent } from '../src/parent-watch.js'
+import { watchParent, watchProcess } from '../src/parent-watch.js'
 
 describe('watchParent', () => {
   beforeEach(() => vi.useFakeTimers())
@@ -50,5 +50,22 @@ describe('watchParent', () => {
     stop()
     vi.advanceTimersByTime(60_000)
     expect(gone).not.toHaveBeenCalled()
+  })
+})
+
+describe('watchProcess', () => {
+  beforeEach(() => vi.useFakeTimers())
+  afterEach(() => vi.useRealTimers())
+
+  it('says once that a process that is not the parent is gone: the window, which the core\'s parent (a shell) outlives', () => {
+    const gone = vi.fn()
+    let alive = true
+    watchProcess({ pid: 777, alive: () => alive, onGone: gone })
+    vi.advanceTimersByTime(10_000)
+    expect(gone).not.toHaveBeenCalled()
+    alive = false
+    vi.advanceTimersByTime(60_000)
+    expect(gone).toHaveBeenCalledTimes(1)
+    expect(gone.mock.calls[0]![0]).toMatch(/777/)
   })
 })

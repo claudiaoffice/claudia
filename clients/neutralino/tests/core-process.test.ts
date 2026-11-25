@@ -262,6 +262,31 @@ describe.each(PLATFORMS)('the core process built for %s', (platform) => {
     }
   }, 30_000)
 
+  it('ends when the window process that the page names is killed, though the link to Neutralino is still up (CODE-97, D753)', async () => {
+    // On Windows the core's parent is a shell that outlives Neutralino, and the link stayed up when Neutralino was killed
+    // (CI, 2026-11-25): the page tells the core which process the window is (NL_PID), and the core watches that.
+    const window = spawn(process.execPath, ['-e', 'setInterval(() => {}, 1000)'], { stdio: 'ignore' })
+    start({})
+    const isThere = (pid: number): boolean => {
+      try {
+        process.kill(pid, 0)
+        return true
+      } catch {
+        return false
+      }
+    }
+    try {
+      await neutralino.connected()
+      neutralino.dispatch('claudia.core', { kind: 'start', windowPid: window.pid })
+      await neutralino.until(() => neutralino.broadcasts.length > 0)
+      window.kill('SIGKILL')
+      expect(await Promise.race([exit, new Promise((resolve) => setTimeout(() => resolve('still running'), 10_000))])).toBe(0)
+    } finally {
+      window.kill('SIGKILL')
+      if (child?.pid && isThere(child.pid)) child.kill('SIGKILL')
+    }
+  }, 30_000)
+
   describe('without being told anything (what a window that was not started by the launcher, or a Neutralino that passes on no environment, gives it)', () => {
     const suiteDir = () => suiteFolder(platform, home)
 

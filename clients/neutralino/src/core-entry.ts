@@ -13,7 +13,7 @@ import { FROM_CORE, isRequest, TO_CORE } from './core-protocol.js'
 import { describeAuthInput, ExtensionLink, parseAuth } from './extension.js'
 import { appFromPath, getIdentity } from './identity.js'
 import { configDir, stateDir } from './paths.js'
-import { watchParent } from './parent-watch.js'
+import { watchParent, watchProcess } from './parent-watch.js'
 import { parseAddress } from './servers.js'
 import { Settings } from './settings.js'
 import { appendFileSync, fstatSync, mkdirSync } from 'node:fs'
@@ -89,6 +89,15 @@ function main(): void {
   }
   watchParent({ pid: process.ppid, onGone: end })
 
+  // The page says which process the window is (NL_PID): the core's parent is not always Neutralino (a shell on Windows).
+  let watchingWindow = false
+  const watchWindow = (pid: unknown): void => {
+    if (watchingWindow || typeof pid !== 'number' || !Number.isInteger(pid) || pid <= 1) return
+    watchingWindow = true
+    log(`the window is process ${pid}`)
+    watchProcess({ pid, onGone: end })
+  }
+
   let raw = ''
   let started = false
   process.stdin.setEncoding('utf8')
@@ -119,6 +128,7 @@ function main(): void {
         if (event !== TO_CORE) return
         if (isRequest(data)) {
           appLog(`<- page: ${data.kind}`)
+          if (data.kind === 'start') watchWindow(data.windowPid)
           core?.handle(data)
         } else appLog('ignored a request of the shell page that is not one')
       },

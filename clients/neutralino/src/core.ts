@@ -29,7 +29,7 @@ import type { Settings } from './settings.js'
 
 /** The shell page's requests to the core. */
 export type CoreRequest =
-  | { kind: 'start' }
+  | { kind: 'start'; windowPid?: number }
   | { kind: 'connect'; address: string }
   | { kind: 'servers'; servers: unknown }
   | { kind: 'want_servers' }
