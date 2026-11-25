@@ -267,6 +267,11 @@ describe('the core shows a server', () => {
     t.core({ kind: 'show', origin: 'https://demo.example.org' })
     t.hello()
     expect(t.toFrame()[0]).not.toHaveProperty('setup_code')
+    t.posted.length = 0
+    t.core({ kind: 'show', origin: 'https://demo.example.org', askAdministrator: true }) // as for the shared service (D1624)
+    t.hello()
+    expect(t.toFrame()).toMatchObject([{ type: 'welcome', ask_administrator: true }])
+    expect(t.toFrame()[0]).not.toHaveProperty('setup_code')
   })
 
   it('loads it into the frame and accepts messages from that origin only', async () => {

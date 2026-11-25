@@ -38,10 +38,13 @@ export interface BridgeOptions {
   onServers?: (servers: unknown[]) => void
   /** Choosing and saving files with the shell's dialogs (D501); without it the shell does not offer `files`. */
   files?: FileDesk
-  /** The setup code the page may have (D1373): its own server's, `undefined` for another server's. Asked at every
-   * hello. */
-  setupCode?: () => string | undefined
+  /** What the page of the server shown now may know about setting it up, asked at every hello: her own server's setup
+   * code (D1373), the shared service's when she may read it, or that she has to ask an administrator (D1624). */
+  setup?: () => Setup
 }
+
+/** What the core sends with the server it shows (core.ts `show`). */
+export type Setup = { setupCode?: string; askAdministrator?: true }
 
 export class Bridge {
   private isReady = false
@@ -121,7 +124,7 @@ export class Bridge {
         contract: version,
         app, // D444: this window is one app, whatever the server behind it hosts
         ...(this.options.locale !== undefined ? { locale: this.options.locale } : {}),
-        ...((code) => (code !== undefined ? { setupCode: code } : {}))(this.options.setupCode?.()),
+        ...this.options.setup?.(),
       }),
     )
     this.options.onReady?.()

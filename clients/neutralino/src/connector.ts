@@ -8,7 +8,8 @@
 // `connect_failed` message. The newest request wins: an older one that finishes later is dropped.
 //
 // `ServerBook` is the list of servers that this window's app remembers (servers.ts, settings.ts) as the page sees it:
-// this computer's own server first when there is one, then the remembered ones.
+// her own server first when there is one, then the computer's shared service when it is installed, then the remembered
+// ones.
 
 import { check as defaultCheck, type Outcome } from './connection.js'
 import { AddressRefused, forPage, parseAddress, remember, sanitize, type Address, type Entry } from './servers.js'
@@ -21,16 +22,23 @@ export class ServerBook {
   constructor(
     private readonly app: string,
     private readonly settings: Settings,
-    options: { localOrigin?: string | null; localLabel?: string } = {},
+    options: { localOrigin?: string | null; localLabel?: string; sharedOrigin?: string | null } = {},
   ) {
     this.localOrigin = options.localOrigin ?? null
+    this.sharedOrigin = options.sharedOrigin ?? null
     this.localLabel = options.localLabel ?? 'Private on this computer' // the page names it in her language (named, E8.5)
   }
   private readonly localLabel: string
+  /** The origin of the computer's shared service (shared-service.ts), or `null` when it is not installed. */
+  private readonly sharedOrigin: string | null
 
   /** The list for the page. */
   entries(): Entry[] {
-    return forPage(this.settings.loadServers(this.app), { localOrigin: this.localOrigin, localLabel: this.localLabel })
+    return forPage(this.settings.loadServers(this.app), {
+      localOrigin: this.localOrigin,
+      localLabel: this.localLabel,
+      sharedOrigin: this.sharedOrigin,
+    })
   }
 
   /** Keep the list that the page handed back (what is valid of it). */
@@ -38,9 +46,9 @@ export class ServerBook {
     this.settings.saveServers(this.app, sanitize(raw))
   }
 
-  /** Add the server at `origin` unless it is this computer's own or already there. */
+  /** Add the server at `origin` unless it is her own, the shared service or already there. */
   remember(origin: string): void {
-    if (origin === this.localOrigin) return
+    if (origin === this.localOrigin || origin === this.sharedOrigin) return
     this.settings.saveServers(this.app, remember(this.settings.loadServers(this.app), origin))
   }
 }

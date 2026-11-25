@@ -64,8 +64,10 @@ VALID = [
         "servers": [
             {"origin": "http://127.0.0.1:41233", "label": "This computer", "custom": True, "local": True},
             {"origin": "https://demo.example.org:8420", "label": "demo", "custom": False},
+            {"origin": "http://127.0.0.1:8765", "label": "Shared", "custom": False, "shared": True},  # E8.5, D1622
         ],
     },
+    {**WELCOME, "ask_administrator": True},  # (D1624) a page of the shared service that she may not set up
     # (D501, D502) files through the shell's own dialogs, in pieces
     {"type": "pick_file", "request": "f1-abc", "accept": ["docx", "odt"], "title": "Open a File"},
     {"type": "pick_file", "request": "f1", "accept": []},
@@ -112,6 +114,8 @@ INVALID = [
     {"type": "servers", "servers": [{"origin": "https://a.example.org", "label": "x" * 200, "custom": False}]},
     {"type": "servers", "servers": [{"origin": "https://a.example.org", "label": "x", "custom": "yes"}]},
     {"type": "servers", "servers": [{"origin": "https://a.example.org", "label": "x", "custom": False, "local": 1}]},
+    {"type": "servers", "servers": [{"origin": "https://a.example.org", "label": "x", "custom": False, "shared": 1}]},
+    {**WELCOME, "ask_administrator": "yes"},
     {"type": "servers", "servers": [{"origin": "https://a.example.org", "label": "x", "custom": False}] * 65},
     {"type": "pick_file", "accept": []},  # (D501) no request
     {"type": "pick_file", "request": "f1", "accept": [".docx"]},

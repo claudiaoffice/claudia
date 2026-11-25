@@ -134,6 +134,7 @@ const CHECKS: Record<string, Check> = {
       throw bad("'locale' is a BCP-47-ish tag such as 'de' or 'de-DE'")
     }
     if ('app' in message) token(message.app, "'app'")
+    if ('ask_administrator' in message && message.ask_administrator !== true) throw bad("'ask_administrator' is true when given")
   },
   action(message) {
     actionId(message.action)
@@ -235,7 +236,9 @@ function checkServerEntry(entry: unknown): void {
     throw bad(`a server's 'label' is text of at most ${MAX_LABEL} characters`)
   }
   if (typeof entry.custom !== 'boolean') throw bad("a server's 'custom' is true or false")
-  if ('local' in entry && typeof entry.local !== 'boolean') throw bad("a server's 'local' is true or false")
+  for (const flag of ['local', 'shared']) {
+    if (flag in entry && typeof entry[flag] !== 'boolean') throw bad(`a server's '${flag}' is true or false`)
+  }
 }
 
 /** The message in `raw` (one JSON object), checked against the contract. Throws `ContractError` (`bad_json` or
@@ -286,8 +289,11 @@ export function welcome(options: {
   locale?: string
   /** The app of this window (D444): the page then shows that app's documents only. */
   app?: string
-  /** The setup code of the shell's own server, for a page of that server only (D1373). */
+  /** The setup code of the shell's own server, for a page of that server only (D1373); or of the computer's shared
+   * service when this person may read it (D1624). */
   setupCode?: string
+  /** A page of the shared service that she may not set up: "ask an administrator of this computer" (D1624). */
+  askAdministrator?: boolean
 }): Message {
   const built: Message = {
     type: 'welcome',
@@ -298,6 +304,7 @@ export function welcome(options: {
   if (options.locale !== undefined) built.locale = options.locale
   if (options.app !== undefined) built.app = options.app
   if (options.setupCode !== undefined) built.setup_code = options.setupCode
+  if (options.askAdministrator === true) built.ask_administrator = true
   return built
 }
 
@@ -326,7 +333,7 @@ export function connectFailed(code: ConnectFailedCode, message: string): Message
   return built
 }
 
-export type ServerEntry = { origin: string; label: string; custom: boolean; local?: boolean }
+export type ServerEntry = { origin: string; label: string; custom: boolean; local?: boolean; shared?: boolean }
 
 export function servers(entries: readonly ServerEntry[]): Message {
   const built: Message = { type: 'servers', servers: entries.map((entry) => ({ ...entry })) }

@@ -195,6 +195,8 @@ def _check_welcome(message: Message) -> None:
         raise _bad("'locale' is a BCP-47-ish tag such as 'de' or 'de-DE'")
     if "app" in message:  # the window's own app (D444)
         _token(message["app"], "'app'")
+    if "ask_administrator" in message and message["ask_administrator"] is not True:  # D1624, never sent by Linux
+        raise _bad("'ask_administrator' is true when given")
 
 
 def _check_action(message: Message) -> None:
@@ -248,8 +250,9 @@ def _check_server_entry(entry: object) -> None:
         raise _bad(f"a server's 'label' is text of at most {_MAX_LABEL} characters")
     if not isinstance(entry.get("custom"), bool):
         raise _bad("a server's 'custom' is true or false")
-    if "local" in entry and not isinstance(entry["local"], bool):
-        raise _bad("a server's 'local' is true or false")
+    for flag in ("local", "shared"):
+        if flag in entry and not isinstance(entry[flag], bool):
+            raise _bad(f"a server's '{flag}' is true or false")
 
 
 def _check_servers(message: Message) -> None:

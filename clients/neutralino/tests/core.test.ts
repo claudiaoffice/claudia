@@ -9,6 +9,7 @@ import { Core, type CoreMessage, type ServerLike } from '../src/core.js'
 import { getIdentity } from '../src/identity.js'
 import { SetupProblem } from '../src/local-server.js'
 import { parseAddress } from '../src/servers.js'
+import type { SetupCodeAccess, SharedService } from '../src/shared-service.js'
 import { Settings } from '../src/settings.js'
 
 const tick = () => new Promise((resolve) => setTimeout(resolve, 0))
@@ -39,7 +40,7 @@ describe('Core', () => {
   afterEach(() => rmSync(directory, { recursive: true, force: true }))
 
   const make = (options: Partial<ConstructorParameters<typeof Core>[0]> = {}) =>
-    new Core({ identity: getIdentity('creates'), settings, send: (m) => sent.push(m), ...options })
+    new Core({ identity: getIdentity('creates'), settings, send: (m) => sent.push(m), sharedService: null, ...options })
 
   describe('with its own server', () => {
     it('says it is starting, then shows the server, and lists it as this computer', async () => {
@@ -172,6 +173,58 @@ describe('Core', () => {
       core.handle({ kind: 'connect', address: 'http://127.0.0.1:5000' }) // an administrator exists by now
       await tick()
       expect(sent.at(-1)).toEqual({ kind: 'show', origin: 'http://127.0.0.1:5000' })
+    })
+  })
+
+  describe("the computer's shared service (E8.5, D1622, D1624)", () => {
+    const SHARED = 'http://127.0.0.1:8765'
+    const service = (access: SetupCodeAccess = { kind: 'none' }): SharedService => ({ origin: SHARED, setupCode: () => access })
+    const reached = async (address: { origin: string }): Promise<Outcome> => ({ kind: 'reached', origin: address.origin, app: 'creates' })
+    const started = async (options: Partial<ConstructorParameters<typeof Core>[0]>) => {
+      const core = make({ serverFactory: async () => new FakeServer(), check: reached, ...options })
+      core.handle({ kind: 'start' })
+      await tick()
+      return core
+    }
+    const places = () => {
+      const last = sent.at(-1) as { servers: { origin: string; label: string; shared?: boolean }[] }
+      return last.servers
+    }
+
+    it('is listed after her private place', async () => {
+      const core = await started({ sharedService: service() })
+      core.handle({ kind: 'want_servers' })
+      expect(places().map((s) => [s.origin, s.label])).toEqual([
+        ['http://127.0.0.1:5000', 'Private on this computer'],
+        [SHARED, 'Shared on this computer'],
+      ])
+    })
+
+    it('is not listed without the service', async () => {
+      const core = await started({ sharedService: null })
+      core.handle({ kind: 'want_servers' })
+      expect(places().map((s) => s.origin)).toEqual(['http://127.0.0.1:5000'])
+    })
+
+    it('is not remembered as another server when she opens it', async () => {
+      const core = await started({ sharedService: service() })
+      core.handle({ kind: 'connect', address: SHARED })
+      await tick()
+      expect(settings.loadServers('creates')).toEqual([])
+    })
+
+    it('is shown with its setup code to whom may read it, and with "ask an administrator" to anyone else', async () => {
+      for (const [access, extra] of [
+        [{ kind: 'code', code: 'K7QM-4TXR-92HB' }, { setupCode: 'K7QM-4TXR-92HB' }],
+        [{ kind: 'may not' }, { askAdministrator: true }],
+        [{ kind: 'none' }, {}],
+      ] as const) {
+        const core = await started({ sharedService: service(access) })
+        core.handle({ kind: 'connect', address: SHARED })
+        await tick()
+        expect(sent.at(-1)).toEqual({ kind: 'show', origin: SHARED, ...extra })
+        await core.stop()
+      }
     })
   })
 

@@ -45,7 +45,10 @@ MAX_LABEL = 128
 MAX_ADDRESS = 255
 
 Entry = dict[str, Any]
-"""``{"origin": ..., "label": ..., "custom": ...}``, and ``"local": True`` for this computer's own server."""
+"""``{"origin": ..., "label": ..., "custom": ...}``, and ``"local": True`` for her own server on this computer.
+
+``"shared": True`` marks the computer's shared service on macOS and Windows (E8.5, D1622); Linux has none (Q21), so
+this shell never sets it, but keeps the same rule for it in :func:`sanitize`."""
 
 _DEFAULT_PORTS = {"http": 80, "https": 443}
 _BARE_HOST = re.compile(r"^(\[[0-9A-Fa-f:.]+\]|[^:/\s\[\]]+)(:\d+)?$")
@@ -162,8 +165,9 @@ def sanitize(raw: object) -> list[Entry]:
     """What may be remembered of ``raw`` — a list from the settings file or one that the page sent.
 
     Entries that are not a valid origin are dropped, origins are made canonical, a server stays in the list once (the
-    first wins), a missing or unusable label becomes the default one, a long one is cut, this computer's own entry is
-    never kept, and the list is cut at :data:`MAX_SERVERS`. Anything that is not a list is no list at all.
+    first wins), a missing or unusable label becomes the default one, a long one is cut, her own server's entry is
+    never kept, nor the shared service's unless a person named it, and the list is cut at :data:`MAX_SERVERS`.
+    Anything that is not a list is no list at all.
     """
     if not isinstance(raw, list):
         return []
@@ -172,6 +176,8 @@ def sanitize(raw: object) -> list[Entry]:
     for item in raw:
         if not isinstance(item, dict) or item.get("local") is True or not isinstance(item.get("origin"), str):
             continue
+        if item.get("shared") is True and item.get("custom") is not True:
+            continue  # the shell lists the service while it is installed; only a name a person gave it is kept
         if "://" not in item["origin"]:
             continue  # a stored origin names its scheme; only what a person types may be a bare host
         try:

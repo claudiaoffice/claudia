@@ -11,7 +11,7 @@
 // object or its token. It can only post messages, and this page accepts them only from its own frame and only from
 // the origin that the core told it to show.
 
-import { Bridge } from './bridge.js'
+import { Bridge, type Setup } from './bridge.js'
 import { CORE_ID, FROM_CORE, TO_CORE, isCoreMessage } from './core-protocol.js'
 import { CONNECT_FAILED_CODES, type ConnectFailedCode } from './contract.js'
 import type { CoreMessage, CoreRequest } from './core.js'
@@ -107,8 +107,8 @@ export class ShellPage {
   private readonly bridge: Bridge
   /** The origin of the web app in the frame; messages from any other are refused. `null` while no page is shown. */
   private frameOrigin: string | null = null
-  /** The setup code the core sent with the server shown now: its own server's, for its settings pages (D1373). */
-  private setupCode: string | undefined
+  /** What the core sent with the server shown now about setting it up (D1373, D1624), for its settings pages. */
+  private setup: Setup = {}
   private menuPending = false
   /** Has the core said anything yet? Until then the page cannot know that it is there at all. */
   private coreSeen = false
@@ -135,7 +135,7 @@ export class ShellPage {
       onConnect: (address) => this.ask({ kind: 'connect', address }),
       onServers: (servers) => this.ask({ kind: 'servers', servers }),
       // D501, D502: the core shows the dialogs and reads and writes the files; this page only passes the pieces on.
-      setupCode: () => this.setupCode,
+      setup: () => this.setup,
       files: {
         pick: (request, accept, title) => this.ask({ kind: 'pick_file', request, accept, ...(title !== undefined ? { title } : {}) }),
         begin: (request, name, size, purpose) => this.ask({ kind: 'save_begin', request, name, size, purpose }),
@@ -269,7 +269,10 @@ export class ShellPage {
       case 'show': {
         this.bridge.reset()
         this.frameOrigin = new URL(message.origin).origin
-        this.setupCode = message.setupCode
+        this.setup = {
+          ...(message.setupCode !== undefined ? { setupCode: message.setupCode } : {}),
+          ...(message.askAdministrator ? { askAdministrator: true as const } : {}),
+        }
         this.env.status.show('Opening…', undefined, false)
         this.env.frame.src = `${this.frameOrigin}/`
         return
