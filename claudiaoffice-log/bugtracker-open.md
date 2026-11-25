@@ -560,13 +560,20 @@ holds everywhere. **Fix.** Tell her once when she tries: a greyed entry, a gestu
 
 ## Round of 2026-11-22 (E6.31 step 2: slides in computes, branch `e6-31-slides-in-computes`)
 
-### UX-70 · What an export could not keep is never shown · P2 · size 2 · new, open
+### UX-70 · What an export could not keep is never shown · P2 · size 2 · fix on `batch-4`
 **Found** while writing the slide's loss (`slide_plan.py`): `export_office` answers with `losses` (`{kind, detail,
 count}`) for xlsx and ods, and composes and creates have their own, but no client reads them (`ExportedFile.losses` in
 `web/app/lib/base-session.ts` is never shown). The person is not told that a chart tab became a sheet, that a formula
 was written as its value, or (since E6.31) that a slide was written as a sheet. Evidence: **read**. **Acceptance:** after
 an export that lost something, the person is told what, in words, once per kind (the scenario "Downloading as xlsx or
 ods says that a slide became a sheet" of `specs/computes/slides.feature` is one of them).
+**Fix** on `batch-4`, to the design the owner agreed on 2026-11-25 (`notes/mockups/export-dialog-tracked-changes.svg`,
+panel B): after Export the dialog says "The file does not hold:", one line per kind (with how many when more than one)
+and a sentence why or what to do, then "Everything else is in the file."; a format that reported nothing lost says
+"Everything is in the file."; a format that does not report says nothing more. The words of every code are in
+`web/app/lib/export-losses.ts`; a code nobody has put into words is still said, with its code. The result is in a
+`role=status` region that is always in the dialog (BITV 4.1.3). **Test:** `web/tests/export-losses.test.ts`; used in
+the browser once (odt of a typed text: "Who typed which words").
 
 ### UX-71 · Text on a workbook's slide is tiny · P2 · size 2 · needs decision
 **Found** in the screenshots of `web/e2e/computes-slides.cjs`: a text box on a slide in computes is drawn in the
