@@ -591,8 +591,8 @@ path is an owner's upload. Found by a helper (PROC-37), confirmed by reading. **
 from an editor is refused (`forbidden`), and the history is unchanged; the owner says whether any other command is
 for the server's own use only.
 **Fix** on `batch-5` (D2007): every kind of change says who may send it (`Command.sender`); `apply` decodes with
-`registry.for_persons()`, which refuses `Import`, `Setup`, `Checkpoint`, `Redaction`, `Redacted`, `Restore` and `Switch`
-with `forbidden`, at any depth. `tests/command_senders.json` lists all 91 kinds. **Test:** an editor's `apply` of each
+`registry.for_persons()`, which refuses `Import`, `Setup`, `Checkpoint`, `Redaction`, `Redacted`, `Restore`, `Switch`
+and computes' `ApplyCalculated` with `forbidden`, at any depth. `tests/command_senders.json` lists all 91 kinds. **Test:** an editor's `apply` of each
 of the seven, alone and inside a `Batch`, is refused and the history unchanged (red: all seven accepted).
 
 ### UX-93 · The font banner cannot be read · P2 · size 2 · open

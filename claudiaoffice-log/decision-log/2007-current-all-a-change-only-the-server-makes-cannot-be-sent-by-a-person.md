@@ -22,7 +22,9 @@ a `Batch`. The apps never send raw changes; only the tests and scripts do.
 **Rule.** Every kind of change says who may send it (`Command.sender`): `"person"`, the default, or `"server"`. Server
 only are `core.Import`, `core.Setup`, `core.Checkpoint`, `core.Redaction`, `core.Redacted`, `core.Restore` and
 `core.Switch`: each is made by the server's own method (import, a new document, File ▸ Save, Redact…, Restore…, the
-switch of line), which checks the role first. `apply` decodes what a person sends with the registry
+switch of line), which checks the role first. So is `computes.ApplyCalculated`, a heavy formula's result, which only
+the server's worker lands (found by the review of the list; written as the assistant's, it would let a person put any
+value on a waiting cell under that name). `apply` decodes what a person sends with the registry
 `for_persons()`, which refuses a server-only kind with `ServerOnly` (`forbidden` on the wire) wherever it sits: a
 change that holds changes decodes them through the same registry, so a batch cannot carry one in. Nothing changes and
 nothing is written to the history.
