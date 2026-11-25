@@ -2,7 +2,7 @@
 
 It lives in ``clients/contract`` beside the shell contract because it belongs to every client: the Linux client turns
 it into GtkBuilder XML (``claudia_shell_gtk/menu_xml.py``), ``clients/neutralino/tools/generate_menu.py`` into the
-macOS and Windows menus, and ``scripts/generate_keys.py`` into the web app's key table.
+macOS and Windows menus, and ``scripts/generate_menus.py`` into the web app's key table.
 
 
 D120 gives every app the same seven header-bar menus — File, Edit, Format, View, Tools, Preferences (called Config
@@ -112,7 +112,7 @@ class KeyOwner(enum.Enum):
     Linux, Windows and macOS shells, which show it in their menus."""
 
     PAGE = "page"
-    """The page listens, in every client (``web/app/lib/keys.generated.ts``, made from this manifest). A shell only
+    """The page listens, in every client (``web/app/lib/menus.generated.ts``, made from this manifest). A shell only
     shows the key: binding it too would take it away from the page's own rules (no shortcut while typing in a
     field)."""
     SHELL = "shell"
@@ -371,6 +371,8 @@ ANYONE = "role: anyone"
 EDITORS = "role: editor or owner"
 SELECTED = f"{EDITORS} · selection: something"
 CELLS = f"{EDITORS} · selection: a cell or range"
+# what is selected, or the paragraph the cursor is in: what a style is for (a caret is not "something", D1601; D1654)
+HERE = f"{EDITORS} · selection: something, or the cursor in a text"
 LIST_ITEM = f"{EDITORS} · selection: a list item"
 
 # --------------------------------------------------------------------------------------------- shared across apps
@@ -419,7 +421,7 @@ STYLE = _page(
     "Apply…",
     "Choose a style for the selection, each drawn in its own look",
     key="<Primary><Alt>a",
-    fits=SELECTED,
+    fits=HERE,
 )
 ROTATE_BY = _page(
     "format.rotate-by",
@@ -669,7 +671,7 @@ def _format_menu(*, look: str, clear_cell_style: bool = False, headings: tuple[s
         "Style",
         (
             STYLE,
-            _page("format.look", "Edit…", look, key="<Primary><Alt><Shift>h", fits=SELECTED),
+            _page("format.look", "Edit…", look, key="<Primary><Alt><Shift>h", fits=HERE),
             *clear,
             _page(
                 "format.all-styles",
@@ -1133,7 +1135,7 @@ def composes() -> Manifest:
             tools,
         ),
         context_menus=(
-            _object_menu(native=True, edit_text=False, wrap=True, grid=False),
+            _object_menu(native=True, edit_text=True, wrap=True, grid=False),
             *_paragraph_menus(),
             table,
             _thing("heading", "Heading"),
@@ -1330,7 +1332,7 @@ def computes() -> Manifest:
             tools,
         ),
         context_menus=(
-            _object_menu(native=False, edit_text=False, wrap=False, grid=False),
+            _object_menu(native=False, edit_text=True, wrap=False, grid=False),
             cell,
             _thing("paragraph", "Paragraph", style=True),
             _thing("list", "List"),

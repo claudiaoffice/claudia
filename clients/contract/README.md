@@ -9,7 +9,7 @@ messages against it.
 `src/claudia_menus/` is the menu definition every client builds its menus from (D1643): which menus there are, what
 is in them, each entry's key and who carries it out. It is pure data with no dependencies and runs on Python 3.12, so
 the Linux client imports it on the system's Python, `clients/neutralino/tools/generate_menu.py` writes the macOS and
-Windows menus from it, and `scripts/generate_keys.py` writes the web app's key table from it. Its tests are in the
+Windows menus from it, and `scripts/generate_menus.py` writes the web app's key table from it. Its tests are in the
 Linux client (`clients/linux/tests/test_manifest.py`), which also checks it against that client's contract module and
 app identities.
 

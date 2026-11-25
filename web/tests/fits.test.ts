@@ -1,14 +1,24 @@
 // Whether a menu entry fits (D1600–D1606, D1642, D1650): its rule, read from the workbook's words (D1646), judged
 // against what is true now. Plain data in, a verdict out: the seam agreed for slice 3 of the menu work.
-import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { judge, type Verdict } from '~/lib/fits/judge'
 import { DEFAULT_POLICY, policyFromAddress } from '~/lib/fits/policy'
-import { parseRule } from '~/lib/fits/rule'
+import { describeRule, parseRule } from '~/lib/fits/rule'
 import type { Facts, Thing } from '~/lib/fits/facts'
+import { DEFINITIONS, type PlacedDef } from '~/lib/menus.generated'
 
-const t = (msgid: string) => msgid
+/** Every rule of the definition, by app: its menus, context menus and keys without entry. */
+const RULES = Object.fromEntries(
+  Object.entries(DEFINITIONS).map(([app, def]) => {
+    const entries = (placed: PlacedDef) => ('items' in placed ? placed.items : [placed])
+    const rules = new Set<string>()
+    for (const menu of [...def.menus, ...def.contexts]) for (const section of menu.sections) for (const placed of section) for (const e of entries(placed)) rules.add(e.fits)
+    for (const e of def.keysOnly) rules.add(e.fits)
+    return [app, rules]
+  }),
+)
+
+const t = (msgid: string, vars: Record<string, string | number> = {}) => msgid.replace(/\{(\w+)\}/g, (_, name: string) => String(vars[name] ?? `{${name}}`))
 
 const caret: Thing = { kind: 'text', range: false, listItem: false }
 const words: Thing = { kind: 'text', range: true, listItem: false }
@@ -46,18 +56,7 @@ describe('a rule, in the workbook’s words (D1601, D1646)', () => {
   })
 
   it('reads every rule of the definition, in every app and every place', () => {
-    for (const app of ['composes', 'computes', 'creates']) {
-      const listing = JSON.parse(readFileSync(resolve(__dirname, `../../clients/neutralino/src/generated/menu.${app}.json`), 'utf8'))
-      const rules = new Set<string>()
-      const walk = (node: unknown): void => {
-        if (Array.isArray(node)) node.forEach(walk)
-        else if (node && typeof node === 'object') {
-          const entry = node as Record<string, unknown>
-          if (typeof entry.fits === 'string') rules.add(entry.fits)
-          Object.values(entry).forEach(walk)
-        }
-      }
-      walk(listing)
+    for (const [app, rules] of Object.entries(RULES)) {
       expect(rules.size).toBeGreaterThan(10)
       for (const rule of rules) expect(() => parseRule(rule), `${app}: ${rule}`).not.toThrow()
     }
@@ -108,8 +107,23 @@ describe('judging an entry', () => {
     expect(verdict('selection: a list item', { selection: [{ ...caret, listItem: true }] }).enabled).toBe(true)
   })
 
+  it('lets a style be for the cursor’s paragraph as well as for something selected (D1654)', () => {
+    const rule = 'selection: something, or the cursor in a text'
+    expect(verdict(rule, { selection: [caret] }).enabled).toBe(true)
+    expect(verdict(rule, { selection: [{ kind: 'cells' }] }).enabled).toBe(true)
+    expect(verdict(rule, { selection: [] })).toMatchObject({ enabled: false, why: 'Select something first.' })
+  })
+
+  it('counts the words of a selected text box, and as a list item where they are one', () => {
+    const box: Thing = { kind: 'object', holdsText: true, canTurn: true, onGrid: false, listItem: false }
+    expect(verdict('selection: text', { selection: [box] }).enabled).toBe(true)
+    expect(verdict('selection: text', { selection: [chart] }).enabled).toBe(false)
+    expect(verdict('selection: a list item', { selection: [box] }).enabled).toBe(false)
+    expect(verdict('selection: a list item', { selection: [{ ...box, listItem: true }] }).enabled).toBe(true)
+  })
+
   it('asks the server, the client and the ai what they can do', () => {
-    expect(verdict('server: has the tool for LaTeX', { tools: new Set(['mermaid']) })).toMatchObject({ enabled: false, reason: 'server', why: 'This server has no {tool} set up.' })
+    expect(verdict('server: has the tool for LaTeX', { tools: new Set(['mermaid']) })).toMatchObject({ enabled: false, reason: 'server', why: 'This server has no LaTeX set up.' })
     expect(verdict('client: desktop only', { client: 'web' })).toMatchObject({ enabled: false, reason: 'client' })
     expect(verdict('client: desktop only', { client: 'desktop' }).enabled).toBe(true)
     expect(verdict('ai: the ai can really answer', { ai: false })).toMatchObject({ enabled: false, reason: 'ai' })
@@ -132,5 +146,21 @@ describe('the trial’s setting in the page’s address (D1606, D1647)', () => {
       ...DEFAULT_POLICY,
       byReason: { ...DEFAULT_POLICY.byReason, role: 'grey' },
     })
+  })
+})
+
+describe('a rule in plain words, for Preferences ▸ Shortcuts (D1604)', () => {
+  it('says who first, then when', () => {
+    expect(describeRule(parseRule('role: anyone'), t)).toBe('everyone')
+    expect(describeRule(parseRule('role: owner'), t)).toBe('owners')
+    expect(describeRule(parseRule('role: editor or owner · document: something to undo'), t)).toBe('editors and owners, when there is something to undo')
+    expect(describeRule(parseRule('role: editor or owner · server: has the tool for LaTeX'), t)).toBe('editors and owners, when the server has LaTeX')
+    expect(describeRule(parseRule('ai: the ai can really answer'), t)).toBe('when the ai can really answer')
+  })
+
+  it('has words for every condition of the three apps', () => {
+    for (const rules of Object.values(RULES)) {
+      for (const words of rules) for (const condition of parseRule(words)) expect(condition.plain(t), condition.words).not.toBe('')
+    }
   })
 })

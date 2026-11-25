@@ -218,7 +218,7 @@ Each patch assumes the earlier ones are applied; the last step of each is a merg
 1. **This patch:** the note and the two mock-ups.
 2. **Shared module — built:** `web/app/lib/object-gestures.ts` (the state machine), `web/app/lib/object-interaction.ts`
    (`ObjectHost` and the composable), an explicit `Bounds` in `web/app/lib/geometry.ts` and `web/app/lib/turning.ts`, the
-   object menu of D1225 in `web/app/lib/object-menu.ts` (with submenus and ticks in `web/app/components/ContextMenu.vue`),
+   object menu of D1225 in `lib/object-menu.ts` (since 2026-11 the definition's object menu, D1644) (with submenus and ticks in `web/app/components/ContextMenu.vue`),
    all with vitest, and creates (`web/app/components/SlideCanvas.vue`) moved onto it with its behaviour unchanged except
    that Esc now drops a drag in progress (D1227). `ObjectFrame.vue` (outline and handles drawn once) is **not** in this
    patch: it moves out of creates when composes is its second user (patch 3 below), where its markup can be checked

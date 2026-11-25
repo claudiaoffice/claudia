@@ -1,11 +1,10 @@
 """The menu definition (``clients/contract``, D1643) as the clients build on it: its kinds of action, keys and roles,
-the GTK menus made from it, the short menu of the front page, and the web app's ids.
+the GTK menus made from it, and the short menu of the front page.
 
 What the menus hold, in which order, with which words, keys and rules, is the workbook's and is tested against it in
-``tests/test_menu_workbook.py`` (D1605); nothing here repeats it.
-
-The drift guard against the web app compares *ids*, the one thing both sides are required to agree on
-(``web/app/lib/menu-dispatch.ts``), where a label never was (D121).
+``tests/test_menu_workbook.py`` (D1605); nothing here repeats it. The web app assembles its menus from the same
+definition (``web/app/lib/menus.generated.ts``, D1644), so it cannot drift from it; ``tests/test_menus_generated.py``
+keeps that file current, and a workspace that lacks a handler says so on the browser's console.
 """
 
 from __future__ import annotations
@@ -26,48 +25,8 @@ from claudia_shell_gtk import contract
 from claudia_shell_gtk.menu_xml import menu_xml
 
 REPO = Path(__file__).resolve().parents[3]
-WEB_SOURCES = {
-    "composes": REPO / "web" / "app" / "components" / "TextWorkspace.vue",
-    "computes": REPO / "web" / "app" / "components" / "Workspace.vue",
-    "creates": REPO / "web" / "app" / "components" / "SlideWorkspace.vue",
-}
-# The items every app's window shares (File, the Edit and View blocks, Preferences, Help) are built once, here; each
-# workspace above assembles them with its own.
-WEB_SHARED_MENUS = REPO / "web" / "app" / "lib" / "document-menus.ts"
-# The Format menu's four entries are built in one place for all three apps (D300).
-WEB_FORMAT_MENU = REPO / "web" / "app" / "lib" / "format-menu.ts"
-# Composes' table entries (E9.32), Edit ▸ Row ▸ … Table Options… and Insert ▸ Table…, are built in one place.
-WEB_TABLE_MENU = REPO / "web" / "app" / "lib" / "table-menu.ts"
-WEB_ROTATE_MENU = REPO / "web" / "app" / "lib" / "rotate-menu.ts"
-# Preferences ▸ App Language's ids are built from this list (`config.language.${tag}`), not written out one by one.
-WEB_LANGUAGES = REPO / "web" / "app" / "lib" / "i18n.ts"
 BUILDERS = {"composes": manifest.composes, "computes": manifest.computes, "creates": manifest.creates}
 APPS = tuple(BUILDERS)
-
-
-#: Until the web assembles its menus from the definition (slice 4 of the menu work, D1644), its hand-built menus
-#: still have entries the workbook dropped or moved, and lack the new ones. Emptied by slice 4, then removed.
-WEB_CATCHES_UP: dict[str, set[str]] = {
-    # in the definition, not yet on the web
-    "composes": {"insert.shape.circle", "insert.shape.rectangle", "insert.shape.triangle"},
-    "creates": {"insert.shape.circle", "insert.shape.rectangle", "insert.shape.triangle"},
-    # on the web, dropped by the workbook (the owner, 2026-11-25; D1608)
-    "all": {
-        "file.save",
-        "file.manage.assign-owner",
-        "file.manage.accept-owner",
-        "file.manage.leave",
-        "file.manage.delete",
-        "format.rotate-right",
-        "format.rotate-left",
-        "help.ask",
-    },
-    "computes": {"insert.contents", "insert.cross-reference"},
-}
-
-
-def catching_up(app_name: str) -> set[str]:
-    return WEB_CATCHES_UP["all"] | WEB_CATCHES_UP.get(app_name, set())
 
 
 @pytest.fixture(scope="module", params=APPS)
@@ -208,7 +167,7 @@ def test_one_action_has_one_key_in_every_app():
 
 
 def test_only_the_shells_own_keys_are_bound_natively(app: manifest.Manifest) -> None:
-    """The page listens for every other key in every client, by the same table (`web/app/lib/keys.generated.ts`). A
+    """The page listens for every other key in every client, by the same table (`web/app/lib/menus.generated.ts`). A
     key the shell bound too would never reach the page (GTK takes application keys before the web view), so it would
     lose the page's rules: no shortcut while typing in a field, the right thing in the right place."""
     native = {a.id for a in app.actions if a.key_owner is KeyOwner.SHELL}
@@ -277,40 +236,6 @@ def test_computes_and_creates_clipboard_actions_go_through_the_page_instead(app_
     built = BUILDERS[app_name]()
     for action_id in ("edit.copy", "edit.cut", "edit.paste", "edit.paste-as-plain"):
         assert built.action(action_id).kind is Kind.PAGE
-
-
-# ------------------------------------------------------------------------------------------- the web app, by id
-
-
-@pytest.mark.parametrize("app_name", APPS)
-def test_every_page_and_editing_action_id_is_in_the_matching_web_source(app_name: str) -> None:
-    """The guard against drift (see this module's docstring): if the web app renames or drops an id of a menu, this
-    fails and says which. ``Kind.SHELL`` actions (Quit, About) have no web equivalent by design. The context menus'
-    ids are the web's when it assembles them from the definition (D1644)."""
-    sources = (WEB_SOURCES[app_name], WEB_SHARED_MENUS, WEB_FORMAT_MENU, WEB_LANGUAGES, WEB_TABLE_MENU, WEB_ROTATE_MENU)
-    if not all(path.exists() for path in sources):
-        pytest.skip("the web sources are not next to the client")
-    app_source, shared_menus, format_menu, languages_source, table_menu, rotate_menu = (
-        path.read_text(encoding="utf-8") for path in sources
-    )
-    shared_source = shared_menus + format_menu + rotate_menu
-    table_source = table_menu if app_name == "composes" else ""
-
-    def in_web(action_id: str) -> bool:
-        if f"id: '{action_id}'" in app_source or f"id: '{action_id}'" in shared_source:
-            return True
-        if f"'{action_id}'" in table_source:
-            return True
-        tag = action_id.removeprefix("config.language.")
-        return (
-            tag != action_id and "id: `config.language.${tag}`" in shared_source and f"['{tag}', " in languages_source
-        )
-
-    built = BUILDERS[app_name]()
-    missing = [a.id for a in menu_actions(built) if a.kind is not Kind.SHELL and not in_web(a.id)]
-    assert sorted(set(missing) - catching_up(app_name)) == [], f"{app_name}: the web app no longer has " + ", ".join(
-        missing
-    )
 
 
 # ------------------------------------------------------------------------------------------------- GMenu XML
@@ -510,45 +435,6 @@ def test_an_app_without_a_manifest_is_a_clear_error_naming_the_available_ones() 
     with pytest.raises(manifest.UnknownApp) as problem:
         manifest.for_app("drawbook")
     assert "composes" in str(problem.value)
-
-
-# UX-36: the other direction. Entries that are only a flyout's parent (they have an id for the web's own drawing, not
-# an action) are named, with the reason, so that nothing else can be web-only without someone saying so here.
-WEB_ONLY_PARENTS = {
-    "file.manage": "File ▸ Manage ▸ is a Submenu here (no id, no action)",
-    "edit.paste-as": "Edit ▸ Paste As ▸ is a Submenu here",
-    "edit.row": "Edit ▸ Row ▸ is a Submenu here",
-    "edit.column": "Edit ▸ Column ▸ is a Submenu here",
-    "edit.sort": "composes' Edit ▸ Sort ▸ is a Submenu here",
-    "tools.row": "composes' Tools ▸ Row ▸ is a Submenu here (D1229)",
-    "tools.column": "composes' Tools ▸ Column ▸ is a Submenu here (D1229)",
-    "tools.sort": "composes' Tools ▸ Sort ▸ is a Submenu here (D1229)",
-}
-
-
-@pytest.mark.parametrize("app_name", APPS)
-def test_every_web_menu_entry_is_in_the_desktop_menus_too(app_name: str) -> None:
-    """At cfa2d91 File ▸ Print…, Image…, Chart…, Names…, SQL Query…, Show Grid and the List flyout were on the web
-    only, and the desktop shells hide the web menu bar: on the desktop they could not be found. A menu item on the web
-    is `{ id: '…', label: … }`; a keyboard shortcut (`get label()`) is not a menu item."""
-    sources = (WEB_SOURCES[app_name], WEB_SHARED_MENUS, WEB_FORMAT_MENU, WEB_TABLE_MENU, WEB_ROTATE_MENU)
-    if not all(path.exists() for path in sources):
-        pytest.skip("the web sources are not next to the client")
-    app_source, shared_menus, format_menu, table_menu, rotate_menu = (
-        path.read_text(encoding="utf-8") for path in sources
-    )
-    item = re.compile(r"\{\s*id: '([a-z.-]+)',\s*label:")
-    ids = set(item.findall(app_source)) | set(item.findall(format_menu)) | set(item.findall(shared_menus))
-    if "rotateItem(" in app_source:  # the apps that turn objects hand the Format menu the shared Rotate submenu
-        ids |= set(item.findall(rotate_menu))
-    if app_name == "composes":
-        ids |= set(item.findall(table_menu))
-    ids |= {"file.manage", "edit.paste-as"} & set(re.findall(r"id: '([a-z.-]+)',\n", shared_menus))
-    if "print: " not in app_source:  # File ▸ Print… is only in the apps that hand the shared File menu a `print`
-        ids.discard("file.print")
-    native = {a.id for a in BUILDERS[app_name]().actions}
-    missing = sorted(ids - native - set(WEB_ONLY_PARENTS) - catching_up(app_name))
-    assert not missing, f"{app_name}: on the web menus but not on the desktop's: {missing}"
 
 
 def test_the_gmenu_xml_shows_every_key_whoever_listens_for_it(app: manifest.Manifest) -> None:

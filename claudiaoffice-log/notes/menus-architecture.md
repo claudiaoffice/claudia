@@ -21,7 +21,8 @@ disagree about what fits. That is the definition of done's "web app and desktop 
 
 - **The desktop menus have one definition already:** `manifest.py`, then in the Linux client (`claudia_shell_gtk`), now `clients/contract/src/claudia_menus/manifest.py` (slice 1).
   - The GTK shell builds its menus from it.
-  - `scripts/generate_keys.py` makes `web/app/lib/keys.generated.ts` from it.
+  - `generate_keys.py` made `lib/keys.generated.ts` from it (since slice 4: `scripts/generate_menus.py` makes
+    `web/app/lib/menus.generated.ts`).
   - The Neutralino menus (`clients/neutralino/src/generated/menu.*.json`) are made from it too.
 - **The web builds its menus by hand.**
   - `lib/document-menus.ts` has 44 entries.
@@ -69,7 +70,7 @@ The move is the first commit of the build, with no change of behaviour. Everythi
 - `start-linux-client.sh` (`PYTHONPATH`);
 - `packaging/debian/build-deb.sh`, which copies the package beside the client;
 - `clients/neutralino/tools/generate_menu.py` and its `pyproject.toml`;
-- `scripts/generate_keys.py`, `scripts/menu_audit.py` and `scripts/extract_i18n.py`;
+- `scripts/generate_menus.py` (was `generate_keys.py`), `scripts/menu_audit.py` and `scripts/extract_i18n.py`;
 - the ruff and vulture paths in the root `pyproject.toml`;
 - the paths of `.github/workflows/deb.yml`.
 
@@ -82,7 +83,7 @@ Then the definition grows by three things:
   the workbook's order. They are in the definition because the Shortcuts dialog (D1604) lists them, and the workbook
   test checks them.
 
-`scripts/generate_keys.py` becomes `generate_menus.py`. It writes `web/app/lib/menus.generated.ts`, which holds the
+`generate_keys.py` becomes `scripts/generate_menus.py` (slice 4, done). It writes `web/app/lib/menus.generated.ts`, which holds the
 whole definition (`keys.generated.ts` merges into it), and the Neutralino JSON as today. A test fails when either is
 stale, as one does for the keys today.
 
@@ -178,11 +179,12 @@ app by app:
 
 1. ~~**The definition moves** to `clients/contract/` with everything that reaches it (D1643); nothing else changes.~~ Done.
 2. ~~**The definition grows** (`fits`, `keys`, context menus), rebuilt to the workbook (E5.23's content), with
-   the workbook test.~~ Done; `generate_keys.py` keeps its name until slice 4 writes the whole definition for the web.
+   the workbook test.~~ Done.
 3. ~~**Judging:** `fits/`, pure, with every rule of the definition parsing.~~ Done.
-4. **The web from the definition**, one workspace at a time, everything at "grey" first, so behaviour only changes
-   where the workbook moved entries. Then the trial's default, hide.
-5. **Keys and the Shortcuts dialog** (D1604, D1642).
+4. ~~**The web from the definition**, one workspace at a time, everything at "grey" first, so behaviour only changes
+   where the workbook moved entries. Then the trial's default, hide.~~ Done (D1654); the keys of every entry came with
+   it, judged when pressed.
+5. ~~**Keys and the Shortcuts dialog** (D1604, D1642).~~ Done; macOS's own keys on the web on a Mac (D1648).
 6. **The shells:** contract fields, Neutralino, GTK.
 7. **The copy guard and Paste As ▸ Plain text** (D1640, D1641).
 8. **I18N:** every new text (the notices, the "why" lines, the tags, `plain`) in `po/`; the German menus with

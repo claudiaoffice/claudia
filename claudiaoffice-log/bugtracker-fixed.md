@@ -20,7 +20,7 @@ PROC-24 to PROC-27, CODE-58 to CODE-61, SEC-19, UX-44; SEC-15 fixed (see "Round 
 
 ## Index
 
-### Fixed (228)
+### Fixed (229)
 
 By ID. Items closed without a fix (superseded, wontfix) are here too.
 
@@ -118,6 +118,7 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | UX-88 | P2 | UX / a11y | A notice (toast) is a `role=status` element made together with its text, which screen readers may not announce (BITV 4.1.3) | **fixed** 2026-11-25 (batch 3 of the bug eater, `batch-3`) | 2026-11-25 | 2026-11-25 |
 | UX-89 | P3 | UX / a11y | A table's accessible name is "Table 1 Options…": the Options… button is inside its caption | **fixed** 2026-11-25 (batch 3 of the bug eater, `batch-3`) | 2026-11-25 | 2026-11-25 |
 | UX-90 | P2 | UX / a11y | About 25 other `role="status"` elements appear with their text already in them (`v-if`), so screen readers may not announce them (BITV 4.1.3), as the notice did (UX-88) | **fixed** 2026-11-25 (batch 4 of the bug eater, `batch-4`) | 2026-11-25 | 2026-11-25 |
+| UX-94 | P3 | UX / clients | The web menus and the desktop menus disagree in six places: the About entry's words, where Clear Cell Style sits, Flow and Page in composes' View, and the order of two pivot entries | **fixed** on `menus` (slice 4 of the menu work: the web assembles its menus from the one definition, D1644) | 2026-11-25 | 2026-11-25 |
 | CODE-01 | P2 | Code | No coverage, no web lint; Playwright not declared | **fixed** |  |  |
 | CODE-02 | P3 | Code | 26 build files tracked in `web/dist` | fixed |  |  |
 | CODE-05 | P3 | Code | Dead branch in `Gateway.admit`; stale docstring in `state.py` | **fixed** (the branch was not dead: comment corrected) |  |  |
@@ -2775,3 +2776,21 @@ the import's step ("History of the original"); the import dialog now says the mo
 export brings a history (`with_history` in the upload answer), and "Nobody else is given access." otherwise. **Test:**
 "importing an owner's export adds one note with who did what" (`test_server_export_import.py`), and "the upload says
 whether the export brings a history".
+
+## Fixed by the menu work (branch `menus`)
+
+### UX-94 · The web menus and the desktop menus disagree in six places · P3 · size 3 · fixed
+**Measured** by the menu audit (phase 1 of the menu work, branch `menus`; `scripts/menu_capture.py` and
+`scripts/menu_audit.py`, rows "Web and desktop differ" of the Diagnosis sheet in `notes/claudia-menus.xlsx`). The
+desktop clients take their menus from the manifest (then `clients/linux/src/claudia_shell_gtk/manifest.py`, now `clients/contract/src/claudia_menus/manifest.py`, D1643), the web client
+from `web/app/lib/document-menus.ts` and each workspace, and they differ:
+
+- Help ▸ About is "About claudia" on the web and "About Claudia Composes" / "… Computes" / "… Creates" on the desktop
+  (all three apps).
+- computes: Clear Cell Style is inside Format ▸ Apply Style ▸ on the web, directly in Format on the desktop.
+- composes: View has two entries, Flow and Page, on the web, one switch, Page, on the desktop.
+- computes: Tools has Value Field Settings… before Pivot Fields on the web, the other way round on the desktop.
+
+Not part of it, by design: Quit (desktop only), Apply Style (D301), and the shapes of the library in Edit (web only;
+the workbook makes them fixed entries, Insert ▸ Shape ▸ …). **Fixed** on `menus`, 2026-11-25 (slice 4): the web's menus are assembled from the one definition (D1644), as the
+desktop clients' are; the workbook test (`tests/test_menu_workbook.py`) and `web/tests/assemble.test.ts` keep them so.

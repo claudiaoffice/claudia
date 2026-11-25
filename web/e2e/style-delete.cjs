@@ -16,8 +16,9 @@ const look = (page, n) =>
   }, n)
 
 async function allStyles(page) {
-  await page.click('text=Format')
-  await page.click('text=All Styles…')
+  await page.click('.menus .title:text-is("Format")')
+  await page.hover('.menus .drop [role=menuitem]:has-text("Style")')
+  await page.click('.menus .drop.sub [role=menuitem]:has-text("All Styles…")')
   await page.waitForSelector('[data-testid=styles-list]')
 }
 
@@ -50,7 +51,7 @@ async function main() {
   // a style of the document's own: bold, this paragraph only, and named
   const second = page.locator('[data-testid=text] [data-paragraph]').nth(1)
   await second.click()
-  await second.click({ button: 'right' })
+  await page.keyboard.press('Control+Shift+Alt+h') // Format ▸ Style ▸ Edit…
   await page.waitForSelector('[data-testid=style-menu]')
   await page.click('[data-testid=bold]')
   await page.waitForFunction(() => document.querySelectorAll('[data-testid=text] [data-paragraph]')[1].className.includes('changed'))

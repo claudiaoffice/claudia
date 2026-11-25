@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { lookOnly, roleNow } from '~/lib/replay'
+import { lookOnly } from '~/lib/replay'
 // A workbook: the formula bar, the grid (or a slide), the sheet tabs, inside the document window every app shares
 // (DocumentFrame).
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
@@ -29,37 +29,24 @@ import { bounds, jump, move, single, summarize, type Sel } from '~/lib/selection
 import type { ChartShownAs, Session } from '~/lib/session'
 import { NEW_OBJECT_CAP, pictureSize, type PictureImport } from '~/lib/images'
 import { insertFrame } from '~/lib/geometry'
-import {
-  askItem,
-  authorsItemUnavailable,
-  clipboardItems,
-  preferencesMenu,
-  darkItem,
-  fileMenu,
-  helpMenu,
-  insertMenu,
-  goToTargetItem,
-  backItem, panelItem, referenceItem, replayItem,
-  searchItem,
-  undoRedoItems,
-  type DocumentMenuContext,
-} from '~/lib/document-menus'
+import type { Thing } from '~/lib/fits/facts'
+import type { ContextMenuOf, Handler, Handlers } from '~/lib/menus/assemble'
+import { useMenus, windowFacts } from '~/lib/menus/use-menus'
+import { notYet, windowHandlers } from '~/lib/menus/window-handlers'
+import { canTurn } from '~/lib/turning'
 import { currentFunctionAt } from '~/lib/formula-help'
 import { useI18n } from '~/lib/i18n'
-import { forThe } from '~/lib/noun-phrases'
 import { objectStyleHost } from '~/lib/object-style-host'
 import { cellStyleHost } from '~/lib/cell-style-host'
 import { sheetArea } from '~/lib/cell-styles'
-import { describeShortcut, objectName } from '~/lib/descriptions'
+import { objectName } from '~/lib/descriptions'
 import { useNameAndDescribe } from '~/lib/use-name-and-describe'
 import { selectionAnnouncement } from '~/lib/grid-a11y'
-import { chordLabel, chordOf, hintOf, searchShortcuts, type ShortcutDef } from '~/lib/shortcuts'
+import { hintOf, searchShortcuts, type ShortcutDef } from '~/lib/shortcuts'
 import type { PreviewAnswer, SearchMatch } from '~/lib/search'
 import { marksFor, NO_MARKS, sheetSearchHost } from '~/lib/sheet-search-host'
 import { marksFor as slideMarksFor } from '~/lib/slide-search-host'
 import { coversWindow, tabMarks, windowAround, type Reach, type Window } from '~/lib/follow'
-import { galleryFor } from '~/lib/style-host'
-import { formatItems, noLists } from '~/lib/format-menu'
 import { useTheme } from '~/lib/theme'
 import { usePrint } from '~/lib/print/use-print'
 import { sheetSource } from '~/lib/print/source'
@@ -67,8 +54,6 @@ import type { Axis } from '~/lib/line-sizes'
 import DocumentFrame from './DocumentFrame.vue'
 import PrintPreview from './PrintPreview.vue'
 import SearchPanel from './SearchPanel.vue'
-import { rotateItem } from '~/lib/rotate-menu'
-import type { Menu } from './MenuBar.vue'
 import type { EditState } from './SheetGrid.vue'
 
 const props = defineProps<{ session: Session }>()
@@ -106,6 +91,7 @@ const grid = ref<{
   stepObject: (step: 1 | -1) => void
   quarter: (direction: 1 | -1) => Promise<void>
   openRotateBy: () => void
+  editText: () => void
   paste: () => Promise<boolean>
   anchorPoint: (row: number, col: number) => { x: number; y: number } | null
   centre: (row: number, col: number) => void
@@ -379,16 +365,6 @@ function openPivotDelete() {
   const pivot = pivotHere.value
   if (pivot && !readonly.value) pivotDeleteName.value = pivot.name
 }
-/** The entries of the cell menu and of Tools that work on the pivot the cursor is in. */
-const pivotItems = computed(() => {
-  const here = pivotHere.value !== null
-  return [
-    { id: 'tools.pivot-value', label: t('Value Field Settings…'), hint: hintOf('tools.pivot-value'), action: () => openPivotValue(), disabled: !here || readonly.value },
-    { id: 'tools.pivot-fields', label: t('Pivot Fields'), hint: hintOf('tools.pivot-fields'), checked: panelPivot.value !== null, action: () => togglePivotFields(), disabled: !here && panelPivot.value === null },
-    { id: 'tools.pivot-sql', label: t('Show Pivot Table as SQL…'), hint: hintOf('tools.pivot-sql'), action: () => openPivotSql(), disabled: !here },
-    { id: 'tools.pivot-delete', label: t('Delete Pivot Table…'), hint: hintOf('tools.pivot-delete'), action: () => openPivotDelete(), disabled: !here || readonly.value },
-  ]
-})
 
 /** The cell the SQL editor writes to: the active cell, or the cell of the query that fills it when it is a part of a
  * result — with what is already in it. */
@@ -702,7 +678,6 @@ const objectSelected = ref(false)
 const activeHost = computed(() => (objectSelected.value ? styleHost : cellHost))
 
 /** Edit this style… at the active cell, or beside the selected object (D300, D302). */
-const LOOK: ShortcutDef = { id: 'format.look', get label() { return t('Edit This Style…') }, chord: chordOf('format.look'), run: () => grid.value?.openStyleMenu() }
 
 // ------------------------------------------------------------------------------ Search & replace (E5.15)
 // The panel is one component for the three apps; this is the sheet's side of it: where it can look, how a match is
@@ -756,10 +731,6 @@ const slideMarks = computed(() => (searchOpen.value && state.activeSlide ? slide
 
 // ------------------------------------------------------------------------------ random numbers, alternatives, following (E6.21–E6.23)
 // Chords are by physical key (`code`): with Alt held, the character a key types differs by layout and platform.
-const RESAMPLE: ShortcutDef = { id: 'tools.resample', get label() { return t('Resample Random Numbers') }, chord: chordOf('tools.resample'), run: () => void resample() }
-const RANDOM_GENERATOR: ShortcutDef = { id: 'tools.random', get label() { return t('Random Generator…') }, chord: chordOf('tools.random'), run: () => openRandom() }
-const OUTCOMES: ShortcutDef = { id: 'tools.outcomes', get label() { return t('Outcomes of This Cell…') }, chord: chordOf('tools.outcomes'), run: () => openOutcomes() }
-const FOLLOW: ShortcutDef = { id: 'tools.follow', get label() { return t('Follow Computation') }, chord: chordOf('tools.follow'), run: () => toggleFollow() }
 
 // ------------------------------------------------------------------------------ what a screen reader is told of the selection (UX-02)
 // The active cell speaks for itself (`aria-activedescendant` on the grid); a block of cells, a whole row or column and
@@ -795,14 +766,13 @@ function openDescribe() {
   if (named) return void nameDialog.open(named.id)
   nameDialog.openRange({ sheet: state.activeSheet, row0: r0, col0: c0, row1: r1, col1: c1 })
 }
-const DESCRIBE = describeShortcut(openDescribe, () => !readonly.value)
 /** Ctrl+Alt+PageDown / PageUp: the keyboard's way to a floating object, which only the mouse reached before. */
 const NEXT_OBJECT: ShortcutDef = { id: 'view.nextObject', get label() { return t('Next Object') }, chord: { key: 'PageDown', ctrl: true, alt: true }, run: () => grid.value?.stepObject(1) }
 const PREVIOUS_OBJECT: ShortcutDef = { id: 'view.previousObject', get label() { return t('Previous Object') }, chord: { key: 'PageUp', ctrl: true, alt: true }, run: () => grid.value?.stepObject(-1) }
 
 // File ▸ Print… (E6.19): the preview takes the place of the sheet. What is printed is the sheet or slide shown, the
 // selection of it, or the whole workbook (D1001–D1004); the bar's choices live in `lib/print/source.ts`.
-const { printing, preview, open: openPrint, close: closePrint, shortcut: PRINT } = usePrint(() => grid.value?.focus())
+const { printing, preview, open: openPrint, close: closePrint} = usePrint(() => grid.value?.focus())
 const printSource = sheetSource(session, {
   shown: () => (state.activeSlide ? { kind: 'slide', id: state.activeSlide } : { kind: 'sheet', id: state.activeSheet }),
   selection: () => {
@@ -811,17 +781,11 @@ const printSource = sheetSource(session, {
   },
 })
 
+// The keys with rules of their own; every menu entry's key comes from the definition (`DocumentFrame`, D1604).
 const extraShortcuts = [
-  PRINT,
-  LOOK,
-  DESCRIBE,
   NEXT_OBJECT,
   PREVIOUS_OBJECT,
   ...searchShortcuts({ find: () => openSearch(), replace: () => openSearch(true), canReplace: () => !readonly.value }),
-  RESAMPLE,
-  RANDOM_GENERATOR,
-  OUTCOMES,
-  FOLLOW,
 ]
 
 /** Where the cell menu is open (right click on a cell), and the outcomes popover (which cell, at which point). */
@@ -893,78 +857,16 @@ watch(following, (now) => {
 onBeforeUnmount(() => window.removeEventListener('keydown', onFollowKey))
 const marks = computed(() => tabMarks(state.trace))
 
-/**
- * The Format menu (D300): what it styles follows the selection — the selected cells (`computes-cell-styles.svg`,
- * panel B: both slots, D311, and Clear cell style, D317), or the floating object selected, in the slot the style
- * menu works on (D304, D316); the flyout's first line says which. The colours are the document's.
- */
-function styleItems() {
-  if (session.styleViews().length === 0) return [{ label: t('No styles yet'), disabled: true }]
-  const selected = grid.value?.selectedObject()
-  const body = selected ? state.objects[selected] : undefined
-  const look = { hint: chordLabel(LOOK.chord), open: () => grid.value?.openStyleMenu() }
-  const common = {
-    openApply: () => grid.value?.openStyleMenu(undefined, 'apply'),
-    allStyles: () => (dialog.value = 'styles'),
-    colours: () => (dialog.value = 'colours'),
-    list: noLists(t('Cells hold no lists')),
-  }
-  if (body) {
-    const offered = galleryFor(styleHost.styles, styleHost.slot, state.styleModel, styleHost.current?.id)
-    return formatItems(t, {
-      ...common,
-      groups: [offered.own, offered.bundles],
-      heading: forThe(),
-      current: styleHost.current?.id,
-      canApply: !readonly.value,
-      apply: (id) => void styleHost.apply(id),
-      look: { ...look, disabled: false },
-    })
-  }
-  const offered = galleryFor(cellHost.styles, cellHost.slot, state.styleModel, cellHost.current?.id)
-  const [r0, c0, r1, c1] = sheetArea([b.value.r0, b.value.c0, b.value.r1, b.value.c1], SIZE)
-  const cells = (r1 - r0 + 1) * (c1 - c0 + 1)
-  const some = !!state.activeSheet && sheetShown.value
-  return formatItems(t, {
-    ...common,
-    groups: some ? [offered.own] : [],
-    heading: !some ? t('Select cells or an object to style them') : cells === 1 ? t('For cell {cell}', { cell: label.value }) : t('For the {count} selected cells', { count: cells.toLocaleString('en-US') }),
-    current: cellHost.current?.id,
-    canApply: !readonly.value && some,
-    apply: (id) => void cellHost.apply(id),
-    look: { ...look, disabled: !some },
-    more: some ? [{ id: 'format.clear-cell-style', label: t('Clear Cell Style'), disabled: readonly.value, action: () => void cellHost.clear?.() }] : [],
-  })
-}
-
 /** Put the colours the document started with back, as the server itself states them. */
 async function resetPalette() {
   const started = state.palette?.builtin ?? []
   if (started.length && (await session.replacePalette(started))) dialog.value = null
 }
 
-// Row/column header menu (mockup 1) and the resize dialog it opens (mockup 2) — SheetGrid.vue already made sure
-// the selection covers the header that was right-clicked, so `b` (above) is the right range for all three actions.
+// Row/column header menu (mockup 1): SheetGrid.vue already made sure the selection covers the header that was pressed,
+// so `b` (above) is the right range for what its entries do (the definition's `row-header` and `column-header`).
 function openHeaderMenu(axis: Axis, index: number, x: number, y: number) {
   headerMenu.value = { axis, index, x, y }
-}
-async function headerInsert(after: boolean) {
-  const axis = headerMenu.value!.axis
-  headerMenu.value = null
-  await structure(axis, true, after)
-}
-async function headerDelete() {
-  const axis = headerMenu.value!.axis
-  headerMenu.value = null
-  await structure(axis, false)
-}
-function headerResize() {
-  if (readonly.value) {
-    headerMenu.value = null
-    return session.tellLookOnly()
-  }
-  dialog.value = headerMenu.value!.axis === 'row' ? 'row-size' : 'col-size'
-  headerMenu.value = null
 }
 
 // ------------------------------------------------------------------------------ images (E6.17)
@@ -1036,135 +938,127 @@ async function moveToSlide(object: string) {
   if (slide) await pickTab(slide, 'slide')
 }
 
-// ------------------------------------------------------------------------------ menus
-/** What the shared menu items need from this window (`lib/document-menus.ts`). */
-const shared = computed<DocumentMenuContext>(() => ({
-  t,
-  role: roleNow(state),
-  open: (name) => frame.value?.openDialog(name),
-  leave: (opts) => emit('leave', opts),
-  save: () => frame.value?.checkpoint(null),
-  print: openPrint,
-}))
-
+// ------------------------------------------------------------------------------ menus (D1644)
+// The menus and context menus are the definition's (`menus.generated.ts`); what is true now says what fits (`fits/`),
+// and these handlers say what each entry does here.
 function ask(text: string) {
   frame.value?.ask(text)
 }
 
-/** The cell's own menu (right click): the clipboard, then outcomes, follow and resample (mock computes-random-alternatives-follow-menus). */
-const cellMenuItems = computed(() => [
-  ...clipboardItems(shared.value, () => pasteFromClipboard()),
-  { label: '', separator: true },
-  { id: 'tools.outcomes', label: t('Outcomes of This Cell…'), hint: chordLabel(OUTCOMES.chord), action: () => openOutcomes(cellMenu.value ?? undefined), disabled: !hasOutcomes.value },
-  { id: 'tools.follow', label: following.value ? t('Stop Following') : t('Follow Computation'), hint: chordLabel(FOLLOW.chord), action: () => toggleFollow() },
-  { id: 'tools.resample', label: t('Resample Random Numbers'), hint: chordLabel(RESAMPLE.chord), action: () => void resample(), disabled: readonly.value },
-  ...(pivotHere.value ? [{ label: '', separator: true }, ...pivotItems.value.map(({ checked: _checked, ...item }) => item)] : []),
-])
+/** Does any cell that has been loaded hold a random number or an alternative, or depend on one? (E6.21–E6.23) */
+const randomNumbers = computed(() => {
+  void state.generation
+  for (const cells of Object.values(state.cells)) for (const content of cells.values()) if (content?.alts || content?.out) return true
+  return false
+})
 
-const menus = computed<Menu[]>(() => {
-  const c = shared.value
-  return [
-    fileMenu(c),
-    {
-      label: t('Edit'),
-      items: [
-        ...undoRedoItems(c, {
-          canUndo: state.canUndo,
-          undoLabel: state.undoLabel,
-          canRedo: state.canRedo,
-          redoLabel: state.redoLabel,
-          undo: () => session.undo(),
-          redo: () => session.redo(),
-        }),
-        { label: '', separator: true },
-        ...clipboardItems(c, () => pasteFromClipboard()),
-        { label: '', separator: true },
-        searchItem(c, { open: () => openSearch() }),
-        { label: '', separator: true },
-        referenceItem(c, { run: () => void frame.value?.referenceThing(thingInFocus() ?? ""), possible: () => !!thingInFocus() }),
-        goToTargetItem(c, { run: () => {}, possible: () => false }), // references come to sheets with their text boxes
-        { label: '', separator: true },
-        { id: 'edit.new-sheet', label: t('New Sheet…'), action: () => (dialog.value = 'sheet'), disabled: readonly.value },
-        { id: 'edit.rename-sheet', label: t('Rename Sheet…'), action: () => askRename(), disabled: readonly.value || !shownTab.value },
-        { id: 'edit.image', label: t('Image…'), action: () => (dialog.value = 'image'), disabled: readonly.value },
-        { id: 'edit.chart', label: t('Chart…'), action: () => (dialog.value = 'chart'), disabled: readonly.value },
-        { label: '', separator: true },
-        // D130 (confirmed by the owner 2026-11-10): grouped into Row ▸ / Column ▸ rather
-        // than six flat items, reusing the submenu mechanism Edit ▸ Paste as ▸ already needed.
-        {
-          id: 'edit.row',
-          label: t('Row'),
-          disabled: readonly.value,
-          items: [
-            { id: 'edit.row-insert-above', label: t('Insert Above'), action: () => structure('row', true), disabled: readonly.value },
-            { id: 'edit.row-insert-below', label: t('Insert Below'), action: () => structure('row', true, true), disabled: readonly.value },
-            { id: 'edit.row-delete', label: t('Delete'), action: () => structure('row', false), disabled: readonly.value },
-          ],
-        },
-        {
-          id: 'edit.column',
-          label: t('Column'),
-          disabled: readonly.value,
-          items: [
-            { id: 'edit.column-insert-left', label: t('Insert Left'), action: () => structure('col', true), disabled: readonly.value },
-            { id: 'edit.column-insert-right', label: t('Insert Right'), action: () => structure('col', true, true), disabled: readonly.value },
-            { id: 'edit.column-delete', label: t('Delete'), action: () => structure('col', false), disabled: readonly.value },
-          ],
-        },
-        { label: '', separator: true },
-        { id: 'edit.clear', label: t('Clear Cells'), hint: 'Del', action: () => clearSelection(), disabled: readonly.value },
-      ],
-    },
-    insertMenu(c, { types: state.containerTypes, add: (type) => addContainer(type) }),
-    {
-      label: t('Format'),
-      items: [
-        ...styleItems(),
-        { label: '', separator: true },
-        { id: 'format.describe', label: t('Name & describe…'), hint: chordLabel(DESCRIBE.chord), action: () => openDescribe(), disabled: readonly.value },
-        // a quarter turn each way and any angle, for what turns (a chart and a table do not, D1021, D1224)
-        rotateItem(t, {
-          kind: () => {
-            const id = grid.value?.selectedObject()
-            return id ? (state.objects[id]?.kind ?? null) : null
-          },
-          readonly: () => readonly.value,
-          quarter: (direction) => void grid.value?.quarter(direction),
-          by: () => grid.value?.openRotateBy(),
-        }),
-      ],
-    },
-    {
-      label: t('View'),
-      items: [
-        authorsItemUnavailable(c), // computes tracks no per-cell authorship yet
-        panelItem(c, { open: () => frame.value?.isPanelOpen() ?? true, toggle: () => frame.value?.togglePanel() }),
-        replayItem(c, { start: () => frame.value?.replayHistory(), possible: () => state.entries.length > 0 && state.status === 'open' }),
-        backItem(c, { go: () => session.goBack(), possible: () => !!state.wayBack }),
-        darkItem(c, { on: dark, toggle: toggleDark }),
-      ],
-    },
-    {
-      label: t('Tools'),
-      items: [
-        // "Ask for an example budget" was a demo prop, taken out at the owner's request (2026-11-12, D126 keeps "Ask ai").
-        askItem(c, ask),
-        { label: '', separator: true },
-        { id: 'tools.random', label: t('Random Generator…'), hint: chordLabel(RANDOM_GENERATOR.chord), action: () => openRandom(), disabled: readonly.value },
-        { id: 'tools.resample', label: t('Resample Random Numbers'), hint: chordLabel(RESAMPLE.chord), action: () => void resample(), disabled: readonly.value },
-        { id: 'tools.outcomes', label: t('Outcomes of This Cell…'), hint: chordLabel(OUTCOMES.chord), action: () => openOutcomes(), disabled: !hasOutcomes.value },
-        { id: 'tools.follow', label: t('Follow Computation'), hint: chordLabel(FOLLOW.chord), checked: following.value, action: () => toggleFollow() },
-        { label: '', separator: true },
-        { id: 'tools.names', label: t('Names…'), action: () => (dialog.value = 'names') },
-        { id: 'tools.sql', label: t('SQL Query…'), action: () => openSql(), disabled: readonly.value },
-        { label: '', separator: true },
-        { id: 'tools.pivot', label: t('Pivot Table…'), action: () => openPivotNew(), disabled: readonly.value },
-        ...pivotItems.value,
-      ],
-    },
-    preferencesMenu(c, { current: locale.value, choose }),
-    helpMenu(c, { ask, openHelp: (mode) => frame.value?.openHelp(mode) }),
-  ]
+/** What is selected, for what fits (D1601): an object on the slide or the sheet, else the cells. */
+function selectionNow(): Thing[] {
+  const id = state.activeSlide ? state.selected : objectSelected.value ? grid.value?.selectedObject() : null
+  const kind = id ? state.objects[id]?.kind : undefined
+  if (kind) return [{ kind: 'object', holdsText: kind === 'container', canTurn: canTurn(kind), onGrid: false }]
+  return state.activeSlide ? [] : [{ kind: 'cells' }]
+}
+
+const lists = (): Handler => ({ run: () => {}, notNow: () => t('Cells hold no lists') })
+const handlers = computed<Handlers>(() => ({
+  ...windowHandlers({
+    t,
+    open: (name) => frame.value?.openDialog(name),
+    leave: (opts) => emit('leave', opts),
+    print: openPrint,
+    history: { undo: () => session.undo(), redo: () => session.redo(), undoLabel: () => (state.canUndo ? state.undoLabel : ''), redoLabel: () => (state.canRedo ? state.redoLabel : '') },
+    paste: () => void pasteFromClipboard(),
+    search: () => openSearch(),
+    panel: { open: () => frame.value?.isPanelOpen() ?? true, toggle: () => frame.value?.togglePanel() },
+    replay: { start: () => frame.value?.replayHistory(), notNow: () => (state.entries.length > 0 && state.status === 'open' ? null : t('There is no history to replay yet.')) },
+    back: () => session.goBack(),
+    theme: { on: dark, toggle: toggleDark },
+    ask,
+    help: (mode) => frame.value?.openHelp(mode),
+    language: { current: () => locale.value, choose },
+  }),
+  'format.describe': { run: () => openDescribe() },
+  'edit.reference': { run: () => void frame.value?.referenceThing(thingInFocus() ?? '') },
+  // references come to sheets with their text boxes
+  'edit.go-to-target': { run: () => {}, notNow: () => t('There is no reference here.') },
+  'edit.rename-sheet': { run: () => askRename(), notNow: () => (shownTab.value ? null : t('Show a sheet first.')) },
+  'edit.row-delete': { run: () => void structure('row', false) },
+  'edit.column-delete': { run: () => void structure('col', false) },
+  'edit.image': { run: () => (dialog.value = 'image') },
+  'edit.edit-text': { run: () => grid.value?.editText() },
+  'edit.delete': { run: () => void removeObject() },
+  ...Object.fromEntries(['latex', 'mermaid', 'typst'].map((type) => [`insert.container.${type}`, { run: () => void addContainer(type) }])),
+  'edit.chart': { run: () => (dialog.value = 'chart') },
+  'edit.new-sheet': { run: () => (dialog.value = 'sheet') },
+  'edit.row-insert-above': { run: () => void structure('row', true) },
+  'edit.row-insert-below': { run: () => void structure('row', true, true) },
+  'edit.column-insert-left': { run: () => void structure('col', true) },
+  'edit.column-insert-right': { run: () => void structure('col', true, true) },
+  // a row or column header's own (its menu runs them on the header pressed)
+  'edit.row-height': { run: () => (dialog.value = 'row-size') },
+  'edit.column-width': { run: () => (dialog.value = 'col-size') },
+  'format.apply-style': { run: () => grid.value?.openStyleMenu(undefined, 'apply'), notNow: styleable },
+  'format.look': { run: () => grid.value?.openStyleMenu(), notNow: styleable },
+  'format.clear-cell-style': { run: () => void cellHost.clear?.() },
+  'format.all-styles': { run: () => (dialog.value = 'styles') },
+  'format.rotate-by': { run: () => grid.value?.openRotateBy() },
+  ...Object.fromEntries(['bulleted-list', 'numbered-list', 'list-continue', 'list-start', 'list-indent', 'list-outdent', 'number-headings', 'all-numbering'].map((id) => [`format.${id}`, lists()])),
+  'format.colours': { run: () => (dialog.value = 'colours') },
+  'view.authors': notYet(t), // computes tracks no per-cell authorship yet
+  'tools.random': { run: () => openRandom() },
+  'tools.resample': { run: () => void resample() },
+  'tools.outcomes': { run: () => openOutcomes(cellMenu.value ?? undefined), checked: () => outcomes.value !== null },
+  'tools.follow': { run: () => toggleFollow(), checked: () => following.value, label: () => (following.value ? t('Stop Following') : t('Follow Computation')) },
+  'tools.names': { run: () => (dialog.value = 'names') },
+  'tools.pivot': { run: () => openPivotNew() },
+  'tools.sql': { run: () => openSql() },
+  // the pivot table's own (its context menu, D1612): on the pivot the cursor is in
+  'tools.pivot-value': { run: () => openPivotValue() },
+  'tools.pivot-fields': { run: () => togglePivotFields(), checked: () => panelPivot.value !== null },
+  'tools.pivot-sql': { run: () => openPivotSql() },
+  'tools.pivot-delete': { run: () => openPivotDelete() },
+  'edit.move-to-slide': { run: () => void moveSelectedToSlide() },
+  'edit.clear': { run: () => void clearSelection() },
+}))
+
+/** Style ▸ Apply… and Edit…: on the cells of a sheet shown, or on an object. */
+function styleable(): string | null {
+  return objectSelected.value || (state.activeSheet && sheetShown.value) ? null : t('Select cells or an object to style them')
+}
+async function removeObject() {
+  const id = grid.value?.selectedObject()
+  if (id) await session.removeObject(id)
+}
+async function moveSelectedToSlide() {
+  const id = grid.value?.selectedObject()
+  if (id) await moveToSlide(id)
+}
+
+const menus = useMenus('computes', {
+  handlers: () => handlers.value,
+  facts: () => windowFacts(state, { selection: selectionNow(), randomNumbers: randomNumbers.value, desktop: frame.value?.inDesktopApp() }),
+  notice: (why) => session.notice(why, 'info'),
+})
+/** A context menu of this window: what fits the thing pressed, by the definition. */
+const menuOf: ContextMenuOf = (id, own) => menus.value.context(id, own)
+
+/** A right press on a sheet's or a slide's tab: it is shown, and its menu opens (the definition's `tab`). */
+const tabMenu = ref<{ x: number; y: number; id: string } | null>(null)
+async function openTabMenu(id: string, kind: 'sheet' | 'slide', at: { x: number; y: number }) {
+  await pickTab(id, kind)
+  tabMenu.value = { ...at, id }
+}
+const tabMenuItems = computed(() =>
+  tabMenu.value ? menuOf('tab', { 'format.describe': { run: () => void nameDialog.open(tabMenu.value?.id ?? '') }, 'edit.reference': { run: () => void frame.value?.referenceThing(tabMenu.value?.id ?? '') } }) : [],
+)
+
+/** The cell's own menu (right press): a pivot table's entries first where the cell is in one (D1612), then the cell's. */
+const cellMenuItems = computed(() => {
+  const cell = menuOf('cell')
+  if (!pivotHere.value) return cell
+  const pivot = menuOf('pivot')
+  return [...pivot, ...(pivot.length && cell.length ? [{ label: '', separator: true }] : []), ...cell]
 })
 
 // Preferences ▸ Shortcuts: the grid's own mouse and keyboard conventions, which are not a single `keydown` chord and so
@@ -1232,13 +1126,13 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
           @undo="session.undo()"
           @redo="session.redo()"
         >
-          <StylePicker v-if="state.activeSheet && sheetShown" :host="activeHost" :hint="chordLabel(LOOK.chord)" @look="grid?.openStyleMenu()" @styled="grid?.focus()" />
+          <StylePicker v-if="state.activeSheet && sheetShown" :host="activeHost" :hint="hintOf('format.look')" @look="grid?.openStyleMenu()" @styled="grid?.focus()" />
           <button
             v-if="state.activeSheet && sheetShown"
             type="button"
             class="draw"
             :disabled="readonly"
-            :title="t('Draw new random numbers ({key})', { key: chordLabel(RESAMPLE.chord) })"
+            :title="t('Draw new random numbers ({key})', { key: hintOf('tools.resample') ?? '' })"
             :aria-label="t('Draw {n}: draw new random numbers', { n: state.random?.draw ?? 1 })"
             @click="resample()"
           >
@@ -1268,12 +1162,13 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
     </template>
     <PrintPreview v-if="printing" ref="preview" :source="printSource" @close="closePrint" />
     <div v-else-if="state.activeSlide" class="stage">
-      <SlideCanvas ref="canvas" class="canvas" data-region="document" :session="session" :show-grid="false" :marks="slideMarks" @styles="dialog = 'styles'" />
+      <SlideCanvas ref="canvas" class="canvas" data-region="document" :menu-of="menuOf" :session="session" :show-grid="false" :marks="slideMarks" @styles="dialog = 'styles'" />
     </div>
     <SheetGrid
       v-else-if="state.activeSheet"
       ref="grid"
       data-region="document"
+      :menu-of="menuOf"
       :session="session"
       :sheet="state.activeSheet"
       :sel="sel"
@@ -1306,7 +1201,7 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
     <div v-else class="nosheet">{{ t('This document has no sheet yet.') }}</div>
     <div class="sr-only" role="status" aria-live="polite" aria-atomic="true">{{ announcement }}</div>
     <template #footer>
-      <FooterBar v-if="!printing" data-region="footer" :state="state" :summary="summary" :can-add="!readonly" :marks="marks" @pick="pickTab" @add="dialog = 'sheet'" @rename="askRename" />
+      <FooterBar v-if="!printing" data-region="footer" :state="state" :summary="summary" :can-add="!readonly" :marks="marks" @pick="pickTab" @add="dialog = 'sheet'" @rename="askRename" @menu="openTabMenu" />
     </template>
     <template #overlay>
       <SearchPanel
@@ -1327,6 +1222,7 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
         @insert="insertRandom"
       />
       <OutcomePopover v-if="outcomes" :session="session" :sheet="state.activeSheet" :row="outcomes.row" :col="outcomes.col" :x="outcomes.x" :y="outcomes.y" @close="outcomes = null" />
+      <ContextMenu v-if="tabMenu" :x="tabMenu.x" :y="tabMenu.y" :items="tabMenuItems" :label="t('Tab menu')" @close="tabMenu = null" />
       <ContextMenu v-if="cellMenu" :x="cellMenu.x" :y="cellMenu.y" :items="cellMenuItems" :width="290" :label="t('Cell menu')" @close="cellMenu = null" />
       <PromptDialog v-if="dialog === 'rename' && renaming" :title="t('Rename sheet')" :label="t('Name')" :ok="t('Rename')" required :initial="renaming.name" @ok="rename" @close="dialog = null" />
       <PromptDialog v-if="dialog === 'sheet'" :title="t('New sheet')" :label="t('Name')" :ok="t('Add Sheet')" required :initial="session.freeSheetName()" :placeholder="t('Forecast')" @ok="addSheet" @close="dialog = null" />
@@ -1434,15 +1330,12 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
         :last="dialog === 'row-size' ? b.r1 : b.c1"
         @close="dialog = null"
       />
-      <HeaderMenu
+      <ContextMenu
         v-if="headerMenu"
-        :axis="headerMenu.axis"
         :x="headerMenu.x"
         :y="headerMenu.y"
-        :readonly="readonly"
-        @insert="headerInsert"
-        @delete="headerDelete"
-        @resize="headerResize"
+        :items="menuOf(headerMenu.axis === 'row' ? 'row-header' : 'column-header')"
+        :label="headerMenu.axis === 'row' ? t('Row menu') : t('Column menu')"
         @close="headerMenu = null"
       />
     </template>

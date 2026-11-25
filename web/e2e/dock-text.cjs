@@ -1,5 +1,5 @@
 // Paragraphs as things in a real browser (D554): in a text, ann writes a heading and a paragraph, types "#" in the chat
-// and picks the heading, which has no name yet: it is named by its words and the tag says so. Edit ▸ Reference in Chat
+// and picks the heading, which has no name yet: it is named by its words and the tag says so. The paragraph's menu ▸ Reference in Chat
 // puts a tag for the paragraph with the caret in the box. ben clicks the heading's tag and the text outlines it.
 // Start a text server first (as CI does): python -m claudia_server --model claudia_composes:TextModel ...
 // Run: URL=http://127.0.0.1:8766/ npm run e2e:dock-text
@@ -69,11 +69,12 @@ async function menu(page, title, ...path) {
     await ann.waitForSelector('.msg button.tag:text-is("#Introduction")')
     log('ann tagged the heading; it is called “Introduction”')
 
-    // ---- Edit ▸ Reference in Chat: the paragraph with the caret
+    // ---- the paragraph's menu ▸ Reference in Chat (D1607): the paragraph pressed
     await ann.click('[data-testid=text] [data-paragraph]:nth-child(2)')
-    await menu(ann, 'Edit', 'Reference in Chat')
+    await ann.click('[data-testid=text] [data-paragraph]:nth-child(2)', { button: 'right' })
+    await ann.click('[role=menu][aria-label="Paragraph menu"] [role=menuitem]:has-text("Reference in Chat")')
     await ann.waitForFunction((sel) => document.querySelector(sel)?.querySelector('.chip')?.textContent.includes('Paragraph'), chatBox)
-    log('Edit ▸ Reference in Chat put a tag for the paragraph in the box')
+    log('the paragraph menu ▸ Reference in Chat put a tag for the paragraph in the box')
 
     // ---- ben follows the heading's tag
     await menu(ann, 'File', 'Manage', 'Share')

@@ -1,9 +1,7 @@
 <script setup lang="ts">
-import { roleNow } from '~/lib/replay'
 // A text: the style bar, the page, the suggestions above the panel, and the counts along the bottom, inside the
 // document window every app shares (DocumentFrame).
 import { computed, nextTick, ref, watch } from 'vue'
-import { DEFAULT_STYLE, SHAPE_LABEL_STYLE } from '@claudia/layout'
 import { countWords } from '~/lib/paragraphs'
 import { NEW_OBJECT_CAP, pictureSize, type PictureImport } from '~/lib/images'
 import { pictureOf, useObjectClipboard } from '~/lib/object-clipboard'
@@ -11,31 +9,19 @@ import { NEW_OBJECT_WRAP, wrapAnnouncement, wrapLabel, wrapOf } from '~/lib/wrap
 import { toMarkdown } from '~/lib/markdown'
 import { textStyleHost } from '~/lib/text-style-host'
 import type { TextSession } from '~/lib/text-session'
-import type { StyleView } from '~/lib/style-css'
-import { formatItems } from '~/lib/format-menu'
 import { hasHeadingStyles, headingsNumbered, type NumberingHost } from '~/lib/numbering'
 import { looksOf, type ContentsHost } from '~/lib/contents'
 import { usePageNumbers } from '~/lib/print/page-numbers'
 import { SHOWS, type Show } from '~/lib/references'
 import { showLabel } from '~/lib/reference-labels'
-import {
-  askItem,
-  clipboardItems,
-  preferencesMenu,
-  darkItem,
-  fileMenu,
-  goToTargetItem,
-  helpMenu,
-  insertMenu,
-  backItem, panelItem, referenceItem, replayItem,
-  searchItem,
-  undoRedoItems,
-  type DocumentMenuContext,
-} from '~/lib/document-menus'
-import { chordLabel, chordOf, hintOf, searchShortcuts, type ShortcutDef } from '~/lib/shortcuts'
-import { describeShortcut } from '~/lib/descriptions'
+import type { Thing } from '~/lib/fits/facts'
+import type { ContextMenuOf, Handler, Handlers } from '~/lib/menus/assemble'
+import { useMenus, windowFacts } from '~/lib/menus/use-menus'
+import { notYet, windowHandlers } from '~/lib/menus/window-handlers'
+import { canTurn } from '~/lib/turning'
+import { searchShortcuts } from '~/lib/shortcuts'
 import { useNameAndDescribe } from '~/lib/use-name-and-describe'
-import { insertTableItems, possible, tableItems, tableShortcuts, type TableAction, type TableMenuHost } from '~/lib/table-menu'
+import { possible, tableShortcuts, type TableAction, type TableMenuHost } from '~/lib/table-menu'
 import { columnPlace, mergeRect, rowPlace } from '~/lib/tables'
 import { marksFor, textSearchHost } from '~/lib/text-search-host'
 import { useSearch } from '~/lib/use-search'
@@ -48,8 +34,7 @@ import PrintPreview from './PrintPreview.vue'
 import ImageImportDialog from './ImageImportDialog.vue'
 import { textSource } from '~/lib/print/source'
 import { usePrint } from '~/lib/print/use-print'
-import { rotateItem } from '~/lib/rotate-menu'
-import type { Menu, MenuItem } from './MenuBar.vue'
+import type { MenuItem } from './MenuBar.vue'
 
 const props = defineProps<{ session: TextSession }>()
 const emit = defineEmits<{ leave: [opts?: { startFresh?: boolean }] }>()
@@ -84,7 +69,7 @@ watch(authors, (on) => remember('claudia.composes.authors', on ? 'on' : 'off'))
 
 // File ▸ Print… shows the pages in place of the text (D906, D918), as in every app that prints (`lib/print/use-print.ts`).
 // (A new text's language, D915, is set by the server when it creates the document: UX-33.)
-const { printing, preview, open: openPrint, close: closePrint, shortcut: PRINT } = usePrint(() => editor.value?.focus())
+const { printing, preview, open: openPrint, close: closePrint} = usePrint(() => editor.value?.focus())
 const printSource = textSource(session)
 
 const readonly = computed(() => session.readOnly)
@@ -188,7 +173,6 @@ async function cycleWrap() {
   const now = await session.cycleWrap(id)
   if (now) session.notice(wrapAnnouncement(now), 'info')
 }
-const WRAP_TEXT: ShortcutDef = { id: 'format.wrap-text', get label() { return t('Wrap Text') }, chord: chordOf('format.wrap-text'), run: () => void cycleWrap(), enabled: () => !!state.selectedObject && !readonly.value && !printing.value }
 /** What Wrap Text shows beside its name: the mode the selected object has now. */
 const currentWrap = computed(() => (state.selectedObject && state.objects[state.selectedObject] ? wrapOf(state.objects[state.selectedObject]!.anchor).wrap : null))
 function pictureInserted() {
@@ -243,24 +227,16 @@ const searchHost = textSearchHost({ session, goTo: (paragraph) => editor.value?.
 const searchMarks = computed(() => (search.open.value ? marksFor(search.view.value.matches, search.view.value.current) : []))
 const openSearch = (replace = false) => search.openSearch(replace, session.selectedText())
 
-// ------------------------------------------------------------------------------ menus and shortcuts
-// D122: composes' one shortcut of its own, on top of the window's Undo, Redo and Save.
-/** Format ▸ Name & describe…, Ctrl+Alt+D (D1317): the object selected, else the paragraph the caret is in. */
+// ------------------------------------------------------------------------------ Name & Describe… and the keys
+/** Edit ▸ Name & Describe…, Ctrl+Alt+D (D1317): the object selected, else the paragraph the caret is in. */
 const nameDialog = useNameAndDescribe(session, () => editor.value?.focus())
 function openDescribe() {
   if (readonly.value) return session.tellLookOnly()
   const id = state.selectedObject ?? state.selection?.focus.paragraph
   if (id) void nameDialog.open(id)
 }
-const DESCRIBE = describeShortcut(openDescribe, () => !readonly.value && !!(state.selectedObject ?? state.selection))
-const LOOK: ShortcutDef = { id: 'format.look', get label() { return t('Edit This Style…') }, chord: chordOf('format.look'), run: () => openStyleMenu() }
-// D912: a non-breaking hyphen says where a word may not be broken (as in Word and LibreOffice); its key stayed when
-// its entry left the menu (the menu workbook, "Keys without entry"). The soft hyphen's entry and key were dropped.
+/** Where the caret can take a character: not while printing, not for somebody who may only look. */
 const typing = () => !printing.value && !session.readOnly
-const HARD_HYPHEN: ShortcutDef = { id: 'edit.nonbreaking-hyphen', get label() { return t('Non-breaking Hyphen') }, chord: chordOf('edit.nonbreaking-hyphen'), run: () => session.type('\u2011'), enabled: typing }
-// E9.21: bullets and numbers, on the keys of the digits (Google Docs' Ctrl+Shift+8 and 7), whatever they type.
-const BULLETS: ShortcutDef = { id: 'format.bulleted-list', get label() { return t('Bulleted List') }, chord: chordOf('format.bulleted-list'), run: () => makeList('bullets'), enabled: () => !readonly.value }
-const NUMBERS: ShortcutDef = { id: 'format.numbered-list', get label() { return t('Numbered List') }, chord: chordOf('format.numbered-list'), run: () => makeList('numbers'), enabled: () => !readonly.value }
 // E9.32: the keys of the table entries work in a box, which is a field of its own (`whileTyping`).
 const tableHost: TableMenuHost = {
   get table() {
@@ -274,15 +250,10 @@ const tableHost: TableMenuHost = {
   },
   run: (action) => void runTable(action),
 }
+// The keys with rules of their own (a table's work in its boxes, which are fields); every menu entry's key comes from
+// the definition (`DocumentFrame`, D1604).
 const extraShortcuts = [
-  LOOK,
-  DESCRIBE,
-  WRAP_TEXT,
   ...tableShortcuts({ t }, tableHost),
-  PRINT,
-  HARD_HYPHEN,
-  BULLETS,
-  NUMBERS,
   ...searchShortcuts({ find: () => openSearch(), replace: () => openSearch(true), canReplace: () => !readonly.value && !printing.value }),
 ]
 
@@ -295,10 +266,8 @@ const objectMenuHost = ref<{ quarter: (direction: 1 | -1) => Promise<void>; open
 /** The table whose options are open, and the column the caret was in. */
 const optionsFor = ref<{ table: string; column?: string } | null>(null)
 
-/** Insert ▸ Table…: the dialog asks how big; the table goes after the paragraph the caret is in. */
-const canInsertTable = () => !readonly.value && !!state.selection && !state.box
-/** Where the table goes: the caret as it was when the menu entry was chosen (the dialog takes the focus, and a click
- *  into its fields must not move the place). */
+/** Insert ▸ Table…: the dialog asks how big; the table goes after the paragraph the caret is in, as it was when the
+ * entry was chosen (the dialog takes the focus, and a click into its fields must not move the place). */
 let tablePlace: { paragraph: string; offset: number } | null = null
 function openTableDialog() {
   editor.value?.syncCaret()
@@ -411,7 +380,8 @@ function goToTarget() {
   const found = referenceAtCaret()
   if (found && found.shown?.state !== 'broken') editor.value?.goTo(found.field.target)
 }
-/** A reference's own menu (mock-up C): Show As, Go to Target, Remove Reference. */
+/** A reference's own menu (mock-up C): Show As and Remove Reference, which the workbook does not list (UX-96), around the
+ * definition's `reference` context menu, Go to Target. */
 const refMenu = ref<{ paragraph: string; index: number; x: number; y: number } | null>(null)
 const refMenuItems = computed<MenuItem[]>(() => {
   const at = refMenu.value
@@ -419,10 +389,12 @@ const refMenuItems = computed<MenuItem[]>(() => {
   const field = paragraph?.fields?.[at!.index]
   if (!at || !field) return []
   const shows = SHOWS.map((s) => ({ label: `${field.show === s ? '✓ ' : ''}${t('Show As')} ${showLabel(s)}`, disabled: readonly.value || field.show === s, action: () => void session.setFieldShow(at.paragraph, at.index, s) }))
+  const broken = paragraph.shown?.[at.index]?.state === 'broken'
+  const go = menuOf('reference', { 'edit.go-to-target': { run: () => editor.value?.goTo(field.target), notNow: () => (broken ? t('What this reference pointed at is gone.') : null) } })
   return [
     ...shows,
     { label: '', separator: true },
-    { label: t('Go to Target'), hint: hintOf('edit.go-to-target'), disabled: paragraph.shown?.[at.index]?.state === 'broken', action: () => editor.value?.goTo(field.target) },
+    ...go,
     { label: t('Remove Reference'), hint: 'Delete', disabled: readonly.value, action: () => void session.replaceSelection('') },
   ]
 })
@@ -456,186 +428,131 @@ function insertContents() {
   else void session.insertContents().then(() => editor.value?.focus())
 }
 
-/** What the shared menu items need from this window (`lib/document-menus.ts`). */
-const shared = computed<DocumentMenuContext>(() => ({
-  t,
-  role: roleNow(state),
-  open: (name) => frame.value?.openDialog(name),
-  leave: (opts) => emit('leave', opts),
-  save: () => frame.value?.checkpoint(null),
-  print: openPrint,
-}))
-
+// ------------------------------------------------------------------------------ menus (D1644)
+// The menus and context menus are the definition's (`menus.generated.ts`); what is true now says what fits (`fits/`),
+// and these handlers say what each entry does here.
 function ask(text: string) {
   frame.value?.ask(text)
 }
 
-const menus = computed<Menu[]>(() => {
-  const c = shared.value
-  return [
-    fileMenu(c),
-    {
-      label: t('Edit'),
-      items: [
-        ...undoRedoItems(c, {
-          canUndo: state.canUndo,
-          undoLabel: state.undoLabel,
-          canRedo: state.canRedo,
-          redoLabel: state.redoLabel,
-          undo: () => session.undo(),
-          redo: () => session.redo(),
-        }),
-        { label: '', separator: true },
-        ...clipboardItems(c, () => pasteFromClipboard()),
-        { label: '', separator: true },
-        searchItem(c, { open: () => openSearch() }),
-        { label: '', separator: true },
-        // the paragraph with the caret (D554); a floating object cannot be selected in the text yet
-        referenceItem(c, { run: () => void frame.value?.referenceThing(session.state.selection?.focus.paragraph ?? ''), possible: () => !!session.state.selection }),
-        goToTargetItem(c, { run: () => goToTarget(), possible: () => !!referenceAtCaret() }),
-        { label: '', separator: true },
-        // a picture hangs from the caret's character, like a container (E10.16); its key is the same in all three apps
-        { id: 'edit.image', label: t('Image…'), action: () => (dialog.value = 'image'), disabled: readonly.value || !state.selection },
-        { id: 'edit.text-box', label: t('Text Box'), action: () => void addTextBox(), disabled: readonly.value || !state.selection },
-        // the outlines the server offers, as in creates; they hang from the caret's character like a picture
-        ...state.library.map((s) => ({ label: s.name, action: () => void addShape(s.id), disabled: readonly.value || !state.selection })),
-        { label: '', separator: true },
-        // The two characters that had keys and no menu entry (UX-35/UX-36): where a word may break, and where never.
-        {
-          label: t('Insert'),
-          disabled: !typing(),
-          items: [
-            { id: 'edit.nonbreaking-hyphen', label: t('Non-breaking Hyphen'), disabled: !typing(), action: () => HARD_HYPHEN.run() },
-          ],
-        },
-      ],
-    },
-    insertMenu(c, { types: state.containerTypes, add: (type) => addContainer(type) }, { label: t('Table of Contents'), add: insertContents, possible: !readonly.value && !!state.selection }, { add: openPicker, possible: !readonly.value && !!state.selection }, insertTableItems(c, { add: openTableDialog, possible: canInsertTable() })),
-    {
-      label: t('Format'),
-      items: [
-        ...(Object.keys(state.styles).length === 0
-          ? [{ label: t('No styles yet'), disabled: true }]
-          : formatItems(t, {
-              // D127's groups — structure · running text · called-out paragraphs — and then any style of the text's own.
-              // Structure is every style that gives a heading level (E9.22), by its level: the title and the
-              // headings, and any style somebody made a heading.
-              groups: [headingStyles(), builtins([DEFAULT_STYLE.composes]), builtins(CALLED_OUT_STYLE_IDS), customStyles()],
-              current: session.currentStyle(),
-              canApply: !readonly.value,
-              apply: (id) => {
-                void session.setStyle(id)
-                editor.value?.focus()
-              },
-              openApply: () => openStyleMenu(undefined, 'apply'),
-              look: { disabled: false, hint: chordLabel(LOOK.chord), open: () => openStyleMenu() },
-              allStyles: () => (dialog.value = 'styles'),
-              // The palette reaches composes' paragraph styles from day one (D200): a heading's colour is a role.
-              colours: () => (dialog.value = 'colours'),
-              list: {
-                readonly: readonly.value,
-                current: currentKind(),
-                canNest: !!session.currentItem(),
-                canContinue: session.canContinue(),
-                hints: { bulleted: chordLabel(BULLETS.chord), numbered: chordLabel(NUMBERS.chord), indent: 'Tab', outdent: 'Shift+Tab' },
-                bulleted: () => makeList('bullets'),
-                numbered: () => makeList('numbers'),
-                continueList: () => void session.continueList(),
-                startAt: () => (dialog.value = 'list-start'),
-                indent: () => void session.indent(1),
-                outdent: () => void session.indent(-1),
-                headings: {
-                  label: t('Number Headings'),
-                  on: headingsNumbered(Object.values(state.styles)),
-                  possible: hasHeadingStyles(Object.values(state.styles)),
-                  toggle: () => void session.numberHeadings(!headingsNumbered(Object.values(state.styles))),
-                },
-                allNumbering: () => (dialog.value = 'numbering'),
-              },
-            })),
-        { label: '', separator: true },
-        { id: 'format.describe', label: t('Name & describe…'), hint: chordLabel(DESCRIBE.chord), action: () => openDescribe(), disabled: readonly.value || !(state.selectedObject ?? state.selection) },
-        { label: '', separator: true },
-        // a quarter turn each way and any angle, for what turns (a chart and a table do not, D1021, D1224)
-        rotateItem(t, {
-          kind: () => (state.selectedObject ? (state.objects[state.selectedObject]?.kind ?? null) : null),
-          readonly: () => readonly.value || printing.value,
-          quarter: (direction) => void objectMenuHost.value?.quarter(direction),
-          by: () => objectMenuHost.value?.openRotateBy(),
-        }),
-        { label: '', separator: true },
-        // one entry and one key that cycles the four modes (D1064); it says which mode the selected object has now
-        {
-          id: 'format.wrap-text',
-          label: currentWrap.value ? t('Wrap Text: {mode}', { mode: wrapLabel(currentWrap.value) }) : t('Wrap Text'),
-          action: () => void cycleWrap(),
-          disabled: readonly.value || !state.selectedObject,
-        },
-      ],
-    },
-    {
-      label: t('View'),
-      items: [
-        { id: 'view.authors', label: t('Show Who Wrote What'), checked: authors.value, action: (x) => (authors.value = x ? x === 'on' : !authors.value) },
-        panelItem(c, { open: () => frame.value?.isPanelOpen() ?? true, toggle: () => frame.value?.togglePanel() }),
-        replayItem(c, { start: () => frame.value?.replayHistory(), possible: () => state.entries.length > 0 && state.status === 'open' }),
-        backItem(c, { go: () => session.goBack(), possible: () => !!state.wayBack }),
-        darkItem(c, { on: dark, toggle: toggleDark }),
-        { label: '', separator: true },
-        { label: t('Flow'), checked: view.value === 'flow', action: () => (view.value = 'flow') },
-        // One boolean action (GTK has no notion of two radio items), set/cleared explicitly by a shell, toggled by a web click.
-        { id: 'view.page', label: t('Page'), checked: view.value === 'page', action: (x) => (view.value = x === 'off' ? 'flow' : 'page') },
-      ],
-    },
-    {
-      label: t('Tools'),
-      items: [
-        // Only the generic "Ask ai" (D126). The canned demo requests ("Review this text", "Review this paragraph") and
-        // "Insert sample text" were taken out at the owner's request (2026-11-12): demo props, not features.
-        askItem(c, ask),
-        // the table the caret is in (E9.32): on only in one of its boxes. In Tools since D1229, as computes has its pivot
-        // table there.
-        { label: '', separator: true },
-        ...tableItems(c, tableHost),
-      ],
-    },
-    preferencesMenu(c, { current: locale.value, choose }),
-    helpMenu(c, { ask, openHelp: (mode) => frame.value?.openHelp(mode) }),
-  ]
+/** What is selected, for what fits (D1601): the boxes of a table the caret is in, an object, or the text at the caret. */
+function selectionNow(): Thing[] {
+  if (state.box) return [{ kind: 'table-cells', count: possible(tableHost, 'merge-cells') ? 2 : 1, merged: possible(tableHost, 'split-cell') }]
+  const o = state.selectedObject ? state.objects[state.selectedObject] : undefined
+  if (o) return [{ kind: 'object', holdsText: o.kind !== 'image' && o.kind !== 'chart' && o.kind !== 'table', canTurn: canTurn(o.kind), onGrid: false }]
+  const sel = state.selection
+  if (!sel) return []
+  const range = sel.anchor.paragraph !== sel.focus.paragraph || sel.anchor.offset !== sel.focus.offset
+  return [{ kind: 'text', range, listItem: !!session.currentItem() }]
+}
+/** A table's own entry: on the box the caret is in, and only where it has something to do (`possible`). */
+const table = (action: TableAction): Handler => ({
+  run: () => void runTable(action),
+  notNow: () => (possible(tableHost, action) ? null : state.box ? t('That cannot be done in this table.') : t('Put the cursor into a box of the table first.')),
 })
+const shape = (id: string): Handler => ({
+  run: () => void addShape(id),
+  notNow: () => (state.library.some((s) => s.id === id) ? null : t('This server offers no such shape.')),
+})
+const styles = () => Object.values(state.styles)
+/** What hangs from the caret, or goes in at it, needs a caret. */
+function atCaret(): string | null {
+  return state.selection ? null : t('Put the cursor into a text first.')
+}
+const handlers = computed<Handlers>(() => ({
+  ...windowHandlers({
+    t,
+    open: (name) => frame.value?.openDialog(name),
+    leave: (opts) => emit('leave', opts),
+    print: openPrint,
+    history: { undo: () => session.undo(), redo: () => session.redo(), undoLabel: () => (state.canUndo ? state.undoLabel : ''), redoLabel: () => (state.canRedo ? state.redoLabel : '') },
+    paste: () => void pasteFromClipboard(),
+    search: () => openSearch(),
+    panel: { open: () => frame.value?.isPanelOpen() ?? true, toggle: () => frame.value?.togglePanel() },
+    replay: { start: () => frame.value?.replayHistory(), notNow: () => (state.entries.length > 0 && state.status === 'open' ? null : t('There is no history to replay yet.')) },
+    back: () => session.goBack(),
+    theme: { on: dark, toggle: toggleDark },
+    ask,
+    help: (mode) => frame.value?.openHelp(mode),
+    language: { current: () => locale.value, choose },
+  }),
+  'format.describe': { run: () => openDescribe() },
+  // the paragraph with the caret (D554), or the object selected
+  'edit.reference': { run: () => void frame.value?.referenceThing(state.selectedObject ?? state.selection?.focus.paragraph ?? '') },
+  'edit.go-to-target': { run: () => goToTarget(), notNow: () => (referenceAtCaret() ? null : t('There is no reference here.')) },
+  'edit.edit-text': { run: () => void (state.selectedObject && (state.editingObject = state.selectedObject)) },
+  'edit.delete': { run: () => void (state.selectedObject && session.removeObject(state.selectedObject)) },
+  // where a word may never break (D912, as in Word and LibreOffice): a key without an entry ("Keys without entry")
+  'edit.nonbreaking-hyphen': { run: () => session.type('‑'), notNow: () => (typing() ? atCaret() : t('Put the cursor into a text first.')) },
+  'insert.contents': { run: () => insertContents(), notNow: atCaret },
+  'insert.cross-reference': { run: () => openPicker(), notNow: atCaret },
+  'insert.table': { run: () => openTableDialog(), notNow: () => (state.box ? t('A table cannot go into a table.') : atCaret()) },
+  // a picture, a text box and a shape hang from the caret's character, like a container (E10.16)
+  'edit.image': { run: () => (dialog.value = 'image'), notNow: atCaret },
+  'edit.text-box': { run: () => void addTextBox(), notNow: atCaret },
+  'insert.shape.circle': shape('circle'),
+  'insert.shape.rectangle': shape('rectangle'),
+  'insert.shape.triangle': shape('triangle'),
+  ...Object.fromEntries(['latex', 'mermaid', 'typst'].map((type) => [`insert.container.${type}`, { run: () => void addContainer(type) }])),
+  'format.apply-style': { run: () => openStyleMenu(undefined, 'apply') },
+  'format.look': { run: () => openStyleMenu() },
+  'format.all-styles': { run: () => (dialog.value = 'styles') },
+  'format.rotate-by': { run: () => objectMenuHost.value?.openRotateBy() },
+  // the object's own (D1064): the key and a native shell go on to the next mode
+  'format.wrap-text': {
+    run: () => void cycleWrap(),
+    label: () => (currentWrap.value ? t('Wrap Text: {mode}', { mode: wrapLabel(currentWrap.value) }) : t('Wrap Text…')),
+  },
+  'format.bulleted-list': { run: () => makeList('bullets'), checked: () => currentKind() === 'bullets' },
+  'format.numbered-list': { run: () => makeList('numbers'), checked: () => currentKind() === 'numbers' },
+  'format.list-continue': { run: () => void session.continueList(), notNow: () => (session.canContinue() ? null : t('There is no list before this one to go on from.')) },
+  'format.list-start': { run: () => (dialog.value = 'list-start') },
+  'format.list-indent': { run: () => void session.indent(1) },
+  'format.list-outdent': { run: () => void session.indent(-1) },
+  'format.number-headings': {
+    run: () => void session.numberHeadings(!headingsNumbered(styles())),
+    checked: () => headingsNumbered(styles()),
+    notNow: () => (hasHeadingStyles(styles()) ? null : t('No style gives a heading level here.')),
+  },
+  'format.all-numbering': { run: () => (dialog.value = 'numbering') },
+  'format.colours': { run: () => (dialog.value = 'colours') },
+  'view.authors': { run: () => (authors.value = !authors.value), checked: () => authors.value },
+  // one switch (D1611): ticked is pages, not ticked flowing text
+  'view.page': { run: () => (view.value = view.value === 'page' ? 'flow' : 'page'), checked: () => view.value === 'page' },
+  // a table's own (its context menu, D1224): on the box the caret is in
+  'tools.table-options': table('options'),
+  'tools.merge-cells': table('merge-cells'),
+  'tools.split-cell': table('split-cell'),
+  'tools.sort-ascending': table('sort-ascending'),
+  'tools.sort-descending': table('sort-descending'),
+  'edit.row-insert-above': table('row-above'),
+  'edit.row-insert-below': table('row-below'),
+  'edit.row-delete': table('row-delete'),
+  'edit.column-insert-left': table('column-left'),
+  'edit.column-insert-right': table('column-right'),
+  'edit.column-delete': table('column-delete'),
+  'edit.row-height': notYet(t),
+  'edit.column-width': notYet(t),
+}))
 
-/** The built-in styles of one of D127's groups (structure · running text · called-out paragraphs), by id, in order. */
-function builtins(ids: string[]): StyleView[] {
-  return ids.map((id) => state.styles[id]).filter((s): s is StyleView => !!s)
-}
-/** The styles that make a paragraph a heading, by their level: the title first. */
-function headingStyles(): StyleView[] {
-  return Object.values(state.styles)
-    .filter((s) => s.heading !== null && s.heading !== undefined && forParagraphs(s))
-    .sort((a, b) => a.heading! - b.heading!)
-}
-/** The built-in styles of the called-out paragraphs (D127), as composes' built-ins name them (`tests/test_style_ids_generated.py`
- * checks that each is one). */
-const CALLED_OUT_STYLE_IDS = ['quote', 'remark', 'definition']
-const BUILTIN_STYLE_IDS = new Set([DEFAULT_STYLE.composes, ...CALLED_OUT_STYLE_IDS])
-/**
- * A text's style book holds the floating objects' styles too, since one object layer serves all three apps
- * (E10.16). The *Format* menu marks a paragraph, so it lists only the styles that fit a paragraph: a paragraph is
- * one slot that takes paragraph styles (D304, D316), which leaves out `plain-shape`, `plain-box` and `plain-image`
- * by their kind, and with them every style somebody deviated from one of them.
- *
- * `shape-label` is a paragraph style by kind but was made for the words in a shape, not for a paragraph of the text
- * (D310), so it is left out by name. Which slots a style is *meant* for, beyond which it fits, is a question for the
- * new style menu (the styling-suite plan, step 2.2).
- */
-const OBJECT_WORDS_STYLE_IDS = new Set([SHAPE_LABEL_STYLE])
-const forParagraphs = (s: StyleView) => s.kind === 'paragraph' && !OBJECT_WORDS_STYLE_IDS.has(s.id)
-/** A style made by deviating from a built-in (`next_style` in `model.py`) is not one of the three fixed groups above
- * — D127 only grouped the built-ins, so anything else gets its own trailing group rather than being folded silently
- * into one of them. A style that gives a heading level is in the structure group instead, whoever made it (E9.22). */
-function customStyles(): StyleView[] {
-  return Object.values(state.styles).filter((s) => !BUILTIN_STYLE_IDS.has(s.id) && (s.heading === null || s.heading === undefined) && forParagraphs(s))
-}
+const menus = useMenus('composes', {
+  handlers: () => handlers.value,
+  // the picker asks the server what can be referred to: the page does not know before
+  facts: () => windowFacts(state, { selection: selectionNow(), references: true, desktop: frame.value?.inDesktopApp() }),
+  notice: (why) => session.notice(why, 'info'),
+})
+/** A context menu of this window: what fits the thing pressed, by the definition. */
+const menuOf: ContextMenuOf = (id, own) => menus.value.context(id, own)
+
+/** A right press on the words (D1603): the paragraph's menu, a heading's or a list's where the caret is in one. */
+const textMenu = ref<{ x: number; y: number } | null>(null)
+const textMenuItems = computed<MenuItem[]>(() => {
+  const at = textMenu.value
+  if (!at) return []
+  const style = state.styles[session.currentStyle() ?? '']
+  const kind = session.currentItem() ? 'list' : style?.heading !== null && style?.heading !== undefined ? 'heading' : 'paragraph'
+  return menuOf(kind, { 'format.apply-style': { run: () => openStyleMenu(at, 'apply') } })
+})
 
 // Preferences ▸ Shortcuts (D122/D126): the things that are not a `keydown` shortcut at all — typing itself, and native
 // Ctrl+C/X/V, which the browser already handles for whatever has focus.
@@ -666,7 +583,7 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
       <StyleBar v-if="!printing" data-region="toolbar" :session="session" :view="view" :authors="authors" @view="view = $event" @authors="authors = $event" @styled="editor?.focus()" @look="openStyleMenu" />
     </template>
     <PrintPreview v-if="printing" ref="preview" :source="printSource" @close="closePrint" />
-    <TextEditor v-else ref="editor" data-region="document" :session="session" :view="view" :authors="authors" :active="active" :marks="searchMarks" :pages="pageNumbers" :turning="turning" @suggestion="pick" @style-menu="openStyleMenu" @contents="openContents" @reference-menu="refMenu = $event" @table-options="openTableOptions" @object-menu="objectMenu = $event" />
+    <TextEditor v-else ref="editor" data-region="document" :session="session" :view="view" :authors="authors" :active="active" :marks="searchMarks" :pages="pageNumbers" :turning="turning" @suggestion="pick" @style-menu="textMenu = $event" @contents="openContents" @reference-menu="refMenu = $event" @table-options="openTableOptions" @object-menu="objectMenu = $event" />
     <template #footer>
       <footer v-if="!printing" class="foot">
         <div class="stats mono" aria-live="polite">
@@ -693,7 +610,8 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
       <StylesDialog v-if="dialog === 'styles'" :host="styleHost" @close="dialog = null" />
       <ReferencePicker v-if="picker" :x="picker.x" :y="picker.y" :targets="(q) => session.referenceTargets(q)" @choose="putReference" @close="(picker = null), editor?.focus()" />
       <NameAndDescribeDialog v-if="nameDialog.details.value" :details="nameDialog.details.value" @save="nameDialog.save" @close="nameDialog.close" />
-      <TextObjectMenu ref="objectMenuHost" :session="session" :menu="objectMenu" :table-host="tableHost" :clipboard="objectClip" @close="objectMenu = null" @turning="turning = $event" @styles="dialog = 'styles'" />
+      <TextObjectMenu ref="objectMenuHost" :session="session" :menu="objectMenu" :menu-of="menuOf" :clipboard="objectClip" @close="objectMenu = null" @turning="turning = $event" @styles="dialog = 'styles'" />
+      <ContextMenu v-if="textMenu" :x="textMenu.x" :y="textMenu.y" :items="textMenuItems" :label="t('Paragraph menu')" @close="textMenu = null" />
       <ContextMenu v-if="refMenu" :x="refMenu.x" :y="refMenu.y" :items="refMenuItems" :width="260" :label="t('Reference menu')" @close="refMenu = null" />
       <ContentsDialog v-if="dialog === 'contents' && contentsHost" :host="contentsHost" :title="t('Table of contents')" @close="dialog = null" />
       <NumberingDialog v-if="dialog === 'numbering'" :host="numberingHost" :initial="session.currentScheme() ?? undefined" @close="dialog = null" />

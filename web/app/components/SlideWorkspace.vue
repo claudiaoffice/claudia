@@ -1,33 +1,19 @@
 <script setup lang="ts">
-import { lookOnly, roleNow } from '~/lib/replay'
+import { lookOnly } from '~/lib/replay'
 // A presentation: the slide, the tool bar to put things on it, the slides along the bottom and the panel.
 import { computed, nextTick, ref } from 'vue'
 import { insertFrame } from '~/lib/geometry'
 import type { PictureImport } from '~/lib/images'
 import type { SlideSession } from '~/lib/slide-session'
 import { pasteAsPlainText } from '~/lib/clipboard'
-import {
-  askItem,
-  authorsItemUnavailable,
-  clipboardItems,
-  preferencesMenu,
-  darkItem,
-  fileMenu,
-  helpMenu,
-  insertMenu,
-  goToTargetItem,
-  backItem, panelItem, referenceItem, replayItem,
-  searchItem,
-  undoRedoItems,
-  type DocumentMenuContext,
-} from '~/lib/document-menus'
+import type { Thing } from '~/lib/fits/facts'
+import type { ContextMenuOf, Handler, Handlers } from '~/lib/menus/assemble'
+import { useMenus, windowFacts } from '~/lib/menus/use-menus'
+import { notYet, windowHandlers } from '~/lib/menus/window-handlers'
+import { canTurn } from '~/lib/turning'
 import { useI18n } from '~/lib/i18n'
 import { objectStyleHost, type ObjectStyling } from '~/lib/object-style-host'
-import { galleryFor } from '~/lib/style-host'
-import { describeShortcut } from '~/lib/descriptions'
-import { chordLabel, hintOf, searchShortcuts } from '~/lib/shortcuts'
-import { rotateItem } from '~/lib/rotate-menu'
-import { formatItems, type ListMenu } from '~/lib/format-menu'
+import { hintOf, searchShortcuts } from '~/lib/shortcuts'
 import { looksOf, type ContentsHost } from '~/lib/contents'
 import type { Show } from '~/lib/references'
 import { hasHeadingStyles, headingsNumbered, type NumberingHost } from '~/lib/numbering'
@@ -35,7 +21,7 @@ import { useGrid } from '~/lib/grid'
 import { marksFor, slideSearchHost } from '~/lib/slide-search-host'
 import { useSearch } from '~/lib/use-search'
 import { useTheme } from '~/lib/theme'
-import { onMac, presentHint, presentShortcuts } from '~/lib/present-keys'
+import { presentShortcuts } from '~/lib/present-keys'
 import { useNotesShown } from '~/lib/show-prefs'
 import { formatTime } from '~/lib/show-time'
 import DocumentFrame from './DocumentFrame.vue'
@@ -47,7 +33,6 @@ import SlideNotes from './SlideNotes.vue'
 import SearchPanel from './SearchPanel.vue'
 import { slideSource } from '~/lib/print/source'
 import { usePrint } from '~/lib/print/use-print'
-import type { Menu, MenuItem } from './MenuBar.vue'
 
 const props = defineProps<{ session: SlideSession }>()
 const emit = defineEmits<{ leave: [opts?: { startFresh?: boolean }] }>()
@@ -76,7 +61,6 @@ const readonly = computed(() => lookOnly(state))
 const { shown: notesShown, toggle: toggleNotes } = useNotesShown()
 const notes = ref<InstanceType<typeof SlideNotes> | null>(null)
 const presenting = ref<{ from: number } | null>(null)
-const mac = onMac()
 const plan = computed(() => session.plan())
 function present(from: 'start' | 'here') {
   if (!state.slides.length || printing.value) return
@@ -110,12 +94,8 @@ async function planTime() {
 
 // File ▸ Print… shows the pages in place of the slide (D906, D918), as in every app that prints (`lib/print/use-print.ts`).
 // (A new presentation's language, D915, D917, is set by the server when it creates the document: UX-33.)
-const { printing, preview, open: openPrint, close: closePrint, shortcut: PRINT } = usePrint(() => canvas.value?.focus())
+const { printing, preview, open: openPrint, close: closePrint} = usePrint(() => canvas.value?.focus())
 const printSource = slideSource(session)
-const describeSelected = describeShortcut(
-  () => canvas.value?.openDescribe(),
-  () => state.selected !== null && !readonly.value,
-)
 // ------------------------------------------------------------------------------ Search & replace (E10.19)
 // The panel is one component for the three apps; this is the presentation's side of it: where it can look (all slides,
 // this slide), how a match is named and gone to, and the marks the slide draws for what it found in the words of its
@@ -125,25 +105,11 @@ const searchHost = slideSearchHost({ session, showNotes: () => (notesShown.value
 const searchMarks = computed(() => (search.open.value ? marksFor(search.view.value.matches, search.view.value.current, state.activeSlide) : []))
 const openSearch = (replace = false) => search.openSearch(replace)
 
-/** Format ▸ Rotate ▸ (D1024): the same submenu in every app that turns objects (`lib/rotate-menu.ts`). */
-function rotateMenu(): MenuItem {
-  return rotateItem(t, {
-    kind: () => (state.selected ? (state.objects[state.selected]?.kind ?? null) : null),
-    readonly: () => readonly.value,
-    quarter: (direction) => void canvas.value?.quarter(direction),
-    by: () => canvas.value?.openRotateBy(),
-  })
-}
-
+// The keys with rules of their own (Ctrl+H; Present's letter keys beside F5, D344); every menu entry's key comes from
+// the definition (`DocumentFrame`, D1604).
 const extraShortcuts = [
-  PRINT,
-  describeSelected,
   ...searchShortcuts({ find: () => openSearch(), replace: () => openSearch(true), canReplace: () => !readonly.value && !printing.value }),
-  ...presentShortcuts(
-    t,
-    { start: () => present('start'), here: () => present('here'), notes: toggleNotes, time: () => void planTime() },
-    { time: () => !readonly.value },
-  ),
+  ...presentShortcuts(t, { start: () => present('start'), here: () => present('here') }),
 ]
 const styling: ObjectStyling = {
   get readOnly() {
@@ -180,56 +146,6 @@ const styleHost = objectStyleHost(styling)
 /** The bar's second picker, for a shape's words (D310: the outline and the label are two slots). */
 const labelHost = objectStyleHost(styling, 'label')
 const selectedKind = computed(() => (state.selected ? state.objects[state.selected]?.kind : undefined))
-
-/**
- * The Format menu (D300): Apply style ▸ with the styles that fit the selected object's slot — the one the style
- * menu works on, a shape's outline or a text box's words (D304, D316) — then this object's own look, all the
- * styles, and the document's colours. Styling needs something selected; colours never do.
- */
-function styleItems() {
-  if (session.styleViews().length === 0) return [{ label: t('No styles yet'), disabled: true }]
-  const body = state.selected ? state.objects[state.selected] : undefined
-  const offered = galleryFor(styleHost.styles, styleHost.slot, state.styleModel, styleHost.current?.id)
-  return formatItems(t, {
-    groups: body ? [offered.own, offered.bundles] : [],
-    heading: body ? undefined : t('Select an object to style it'),
-    current: styleHost.current?.id,
-    canApply: !readonly.value && !!body,
-    apply: (id) => void styleHost.apply(id),
-    openApply: () => canvas.value?.openStyleMenu(undefined, 'apply'),
-    look: { disabled: !body, open: () => canvas.value?.openStyleMenu() },
-    allStyles: () => (dialog.value = 'styles'),
-    colours: () => (dialog.value = 'colours'),
-    list: listMenu(),
-  })
-}
-
-/** Format ▸ List ▸ for the selected text box or shape (E9.21, E9.22): its words are an item of a list that runs on from
- * box to box across the slides, and Number All Slide Titles numbers the slide title style. */
-function listMenu(): ListMenu {
-  const scheme = session.selectedScheme()
-  const item = session.selectedItem()
-  const styles = Object.values(state.styles)
-  return {
-    readonly: readonly.value,
-    current: scheme === 'bullets' || scheme === 'numbers' ? scheme : null,
-    canNest: !!item,
-    canContinue: session.canContinue(),
-    bulleted: () => void session.makeList('bullets'),
-    numbered: () => void session.makeList('numbers'),
-    continueList: () => void session.continueList(),
-    startAt: () => (dialog.value = 'list-start'),
-    indent: () => void session.indent(1),
-    outdent: () => void session.indent(-1),
-    headings: {
-      label: t('Number All Slide Titles'),
-      on: headingsNumbered(styles),
-      possible: hasHeadingStyles(styles),
-      toggle: () => void session.numberHeadings(!headingsNumbered(styles)),
-    },
-    allNumbering: () => (dialog.value = 'numbering'),
-  }
-}
 
 /** What the numbering manager works with (E9.22): the presentation's books, and the session's requests. */
 const numberingHost = computed<NumberingHost>(() => ({
@@ -343,106 +259,96 @@ async function pasteFromClipboard() {
   await pasteAsPlainText(document.activeElement)
 }
 
-/** What the shared menu items need from this window (`lib/document-menus.ts`). */
-const shared = computed<DocumentMenuContext>(() => ({
-  t,
-  role: roleNow(state),
-  open: (dialog) => frame.value?.openDialog(dialog),
-  leave: (opts) => emit('leave', opts),
-  save: () => frame.value?.checkpoint(null),
-  print: openPrint,
+// ------------------------------------------------------------------------------ menus (D1644)
+// The menus and context menus are the definition's (`menus.generated.ts`); what is true now says what fits (`fits/`),
+// and these handlers say what each entry does here.
+/** What is selected, for what fits (D1601): the object on the slide, with whether its words are a list's item. */
+function selectionNow(): Thing[] {
+  const o = state.selected ? state.objects[state.selected] : undefined
+  if (!o) return []
+  const holdsText = o.kind !== 'image' && o.kind !== 'chart'
+  return [{ kind: 'object', holdsText, canTurn: canTurn(o.kind), onGrid: !!o.snap, listItem: holdsText && !!session.selectedItem() }]
+}
+const onSlide = () => (state.activeSlide ? null : t('Show a slide first.'))
+const shape = (id: string): Handler => ({
+  run: () => void addShape(id),
+  notNow: () => (state.library.some((s) => s.id === id) ? null : t('This server offers no such shape.')),
+})
+const handlers = computed<Handlers>(() => ({
+  ...windowHandlers({
+    t,
+    open: (name) => frame.value?.openDialog(name),
+    leave: (opts) => emit('leave', opts),
+    print: openPrint,
+    history: { undo: () => session.undo(), redo: () => session.redo(), undoLabel: () => (state.canUndo ? state.undoLabel : ''), redoLabel: () => (state.canRedo ? state.redoLabel : '') },
+    paste: () => void pasteFromClipboard(),
+    search: () => openSearch(),
+    panel: { open: () => frame.value?.isPanelOpen() ?? true, toggle: () => frame.value?.togglePanel() },
+    replay: { start: () => frame.value?.replayHistory(), notNow: () => (state.entries.length > 0 && state.status === 'open' ? null : t('There is no history to replay yet.')) },
+    back: () => session.goBack(),
+    theme: { on: dark, toggle: toggleDark },
+    ask: (text) => frame.value?.ask(text),
+    help: (mode) => frame.value?.openHelp(mode),
+    language: { current: () => locale.value, choose },
+  }),
+  'format.describe': { run: () => canvas.value?.openDescribe() },
+  'edit.reference': { run: () => void frame.value?.referenceThing(state.selected ?? state.activeSlide) },
+  'edit.go-to-target': { run: () => void goToTarget(), notNow: () => (state.selected && session.referenceIn(state.selected) ? null : t('There is no reference here.')) },
+  'edit.rename-slide': { run: () => askRename(), notNow: onSlide },
+  'edit.edit-text': { run: () => void canvas.value?.beginEdit() },
+  'edit.delete': { run: () => void remove() },
+  'edit.release-from-grid': { run: () => void (state.selected && session.setSnap?.(state.selected, false)) },
+  'insert.cross-reference': { run: () => void openPicker() },
+  'insert.contents': { run: () => insertAgenda(), notNow: onSlide },
+  'edit.image': { run: () => (showImageDialog.value = true) },
+  'edit.text-box': { run: () => void addText() },
+  'insert.shape.circle': shape('circle'),
+  'insert.shape.rectangle': shape('rectangle'),
+  'insert.shape.triangle': shape('triangle'),
+  ...Object.fromEntries(['latex', 'mermaid', 'typst'].map((type) => [`insert.container.${type}`, { run: () => void addContainer(type) }])),
+  'edit.new-slide': { run: () => void session.addSlide() },
+  'format.apply-style': { run: () => canvas.value?.openStyleMenu(undefined, 'apply') },
+  'format.look': { run: () => canvas.value?.openStyleMenu() },
+  'format.all-styles': { run: () => (dialog.value = 'styles') },
+  'format.rotate-by': { run: () => canvas.value?.openRotateBy() },
+  'format.bulleted-list': { run: () => void session.makeList('bullets'), checked: () => session.selectedScheme() === 'bullets' },
+  'format.numbered-list': { run: () => void session.makeList('numbers'), checked: () => session.selectedScheme() === 'numbers' },
+  'format.list-continue': { run: () => void session.continueList(), notNow: () => (session.canContinue() ? null : t('There is no list before this one to go on from.')) },
+  'format.list-start': { run: () => (dialog.value = 'list-start') },
+  'format.list-indent': { run: () => void session.indent(1) },
+  'format.list-outdent': { run: () => void session.indent(-1) },
+  'format.number-headings': {
+    run: () => void session.numberHeadings(!headingsNumbered(Object.values(state.styles))),
+    checked: () => headingsNumbered(Object.values(state.styles)),
+    notNow: () => (hasHeadingStyles(Object.values(state.styles)) ? null : t('No style gives a heading level here.')),
+  },
+  'format.all-numbering': { run: () => (dialog.value = 'numbering') },
+  'format.colours': { run: () => (dialog.value = 'colours') },
+  'view.authors': notYet(t), // creates tracks no per-object authorship yet
+  'view.grid': { run: () => toggleGrid(), checked: () => gridShown.value },
+  'view.speaker-notes': { run: () => toggleNotes(), checked: () => notesShown.value },
+  'view.present-here': { run: () => present('here'), notNow: () => (state.slides.length ? null : t('There is no slide to show.')) },
+  'view.present-start': { run: () => present('start'), notNow: () => (state.slides.length ? null : t('There is no slide to show.')) },
+  'edit.slide-time': { run: () => void planTime(), notNow: onSlide },
 }))
 
-const menus = computed<Menu[]>(() => {
-  const c = shared.value
-  return [
-    fileMenu(c),
-    {
-      label: t('Edit'),
-      items: [
-        ...undoRedoItems(c, {
-          canUndo: state.canUndo,
-          undoLabel: state.undoLabel,
-          canRedo: state.canRedo,
-          redoLabel: state.redoLabel,
-          undo: () => session.undo(),
-          redo: () => session.redo(),
-        }),
-        { label: '', separator: true },
-        ...clipboardItems(c, () => pasteFromClipboard()),
-        { label: '', separator: true },
-        searchItem(c, { open: () => openSearch() }),
-        { label: '', separator: true },
-        referenceItem(c, { run: () => void frame.value?.referenceThing(state.selected ?? state.activeSlide), possible: () => !!(state.selected ?? state.activeSlide) }),
-        goToTargetItem(c, { run: () => void goToTarget(), possible: () => !!state.selected && !!session.referenceIn(state.selected) }),
-        { label: '', separator: true },
-        { id: 'edit.new-slide', label: t('New Slide'), action: () => session.addSlide(), disabled: readonly.value },
-        { id: 'edit.rename-slide', label: t('Rename Slide…'), action: () => askRename(), disabled: readonly.value || !state.activeSlide },
-        {
-          id: 'edit.slide-time',
-          label: t('Plan the Time of This Slide…'),
-          hint: presentHint('time', mac),
-          action: () => planTime(),
-          disabled: readonly.value || !state.activeSlide,
-        },
-        { label: '', separator: true },
-        { id: 'edit.edit-text', label: t('Edit Text'), hint: 'Enter', action: () => canvas.value?.beginEdit(), disabled: readonly.value || !state.selected },
-        { id: 'edit.text-box', label: t('Text Box'), action: () => addText(), disabled: readonly.value },
-        { id: 'edit.image', label: t('Image…'), action: () => (showImageDialog.value = true), disabled: readonly.value },
-        { label: '', separator: true },
-        ...state.library.map((s) => ({ label: s.name, action: () => addShape(s.id), disabled: readonly.value })),
-        { label: '', separator: true },
-        { id: 'edit.delete', label: t('Delete'), hint: 'Del', action: () => remove(), disabled: readonly.value || !state.selected },
-      ],
-    },
-    insertMenu(c, { types: state.containerTypes, add: (type) => addContainer(type) }, { label: t('Agenda'), add: insertAgenda, possible: !readonly.value && !!state.activeSlide }, { add: () => void openPicker(), possible: !readonly.value && !!state.selected }),
-    {
-      label: t('Format'),
-      items: [
-        ...styleItems(),
-        { label: '', separator: true },
-        { id: 'format.describe', label: t('Name & describe…'), hint: chordLabel(describeSelected.chord), action: () => canvas.value?.openDescribe(), disabled: readonly.value || !state.selected },
-        { label: '', separator: true },
-        rotateMenu(),
-      ],
-    },
-    {
-      label: t('View'),
-      items: [
-        authorsItemUnavailable(c), // creates tracks no per-object authorship yet
-        panelItem(c, { open: () => frame.value?.isPanelOpen() ?? true, toggle: () => frame.value?.togglePanel() }),
-        replayItem(c, { start: () => frame.value?.replayHistory(), possible: () => state.entries.length > 0 && state.status === 'open' }),
-        backItem(c, { go: () => session.goBack(), possible: () => !!state.wayBack }),
-        darkItem(c, { on: dark, toggle: toggleDark }),
-        // After the shared block, as composes' Page is (the same order in every app and every client)
-        { label: '', separator: true },
-        {
-          id: 'view.grid',
-          label: t('Show Grid'),
-          checked: gridShown.value,
-          action: (x) => {
-            if (x === undefined || (x === 'on') !== gridShown.value) toggleGrid()
-          },
-        },
-        { label: '', separator: true },
-        { id: 'view.present-start', label: t('Present from the First Slide'), hint: presentHint('start', mac), action: () => present('start'), disabled: !state.slides.length },
-        { id: 'view.present-here', label: t('Present from This Slide'), hint: presentHint('here', mac), action: () => present('here'), disabled: !state.slides.length },
-        {
-          id: 'view.speaker-notes',
-          label: t('Speaker Notes'),
-          hint: presentHint('notes', mac),
-          checked: notesShown.value,
-          action: (x) => {
-            if (x === undefined || (x === 'on') !== notesShown.value) toggleNotes()
-          },
-        },
-      ],
-    },
-    { label: t('Tools'), items: [askItem(c, (text) => frame.value?.ask(text))] },
-    preferencesMenu(c, { current: locale.value, choose }),
-    helpMenu(c, { ask: (text) => frame.value?.ask(text), openHelp: (mode) => frame.value?.openHelp(mode) }),
-  ]
+const menus = useMenus('creates', {
+  handlers: () => handlers.value,
+  facts: () => windowFacts(state, { selection: selectionNow(), slides: state.slides.length, references: true, desktop: frame.value?.inDesktopApp() }),
+  notice: (why) => session.notice(why, 'info'),
 })
+/** A context menu of this window: what fits the thing pressed, by the definition. */
+const menuOf: ContextMenuOf = (id, own) => menus.value.context(id, own)
+
+/** A right press on a slide's tab: the slide is shown, and its menu opens, the same as the slide's own (D1619). */
+const tabMenu = ref<{ x: number; y: number; id: string } | null>(null)
+async function openTabMenu(event: MouseEvent, id: string) {
+  await session.showSlide(id)
+  tabMenu.value = { x: event.clientX, y: event.clientY, id }
+}
+const tabMenuItems = computed(() =>
+  tabMenu.value ? menuOf('tab', { 'format.describe': { run: () => canvas.value?.describeSlide() }, 'edit.reference': { run: () => void frame.value?.referenceThing(tabMenu.value?.id ?? '') } }) : [],
+)
 
 /** Preferences ▸ Shortcuts: the slide's own mouse and keyboard conventions, which are not a single key chord. */
 const SHORTCUT_NOTES = computed<[string, string][]>(() => [
@@ -477,7 +383,7 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
         :undo-label="state.undoLabel"
         :redo-label="state.redoLabel"
         :readonly="readonly"
-        :present-hint="presentHint('start', mac)"
+        :present-hint="hintOf('view.present-start')"
         :present-label="t('Present')"
         @present="present('start')"
         @text="addText"
@@ -495,8 +401,8 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
     </template>
     <PrintPreview v-if="printing" ref="preview" :source="printSource" @close="closePrint" />
     <div v-else-if="state.activeSlide" class="stage">
-      <SlideCanvas ref="canvas" class="canvas" data-region="document" :session="session" :show-grid="gridShown" :marks="searchMarks" @styles="dialog = 'styles'" @agenda="openAgenda" />
-      <SlideNotes v-if="notesShown" ref="notes" :session="session" :hint="presentHint('time', mac)" :t="t" @present="present" />
+      <SlideCanvas ref="canvas" class="canvas" data-region="document" :menu-of="menuOf" :session="session" :show-grid="gridShown" :marks="searchMarks" @styles="dialog = 'styles'" @agenda="openAgenda" />
+      <SlideNotes v-if="notesShown" ref="notes" :session="session" :hint="hintOf('edit.slide-time')" :t="t" @present="present" />
     </div>
     <div v-else class="noslide">{{ t('This presentation has no slide.') }}</div>
     <template #overlay>
@@ -525,6 +431,7 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
       />
       <NumberingDialog v-if="dialog === 'numbering'" :host="numberingHost" :initial="session.selectedScheme() ?? undefined" @close="dialog = null" />
       <PromptDialog v-if="dialog === 'list-start'" :title="t('Start numbering at')" :label="t('First number')" :ok="t('Start')" required :initial="listStart()" @ok="startListAt" @close="dialog = null" />
+      <ContextMenu v-if="tabMenu" :x="tabMenu.x" :y="tabMenu.y" :items="tabMenuItems" :label="t('Slide menu')" @close="tabMenu = null" />
       <PaletteDialog v-if="dialog === 'colours'" :host="styleHost" :builtin="state.palette?.builtin ?? []" @close="dialog = null" @reset="resetPalette" />
     </template>
     <template #footer>
@@ -541,6 +448,7 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
             :title="readonly ? undefined : t('Double-click to rename')"
             @click="session.showSlide(s.id)"
             @dblclick="askRename(s.id)"
+            @contextmenu.prevent="openTabMenu($event, s.id)"
           >
             {{ session.slideLabel(s.id, i) }}<span v-if="session.secondsOf(s.id) !== null" class="time mono">{{ formatTime(session.secondsOf(s.id)!) }}</span>
           </button>

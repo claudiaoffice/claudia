@@ -1,5 +1,5 @@
 // A rule is the workbook's "Fits when" text (D1646): conditions joined by "·", all of which must hold (D1601).
-import { CONDITIONS, type Condition } from './conditions'
+import { CONDITIONS, type Condition, type Translate } from './conditions'
 
 export type Rule = readonly Condition[]
 
@@ -17,4 +17,12 @@ export function parseRule(words: string): Rule {
   })
   read.set(words, rule)
   return rule
+}
+
+/** A rule in plain words for Preferences ▸ Shortcuts (D1604): who first, then when ("editors and owners, when something
+ * is selected"); the conditions' own words, so that a translation says each once. */
+export function describeRule(rule: Rule, t: Translate): string {
+  const who = rule.filter((condition) => condition.reason === 'role')
+  const when = rule.filter((condition) => condition.reason !== 'role')
+  return [...who, ...when].map((condition) => condition.plain(t)).join(', ')
 }

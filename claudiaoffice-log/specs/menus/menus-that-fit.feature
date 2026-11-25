@@ -9,7 +9,7 @@
 Feature: The menus offer what fits who I am and what I am doing, and what does not fit tells me why
 
   # -- the menu bar --------------------------------------------------------------------------------------
-  @core @firefox @desktop @pending:e5.24
+  @core @firefox @desktop
   Scenario Outline: The menu titles stay, whoever I am
     Given I am <role> of a document
     Then the menu bar shows File, Edit, Insert, Format, View, Tools, Preferences and Help
@@ -20,7 +20,7 @@ Feature: The menus offer what fits who I am and what I am doing, and what does n
       | an editor   |
       | a viewer    |
 
-  @core @firefox @desktop @pending:e5.24 @app:computes
+  @core @firefox @desktop @app:computes
   Scenario: A viewer's Insert menu says why it is empty
     Given I am a viewer of a sheet
     When I open the Insert menu
@@ -33,7 +33,7 @@ Feature: The menus offer what fits who I am and what I am doing, and what does n
     Then it shows Image…, Text Box, Shape, Container and Chart…, then New Sheet… and Row or Column
     And the Edit menu holds nothing that adds something to the sheet
 
-  @core @firefox @pending:e5.24 @app:composes
+  @core @firefox @app:composes
   Scenario: Edit offers what needs a selection only once something is selected
     Given I am the owner of a new text with nothing selected
     When I open the Edit menu
@@ -41,14 +41,14 @@ Feature: The menus offer what fits who I am and what I am doing, and what does n
     When I select a word and open the Edit menu again
     Then it shows Copy, Cut and Name & Describe…
 
-  @extended @pending:e5.24 @app:composes
+  @extended @app:composes
   Scenario: Undo appears once there is something to undo
     Given I am the owner of a new text
     Then the Edit menu shows no Undo
     When I type a word
     Then the Edit menu shows Undo
 
-  @extended @pending:e5.24
+  @extended
   Scenario: No menu starts or ends with a line, and no two lines follow each other
     Given I am a viewer of a document
     Then in every menu and submenu no separator comes first, last or right after another
@@ -63,13 +63,13 @@ Feature: The menus offer what fits who I am and what I am doing, and what does n
     Then it is the same menu, and the pivot table's own entries are in its context menu
 
   # -- context menus -------------------------------------------------------------------------------------
-  @core @firefox @pending:e5.24 @app:creates
+  @core @firefox @app:creates
   Scenario: A viewer's context menu on an object says why it is empty
     Given I am a viewer of a presentation with a text box
     When I press the right button on the text box
     Then the menu holds only the greyed line "You can only look at this document."
 
-  @core @firefox @pending:e5.24 @app:composes
+  @core @firefox @app:composes
   Scenario: A paragraph has a context menu of its own
     Given I am the owner of a text
     When I press the right button on a paragraph
@@ -77,34 +77,34 @@ Feature: The menus offer what fits who I am and what I am doing, and what does n
     When I choose Style…
     Then the paragraph style popover opens for that paragraph
 
-  @core @firefox @pending:e5.24 @app:computes
+  @core @firefox @app:computes
   Scenario: A pivot table's actions are in its context menu
     Given I am the owner of a sheet with a pivot table
     When I press the right button on the pivot table
     Then the menu shows Value Field Settings…, Pivot Fields, Show Pivot as SQL… and Delete Pivot Table…
     And the Tools menu has the single entry Pivot Table…
 
-  @extended @pending:e5.24 @app:creates
+  @extended @app:creates
   Scenario: A slide has a context menu of its own
     Given I am the owner of a presentation
     When I press the right button on the slide, away from any object
     Then the menu shows Name & Describe… and Reference in Chat, the same as the slide's tab
 
   # -- a key that does not fit ---------------------------------------------------------------------------
-  @core @firefox @pending:e5.24 @app:composes
+  @core @firefox @app:composes
   Scenario: The key of an entry I am not offered tells me why
     Given I am a viewer of a text
     When I press Ctrl+Shift+Alt+S
     Then I am told "Only an owner can share this document."
     And no dialog opens
 
-  @extended @pending:e5.24 @app:computes
+  @extended @app:computes
   Scenario: When several things are missing, I am told about who I am first
     Given I am a viewer of a sheet with nothing selected
     When I press Ctrl+Alt+D
     Then I am told "You can only look at this document.", not that nothing is selected
 
-  @extended @pending:e5.24 @app:composes
+  @extended @app:composes
   Scenario: The key of an entry the server cannot do tells me so
     Given I am the owner of a text on a server without a real ai
     When I press Ctrl+F1
@@ -132,7 +132,7 @@ Feature: The menus offer what fits who I am and what I am doing, and what does n
     When I select the answer in History & Chat and press Ctrl+C
     Then I am told "Only editors and owners can copy from this document."
 
-  @extended @pending:e5.24 @app:composes
+  @extended @app:composes
   Scenario: A viewer can still download, export and print
     Given I am a viewer of a text
     Then the File menu offers Download, Export… and Print…
@@ -145,7 +145,7 @@ Feature: The menus offer what fits who I am and what I am doing, and what does n
     And the text is unchanged
 
   # -- Preferences ▸ Shortcuts ---------------------------------------------------------------------------
-  @core @firefox @pending:e5.24 @app:composes
+  @core @firefox @app:composes
   Scenario: The Shortcuts dialog lists every action, also those that do not fit now
     Given I am a viewer of a text
     When I choose Preferences ▸ Shortcuts and switch to Everything
@@ -154,14 +154,14 @@ Feature: The menus offer what fits who I am and what I am doing, and what does n
     Then Share… is not listed
 
   # -- the trial -----------------------------------------------------------------------------------------
-  @core @firefox @pending:e5.24 @app:computes
+  @core @firefox @app:computes
   Scenario: With "role" set to grey, a viewer sees the entries greyed
     Given the trial setting greys what does not fit my role
     And I am a viewer of a sheet
     When I open the Insert menu
     Then it shows all its entries, greyed
 
-  @extended @pending:e5.24 @app:composes
+  @extended @app:composes
   Scenario: An entry set to always show stays when its reason hides
     Given the trial setting always shows Undo
     And I am the owner of a new text

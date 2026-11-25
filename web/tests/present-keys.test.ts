@@ -1,59 +1,39 @@
+// The keys that start the show (E10.2, D344, D1648): F5 and Shift+F5 are the definition's; the letter keys beside them.
 import { describe, expect, it } from 'vitest'
-import { dispatch } from '../app/lib/shortcuts'
-import { onMac, presentChord, presentHint, presentShortcuts } from '../app/lib/present-keys'
+import { dispatch, hintOf } from '../app/lib/shortcuts'
+import { presentShortcuts } from '../app/lib/present-keys'
 
 const key = (over: Partial<Record<string, unknown>>) => ({ key: '', code: '', ctrlKey: false, metaKey: false, shiftKey: false, altKey: false, ...over }) as never
 
 describe('the keys that start the show', () => {
-  it('names F5 and Shift+F5 outside a Mac', () => {
-    expect(presentHint('start', false)).toBe('F5')
-    expect(presentHint('here', false)).toBe('Shift+F5')
+  it('are F5 and Shift+F5 in the menus outside a Mac', () => {
+    expect(hintOf('view.present-start', false)).toBe('F5')
+    expect(hintOf('view.present-here', false)).toBe('Shift+F5')
   })
-  it('names the letter chords on a Mac, where F5 is a system key', () => {
-    expect(presentHint('start', true)).toBe('Ctrl+Option+P')
-    expect(presentHint('here', true)).toBe('Ctrl+Option+Shift+H')
-  })
-  it('has no function key for the notes and the time, on any system', () => {
-    expect(presentChord('notes', false)).toEqual(presentChord('notes', true))
-    expect(presentHint('time', false)).toBe('Ctrl+Alt+Shift+T')
-  })
-  it('knows a Mac by its platform', () => {
-    expect(onMac({ platform: 'MacIntel' })).toBe(true)
-    expect(onMac({ platform: 'Linux x86_64' })).toBe(false)
-    expect(onMac(undefined)).toBe(false)
+  it('are the letter keys on a Mac, where F5 is a system key', () => {
+    expect(hintOf('view.present-start', true)).toBe('Ctrl+Option+P')
+    expect(hintOf('view.present-here', true)).toBe('Ctrl+Shift+Option+H')
   })
 })
 
-describe('what the window listens for', () => {
+describe('the letter keys beside F5', () => {
   const calls: string[] = []
-  const defs = presentShortcuts((s) => s, {
-    start: () => calls.push('start'),
-    here: () => calls.push('here'),
-    notes: () => calls.push('notes'),
-    time: () => calls.push('time'),
-  })
-  it('starts from the first slide on F5 and on the letter chord, by the physical key', () => {
+  const defs = presentShortcuts((s) => s, { start: () => calls.push('start'), here: () => calls.push('here') }, false)
+  it('start the show outside a Mac too, by the physical key', () => {
     calls.length = 0
-    dispatch(defs, key({ key: 'F5' }))
-    // Option+P types π on a Mac: only the code identifies the key
-    dispatch(defs, key({ key: 'π', code: 'KeyP', metaKey: true, altKey: true }))
-    expect(calls).toEqual(['start', 'start'])
-  })
-  it('starts from this slide with Shift', () => {
-    calls.length = 0
-    dispatch(defs, key({ key: 'F5', shiftKey: true }))
+    dispatch(defs, key({ key: 'p', code: 'KeyP', ctrlKey: true, altKey: true }))
     dispatch(defs, key({ key: 'H', code: 'KeyH', ctrlKey: true, altKey: true, shiftKey: true }))
-    expect(calls).toEqual(['here', 'here'])
+    expect(calls).toEqual(['start', 'here'])
   })
-  it('keeps a plain P for the text', () => {
+  it('keep a plain P for the text', () => {
     calls.length = 0
     expect(dispatch(defs, key({ key: 'p', code: 'KeyP' }))).toBeNull()
     expect(calls).toEqual([])
   })
-  it('can be switched off, as when the document may not be read', () => {
-    calls.length = 0
-    const off = presentShortcuts((s) => s, { start: () => calls.push('x'), here: () => 0, notes: () => 0, time: () => 0 }, { start: () => false })
-    expect(dispatch(off, key({ key: 'F5' }))).toBeNull()
-    expect(calls).toEqual([])
+  it('leave F5 to the entries: their ids are their own', () => {
+    expect(defs.map((d) => d.id)).toEqual(['view.present-start.letter', 'view.present-here.letter'])
+  })
+  it('are the definition’s own on a Mac', () => {
+    expect(presentShortcuts((s) => s, { start: () => 0, here: () => 0 }, true)).toEqual([])
   })
 })

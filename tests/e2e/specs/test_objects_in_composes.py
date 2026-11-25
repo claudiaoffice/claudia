@@ -109,7 +109,7 @@ def hash_list(person: Person) -> list[tuple[str, str]]:
 
 def name_in_dialog(person: Person) -> str:
     """The name Name & describe… shows for what is selected or has the caret; the dialog is closed again."""
-    choose(person, "Name & describe…")
+    choose(person, "Name & Describe…")
     field = person.page.locator(f"{DIALOG} input[type=text]")
     field.wait_for()
     name = field.input_value()
@@ -180,11 +180,11 @@ class Table:
     SELECTOR = "[data-testid=table]"
     ADDED = "Add table"  # how the history speaks of adding one
     KIND = "Table"  # how the # list says what a thing is
-    #: the entries that change a table, by menu, as the menus of composes have them (claudia-menus.xlsx)
+    #: the entries of the menu bar that change a table, by menu, as the menus of composes have them
+    #: (claudia-menus.xlsx); the rest are in the table's own menu (D1612)
     CHANGES = {
         "Insert": ("Table…",),
-        "Format": ("Name & describe…",),
-        "Tools": ("Row", "Column", "Sort", "Merge Cells", "Split Cell", "Table Options…"),
+        "Edit": ("Name & Describe…",),
     }
 
     def count(self, person: Person) -> int:
@@ -651,7 +651,7 @@ def _describe(world, scene):
     ann = world.ann
     scene.description = "What we grow, by crop"
     scene.kind.select(ann)
-    choose(ann, "Name & describe…")
+    choose(ann, "Name & Describe…")
     ann.page.fill(f"{DIALOG} textarea", scene.description)
     ann.page.click(f"{DIALOG} button[type=submit]")
     ann.page.wait_for_selector(DIALOG, state="detached")

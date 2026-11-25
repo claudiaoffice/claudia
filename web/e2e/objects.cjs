@@ -109,10 +109,10 @@ const APPS = {
 // -- the kinds of object, by app: how each is made. A kind an app cannot have says why instead of a function.
 //    (`tests/test_object_kinds_agree.py` reads this block: one row for every kind in claudia_core.OBJECT_KINDS.)
 const KINDS = {
-  text: { computes: 'a cell grid has no text boxes', composes: (p) => menu(p, 'Edit', 'Text Box'), creates: (p) => menu(p, 'Edit', 'Text Box') },
+  text: { computes: 'a cell grid has no text boxes', composes: (p) => menu(p, 'Insert', 'Text Box'), creates: (p) => menu(p, 'Insert', 'Text Box') },
   shape: {
     computes: 'a cell grid has no shapes',
-    composes: (p) => menu(p, 'Edit', 'Rectangle'),
+    composes: (p) => menu(p, 'Insert', 'Shape', 'Rectangle'),
     creates: (p) => p.click('.bar button[aria-label="Rectangle"]'),
   },
   image: { computes: (p) => insertPicture(p), composes: (p) => insertPicture(p), creates: (p) => insertPicture(p) },
@@ -124,16 +124,16 @@ const KINDS = {
 
 // What each kind has in its menu: the contract (D1225), by what the kind and the app have.
 function menuFor(app, kind) {
+  // the definition's object menu (the menu workbook, Context menus): Cut and Copy are there for every object, greyed
+  // but for a picture; Release from Grid only for an object on the grid (creates)
   const a = APPS[app]
-  const items = ['Name & describe…']
-  if (kind !== 'image' && kind !== 'chart' && a.editable(kind)) items.push('Edit text')
+  const items = ['Name & Describe…', 'Reference in Chat']
+  if (kind !== 'image' && kind !== 'chart' && a.editable(kind)) items.push('Edit Text')
   items.push('Style…')
-  if (kind !== 'chart') items.push('Rotate by…')
-  if (a.wrap) items.push('Wrap text…')
+  if (kind !== 'chart') items.push('Rotate By…')
+  if (a.wrap) items.push(/^Wrap Text/)
+  items.push('Cut', 'Copy', 'Delete')
   if (kind === 'chart' && app === 'computes') items.push('Move to Slide') // a chart on a sheet (E6.31, D1475)
-  if (kind === 'image') items.push('Cut', 'Copy')
-  if (a.grid) items.push(/^(Snap to grid|Release from grid)$/)
-  items.push('Delete')
   return items
 }
 
@@ -171,7 +171,7 @@ async function share(ann, [user, password]) {
   await ann.keyboard.press('Escape')
 }
 async function insertPicture(page) {
-  await menu(page, 'Edit', 'Image…')
+  await menu(page, 'Insert', 'Image…')
   await page.setInputFiles('.modal input[type=file]', { name: 'gradient.png', mimeType: 'image/png', buffer: PICTURE })
   await page.waitForSelector('.modal .preview img')
   await page.fill('.modal input[maxlength="300"]', 'a gradient, red to the right, green downwards')
@@ -187,15 +187,17 @@ async function insertChart(page) {
   await page.locator('.viewport').click({ position: { x: 52 + 40, y: 26 + 13 } })
   await page.keyboard.press('Shift+ArrowDown')
   await page.keyboard.press('Shift+ArrowDown')
-  await menu(page, 'Edit', 'Chart…')
+  await menu(page, 'Insert', 'Chart…')
   await page.check('.modal input[value=sheet]')
   await page.click('.modal button[type=submit]')
 }
 async function insertContainer(page) {
   await page.click('.menus .title:text-is("Insert")')
-  await page.click('.menus .drop [role=menuitem]:has-text("Container")')
+  // with no LaTeX on the server the entry is not offered (D1615), and Container may have nothing else
+  const container = page.locator('.menus .drop [role=menuitem]:has-text("Container")')
+  if (await container.count()) await container.click()
   const latex = page.locator('.menus .drop [role=menuitem]:has-text("LaTeX")')
-  if (await latex.isDisabled()) {
+  if (!(await latex.count()) || (await latex.isDisabled())) {
     await page.keyboard.press('Escape')
     return 'skipped'
   }
@@ -318,7 +320,7 @@ async function battery(app, kind, ann, ben) {
   // 2. a right press selects and opens the object's own menu, and only that one
   await obj.click({ button: 'right' })
   await ann.waitForSelector('[role=menu][aria-label="Object menu"]')
-  const labels = await menuLabels(ann)
+  const labels = (await menuLabels(ann)).filter((label) => label !== 'Release from Grid')
   const wanted = menuFor(app, kind)
   assert.equal(labels.length, wanted.length, `${where}: the menu has ${JSON.stringify(labels)}, expected ${wanted.map(String).join(' | ')}`)
   wanted.forEach((w, i) => assert.ok(w instanceof RegExp ? w.test(labels[i]) : w === labels[i], `${where}: menu entry ${i} is "${labels[i]}", expected ${w}`))
@@ -379,7 +381,7 @@ async function battery(app, kind, ann, ben) {
     const angle = await turnAngle(ann)
     assert.ok(angle >= 80 && angle <= 100, `${where}: turned to the right: ${angle}°`)
     await obj.click({ button: 'right' })
-    await ann.getByRole('menuitem', { name: /^Rotate by…/ }).click()
+    await ann.getByRole('menuitem', { name: /^Rotate by…/i }).click()
     await ann.waitForSelector('form.rotate input[type=text]')
     await ann.keyboard.press('Backspace') // the keys typed in the dialog are the dialog's: the object stays (UX-56)
     assert.equal(await count(ann, app), 1, `${where}: Backspace in the angle field did not delete the object`)
@@ -389,10 +391,10 @@ async function battery(app, kind, ann, ben) {
     await waitEntries(ann, h3 + 2, `${where}: one entry for Rotate by…`)
     log(`${where}: turn`)
   } else {
-    assert.equal(await ann.getByRole('menuitem', { name: /^Rotate by…/ }).count(), 0, `${where}: a chart is not turned`)
+    assert.equal(await ann.getByRole('menuitem', { name: /^Rotate by…/i }).count(), 0, `${where}: a chart is not turned`)
   }
 
-  // 5b. Format ▸ Rotate, with its keys, in every app that turns objects (D1024, D1232)
+  // 5b. Rotate By…'s key and the popover's quarter turn, in every app that turns objects (D1024, D1232)
   await rotateMenu(ann, where, turns, obj)
 
   // 6. the keyboard: arrows nudge, Esc deselects, Delete deletes (and Undo brings it back)
@@ -430,7 +432,7 @@ async function editText(app, kind, ann, ben, obj) {
   const h = await entries(ann)
   // from the object's menu
   await obj.click({ button: 'right' })
-  await ann.getByRole('menuitem', { name: /^Edit text/ }).click()
+  await ann.getByRole('menuitem', { name: /^Edit text/i }).click()
   await editor.waitFor()
   assert.equal(await editor.evaluate((e) => e === document.activeElement), true, `${where}: the editor has the keyboard`)
   await ann.keyboard.type(words)
@@ -459,19 +461,12 @@ async function editText(app, kind, ann, ben, obj) {
   log(`${where}: edit text`)
 }
 
-// -- Format ▸ Rotate: the same three entries and keys in every app; not for a chart, not for nothing selected
+// -- Rotate By…: the object's menu and its key in every app (D1024, D1232); the quarter turns are the popover's
+//    90° (the menu workbook dropped Format ▸ Rotate and its quarter entries); not for a chart, not for nothing selected
 async function rotateOff(page, where) {
-  // With nothing to turn the whole Rotate submenu is off (it used to open with its three entries off): either says it.
-  await page.click('.menus .title:text-is("Format")')
-  const submenu = page.locator('.menus .drop [role=menuitem]:has-text("Rotate")').first()
-  if (await submenu.isDisabled()) {
-    await page.keyboard.press('Escape')
-    return
-  }
-  await submenu.click()
-  for (const name of ['Rotate Right 90°', 'Rotate Left 90°', 'Rotate By…'])
-    assert.equal(await page.locator(`.menus .drop [role=menuitem]:has-text("${name}")`).isDisabled(), true, `${where}: ${name} is off`)
-  await page.keyboard.press('Escape')
+  await page.keyboard.press('Control+Shift+Alt+Z')
+  await page.waitForTimeout(300)
+  assert.equal(await page.locator('form.rotate').count(), 0, `${where}: Rotate By…'s key opens nothing`)
 }
 async function rotateMenu(ann, where, turns, obj) {
   await obj.click()
@@ -479,27 +474,26 @@ async function rotateMenu(ann, where, turns, obj) {
     await rotateOff(ann, `${where}: a chart`)
     return
   }
-  const angle = await turnAngle(ann)
   const h = await entries(ann)
   const turnedTo = (degrees) => ann.waitForFunction((d) => Number(document.querySelector('[data-handle=turn]')?.getAttribute('aria-valuenow')) === d, degrees, { timeout: 8000 })
-  await menu(ann, 'Format', 'Rotate', 'Rotate Right 90°')
-  await turnedTo((angle + 90) % 360)
-  await menu(ann, 'Format', 'Rotate', 'Rotate Left 90°')
-  await turnedTo(angle)
-  // the quarter turns' keys (Ctrl+Alt+. and ,) left with their entries (the menu workbook)
-  await waitEntries(ann, h + 2, `${where}: one entry for each quarter turn`)
-  await menu(ann, 'Format', 'Rotate', 'Rotate By…')
+  await ann.keyboard.press('Control+Shift+Alt+Z')
+  await ann.waitForSelector('form.rotate input[type=text]')
+  await ann.click('form.rotate button:text-is("90°")') // a quarter turn: to 90°, from the 30° of the step before
+  await ann.click('form.rotate button[type=submit]')
+  await turnedTo(90)
+  await waitEntries(ann, h + 1, `${where}: one entry for a quarter turn`)
+  await ann.keyboard.press('Control+Shift+Alt+Z')
   await ann.waitForSelector('form.rotate input[type=text]')
   await ann.fill('form.rotate input[type=text]', '45')
   await ann.keyboard.press('Enter')
   await turnedTo(45)
-  await waitEntries(ann, h + 3, `${where}: one entry for Rotate By…`)
+  await waitEntries(ann, h + 2, `${where}: one entry for Rotate By…`)
   await ann.keyboard.press('Control+Shift+Alt+Z')
   await ann.waitForSelector('form.rotate input[type=text]')
   await ann.keyboard.press('Escape')
   await ann.waitForSelector('form.rotate', { state: 'detached' })
-  assert.equal(await entries(ann), h + 3, `${where}: Rotate By… left with Esc changes nothing`)
-  log(`${where}: Format ▸ Rotate and its keys`)
+  assert.equal(await entries(ann), h + 2, `${where}: Rotate By… left with Esc changes nothing`)
+  log(`${where}: Rotate By… and its key`)
 }
 
 // -- composes' tables: in the flow, a name tab to hold, a drop line between paragraphs, a menu of their own
@@ -553,11 +547,12 @@ async function tables(ann, ben) {
   // right press on the tab: the table's menu, and no other
   await tab.click({ button: 'right' })
   await ann.waitForSelector('[role=menu][aria-label="Table menu"]')
-  assert.deepEqual(await menuLabels(ann, 'Table menu'), ['Name & describe…', 'Table options…', 'Merge cells', 'Split cell', 'Sort', 'Delete table'], `${where}: the table's menu`)
+  // the table as a whole is selected, no box of it: Merge Cells and Split Cell are not offered (the menu workbook)
+  assert.deepEqual(await menuLabels(ann, 'Table menu'), ['Name & Describe…', 'Reference in Chat', 'Table Options…', 'Sort', 'Delete Table'], `${where}: the table's menu`)
   assert.deepEqual(await menusOpen(ann), ['Table menu'], `${where}: not the menu of a paragraph beside it`)
   await ann.keyboard.press('Escape')
   await ann.waitForSelector('[role=menu][aria-label="Table menu"]', { state: 'detached' })
-  // a table does not turn: no Rotate by… in its menu above, and Format ▸ Rotate is off with it selected (D1224)
+  // a table does not turn: no Rotate By… in its menu above, and its key opens nothing with it selected (D1224)
   await rotateOff(ann, `${where}: a table`)
 
   // drag the tab below the last paragraph: a drop line while held, one entry on release, Esc leaves the table

@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
-import type { Menu } from '~/components/MenuBar.vue'
 import { useI18n } from '~/lib/i18n'
-import { chordLabel, chordOf, dispatch, hintOf, isTypingTarget, matches, menuShortcuts, regionShortcuts, searchShortcuts, sharedShortcuts } from '~/lib/shortcuts'
+import { actionShortcuts, chordLabel, chordOf, dispatch, hintOf, isTypingTarget, matches, onMac, regionShortcuts, searchShortcuts } from '~/lib/shortcuts'
 
 function key(partial: Partial<{ key: string; code: string; ctrlKey: boolean; metaKey: boolean; shiftKey: boolean; altKey: boolean }>) {
   return { key: '', code: '', ctrlKey: false, metaKey: false, shiftKey: false, altKey: false, ...partial }
@@ -62,19 +61,6 @@ describe('chordLabel', () => {
       globalThis.fetch = real
       await useI18n().choose('en')
     }
-  })
-})
-
-describe('sharedShortcuts', () => {
-  it('is exactly Undo (Ctrl+Z) and Redo (Ctrl+Shift+Z) — nothing bound to Ctrl+Y', () => {
-    const undo = vi.fn()
-    const redo = vi.fn()
-    const defs = sharedShortcuts({ undo, redo })
-    expect(defs.map((d) => chordLabel(d.chord))).toEqual(['Ctrl+Z', 'Ctrl+Shift+Z'])
-    dispatch(defs, key({ key: 'y', ctrlKey: true }))
-    expect(redo).not.toHaveBeenCalled()
-    dispatch(defs, key({ key: 'z', ctrlKey: true, shiftKey: true }))
-    expect(redo).toHaveBeenCalledOnce()
   })
 })
 
@@ -188,26 +174,26 @@ describe('one key table for every client (UX-35)', () => {
     expect(hintOf('config.language.de')).toBeUndefined()
   })
 
-  it('makes every keyed menu entry a shortcut, enabled as the entry is, except the keys of the view and those taken', () => {
-    const ran: string[] = []
-    const menus: Menu[] = [
-      {
-        label: 'File',
-        items: [
-          { id: 'file.print', label: 'Print…', action: () => ran.push('print') },
-          { label: '', separator: true },
-          { id: 'file.manage', label: 'Manage', items: [{ id: 'file.manage.share', label: 'Share…', action: () => ran.push('share'), disabled: true }] },
-          { id: 'file.save', label: 'Save', action: () => ran.push('save') },
-        ],
-      },
-      { label: 'Edit', items: [{ id: 'edit.copy', label: 'Copy', action: () => ran.push('copy') }, { label: 'No id', action: () => ran.push('none') }] },
+  it('gives every action the page runs its key, except the keys of the view and those taken, judged by the menus', () => {
+    const asked: string[] = []
+    const run = (id: string) => (asked.push(id), true)
+    const actions = [
+      { id: 'edit.undo', label: 'Undo' },
+      { id: 'file.print', label: 'Print…' },
+      { id: 'file.manage.share', label: 'Share…' },
+      { id: 'edit.copy', label: 'Copy' },
+      { id: 'config.language.de', label: 'Deutsch' },
     ]
-    const defs = menuShortcuts(menus, new Set(['file.save']))
-    expect(defs.map((d) => d.id)).toEqual(['file.print', 'file.manage.share'])
-    expect(dispatch(defs, key({ key: 'p', ctrlKey: true }))?.id).toBe('file.print')
-    expect(dispatch(defs, key({ key: 'S', code: 'KeyS', ctrlKey: true, altKey: true, shiftKey: true }))).toBeNull() // disabled
-    expect(ran).toEqual(['print'])
+    const defs = actionShortcuts(actions, run, new Set(['file.print']))
+    expect(defs.map((d) => d.id)).toEqual(['edit.undo', 'file.manage.share'])
+    expect(defs.map((d) => chordLabel(d.chord))).toEqual(['Ctrl+Z', 'Ctrl+Shift+Alt+S'])
+    // Undo is Ctrl+Z only: nothing is bound to Ctrl+Y
+    expect(dispatch(defs, key({ key: 'y', ctrlKey: true }))).toBeNull()
+    // a key always reaches the menus, which run the entry or say why it does not fit (D1604)
+    expect(dispatch(defs, key({ key: 'S', code: 'KeyS', ctrlKey: true, altKey: true, shiftKey: true }))?.id).toBe('file.manage.share')
+    expect(asked).toEqual(['file.manage.share'])
   })
+
 })
 
 describe('a symbol', () => {
@@ -216,5 +202,36 @@ describe('a symbol', () => {
     expect(matches(shortcuts, key({ key: '?', ctrlKey: true, shiftKey: true }))).toBe(true)
     expect(matches(shortcuts, key({ key: '?', ctrlKey: true }))).toBe(true)
     expect(matches(shortcuts, key({ key: '/', ctrlKey: true }))).toBe(false)
+  })
+})
+
+describe('on a Mac, macOS’s own keys (D1616, D1648)', () => {
+  it('knows a Mac by its platform', () => {
+    expect(onMac({ platform: 'MacIntel' })).toBe(true)
+    expect(onMac({ platform: 'Linux x86_64' })).toBe(false)
+    expect(onMac(undefined)).toBe(false)
+  })
+
+  it('gives an action macOS’s own key there, and the common one elsewhere', () => {
+    expect(chordOf('format.describe', true)).toEqual({ key: 'n', code: 'KeyN', ctrl: true, control: true })
+    expect(chordOf('format.describe', false)).toEqual({ key: 'd', code: 'KeyD', ctrl: true, alt: true })
+    expect(chordOf('file.print', true)).toEqual(chordOf('file.print', false))
+  })
+
+  it('writes the keys as a Mac does: Cmd, Ctrl, Shift, Option', () => {
+    expect(hintOf('format.describe', true)).toBe('Cmd+Ctrl+N')
+    expect(hintOf('view.present-here', true)).toBe('Ctrl+Shift+Option+H')
+    expect(hintOf('file.print', true)).toBe('Cmd+P')
+    expect(hintOf('file.print', false)).toBe('Ctrl+P')
+  })
+
+  it('matches the Control key itself, beside Cmd, only where the chord asks for it', () => {
+    const describe = chordOf('format.describe', true)
+    expect(matches(describe, key({ key: 'n', code: 'KeyN', ctrlKey: true, metaKey: true }))).toBe(true)
+    expect(matches(describe, key({ key: 'n', code: 'KeyN', metaKey: true }))).toBe(false)
+    expect(matches(describe, key({ key: 'n', code: 'KeyN', ctrlKey: true }))).toBe(false)
+    const present = chordOf('view.present-start', true)
+    expect(matches(present, key({ key: 'π', code: 'KeyP', ctrlKey: true, altKey: true }))).toBe(true)
+    expect(matches(present, key({ key: 'π', code: 'KeyP', metaKey: true, altKey: true }))).toBe(false)
   })
 })

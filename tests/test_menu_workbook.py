@@ -22,7 +22,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 sys.path.insert(0, str(ROOT / "clients" / "contract" / "src"))
 
 from claudia_menus import manifest  # noqa: E402
-from generate_keys import shown  # noqa: E402
+from generate_menus import shown  # noqa: E402
 from menu_audit import APPS, WORKBOOK, Row, clean_label, mac_shortcut, normal_shortcut, workbook_rows  # noqa: E402
 
 PLATFORMS = ("Web", "Linux", "Windows", "macOS")
@@ -143,7 +143,7 @@ CONTEXTS = {
     "Reference (in the text or in a text box)": "reference",
 }
 #: Context entries of a feature that is not built yet in that app (Context menus sheet, "Status"). Only shrinks.
-CONTEXT_NOT_BUILT_YET = {("computes", "object", "Edit text"), ("composes", "object", "Edit text")}
+CONTEXT_NOT_BUILT_YET: set[tuple[str, str, str]] = set()
 
 
 def workbook_contexts(app: str) -> list[Place]:

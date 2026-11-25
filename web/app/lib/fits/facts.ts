@@ -5,12 +5,13 @@
 export const REASONS = ['role', 'server', 'client', 'ai', 'document', 'selection'] as const
 export type Reason = (typeof REASONS)[number]
 
-/** One selected thing. A caret in text is a thing (`range: false`), so that text entries fit it, but not "something". */
+/** One selected thing. A caret in text is a thing (`range: false`), so that text entries fit it, but not "something".
+ * The words of a selected text box or shape are text too (`holdsText`), and a list's item where `listItem` says so. */
 export type Thing =
   | { kind: 'text'; range: boolean; listItem: boolean }
   | { kind: 'cells' }
   | { kind: 'table-cells'; count: number; merged: boolean }
-  | { kind: 'object'; holdsText: boolean; canTurn: boolean; onGrid: boolean }
+  | { kind: 'object'; holdsText: boolean; canTurn: boolean; onGrid: boolean; listItem?: boolean }
 
 export interface Facts {
   role: 'owner' | 'editor' | 'viewer'

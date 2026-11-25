@@ -453,12 +453,12 @@ Feature: Tables in a composes text (E9.32)
 
     Scenario: Two neighbouring boxes become one
       Given my caret is in the box "Kale"
-      When I choose Edit ▸ Merge Cells
+      When I choose Merge Cells in the table's context menu
       Then "Kale" and the box to its right are one box, and the words of both are in it
 
     Scenario: Splitting gives the words back to the first box and leaves the others empty
       Given "Kale" and its neighbour are merged
-      When I choose Edit ▸ Split Cell
+      When I choose Split Cell in the table's context menu
       Then there are two boxes again
 
     Scenario: Adding and deleting rows around a merged box does not tear it

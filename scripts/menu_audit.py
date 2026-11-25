@@ -280,7 +280,7 @@ def manifest_entries(app: str) -> list[Entry]:
         if str(folder) not in sys.path:
             sys.path.insert(0, str(folder))
     from claudia_menus import manifest  # pure data, no GTK (its own docstring says so)
-    from generate_keys import shown  # the web menus' own notation of a GTK accelerator
+    from generate_menus import shown  # the web menus' own notation of a GTK accelerator
 
     entries: list[Entry] = []
     for menu in manifest.for_app(app).menus:

@@ -14,7 +14,7 @@ superseded-by: []
 **Decided by the owner 2026-11-19 ("Tables and Charts cannot be rotated, that decision stands. Please fix."), built in patches 9 and 10.**
 The server's work is shared and was already there; what was missing was the same few entries in the clients. The scenarios are
 in `specs/objects/words.feature` and `specs/objects/turning.feature`, the tests in `web/e2e/objects.cjs`,
-`packages/claudia-server/tests/test_server_object_words_and_turns.py`, `web/tests/rotate-menu.test.ts` and
+`packages/claudia-server/tests/test_server_object_words_and_turns.py`, `tests/rotate-menu.test.ts` (gone with Format ▸ Rotate, D1644) and
 `clients/linux/tests/test_manifest.py`.
 
 **Turning.**
@@ -38,7 +38,7 @@ that stay keep their writer. Computes has no text boxes or shapes; a container i
 
 **State 2026-11-19.** Both built. Turning: `turn_command` refuses a table with "A table does not turn" (`_NOT_TURNED` in
 `claudia_core/objects.py`), Format ▸ Rotate ▸ is in the composes and computes manifests (so in both desktop menus, the key
-table and `keyboard-shortcuts.md`) and in the web menus through one module (`web/app/lib/rotate-menu.ts`, which creates uses
+table and `keyboard-shortcuts.md`) and in the web menus through one module (`lib/rotate-menu.ts`, gone since the workbook dropped Format ▸ Rotate (D1644), which creates uses
 too); composes and computes turn through `TextObjectMenu.vue` and `SheetGrid.vue`. Writing in a box: see above.
 
 **Notes.** Applies D181, D1024, D1221, D1224, D1225.

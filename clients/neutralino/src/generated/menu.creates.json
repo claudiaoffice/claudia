@@ -830,7 +830,7 @@
                   "<Primary><Alt>a"
                 ],
                 "checkable": false,
-                "fits": "role: editor or owner \u00b7 selection: something",
+                "fits": "role: editor or owner \u00b7 selection: something, or the cursor in a text",
                 "id": "format.apply-style",
                 "key_macos": null,
                 "key_owner": "page",
@@ -844,7 +844,7 @@
                   "<Primary><Alt><Shift>h"
                 ],
                 "checkable": false,
-                "fits": "role: editor or owner \u00b7 selection: something",
+                "fits": "role: editor or owner \u00b7 selection: something, or the cursor in a text",
                 "id": "format.look",
                 "key_macos": null,
                 "key_owner": "page",

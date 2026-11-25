@@ -164,3 +164,141 @@ Both lists only shrink:
 
 **Run:** the web's unit tests (2157), type check and eslint; the root tests without the browser (1408); the catalogue
 tests.
+
+## Slice 4 · The web from the definition, 2026-11-25
+
+**Test first.** `web/tests/assemble.test.ts` tests at the seam agreed for this slice (Q3): the definition, handlers and
+facts in, menus out.
+- Every title stays; what does not fit is left out, or greyed when its reason or the entry says so (D1606, D1653).
+- A line between groups only where both kept something; a submenu with nothing left goes; a submenu of greyed entries
+  is greyed.
+- A menu with nothing left is one greyed line saying why, the first reason of D1642 first (D1603).
+- An entry is judged again when it runs, by a click, a shell or a key, and says why instead of running (D1603, D1604).
+- A switch is turned to what a shell asks, and only when it is not that already.
+- Every action's state goes to a shell, also of an entry left out.
+- A context menu runs what the place that opens it does, keeping the workspace's sentence (Copy's).
+- `handlerGaps` names a handler missing and one left over.
+- `web/tests/window-handlers.test.ts` tests what the shared entries do (About, Undo's words, Copy's and Share…'s
+  sentences, the languages).
+
+**The modules:**
+- `scripts/generate_menus.py` (was `generate_keys.py`) writes `web/app/lib/menus.generated.ts`: the key table as
+  before, and each app's menus, context menus and keys without entry.
+- `web/app/lib/menus/assemble.ts`: `assembleMenus` → `{ bar, context(id, own), states, actions, run }`.
+- `web/app/lib/menus/use-menus.ts`: the live version for a workspace, and `windowFacts`, what every window knows
+  (role, the server's tools, a real ai, undo and redo, a place to go back to). A workspace without a handler for one of
+  its actions says so on the console, where the browser tests look.
+- `web/app/lib/menus/window-handlers.ts`: what File, Undo, Redo, the clipboard, Search and Replace…, View's shared
+  entries, Ask ai…, Preferences and Help do; `FrameDialog` moved here.
+- Removed: `document-menus.ts`, `format-menu.ts`, `rotate-menu.ts`, `object-menu.ts`, `menu-dispatch.ts`,
+  `HeaderMenu.vue` and their tests; `table-menu.ts` keeps what can be done to a table and its keys in a box.
+
+**The workspaces.** Each has a map of handlers and says what is selected:
+- `DocumentFrame.vue` takes the assembled menus: it draws the bar, reports the states, runs what a shell asks, and
+  listens for every action's key from the definition (`actionShortcuts`). The workspaces keep only the keys with rules
+  of their own: the table's keys in a box, Ctrl+H, the steps between objects, Present's Mac keys.
+- The context menus come from the definition: the object's (all three apps), the cell's and the pivot table's
+  (computes, the pivot's first, D1612), the row and column headers' (computes), the chart's Move to Slide (computes),
+  the table's (composes), the paragraph's, a heading's or a list's on a right press in a text (composes, D1603), a
+  reference's (composes), the slide's away from any object (creates, D1619) and a sheet's or slide's tab (computes,
+  creates).
+- `MenuBar.vue` keeps an open menu as it opened (D1603); `ContextMenu.vue` shows an entry's key from the table.
+
+**What changed for a person** (all from the workbook, the decisions or D1654):
+- What does not fit is left out by default: a viewer's Insert says "Nothing to insert: you can only look at this
+  document."; Edit shows Copy, Cut and Name & Describe… once something is selected; Undo once there is something.
+- A key of an entry that does not fit says why: a viewer's Ctrl+Shift+Alt+S, "Only an owner can share this
+  document."; Ctrl+Z with nothing to undo, "There is nothing to undo.".
+- The entries stand where the workbook puts them (Insert has what adds, Present is in Tools, Style ▸ Apply… opens the
+  style popover in place of the list of styles that was a flyout, D300's groups went with it).
+- A right press on a paragraph opens its menu; Style… there opens the style popover (the workbook, 25.11.26). A heading
+  and a list item have no Style… in their menus.
+- The quarter turns are the Rotate By… popover's 90° (the workbook, decision #6).
+- The duplicated keys (Edit Style, Name & Describe…, Wrap Text, the lists, the hyphen, the random numbers, Print) went
+  from the workspaces; the definition's keys do the same, judged.
+
+**What the workbook's rules did not say** (D1654; each greys the entry with its sentence, the owner may make any a
+condition):
+- every app: Replay… with no history yet or not connected; Who Wrote What in computes and creates (not built);
+  an object's Cut and Copy for what is not a picture;
+- computes: Rename Sheet… with no sheet shown; Style ▸ Apply… and Edit… with neither cells nor an object; List ▸ (cells
+  hold no lists); Go to Target (no references on a sheet);
+- composes: Go to Target with no reference at the caret, or one whose target is gone; the non-breaking hyphen,
+  Table of Contents, Cross Reference…, Table…, Image… and Text Box with no caret, Table… in a table; a shape the server
+  does not offer; Continue Previous List with no list before; Number Headings with no heading style; a table's
+  entries where they have nothing to do or no box has the caret; Row Height… and Column Width… of a table (not built);
+- creates: Rename Slide…, Agenda and Plan Time for Slide… with no slide shown; Go to Target; a shape the server does not
+  offer; Continue Previous List; Number All Slide Titles; Present with no slides.
+
+**The definition** (and the workbook, one row each):
+- Edit Text is in the object's menu of computes and composes too (for a container, the object that holds words there);
+  `CONTEXT_NOT_BUILT_YET` is empty.
+- Style ▸ Apply… and Style ▸ Edit… fit "selection: something, or the cursor in a text": a style is for the paragraph
+  the cursor is in too, which "something" left out (a caret is not something, D1601). The condition is new (D1654).
+  Edit ▸ Name & Describe… keeps "something", as the approved spec says; a paragraph is named from its own menu. The words of a selected text box count as text, and as a list's item where
+  they are one.
+
+**Assumptions:**
+- "document: has something to refer to" is taken as true in composes and creates: the picker asks the server what
+  there is, and the page does not know before.
+- "document: has random numbers" is true when a loaded cell holds or depends on random numbers or alternatives.
+- The client fact is "desktop" when the shell is there (`DocumentFrame.inDesktopApp`).
+- Copy's and Share…'s own sentences (D1650) are in the page's handlers: only the page says a notice.
+- The menu line with nothing left goes on after the colon in small letters in English and keeps the capital otherwise
+  (German starts a sentence after a colon with one).
+
+**Bugs found** (logged, the owner's rule): UX-95 (size 2: Assign New Owner…, Accept Ownership…, Leave Document… and
+Delete From Server… have no place until My Role… and the front page's Delete are built), UX-96 (size 3: entries the
+web has and the workbook's context menus do not list), UX-97 (size 3: words just typed cannot be selected with
+Shift+Home). UX-94 is fixed: the web's menus are the definition's.
+
+**Tests changed with it:**
+- The spec `menus-that-fit.feature` is bound (`tests/e2e/specs/test_menus_that_fit.py`): 15 scenarios lost
+  `@pending:e5.24`; those of the copy guard, Paste As, the Shortcuts dialog, German and the open menu wait for their
+  slices. `NOT_BOUND_YET` is empty.
+- Steps and scripts follow the new places (Insert ▸ Image…, Text Box, Shape ▸, Chart…, New Slide; Format ▸ Style ▸;
+  Palette…; Tools ▸ Present ▸; the paragraph's menu); a viewer's left-out entry counts as not chosen.
+- `computes/slides.feature` says Insert ▸ Chart…; `composes/tables.feature`'s merge scenarios say the table's menu;
+  `desktop/about.feature`'s unit test is `window-handlers.test.ts`.
+- The drift guard of ids in `clients/linux/tests/test_manifest.py` went: the web cannot drift from the definition now.
+- Six notes named removed files as built; they name them as gone.
+
+## Slice 5 · Keys and Preferences ▸ Shortcuts, 2026-11-25
+
+Delivered in the same commit as slice 4: the keys of every entry came with slice 4 already (judged when pressed,
+D1604), and the two share the files they change.
+
+**Test first** (the seams of slice 5):
+- `web/tests/fits.test.ts`: a rule in plain words, who first, then when ("editors and owners, when something is
+  selected"); every condition of the three apps has words.
+- `web/tests/assemble.test.ts`: the listing of Preferences ▸ Shortcuts: every action once, by menu, with its place, its
+  key and when it fits; tagged "not for you" (role), "not now" (document, selection, a workspace's own "not now") or
+  "not here" (server, client, ai); what only a context menu has under that menu; the keys without an entry.
+- `web/tests/shortcuts.test.ts`: macOS's own keys on a Mac (D1648): the chord, how it is written (Cmd, Ctrl, Shift,
+  Option, as the workbook writes them), and that the Control key itself is matched only where a chord asks for it.
+- `tests/test_menus_generated.py`: `<Control>` becomes the chord's `control`; an action with a key of its own on macOS
+  has it in the table.
+- `web/tests/present-keys.test.ts`: F5 and Shift+F5 are the entries' keys; the letter keys beside them have ids of
+  their own, so that F5 is listened for too; on a Mac the letter keys are the definition's own.
+
+**What changed:**
+- `scripts/generate_menus.py` writes `mac` beside an action's chord where macOS has its own key: Name & Describe…,
+  History & Chat, Present ▸ From Slide and From Beginning.
+- `shortcuts.ts`: `onMac` moved here; `chordOf`, `hintOf` and `chordLabel` take macOS's keys and words on a Mac.
+- `present-keys.ts` keeps only the letter keys beside F5 outside a Mac; `presentHint` and `presentChord` went, the
+  hints are the definition's (`hintOf`).
+- `fits/conditions.ts`: every condition has its plain words (`plain`); `fits/rule.ts`: `describeRule`.
+- `menus/assemble.ts`: `listing()`.
+- `ShortcutsDialog.vue`: the switch What Fits Now / Everything (What Fits Now first), a search field, the groups, and
+  "Other keys" (F6, Ctrl+H, the steps between objects, the letter keys of Present) with what is no key at all.
+- The spec's Shortcuts scenario is bound and lost `@pending:e5.24`.
+
+**The "why" sentences and the plain words, for the owner's review** (Q2 of slice 3): listed in the reply that delivers
+this slice; they are in `fits/conditions.ts` (one per condition), `menus/window-handlers.ts` (Copy, Share…) and the
+workspaces' "not now" (slice 4's list above). German follows the Sie form.
+
+**Assumptions:**
+- The why line of an empty menu and the muted rows of the dialog use `--muted`, which greyed entries already use
+  (about 5:1): there is no paler grey in the menus to keep apart from it (D1642).
+- On a Mac, a chord without macOS's own key still answers to Cmd or Ctrl, as before; only macOS's own chords ask for
+  the Control key itself.

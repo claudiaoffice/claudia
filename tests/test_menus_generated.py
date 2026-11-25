@@ -1,4 +1,4 @@
-"""The web app's key table is made from the shared menu manifest, and is what the manifest makes (UX-35, D360)."""
+"""The web app's menus and keys are made from the shared menu definition, and are what it makes (UX-35, D360, D1644)."""
 
 import importlib.util
 import sys
@@ -7,19 +7,19 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
-SPEC = importlib.util.spec_from_file_location("generate_keys", ROOT / "scripts" / "generate_keys.py")
+SPEC = importlib.util.spec_from_file_location("generate_menus", ROOT / "scripts" / "generate_menus.py")
 assert SPEC and SPEC.loader
-generate_keys = importlib.util.module_from_spec(SPEC)
-sys.modules["generate_keys"] = generate_keys
-SPEC.loader.exec_module(generate_keys)
+generate_menus = importlib.util.module_from_spec(SPEC)
+sys.modules["generate_menus"] = generate_menus
+SPEC.loader.exec_module(generate_menus)
 
 
 def test_the_checked_in_table_is_what_the_manifest_makes():
-    assert generate_keys.OUT.read_text(encoding="utf-8") == generate_keys.render(), (
-        "run `uv run python scripts/generate_keys.py`"
+    assert generate_menus.OUT.read_text(encoding="utf-8") == generate_menus.render(), (
+        "run `uv run python scripts/generate_menus.py`"
     )
-    assert generate_keys.NOTE.read_text(encoding="utf-8") == generate_keys.render_note()
-    assert generate_keys.main(["--check"]) == 0
+    assert generate_menus.NOTE.read_text(encoding="utf-8") == generate_menus.render_note()
+    assert generate_menus.main(["--check"]) == 0
 
 
 @pytest.mark.parametrize(
@@ -31,7 +31,7 @@ def test_the_checked_in_table_is_what_the_manifest_makes():
     ],
 )
 def test_the_table_for_people_shows_keys_as_the_web_menus_do(accelerator, text):
-    assert generate_keys.shown(accelerator) == text
+    assert generate_menus.shown(accelerator) == text
 
 
 @pytest.mark.parametrize(
@@ -47,20 +47,29 @@ def test_the_table_for_people_shows_keys_as_the_web_menus_do(accelerator, text):
         ("<Primary><Alt>underscore", {"key": "_", "ctrl": True, "shift": True, "alt": True}),
         ("Return", {"key": "Enter"}),
         ("<Shift>Tab", {"key": "Tab", "shift": True}),
+        # macOS's own keys (D1616, D1648): <Primary> is Cmd there, <Control> the Control key itself
+        ("<Primary><Control>n", {"key": "n", "code": "KeyN", "ctrl": True, "control": True}),
+        ("<Control><Alt><Shift>h", {"key": "h", "code": "KeyH", "control": True, "shift": True, "alt": True}),
     ],
 )
 def test_a_gtk_key_becomes_the_key_a_browser_reports(accelerator, chord):
-    assert generate_keys.chord_of(accelerator) == chord
+    assert generate_menus.chord_of(accelerator) == chord
 
 
 def test_a_key_name_nobody_taught_it_is_refused_rather_than_guessed():
     with pytest.raises(ValueError, match="KP_Add"):
-        generate_keys.chord_of("<Primary>KP_Add")
+        generate_menus.chord_of("<Primary>KP_Add")
+
+
+def test_an_action_with_a_key_of_its_own_on_macos_has_it_in_the_table_too():
+    table = generate_menus.table()
+    assert table["format.describe"]["mac"] == {"key": "n", "code": "KeyN", "ctrl": True, "control": True}
+    assert "mac" not in table["file.new"]
 
 
 def test_every_action_of_every_app_with_a_key_is_in_the_table():
-    table = generate_keys.table()
-    manifest = generate_keys._manifest_module()
+    table = generate_menus.table()
+    manifest = generate_menus._manifest_module()
     for app in ("composes", "computes", "creates"):
         for action in manifest.for_app(app).actions:
             if action.keys.default:

@@ -143,7 +143,10 @@ def _ben_has_no_share(world):
     ben = world.people["Ben"]
     ben.page.click('.menus .title:text-is("File")')
     ben.page.click('.menus .drop [role=menuitem]:has-text("Manage")')
-    expect(ben.page.locator('.menus [role=menuitem]:has-text("Share…")')).to_be_disabled()
+    # not offered at all: what does not fit is left out (D1600), or greyed where the trial says so (D1606)
+    share = ben.page.locator('.menus [role=menuitem]:has-text("Share…")')
+    if share.count():
+        expect(share).to_be_disabled()
 
 
 # -- Ben's window ------------------------------------------------------------------------------------------------------

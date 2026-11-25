@@ -22,6 +22,8 @@ is one switch per reason. This note holds the design behind the decisions and th
 | D1642 | A notice names the first failing reason in the order role, server, client, ai, document, selection. The Shortcuts dialog has the switch "What Fits Now" / "Everything" and the tags "not for you", "not now", "not here". Text that says why is drawn in the muted ink, not in the greyed-entry grey. |
 | D1643–D1649 | The architecture: see `menus-architecture.md` §6. |
 | D1650 | A notice speaks per condition; Copy and Share… have sentences of their own. |
+| D1651–D1653 | Ask ai… is one action; the must-not-break marker; an entry's own trial setting is grey or hide. |
+| D1654 | What only the page knows: an entry it cannot run now is greyed with its own sentence; choices of an entry (Wrap Text… ▸); a key that does not fit says why. |
 
 ## The words of "fits when" (D1601)
 
@@ -34,7 +36,7 @@ an entry that fails it is hidden or greyed.
 | server | has the tool for LaTeX · Mermaid · Typst | This server has no LaTeX set up. |
 | client | desktop only · web only | Quit is only in the desktop app. |
 | document | has a pivot table · has a table · has more than one sheet or slide · is being presented · something to undo† · something to redo† · has something to refer to† · has random numbers† · a place to go back to† · has objects† | There is no pivot table here. |
-| selection | a cell or range · text · an object (of a kind) · a table · a chart · nothing · something† · a list item† · a pivot table† · an object that holds text† · an object that can turn† · an object on the grid† · more than one cell of the table† · a merged cell† | Select an object first. |
+| selection | a cell or range · text · an object (of a kind) · a table · a chart · nothing · something† · a list item† · a pivot table† · an object that holds text† · an object that can turn† · an object on the grid† · more than one cell of the table† · a merged cell† · something, or the cursor in a text‡ | Select an object first. |
 | ai | the ai can really answer (a model is set up, local or a provider; not the scripted stand-in) | The ai is not set up on this server. |
 
 Examples of whole rules:
@@ -44,7 +46,8 @@ Examples of whole rules:
 - Insert ▸ Container ▸ LaTeX = role: editor or owner · server: has the tool for LaTeX
 - Ask ai = ai: the ai can really answer
 
-† added by D1615, from the first fill of the workbook's "Fits when" column.
+† added by D1615, from the first fill of the workbook's "Fits when" column. ‡ added by D1654: Format ▸ Style ▸
+Apply… and Edit… work on the paragraph the cursor is in too, which "something" (a caret is not, D1601) left out.
 
 A viewer (D1615) gets:
 - History & chat; the panel tells her it is for editors.

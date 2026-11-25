@@ -49,15 +49,3 @@ def test_no_client_or_layout_module_writes_a_default_style_id_as_a_literal():
                     if _LITERAL.search(line):
                         offenders.append(f"{place}:{number}: {line.strip()[:90]}")
     assert not offenders, "import DEFAULT_STYLE or SHAPE_LABEL_STYLE from @claudia/layout:\n" + "\n".join(offenders)
-
-
-def test_the_called_out_styles_of_the_format_menu_are_built_in_styles_of_composes():
-    """The Format menu groups three built-ins by name (D127); a rename in composes must not leave the group empty."""
-    from claudia_composes import BUILTIN_STYLES
-
-    source = (ROOT / "web" / "app" / "components" / "TextWorkspace.vue").read_text(encoding="utf-8")
-    named = re.search(r"const CALLED_OUT_STYLE_IDS = \[(.*?)\]", source)
-    assert named, "TextWorkspace.vue no longer names CALLED_OUT_STYLE_IDS"
-    ids = re.findall(r"'([a-z-]+)'", named.group(1))
-    assert ids
-    assert set(ids) <= {style.id for style in BUILTIN_STYLES}

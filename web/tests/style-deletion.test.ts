@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { ProtocolError, type LinkLike, type EventHandler, type CloseHandler } from '~/lib/protocol'
 import { TextSession } from '~/lib/text-session'
-import { formatItems, noLists, type FormatMenu } from '~/lib/format-menu'
 import { galleryFor } from '~/lib/style-host'
 import { STYLE_MODEL } from './style-model.fixture'
 import type { StyleView } from '~/lib/style-css'
@@ -161,24 +160,10 @@ describe('hidden styles are not picked from (D780)', () => {
     expect(pickable(styles, 'remark').map((s) => s.id)).toEqual(['body', 'remark', 'note'])
   })
 
-  it('are left out of the gallery, and of the Format menu, but a selected one stays', () => {
+  it('are left out of the gallery, but a selected one stays', () => {
     const slot = { name: 'paragraph', label: 'Paragraph', reads: ['text', 'paragraph', 'box'], kind: 'paragraph', takes: ['paragraph'] }
     expect(galleryFor(styles, slot, STYLE_MODEL).own.map((s) => s.id)).toEqual(['body', 'note'])
     expect(galleryFor(styles, slot, STYLE_MODEL, 'remark').own.map((s) => s.id)).toEqual(['body', 'remark', 'note'])
-    const menu = (current?: string): FormatMenu => ({
-      groups: [styles],
-      current,
-      canApply: true,
-      apply: () => undefined,
-      openApply: () => undefined,
-      look: { disabled: false, open: () => undefined },
-      allStyles: () => undefined,
-      colours: () => undefined,
-      list: noLists('no lists'),
-    })
-    const labels = (current?: string) => formatItems((s) => s, menu(current))[0]!.items!.map((i) => i.label)
-    expect(labels()).toEqual(['Body text', 'Note'])
-    expect(labels('remark')).toEqual(['Body text', 'Remark', 'Note'])
   })
 })
 

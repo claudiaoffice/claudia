@@ -36,6 +36,20 @@
           },
           {
             "accelerators": [
+              "Return"
+            ],
+            "checkable": false,
+            "fits": "role: editor or owner \u00b7 selection: an object that holds text",
+            "id": "edit.edit-text",
+            "key_macos": null,
+            "key_owner": "view",
+            "kind": "page",
+            "label": "Edit Text",
+            "role": null,
+            "start": false
+          },
+          {
+            "accelerators": [
               "<Primary><Alt>a"
             ],
             "checkable": false,
@@ -1201,7 +1215,7 @@
                   "<Primary><Alt>a"
                 ],
                 "checkable": false,
-                "fits": "role: editor or owner \u00b7 selection: something",
+                "fits": "role: editor or owner \u00b7 selection: something, or the cursor in a text",
                 "id": "format.apply-style",
                 "key_macos": null,
                 "key_owner": "page",
@@ -1215,7 +1229,7 @@
                   "<Primary><Alt><Shift>h"
                 ],
                 "checkable": false,
-                "fits": "role: editor or owner \u00b7 selection: something",
+                "fits": "role: editor or owner \u00b7 selection: something, or the cursor in a text",
                 "id": "format.look",
                 "key_macos": null,
                 "key_owner": "page",

@@ -114,7 +114,7 @@ const wait = (page, fn, arg, what) => page.waitForFunction(fn, arg, { timeout: 1
     await inside(ben)
     await ben.click('.menus .title:text-is("File")')
     await ben.click('.menus .drop [role=menuitem]:has-text("Manage")')
-    assert.ok(await ben.locator('.menus .drop [role=menuitem]:has-text("Share")').isDisabled(), 'only the owner may share, and so make a key')
+    assert.equal(await ben.locator('.menus .drop [role=menuitem]:has-text("Share")').count(), 0, 'only the owner may share, and so make a key: not offered (D1600)')
     await ben.close()
 
     // ---- the restart: everything sealed, nothing readable, then Ben forgets his password

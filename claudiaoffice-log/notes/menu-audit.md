@@ -17,7 +17,7 @@ uv run python scripts/menu_audit.py       # the comparison → sheet Diagnosis (
 - **Desktop clients (Linux, Windows, macOS)**: read from the shared manifest
   (`clients/linux/src/claudia_shell_gtk/manifest.py`). The Linux client builds its menus from it. The Windows and macOS
   menus are generated from it, and `generate_menu.py --check` confirmed they are current for all three apps. The
-  generated shortcut table (`generate_keys.py --check`) is current too.
+  generated shortcut table (`generate_menus.py --check`) is current too.
 - **Web client**: `menu_capture.py` starts a real server with all three apps. In each app:
   1. Ann (owner) makes a document and shares it with Eddie (editor) and Vera (viewer).
   2. Ann's menu bar is read, in English and in German, before anything is inserted (afterwards Undo would name what
@@ -47,7 +47,7 @@ uv run python scripts/menu_audit.py       # the comparison → sheet Diagnosis (
 ## The picture
 
 - **The menus are one product already, in two definitions.** All desktop clients come from one manifest and are in step.
-  The web menus are built separately (`web/app/lib/document-menus.ts` and each workspace) and differ from the manifest
+  The web menus are built separately (`lib/document-menus.ts`, gone since slice 4 (D1644), and each workspace) and differ from the manifest
   in 18 places:
   - **6 are by design.** Quit exists only on the desktop. Apply Style is a flyout of the styles on the web but opens
     the page's popover in a shell (D301).
