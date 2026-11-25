@@ -1,13 +1,11 @@
-"""The menu and action manifest of the Linux client (E5.1 / E5.10, D120–D130) and the menus built from it.
+"""The menu definition (``clients/contract``, D1643) as the clients build on it: its kinds of action, keys and roles,
+the GTK menus made from it, the short menu of the front page, and the web app's ids.
 
-D120 gives every app the same seven menus. composes, computes and creates share Edit's Undo/Redo/Copy/Cut/Paste/
-Paste-as block and View's Show-who-wrote-what/History-and-chat/Dark-mode block verbatim; the tests below check that
-directly (one set of ids, compared across the three manifests) rather than retyping the block three times.
+What the menus hold, in which order, with which words, keys and rules, is the workbook's and is tested against it in
+``tests/test_menu_workbook.py`` (D1605); nothing here repeats it.
 
-The drift guard against the web app changed shape with this round (D121): it used to grep ``webroutes.json``'s
-*labels* against ``shim.js``'s hidden-DOM-click targets, which is retired along with ``shim.js`` itself. Now that the
-page speaks the shell contract directly, the guard compares *ids* — a stronger guarantee, since an id is the one
-thing both sides are required to agree on (`web/app/lib/menu-dispatch.ts`), where a label never was.
+The drift guard against the web app compares *ids*, the one thing both sides are required to agree on
+(``web/app/lib/menu-dispatch.ts``), where a label never was (D121).
 """
 
 from __future__ import annotations
@@ -47,9 +45,33 @@ BUILDERS = {"composes": manifest.composes, "computes": manifest.computes, "creat
 APPS = tuple(BUILDERS)
 
 
+#: Until the web assembles its menus from the definition (slice 4 of the menu work, D1644), its hand-built menus
+#: still have entries the workbook dropped or moved, and lack the new ones. Emptied by slice 4, then removed.
+WEB_CATCHES_UP: dict[str, set[str]] = {
+    # in the definition, not yet on the web
+    "composes": {"insert.shape.circle", "insert.shape.rectangle", "insert.shape.triangle"},
+    "creates": {"insert.shape.circle", "insert.shape.rectangle", "insert.shape.triangle"},
+    # on the web, dropped by the workbook (the owner, 2026-11-25; D1608)
+    "all": {
+        "file.save",
+        "file.manage.assign-owner",
+        "file.manage.accept-owner",
+        "file.manage.leave",
+        "file.manage.delete",
+        "format.rotate-right",
+        "format.rotate-left",
+        "help.ask",
+    },
+    "computes": {"insert.contents", "insert.cross-reference"},
+}
+
+
+def catching_up(app_name: str) -> set[str]:
+    return WEB_CATCHES_UP["all"] | WEB_CATCHES_UP.get(app_name, set())
+
+
 @pytest.fixture(scope="module", params=APPS)
 def app(request: pytest.FixtureRequest) -> manifest.Manifest:
-    """Each of the three manifests in turn — most tests below hold for all three identically."""
     return BUILDERS[request.param]()
 
 
@@ -63,191 +85,52 @@ def computes() -> manifest.Manifest:
     return manifest.computes()
 
 
-@pytest.fixture(scope="module")
-def creates() -> manifest.Manifest:
-    return manifest.creates()
+def places(app: manifest.Manifest) -> list[Action]:
+    """Every action where it stands: menus, context menus and the keys without an entry, an action shown twice twice."""
+    return [
+        *(a for menu in app.menus for a in menu.all_actions()),
+        *(a for context in app.context_menus for a in context.all_actions()),
+        *app.keys_only,
+    ]
 
 
-def entries(menu: manifest.Menu) -> list[manifest.MenuEntry]:
-    return [entry for section in menu.sections for entry in section]
+def menu_actions(app: manifest.Manifest) -> list[Action]:
+    return [a for menu in app.menus for a in menu.all_actions()]
 
 
-def labels(menu: manifest.Menu) -> list[str]:
-    return [entry.label for entry in entries(menu)]
-
-
-def action_ids(menu: manifest.Menu) -> list[str]:
-    return [a.id for a in menu.all_actions()]
-
-
-# ------------------------------------------------------------------------------------------------------ the schema
+# ------------------------------------------------------------------------------------------------- the menus
 
 
 def test_every_app_has_the_same_eight_menus_in_the_same_order(app: manifest.Manifest) -> None:
-    """D120's seven, and Insert between Edit and Format (D560)."""
-    assert [menu.label for menu in app.menus] == [
-        "File",
-        "Edit",
-        "Insert",
-        "Format",
-        "View",
-        "Tools",
-        "Preferences",
-        "Help",
-    ]
+    """D120, D1603: the titles are the same in every app and never change."""
+    assert [m.label for m in app.menus] == ["File", "Edit", "Insert", "Format", "View", "Tools", "Preferences", "Help"]
 
 
-def test_insert_offers_the_container_types_with_a_key_each(app: manifest.Manifest) -> None:
-    """Insert ▸ Container ▸ LaTeX, Mermaid, Typst (D560): the same three in every app, each with its own key, listened
-    for by the page like every other app command."""
-    _contents, *_table, (container,) = app.menu("Insert").sections
-    assert isinstance(container, manifest.Submenu)
-    assert container.label == "Container"
-    assert [(a.id, a.label) for a in container.items] == [
-        ("insert.container.latex", "LaTeX"),
-        ("insert.container.mermaid", "Mermaid"),
-        ("insert.container.typst", "Typst"),
-    ]
-    assert [a.accelerators for a in container.items] == [
-        ("<Primary><Alt><Shift>f",),
-        ("<Primary><Alt><Shift>g",),
-        ("<Primary><Alt><Shift>y",),
-    ]
-    assert {a.key_owner for a in container.items} == {manifest.KeyOwner.PAGE}
+def test_every_place_has_a_rule(app: manifest.Manifest) -> None:
+    """D1601, D1605: whether an entry fits is a rule, and every entry has one, in its place."""
+    assert [a.id for a in places(app) if not a.fits] == []
 
 
-def test_insert_starts_with_the_cross_reference_and_the_table_of_contents_which_creates_calls_agenda(
-    app: manifest.Manifest,
-) -> None:
-    """Insert ▸ Table of Contents (E9.31), Ctrl+Alt+Shift+I, listened for by the page; in creates it is Agenda. Computes
-    shows it and the page reports it off, as it does List ▸."""
-    ((reference, contents), *_rest) = app.menu("Insert").sections
-    assert isinstance(reference, manifest.Action) and isinstance(contents, manifest.Action)
-    assert (reference.id, reference.label, reference.accelerators) == (
-        "insert.cross-reference",
-        "Cross-Reference…",
-        ("<Primary>F2",),
-    )
-    assert contents.id == "insert.contents"
-    assert contents.label == ("Agenda" if app.app == "creates" else "Table of Contents")
-    assert contents.accelerators == ("<Primary><Alt><Shift>i",)
-    assert contents.key_owner == manifest.KeyOwner.PAGE
+def test_an_action_in_more_than_one_place_is_the_same_action(app: manifest.Manifest) -> None:
+    """Its words and rule are the place's; what it does and its key are the action's (D1614)."""
+    first: dict[str, Action] = {}
+    for action in places(app):
+        seen = first.setdefault(action.id, action)
+        same = ("kind", "keys", "key_owner", "checkable", "role", "editing")
+        assert all(getattr(seen, f) == getattr(action, f) for f in same), action.id
 
 
-def test_composes_alone_has_tables_in_insert_and_tools_with_the_keys_of_the_decision_log(
-    app: manifest.Manifest,
-) -> None:
-    """E9.32, D1208: Insert ▸ Table… and Tools ▸ Row ▸, Column ▸, Sort ▸, Merge Cells, Split Cell, Table Options… are
-    composes' own (in Tools since D1229, as computes has its pivot table there), because the other two apps have
-    their grid. Row and Column are computes' entries (one action, one key in every app, see
-    test_one_action_has_one_key_in_every_app), the page reports them off outside a table."""
-    ids = {action.id for action in app.actions}
-    table_ids = {
-        "insert.table",
-        "tools.sort-ascending",
-        "tools.sort-descending",
-        "tools.merge-cells",
-        "tools.split-cell",
-        "tools.table-options",
-    }
-    if app.app != "composes":
-        assert not ids & table_ids
-        return
-    assert table_ids <= ids
-    keys = {
-        "insert.table": ("<Primary><Shift>f",),
-        "tools.table-options": ("<Primary><Shift>l",),
-        "tools.merge-cells": ("<Primary><Shift>g",),
-        "tools.split-cell": ("<Primary><Shift>h",),
-        "tools.sort-ascending": ("<Primary><Shift>x",),
-        "tools.sort-descending": ("<Primary><Shift>y",),
-        "edit.row-insert-above": ("<Alt><Shift>Up",),
-        "edit.column-insert-right": ("<Alt><Shift>Right",),
-    }
-    for action_id, accelerators in keys.items():
-        assert app.action(action_id).accelerators == accelerators, action_id
-        assert app.action(action_id).key_owner == manifest.KeyOwner.PAGE, action_id
-    assert [
-        submenu.label for submenu in _submenus(app.menu("Tools")) if submenu.label in {"Row", "Column", "Sort"}
-    ] == [
-        "Row",
-        "Column",
-        "Sort",
-    ]
-
-
-def _submenus(menu: manifest.Menu) -> list[manifest.Submenu]:
-    return [entry for section in menu.sections for entry in section if isinstance(entry, manifest.Submenu)]
-
-
-def test_the_front_page_has_no_insert_menu(app: manifest.Manifest) -> None:
-    assert "Insert" not in [menu.label for menu in manifest.for_start(app).menus]
-
-
-def test_file_is_grouped_new_open_save_group_manage_close_quit(app: manifest.Manifest) -> None:
-    """D123/D124: separators kept, grouped as New/Open · Save-group · Manage · Close/Quit. D141: the Manage
-    item replaces the plain "Share…" item it grew out of, and is itself a submenu. The apps that lay out pages print
-    (D906): File ▸ Print… was on the web only (UX-36), computes
-    prints its sheets too (E6.19). D443: Open a File… next to Open…."""
-    file_menu = app.menu("File")
-    keep = ["Save", "Save New Checkpoint…", "Download", "Print…"]
-    assert [[e.label for e in section] for section in file_menu.sections] == [
-        ["New", "Open…", "Open a File…"],
-        keep,
-        ["Manage"],
-        ["Close Document", "Quit"],
-    ]
-
-
-def test_file_manage_offers_share_assign_owner_leave_export_and_delete(app: manifest.Manifest) -> None:
-    """D141: the "Manage" submenu Claude built from the design the owner accepted (assigning a new owner, leaving,
-    exporting and deleting a document from the server), with Share… kept as its first item so adding people to a
-    document is still possible."""
-    file_menu = app.menu("File")
-    manage = file_menu.sections[2][0]
-    assert isinstance(manage, Submenu) and manage.label == "Manage"
-    assert [a.id for a in manage.items] == [
-        "file.manage.share",
-        "file.manage.change-password",
-        "file.manage.assign-owner",
-        "file.manage.accept-owner",
-        "file.manage.leave",
-        "file.manage.export",
-        "file.manage.redact",
-        "file.manage.delete",
-    ]
-    assert [a.label for a in manage.items] == [
-        "Share…",
-        "Change Password…",
-        "Assign New Owner…",
-        "Accept Ownership…",
-        "Leave Document…",
-        "Export…",
-        "Redact History…",
-        "Delete From Server…",
-    ]
-
-
-def test_edits_shared_block_is_identical_in_every_app(app: manifest.Manifest) -> None:
-    """Undo, Redo, Copy, Cut, Paste, Paste as ▸ Plain text — D120's shared block, verbatim in every app."""
-    shared_ids = [e.id if isinstance(e, Action) else [i.id for i in e.items] for e in entries(app.menu("Edit"))[:6]]
-    assert shared_ids == [
-        "edit.undo",
-        "edit.redo",
-        "edit.copy",
-        "edit.cut",
-        "edit.paste",
-        ["edit.paste-as-plain"],
-    ]
+def test_a_context_menu_holds_actions_and_submenus_only(app: manifest.Manifest) -> None:
+    """D1602: every thing's menu has an id and a name for Preferences ▸ Shortcuts (D1604), and no empty group."""
+    ids = [c.id for c in app.context_menus]
+    assert len(ids) == len(set(ids))
+    for context in app.context_menus:
+        assert context.label and all(context.sections), context.id
 
 
 def test_macos_roles_are_set_on_the_shared_undo_redo_and_clipboard_actions(app: manifest.Manifest) -> None:
-    """D158: a macOS shell needs a Cocoa role (``undo:``, ``redo:``, ``cut:``, ``copy:``, ``paste:``) next to each
-    shared Edit item's accelerator, or the key equivalent is swallowed by the menu and the web view never sees it
-    (confirmed on the owner's Mac, ``notes/e0-3-neutralino-windows-macos.md``). This holds whether the action's
-    ``kind`` is ``EDITING`` (composes, native WebKit commands) or ``PAGE`` (computes/creates, D121): either way the
-    key has to reach the item before anything downstream can run. ``edit.paste-as-plain`` has no standard Cocoa
-    editing selector, so it is not given one."""
+    """D158: a macOS shell needs a Cocoa role next to each shared Edit item's key, or the key equivalent is swallowed
+    by the menu and the web view never sees it. Paste As ▸ Plain Text has no standard selector, so none."""
     pairs = {
         "edit.undo": "undo:",
         "edit.redo": "redo:",
@@ -258,292 +141,7 @@ def test_macos_roles_are_set_on_the_shared_undo_redo_and_clipboard_actions(app: 
     for action_id, role in pairs.items():
         assert app.action(action_id).role == role
     assert app.action("edit.paste-as-plain").role is None
-
-
-def test_only_the_shared_edit_block_carries_a_macos_role(app: manifest.Manifest) -> None:
-    """Everything else (``file.*``, ``view.*``, ``tools.*``, app-specific Edit items such as creates'
-    ``edit.new-slide``) has no Cocoa editing counterpart, so :attr:`manifest.Action.role` stays unset there."""
-    roled = {"edit.undo", "edit.redo", "edit.copy", "edit.cut", "edit.paste"}
-    for action in app.actions:
-        if action.id not in roled:
-            assert action.role is None, f"{action.id} should not carry a macOS role"
-
-
-def test_views_shared_block_is_identical_in_every_app(app: manifest.Manifest) -> None:
-    """Show who wrote what, History and chat, Replay history, Back where I was (D1312), Dark mode — D120's shared
-    block, verbatim in every app
-    (even where, per D125, "Show who wrote what" starts permanently disabled: computes and creates track no authorship
-    yet)."""
-    section = app.menu("View").sections[0]
-    assert all(isinstance(e, Action) for e in section), f"expected only plain actions, got {section!r}"
-    assert [e.id for e in section if isinstance(e, Action)] == [
-        "view.authors",
-        "view.panel",
-        "view.replay",
-        "view.back",
-        "view.dark",
-    ]
-
-
-def test_preferences_items_are_shortcuts_ai_then_app_language(app: manifest.Manifest) -> None:
-    """The owner's second i18n round: Shortcuts, then App Language ▸ one item per ``manifest.LANGUAGES`` entry."""
-    assert action_ids(app.menu("Preferences")) == [
-        "config.shortcuts",
-        "config.ai",
-        "config.language.en",
-        "config.language.de",
-    ]
-
-
-def test_app_language_items_are_checkable_page_actions_named_after_their_tag(app: manifest.Manifest) -> None:
-    config = app.menu("Preferences")
-    app_language = next(
-        e for section in config.sections for e in section if getattr(e, "label", None) == "App Language"
-    )
-    assert isinstance(app_language, manifest.Submenu)
-    assert [(a.id, a.label) for a in app_language.items] == [
-        (f"config.language.{tag}", label) for tag, label in manifest.LANGUAGES
-    ]
-    for action in app_language.items:
-        assert action.kind is manifest.Kind.PAGE
-        assert action.checkable is True
-
-
-def test_each_language_item_labels_itself_with_its_own_autonym(app: manifest.Manifest) -> None:
-    """``LANGUAGES`` itself is the source: "English"/"Deutsch", never translated versions of each other's name."""
-    assert dict(manifest.LANGUAGES) == {"en": "English", "de": "Deutsch"}
-
-
-def test_helps_shared_shape_is_identical_in_every_app(app: manifest.Manifest) -> None:
-    """Ask ai, then the two D125 stubs, then About — only the About dialog's own title differs per app."""
-    help_menu = app.menu("Help")
-    assert action_ids(help_menu) == ["help.ask", "help.how-to", "help.docs", "help.about"]
-    about = next(a for a in help_menu.all_actions() if a.id == "help.about")
-    assert about.label.startswith("About Claudia ")
-
-
-def test_composes_format_offers_the_style_actions_the_lists_and_the_document_colours(
-    composes: manifest.Manifest,
-) -> None:
-    assert labels(composes.menu("Format")) == [
-        "Apply Style…",
-        "Edit This Style…",
-        "All Styles…",
-        "List",
-        "Colours…",
-        "Name & describe…",
-        "Rotate",
-        "Wrap Text",
-    ]
-
-
-def test_composes_format_has_one_wrap_text_entry_with_one_key_that_no_system_keeps(composes: manifest.Manifest) -> None:
-    """D1064: one entry, one key that cycles the modes of the selected object.
-
-    Ctrl+Alt+L is Ubuntu's lock screen, Ctrl+Alt+E, M and Q are AltGr keys and Ctrl+Alt+Shift+W is Change Password.
-    """
-    (wrap,) = [a for a in composes.menu("Format").all_actions() if a.id == "format.wrap-text"]
-    assert wrap.kind is Kind.PAGE and wrap.accelerators == ("<Primary><Alt>r",)
-
-
-def test_only_composes_has_wrap_text(app: manifest.Manifest) -> None:
-    ids = {a.id for a in app.menu("Format").all_actions()}
-    assert ("format.wrap-text" in ids) == (app.app == "composes")
-
-
-def test_every_app_has_the_list_flyout_of_the_web(app: manifest.Manifest) -> None:
-    """UX-36: Format ▸ List ▸ was on the web only. It is in every app, as on the web; outside a text the page reports
-    its entries disabled."""
-    (flyout,) = [e for e in entries(app.menu("Format")) if isinstance(e, Submenu) and e.label == "List"]
-    assert [a.id for a in flyout.items] == [
-        "format.bulleted-list",
-        "format.numbered-list",
-        "format.list-continue",
-        "format.list-start",
-        "format.list-indent",
-        "format.list-outdent",
-        "format.number-headings",
-        "format.all-numbering",
-    ]
-
-
-def test_composes_view_has_page_after_the_shared_block(composes: manifest.Manifest) -> None:
-    section = composes.menu("View").sections[1]
-    assert all(isinstance(e, Action) for e in section), f"expected only plain actions, got {section!r}"
-    assert [e.id for e in section if isinstance(e, Action)] == ["view.page"]
-
-
-@pytest.mark.parametrize("app_name", ["computes", "creates"])
-def test_every_app_offers_the_same_three_format_actions(app_name: str, request: pytest.FixtureRequest) -> None:
-    """Was a single inert stub while only composes had styles (D125). All three have them now (D203), and the
-    colours a document is painted from are the same dialog everywhere (D200), so the menu is the same everywhere
-    too — what differs is what a style is *of*: a paragraph in composes, a floating object in the other two.
-    The two that have floating objects also say what an object shows to someone who cannot see it (BITV 1.1.1)."""
-    m = request.getfixturevalue(app_name)
-    styles = ["format.apply-style"] + (["format.clear-cell-style"] if app_name == "computes" else [])
-    turning = ["format.rotate-right", "format.rotate-left", "format.rotate-by"]
-    assert [
-        a.id
-        for a in m.menu("Format").all_actions()
-        if not a.id.startswith(("format.list", "format.bul", "format.num", "format.all-numbering"))
-    ] == [
-        *styles,
-        "format.look",
-        "format.all-styles",
-        "format.colours",
-        "format.describe",
-        *turning,
-    ]
-
-
-@pytest.mark.parametrize("app_name", ["composes", "computes", "creates"])
-def test_name_and_describe_is_a_page_action_with_its_own_key(app_name: str, request: pytest.FixtureRequest) -> None:
-    """Every menu entry has a key (project rule): Ctrl+Alt+D, the chord the page binds to the same action. Everything
-    can be named and described (D1317), so the entry is in all three apps."""
-    m = request.getfixturevalue(app_name)
-    describe = m.action("format.describe")
-    assert describe.kind is Kind.PAGE and describe.label == "Name & describe…"
-    assert describe.accelerators == ("<Primary><Alt>d",)
-
-
-def test_rotate_is_a_flyout_of_three_page_actions_with_keys_of_their_own(creates: manifest.Manifest) -> None:
-    """D1024: Format ▸ Rotate ▸ Rotate Right 90°, Rotate Left 90°, Rotate By… — Ctrl+Alt+. , Ctrl+Alt+, and
-    Ctrl+Alt+Shift+Z (Ctrl+Alt+Z is Replay History's). Only where objects turn: creates, until the other two apps
-    draw a turned object."""
-    (flyout,) = [e for e in entries(creates.menu("Format")) if isinstance(e, Submenu) and e.label == "Rotate"]
-    assert [(a.id, a.label, a.accelerators) for a in flyout.items] == [
-        ("format.rotate-right", "Rotate Right 90°", ("<Primary><Alt>period",)),
-        ("format.rotate-left", "Rotate Left 90°", ("<Primary><Alt>comma",)),
-        ("format.rotate-by", "Rotate By…", ("<Primary><Alt><Shift>z",)),
-    ]
-    assert all(a.kind is Kind.PAGE for a in flyout.items)
-    assert creates.action("view.replay").accelerators == ("<Primary><Alt>z",)
-
-
-@pytest.mark.parametrize("app_name", ["composes", "computes", "creates"])
-def test_every_app_that_has_objects_turns_them_with_the_same_entries_and_keys(
-    app_name: str, request: pytest.FixtureRequest
-) -> None:
-    """D1024, D1232: Format ▸ Rotate ▸ is one shape wherever an app turns objects. Only creates had it; composes and
-    computes have floating objects too and the server turns them all the same way."""
-    m = request.getfixturevalue(app_name)
-    keys = {a.id: a.accelerators for a in m.menu("Format").all_actions() if a.id.startswith("format.rotate")}
-    assert keys == {
-        "format.rotate-right": ("<Primary><Alt>period",),
-        "format.rotate-left": ("<Primary><Alt>comma",),
-        "format.rotate-by": ("<Primary><Alt><Shift>z",),
-    }
-
-
-@pytest.mark.parametrize("app_name", ["composes", "computes", "creates"])
-def test_apply_style_is_one_page_action_that_opens_the_pages_popover(
-    app_name: str, request: pytest.FixtureRequest
-) -> None:
-    """D301: no native list of styles and no new contract message — one page action, as All Styles… is."""
-    m = request.getfixturevalue(app_name)
-    (apply,) = [a for a in m.menu("Format").all_actions() if a.id == "format.apply-style"]
-    assert apply.kind is Kind.PAGE and apply.label == "Apply Style…"
-    first = [e.id for e in m.menu("Format").sections[0] if isinstance(e, Action)]
-    clear = ["format.clear-cell-style"] if app_name == "computes" else []
-    assert first == ["format.apply-style", *clear, "format.look", "format.all-styles"]
-
-
-def test_computes_edit_has_search_then_new_sheet_then_row_and_column_submenus_then_clear(
-    computes: manifest.Manifest,
-) -> None:
-    """D123 (where new items land) and D130 (confirmed by the owner 2026-11-10 — grouped
-    into two submenus of three items each, not six flat items); E5.15 put Search & Replace… ahead of them."""
-    edit = computes.menu("Edit")
-    tail = entries(edit)[6:]  # past the shared Undo…Paste-as block
-    assert [e.label for e in tail] == [
-        "Search & Replace…",
-        "Reference in Chat",  # E5.20: the same entry in every app
-        "Go to Target",  # step H: to what a reference points at
-        "New Sheet…",
-        "Rename Sheet…",  # E6.24
-        "Image…",  # UX-36: Image… and Chart… were on the web only
-        "Chart…",
-        "Row",
-        "Column",
-        "Clear Cells",
-    ]
-    row, column = tail[7], tail[8]
-    assert isinstance(row, Submenu)
-    assert [a.id for a in row.items] == ["edit.row-insert-above", "edit.row-insert-below", "edit.row-delete"]
-    assert isinstance(column, Submenu) and [a.id for a in column.items] == [
-        "edit.column-insert-left",
-        "edit.column-insert-right",
-        "edit.column-delete",
-    ]
-
-
-@pytest.mark.parametrize("app_name", ["composes", "computes", "creates"])
-def test_search_and_replace_is_a_page_action_with_ctrl_f_in_every_app(
-    app_name: str, request: pytest.FixtureRequest
-) -> None:
-    """E5.15, E9.28, E10.19, D281: the web page owns the panel, so the entry is a page action with the shortcut the menu
-    shows, the same in the three apps."""
-    app = request.getfixturevalue(app_name)
-    (search,) = [a for a in app.menu("Edit").all_actions() if a.id == "edit.search-replace"]
-    assert search.kind is Kind.PAGE
-    assert search.accelerators == ("<Primary>f",)
-
-
-@pytest.mark.parametrize("app_name", ["composes", "computes", "creates"])
-def test_image_is_a_page_action_with_the_same_key_in_every_app(app_name: str, request: pytest.FixtureRequest) -> None:
-    """E10.16: a picture goes into a text as it does onto a slide and into a sheet, and one action has one key in all
-    three apps (UX-35)."""
-    app = request.getfixturevalue(app_name)
-    (image,) = [a for a in app.menu("Edit").all_actions() if a.id == "edit.image"]
-    assert image.kind is Kind.PAGE and image.label == "Image…"
-    assert image.accelerators == ("<Primary><Alt>i",)
-
-
-def test_composes_edit_puts_image_between_the_references_and_the_hyphens(composes: manifest.Manifest) -> None:
-    """E10.16: not in a new Insert entry — that menu is the page's own, and the key is Edit ▸ Image…'s everywhere."""
-    labels = [e.label for e in entries(composes.menu("Edit"))]
-    start = labels.index("Go to Target")  # what follows (the table entries, E9.32) is not this test's business
-    assert labels[start : start + 4] == ["Go to Target", "Image…", "Text Box", "Insert"]
-
-
-def test_composes_text_box_has_the_key_it_has_in_creates(
-    composes: manifest.Manifest, creates: manifest.Manifest
-) -> None:
-    (here,) = [a for a in composes.menu("Edit").all_actions() if a.id == "edit.text-box"]
-    (there,) = [a for a in creates.menu("Edit").all_actions() if a.id == "edit.text-box"]
-    assert here.accelerators == there.accelerators == ("<Primary><Alt>b",)
-
-
-def test_creates_edit_has_search_new_slide_edit_text_text_box_then_delete(creates: manifest.Manifest) -> None:
-    """D123. The shape library itself is dynamic (one entry per document) and, like composes' style names, is
-    deliberately not a static manifest entry — see this module's own docstring and ``manifest.py``'s."""
-    edit = creates.menu("Edit")
-    tail = [e.label for e in entries(edit)[6:]]
-    assert tail == [
-        "Search & Replace…",  # E10.19, as in composes and computes
-        "Reference in Chat",
-        "Go to Target",
-        "New Slide",
-        "Rename Slide…",  # D550
-        "Plan the Time of This Slide…",
-        "Edit Text",
-        "Text Box",
-        "Image…",
-        "Delete",
-    ]  # Image… was on the web only (UX-36)
-
-
-def test_creates_view_has_the_show_and_the_notes_each_with_a_chord_a_mac_leaves_alone(
-    creates: manifest.Manifest,
-) -> None:
-    """E10.2, D344: F5 is a system key on a Mac (the spike's Safari result), so every entry that starts the show
-    has a second chord on a letter, and the planned time has one too (every menu entry has a key)."""
-    view = {a.id: a for a in creates.menu("View").all_actions()}
-    assert view["view.present-start"].accelerators == ("F5", "<Primary><Alt>p")
-    assert view["view.present-here"].accelerators == ("<Shift>F5", "<Primary><Alt><Shift>h")
-    assert view["view.speaker-notes"].checkable is True
-    edit = {a.id: a for a in creates.menu("Edit").all_actions()}
-    assert edit["edit.slide-time"].accelerators == ("<Primary><Alt><Shift>t",)
+    assert [a.id for a in app.actions if a.role and a.id not in pairs] == []
 
 
 # ------------------------------------------------------------------------------------------------- ids and actions
@@ -554,23 +152,19 @@ def test_every_action_id_is_a_valid_contract_action(app: manifest.Manifest) -> N
         contract.action(action.id)  # raises on a bad id
 
 
-def test_action_ids_are_unique(app: manifest.Manifest) -> None:
+def test_the_actions_are_listed_once(app: manifest.Manifest) -> None:
     ids = [action.id for action in app.actions]
     assert len(ids) == len(set(ids))
 
 
 def test_a_submenu_itself_has_no_id_or_kind_only_its_items_do(app: manifest.Manifest) -> None:
-    for menu in app.menus:
+    menus: list[manifest.Menu | manifest.ContextMenu] = [*app.menus, *app.context_menus]
+    for menu in menus:
         for section in menu.sections:
             for entry in section:
                 if isinstance(entry, Submenu):
                     assert not hasattr(entry, "id") and not hasattr(entry, "kind")
                     assert entry.items, f"{menu.label} ▸ {entry.label} has no items"
-
-
-def test_ids_do_not_depend_on_the_menu_an_action_sits_in(composes: manifest.Manifest) -> None:
-    """Moving an item to another menu must not change the contract: Format holds 'format.look', not 'style.look'."""
-    assert {"format.look", "format.all-styles"} <= {a.id for a in composes.menu("Format").all_actions()}
 
 
 def _chord(accel: str) -> tuple[frozenset[str], str]:
@@ -580,13 +174,16 @@ def _chord(accel: str) -> tuple[frozenset[str], str]:
     return frozenset(m for m, _ in modifiers), key[1].lower()
 
 
-def test_accelerators_are_well_formed_and_not_shared(app: manifest.Manifest) -> None:
+def test_keys_are_well_formed_and_not_shared(app: manifest.Manifest) -> None:
+    """A key the page or the shell listens for does one thing in an app. A key of the view (Delete, Enter, Tab, the
+    clipboard) is the view's where it is pressed: Delete clears cells in the grid and removes a selected object."""
     seen: dict[tuple[frozenset[str], str], str] = {}
     for action in app.actions:
-        for accel in action.accelerators:
-            assert re.fullmatch(r"(<(Primary|Shift|Alt)>)*[A-Za-z0-9_]+", accel), accel
-            chord = _chord(accel)
-            assert chord not in seen, f"{accel} is on {seen[chord]} and {action.id}"
+        for accel in filter(None, (action.keys.default, action.keys.macos)):
+            assert re.fullmatch(r"(<(Primary|Control|Shift|Alt)>)*[A-Za-z0-9_]+", accel), accel
+        if action.keys.default and action.key_owner is not KeyOwner.VIEW:
+            chord = _chord(action.keys.default)
+            assert chord not in seen, f"{action.keys.default} is on {seen[chord]} and {action.id}"
             seen[chord] = action.id
 
 
@@ -596,18 +193,18 @@ def test_the_same_chord_written_in_another_order_is_the_same_key() -> None:
 
 
 def test_every_menu_entry_has_a_key_but_the_language_names(app: manifest.Manifest) -> None:
-    """The project rule (UX-35): every menu entry has a key shortcut. The language picker's entries are each a
-    language's own name, as many as there are catalogs; they are the one exception."""
-    missing = [a.id for a in app.actions if not a.accelerators and not a.id.startswith("config.language.")]
+    """The project rule (UX-35): every menu entry has a key. The language picker's entries are each a language's own
+    name, as many as there are catalogs; they are the one exception. A context menu's own entries need none (D1614)."""
+    missing = [a.id for a in menu_actions(app) if not a.keys.default and not a.id.startswith("config.language.")]
     assert not missing, missing
 
 
 def test_one_action_has_one_key_in_every_app():
     """UX-35: the same entry has the same key in composes, computes and creates."""
-    keys: dict[str, tuple[str, ...]] = {}
+    keys: dict[str, manifest.Keys] = {}
     for build in BUILDERS.values():
         for action in build().actions:
-            assert keys.setdefault(action.id, action.accelerators) == action.accelerators, action.id
+            assert keys.setdefault(action.id, action.keys) == action.keys, action.id
 
 
 def test_only_the_shells_own_keys_are_bound_natively(app: manifest.Manifest) -> None:
@@ -615,7 +212,7 @@ def test_only_the_shells_own_keys_are_bound_natively(app: manifest.Manifest) -> 
     key the shell bound too would never reach the page (GTK takes application keys before the web view), so it would
     lose the page's rules: no shortcut while typing in a field, the right thing in the right place."""
     native = {a.id for a in app.actions if a.key_owner is KeyOwner.SHELL}
-    assert native == {"file.quit", "help.about", "format.look"}
+    assert native == {"file.quit", "help.about"}
     for action in app.actions:
         if action.kind is Kind.SHELL:
             assert action.key_owner is KeyOwner.SHELL, action.id
@@ -626,14 +223,16 @@ def test_no_key_is_one_a_browser_keeps_or_alt_gr_types(app: manifest.Manifest) -
     page, and on Windows Ctrl+Alt is AltGr, which types @ € µ and the brackets on a German keyboard. Ctrl+Q only for
     the shells' own Quit. Ubuntu keeps Ctrl+Alt+T (terminal) and Ctrl+Alt+L (lock)."""
     for action in app.actions:
-        for accel in action.accelerators:
-            lowered = accel.lower()
-            assert lowered not in {"<primary>n", "<primary>w", "<primary>t", "<primary><shift>n", "<primary><shift>w"}
-            assert lowered not in {"<primary><shift>t", "<primary><alt>t", "<primary><alt>l"}, accel
-            if "<primary><alt>" in lowered:
-                assert not re.fullmatch(r".*>([qem0-9])", lowered), f"{action.id}: {accel} is AltGr+{lowered[-1]}"
-            if lowered == "<primary>q":
-                assert action.id == "file.quit"
+        accel = action.keys.default
+        if not accel:
+            continue
+        lowered = accel.lower()
+        assert lowered not in {"<primary>n", "<primary>w", "<primary>t", "<primary><shift>n", "<primary><shift>w"}
+        assert lowered not in {"<primary><shift>t", "<primary><alt>t", "<primary><alt>l"}, accel
+        if "<primary><alt>" in lowered and "<shift>" not in lowered:
+            assert not re.fullmatch(r".*>([qem0-9])", lowered), f"{action.id}: {accel} is AltGr+{lowered[-1]}"
+        if lowered == "<primary>q":
+            assert action.id == "file.quit"
 
 
 def test_each_action_is_carried_out_by_exactly_one_party(app: manifest.Manifest) -> None:
@@ -645,27 +244,22 @@ def test_each_action_is_carried_out_by_exactly_one_party(app: manifest.Manifest)
             assert action.editing is None
 
 
-def test_checkable_actions_are_the_view_toggles_and_the_language_picker(app: manifest.Manifest) -> None:
+def test_checkable_actions_are_the_view_toggles_the_lists_and_the_language_picker(app: manifest.Manifest) -> None:
     checkable = {a.id for a in app.actions if a.checkable}
     language_ids = {f"config.language.{tag}" for tag, _label in manifest.LANGUAGES}
     # ticked when the paragraphs are that kind of list, and while the headings are numbered (E9.22)
-    lists = {"format.bulleted-list", "format.numbered-list", "format.number-headings"}
-    if app.app == "composes":
-        assert checkable == {"view.authors", "view.panel", "view.dark", "view.page"} | lists | language_ids
-    elif app.app == "creates":
-        assert (
-            checkable
-            == {"view.authors", "view.panel", "view.dark", "view.grid", "view.speaker-notes"} | lists | language_ids
-        )
-    elif app.app == "computes":
-        # ... and Tools ▸ Follow Computation (E6.23), which is on while a computation is followed.
-        assert checkable == {"view.authors", "view.panel", "view.dark", "tools.follow"} | lists | language_ids
-    else:
-        assert checkable == {"view.authors", "view.panel", "view.dark", "view.grid"} | lists | language_ids
+    shared = {"view.authors", "view.panel", "view.dark", "format.bulleted-list", "format.numbered-list"}
+    shared |= {"format.number-headings"} | language_ids
+    own = {
+        "composes": {"view.page"},
+        "computes": {"tools.follow"},  # on while a computation is followed (E6.23)
+        "creates": {"view.grid", "view.speaker-notes"},
+    }
+    assert checkable == shared | own[app.app]
 
 
 def test_composes_clipboard_actions_are_native_webkit_editing_commands(composes: manifest.Manifest) -> None:
-    """Carried over unchanged from before this round (D121's scope note in ``manifest.py``)."""
+    """D121's scope note: composes' text is WebKit's own, so its clipboard is WebKit's editing commands."""
     pairs = (
         ("edit.copy", "Copy"),
         ("edit.cut", "Cut"),
@@ -678,14 +272,11 @@ def test_composes_clipboard_actions_are_native_webkit_editing_commands(composes:
 
 
 @pytest.mark.parametrize("app_name", ["computes", "creates"])
-def test_computes_and_creates_clipboard_actions_go_through_the_page_instead(
-    app_name: str, request: pytest.FixtureRequest
-) -> None:
-    """New to the GTK shell (D121): a cell grid or a slide canvas needs its own paste logic, not WebKit's generic
-    one, so these dispatch through the page like any other ``file.*``/``edit.*`` action, not natively."""
-    m = request.getfixturevalue(app_name)
+def test_computes_and_creates_clipboard_actions_go_through_the_page_instead(app_name: str) -> None:
+    """A cell grid or a slide canvas needs its own paste logic, not WebKit's generic one (D121)."""
+    built = BUILDERS[app_name]()
     for action_id in ("edit.copy", "edit.cut", "edit.paste", "edit.paste-as-plain"):
-        assert m.action(action_id).kind is Kind.PAGE
+        assert built.action(action_id).kind is Kind.PAGE
 
 
 # ------------------------------------------------------------------------------------------- the web app, by id
@@ -693,18 +284,16 @@ def test_computes_and_creates_clipboard_actions_go_through_the_page_instead(
 
 @pytest.mark.parametrize("app_name", APPS)
 def test_every_page_and_editing_action_id_is_in_the_matching_web_source(app_name: str) -> None:
-    """The guard against drift (see this module's docstring): if the web app renames or drops an id this shell
-    still dispatches, this fails and says which. ``Kind.SHELL`` actions (Quit, About) have no web equivalent by
-    design — the shell intercepts them before they would ever reach the page — so they are not checked here."""
+    """The guard against drift (see this module's docstring): if the web app renames or drops an id of a menu, this
+    fails and says which. ``Kind.SHELL`` actions (Quit, About) have no web equivalent by design. The context menus'
+    ids are the web's when it assembles them from the definition (D1644)."""
     sources = (WEB_SOURCES[app_name], WEB_SHARED_MENUS, WEB_FORMAT_MENU, WEB_LANGUAGES, WEB_TABLE_MENU, WEB_ROTATE_MENU)
     if not all(path.exists() for path in sources):
         pytest.skip("the web sources are not next to the client")
     app_source, shared_menus, format_menu, languages_source, table_menu, rotate_menu = (
         path.read_text(encoding="utf-8") for path in sources
     )
-    assert "formatItems(" in app_source, "every app builds its Format menu with lib/format-menu.ts"
-    shared_source = shared_menus + format_menu + rotate_menu  # Format ▸ Rotate ▸ is one module (D1232)
-    # composes' table entries: the actions are named in one table (`TABLE_ACTION_IDS`), the menus and keys built from it
+    shared_source = shared_menus + format_menu + rotate_menu
     table_source = table_menu if app_name == "composes" else ""
 
     def in_web(action_id: str) -> bool:
@@ -717,8 +306,11 @@ def test_every_page_and_editing_action_id_is_in_the_matching_web_source(app_name
             tag != action_id and "id: `config.language.${tag}`" in shared_source and f"['{tag}', " in languages_source
         )
 
-    missing = [a.id for a in BUILDERS[app_name]().actions if a.kind is not Kind.SHELL and not in_web(a.id)]
-    assert not missing, f"{app_name}: the web app no longer has " + ", ".join(missing)
+    built = BUILDERS[app_name]()
+    missing = [a.id for a in menu_actions(built) if a.kind is not Kind.SHELL and not in_web(a.id)]
+    assert sorted(set(missing) - catching_up(app_name)) == [], f"{app_name}: the web app no longer has " + ", ".join(
+        missing
+    )
 
 
 # ------------------------------------------------------------------------------------------------- GMenu XML
@@ -733,7 +325,7 @@ def test_the_gmenu_xml_has_one_menu_per_manifest_menu_in_order(app: manifest.Man
 def test_menu_items_call_window_actions_and_are_translatable(app: manifest.Manifest) -> None:
     root = ET.fromstring(menu_xml(app))
     items = root.findall(".//item")
-    assert len(items) == sum(1 for menu in app.menus for _ in menu.all_actions())
+    assert len(items) == len(menu_actions(app))
     for item in items:
         attributes = {a.get("name"): a for a in item.findall("attribute")}
         assert (attributes["action"].text or "").startswith("win.")
@@ -741,18 +333,16 @@ def test_menu_items_call_window_actions_and_are_translatable(app: manifest.Manif
 
 
 def test_a_submenu_renders_as_a_nested_gmenu_submenu_with_its_own_section(computes: manifest.Manifest) -> None:
-    """D130/the schema's one new capability: ``<submenu>`` nested in a ``<section>``, GTK's own flyout shape — the
-    same thing ``MenuBar.vue``'s ``items`` property draws on the web side."""
+    """D130: ``<submenu>`` nested in a ``<section>``, GTK's own flyout shape — the same thing ``MenuBar.vue``'s
+    ``items`` property draws on the web side."""
     root = ET.fromstring(menu_xml(computes))
     edit_menu = root.find("menu[@id='menu-edit']")
     assert edit_menu is not None
     submenus = edit_menu.findall(".//submenu")
-    labels_found = {s.findtext("attribute[@name='label']") for s in submenus}
-    assert {"Paste As", "Row", "Column"} <= labels_found
-    row = next(s for s in submenus if s.findtext("attribute[@name='label']") == "Row")
-    row_items = row.findall("section/item")
-    assert len(row_items) == 3
-    assert all((i.findtext("attribute[@name='action']") or "").startswith("win.edit.row-") for i in row_items)
+    assert {s.findtext("attribute[@name='label']") for s in submenus} == {"Paste As", "Remove"}
+    remove = next(s for s in submenus if s.findtext("attribute[@name='label']") == "Remove")
+    targets = [i.findtext("attribute[@name='action']") for i in remove.findall("section/item")]
+    assert targets == ["win.edit.row-delete", "win.edit.column-delete"]
 
 
 def test_sections_become_gmenu_sections_so_that_separators_are_drawn(app: manifest.Manifest) -> None:
@@ -771,12 +361,12 @@ def test_menu_xml_defaults_to_no_translation_at_all() -> None:
 
 
 def test_a_translate_function_is_applied_to_item_and_submenu_labels() -> None:
-    loud = {"New": "NEW", "Manage": "MANAGE"}.get
+    loud = {"New": "NEW", "Open": "OPEN"}.get
     root = ET.fromstring(menu_xml(manifest.composes(), translate=lambda s: loud(s) or s))
     new_item = root.find(".//menu[@id='menu-file']//item/attribute[@name='label']")
     assert new_item is not None and new_item.text == "NEW"
-    manage_submenu = root.find(".//menu[@id='menu-file']//submenu/attribute[@name='label']")
-    assert manage_submenu is not None and manage_submenu.text == "MANAGE"
+    open_submenu = root.find(".//menu[@id='menu-file']//submenu/attribute[@name='label']")
+    assert open_submenu is not None and open_submenu.text == "OPEN"
 
 
 def test_a_translate_function_never_touches_the_language_pickers_own_autonyms() -> None:
@@ -811,6 +401,8 @@ def test_the_manifest_can_be_listed_for_the_page_and_the_docs(app: manifest.Mani
     json.dumps(listing)  # plain data, including any submenu's nested "items"
     paste_as = next(e for e in listing["menus"][1]["sections"][1] if e.get("label") == "Paste As")
     assert paste_as["items"][0]["id"] == "edit.paste-as-plain"
+    assert paste_as["items"][0]["fits"] == "role: editor or owner"
+    assert [c["id"] for c in listing["context_menus"]] == [c.id for c in app.context_menus]
 
 
 def test_role_is_in_the_listing_so_the_macos_client_can_read_it_without_importing_this_module(
@@ -852,11 +444,13 @@ def test_the_front_page_menu_has_only_what_works_without_a_document(app_name: st
 
 
 def test_the_front_page_menu_keeps_the_language_flyout_and_drops_empty_sections(composes: manifest.Manifest) -> None:
-    config = manifest.for_start(composes).menu("Preferences")
+    short = manifest.for_start(composes)
+    config = short.menu("Preferences")
     assert len(config.sections) == 1
     (flyout,) = config.sections[0]
     assert isinstance(flyout, manifest.Submenu) and flyout.label == "App Language"
-    assert all(section for menu in manifest.for_start(composes).menus for section in menu.sections)
+    assert all(section for menu in short.menus for section in menu.sections)
+    assert short.context_menus == () and short.keys_only == ()
 
 
 def test_the_listing_says_which_actions_belong_on_the_front_page(composes: manifest.Manifest) -> None:
@@ -918,37 +512,6 @@ def test_an_app_without_a_manifest_is_a_clear_error_naming_the_available_ones() 
     assert "composes" in str(problem.value)
 
 
-def test_computes_tools_menu_has_random_outcomes_and_follow_entries_each_with_a_key(
-    computes: manifest.Manifest,
-) -> None:
-    """E6.21–E6.23: every menu entry has a shortcut (project rule); F9 keeps Excel's meaning of "draw again"."""
-    keys = {
-        "tools.random": ("<Primary><Alt>r",),
-        "tools.resample": ("F9",),
-        "tools.outcomes": ("<Primary><Alt>o",),
-        "tools.follow": ("<Primary><Alt>f",),
-    }
-    for action_id, accelerators in keys.items():
-        assert computes.action(action_id).accelerators == accelerators, action_id
-        assert computes.action(action_id).kind is Kind.PAGE, action_id
-
-
-def test_computes_tools_menu_has_the_pivot_table_entries_each_with_a_key(computes: manifest.Manifest) -> None:
-    """E6.30, D624: the five pivot entries of Tools, each with a key (project rule).
-
-    The mock proposed Ctrl+Alt+T/E/M/Q, which the terminal and AltGr take (D627)."""
-    keys = {
-        "tools.pivot": ("<Primary><Alt>v",),
-        "tools.pivot-fields": ("<Primary><Shift><Alt>m",),
-        "tools.pivot-value": ("<Primary><Shift><Alt>u",),
-        "tools.pivot-sql": ("<Primary><Shift><Alt>q",),
-        "tools.pivot-delete": ("<Primary><Shift><Alt>v",),
-    }
-    for action_id, accelerators in keys.items():
-        assert computes.action(action_id).accelerators == accelerators, action_id
-        assert computes.action(action_id).kind is Kind.PAGE, action_id
-
-
 # UX-36: the other direction. Entries that are only a flyout's parent (they have an id for the web's own drawing, not
 # an action) are named, with the reason, so that nothing else can be web-only without someone saying so here.
 WEB_ONLY_PARENTS = {
@@ -984,7 +547,7 @@ def test_every_web_menu_entry_is_in_the_desktop_menus_too(app_name: str) -> None
     if "print: " not in app_source:  # File ▸ Print… is only in the apps that hand the shared File menu a `print`
         ids.discard("file.print")
     native = {a.id for a in BUILDERS[app_name]().actions}
-    missing = sorted(ids - native - set(WEB_ONLY_PARENTS))
+    missing = sorted(ids - native - set(WEB_ONLY_PARENTS) - catching_up(app_name))
     assert not missing, f"{app_name}: on the web menus but not on the desktop's: {missing}"
 
 
@@ -997,16 +560,5 @@ def test_the_gmenu_xml_shows_every_key_whoever_listens_for_it(app: manifest.Mani
         attributes = {a.get("name"): a.text for a in item.findall("attribute")}
         shown[str(attributes["action"]).removeprefix("win.")] = attributes.get("accel")
     assert shown["file.print"] is not None
-    for action in app.actions:
-        assert shown[action.id] == (action.accelerators[0] if action.accelerators else None), action.id
-
-
-def test_number_headings_is_called_what_it_does_in_each_app(
-    composes: manifest.Manifest, creates: manifest.Manifest
-) -> None:
-    """E9.22: one action, one key; in a presentation the headings it numbers are the slide titles."""
-    assert composes.action("format.number-headings").label == "Number Headings"
-    assert creates.action("format.number-headings").label == "Number All Slide Titles"
-    for app in (composes, creates):
-        assert app.action("format.number-headings").accelerators == ("<Primary><Alt><Shift>b",)
-        assert app.action("format.all-numbering").accelerators == ("<Primary><Alt><Shift>j",)
+    for action in menu_actions(app):
+        assert shown[action.id] == action.keys.default, action.id

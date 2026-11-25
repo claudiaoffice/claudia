@@ -36,6 +36,7 @@ import re
 import sys
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 ROOT = Path(__file__).resolve().parent.parent
 POT_PATH = ROOT / "po" / "claudia.pot"
@@ -172,6 +173,14 @@ def extract_web(path: Path) -> tuple[dict[str, list[str]], list[Problem]]:
     return found, problems
 
 
+def _add_action_texts(texts: set[str], action: Any) -> None:
+    """An action's label and tooltip, but not a language's own name, which is never translated (``manifest.py``)."""
+    if not action.id.startswith("config.language."):
+        texts.add(action.label)
+        if action.tooltip:
+            texts.add(action.tooltip)
+
+
 def extract_manifest() -> dict[str, list[str]]:
     """Every ``Menu``/``Submenu`` label and every (non-autonym) ``Action`` label/tooltip of the three apps' Linux
     manifests, collected by building and walking them (see this module's docstring for why: these are data, not
@@ -192,17 +201,17 @@ def extract_manifest() -> dict[str, list[str]]:
     texts: set[str] = set()
     for build in (manifest_module.composes, manifest_module.computes, manifest_module.creates):
         built = build()
-        for menu in built.menus:
+        # Every place, menus and context menus alike: an action shown again has the words of its place (D1605).
+        for menu in (*built.menus, *built.context_menus):
             texts.add(menu.label)
             for section in menu.sections:
                 for entry in section:
                     if isinstance(entry, manifest_module.Submenu):
                         texts.add(entry.label)
+            for action in menu.all_actions():
+                _add_action_texts(texts, action)
         for action in built.actions:
-            if not action.id.startswith("config.language."):  # their own autonyms, never translated (manifest.py)
-                texts.add(action.label)
-                if action.tooltip:
-                    texts.add(action.tooltip)
+            _add_action_texts(texts, action)
     texts.update(label for label, _url in manifest_module.about_links())  # the About dialog's links (D28)
     return {text: [occurrence] for text in texts}
 

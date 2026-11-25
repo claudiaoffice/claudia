@@ -25,7 +25,7 @@ import { useI18n } from '~/lib/i18n'
 import { objectStyleHost, type ObjectStyling } from '~/lib/object-style-host'
 import { galleryFor } from '~/lib/style-host'
 import { describeShortcut } from '~/lib/descriptions'
-import { chordLabel, searchShortcuts } from '~/lib/shortcuts'
+import { chordLabel, hintOf, searchShortcuts } from '~/lib/shortcuts'
 import { rotateItem } from '~/lib/rotate-menu'
 import { formatItems, type ListMenu } from '~/lib/format-menu'
 import { looksOf, type ContentsHost } from '~/lib/contents'
@@ -489,7 +489,7 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
       >
         <!-- Applying a style where composes and computes have it (owner's report, 2026-11-12): the popover only shows a
              style's look (UX-14), so without this a named style could be applied only from Format ▸ Apply style. -->
-        <StylePicker :host="styleHost" :hint="'Shift+F10'" @look="canvas?.openStyleMenu()" @styled="canvas?.focus()" />
+        <StylePicker :host="styleHost" :hint="hintOf('format.look')" @look="canvas?.openStyleMenu()" @styled="canvas?.focus()" />
         <StylePicker v-if="selectedKind === 'shape'" :host="labelHost" :caption="t('Label')" testid="label-picker" @look="canvas?.openStyleMenu()" @styled="canvas?.focus()" />
       </InsertBar>
     </template>

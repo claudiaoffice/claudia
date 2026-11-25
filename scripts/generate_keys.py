@@ -86,8 +86,8 @@ def table() -> dict[str, dict]:
     keys: dict[str, dict] = {}
     for app in ("composes", "computes", "creates"):
         for action in manifest.for_app(app).actions:
-            if action.accelerators:
-                keys[action.id] = {"chord": chord_of(action.accelerators[0]), "owner": action.key_owner.value}
+            if action.keys.default:
+                keys[action.id] = {"chord": chord_of(action.keys.default), "owner": action.key_owner.value}
     return dict(sorted(keys.items()))
 
 
@@ -166,7 +166,7 @@ def render_note() -> str:
                     items = entry.items if isinstance(entry, manifest.Submenu) else (entry,)
                     prefix = f"{entry.label} ▸ " if isinstance(entry, manifest.Submenu) else ""
                     for action in items:
-                        key = shown(action.accelerators[0]) if action.accelerators else "—"
+                        key = shown(action.keys.default) if action.keys.default else "—"
                         who = _OWNER_WORDS[action.key_owner.value]
                         lines.append(f"| {menu.label} | {prefix}{action.label} | {key} | {who} |")
         lines.append("")

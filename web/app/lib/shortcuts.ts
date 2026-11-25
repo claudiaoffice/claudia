@@ -60,12 +60,12 @@ export function hintOf(id: string | undefined): string | undefined {
   return found ? chordLabel(found.chord) : undefined
 }
 
-/** Undo, Redo, Save, the same in every app. Each app adds its own (Shift+F10, …); `menuShortcuts` adds the rest. */
-export function sharedShortcuts(actions: { undo: () => void; redo: () => void; save: () => void }): ShortcutDef[] {
+/** Undo and Redo, the same in every app. Each app adds its own (Edit Style, …); `menuShortcuts` adds the rest, among
+ * them Ctrl+S, which is Save Checkpoint…'s since File ▸ Save left the menus (the menu workbook). */
+export function sharedShortcuts(actions: { undo: () => void; redo: () => void }): ShortcutDef[] {
   return [
     { id: 'edit.undo', get label() { return t('Undo') }, chord: chordOf('edit.undo'), run: actions.undo },
     { id: 'edit.redo', get label() { return t('Redo') }, chord: chordOf('edit.redo'), run: actions.redo },
-    { id: 'file.save', get label() { return t('Save') }, chord: chordOf('file.save'), run: actions.save },
   ]
 }
 

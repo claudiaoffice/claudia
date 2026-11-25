@@ -63,5 +63,5 @@ def test_every_action_of_every_app_with_a_key_is_in_the_table():
     manifest = generate_keys._manifest_module()
     for app in ("composes", "computes", "creates"):
         for action in manifest.for_app(app).actions:
-            if action.accelerators:
+            if action.keys.default:
                 assert table[action.id]["owner"] == action.key_owner.value, action.id

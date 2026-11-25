@@ -24,10 +24,10 @@ def _item_element(parent: ET.Element, action: Action, translate: Translate) -> N
     label.text = translate(action.label) if _translatable(action) else action.label
     target = ET.SubElement(item, "attribute", name="action")
     target.text = f"win.{action.id}"
-    if action.accelerators:
+    if action.keys.default:
         # Shown, whoever listens for it: GTK draws the ``accel`` attribute next to the label without binding it.
         accel = ET.SubElement(item, "attribute", name="accel")
-        accel.text = action.accelerators[0]
+        accel.text = action.keys.default
 
 
 def _submenu_element(parent: ET.Element, submenu: Submenu, translate: Translate) -> None:

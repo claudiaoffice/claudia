@@ -1,6 +1,325 @@
 {
   "app": "creates",
+  "context_menus": [
+    {
+      "id": "object",
+      "label": "Object",
+      "sections": [
+        [
+          {
+            "accelerators": [
+              "<Primary><Alt>d"
+            ],
+            "checkable": false,
+            "fits": "role: editor or owner",
+            "id": "format.describe",
+            "key_macos": "<Primary><Control>n",
+            "key_owner": "page",
+            "kind": "page",
+            "label": "Name & Describe\u2026",
+            "role": null,
+            "start": false
+          },
+          {
+            "accelerators": [
+              "<Primary><Alt>x"
+            ],
+            "checkable": false,
+            "fits": "role: editor or owner",
+            "id": "edit.reference",
+            "key_macos": null,
+            "key_owner": "page",
+            "kind": "page",
+            "label": "Reference in Chat",
+            "role": null,
+            "start": false
+          },
+          {
+            "accelerators": [
+              "Return"
+            ],
+            "checkable": false,
+            "fits": "role: editor or owner \u00b7 selection: an object that holds text",
+            "id": "edit.edit-text",
+            "key_macos": null,
+            "key_owner": "view",
+            "kind": "page",
+            "label": "Edit Text",
+            "role": null,
+            "start": false
+          },
+          {
+            "accelerators": [
+              "<Primary><Alt>a"
+            ],
+            "checkable": false,
+            "fits": "role: editor or owner",
+            "id": "format.apply-style",
+            "key_macos": null,
+            "key_owner": "page",
+            "kind": "page",
+            "label": "Style\u2026",
+            "role": null,
+            "start": false
+          },
+          {
+            "accelerators": [
+              "<Primary><Alt><Shift>z"
+            ],
+            "checkable": false,
+            "fits": "role: editor or owner \u00b7 selection: an object that can turn",
+            "id": "format.rotate-by",
+            "key_macos": null,
+            "key_owner": "page",
+            "kind": "page",
+            "label": "Rotate By\u2026",
+            "role": null,
+            "start": false
+          }
+        ],
+        [
+          {
+            "accelerators": [
+              "<Primary>x"
+            ],
+            "checkable": false,
+            "fits": "role: editor or owner",
+            "id": "edit.cut",
+            "key_macos": null,
+            "key_owner": "view",
+            "kind": "page",
+            "label": "Cut",
+            "role": "cut:",
+            "start": false
+          },
+          {
+            "accelerators": [
+              "<Primary>c"
+            ],
+            "checkable": false,
+            "fits": "role: editor or owner",
+            "id": "edit.copy",
+            "key_macos": null,
+            "key_owner": "view",
+            "kind": "page",
+            "label": "Copy",
+            "role": "copy:",
+            "start": false
+          }
+        ],
+        [
+          {
+            "accelerators": [],
+            "checkable": false,
+            "fits": "role: editor or owner \u00b7 selection: an object on the grid",
+            "id": "edit.release-from-grid",
+            "key_macos": null,
+            "key_owner": "page",
+            "kind": "page",
+            "label": "Release from Grid",
+            "role": null,
+            "start": false
+          },
+          {
+            "accelerators": [
+              "Delete"
+            ],
+            "checkable": false,
+            "fits": "role: editor or owner",
+            "id": "edit.delete",
+            "key_macos": null,
+            "key_owner": "view",
+            "kind": "page",
+            "label": "Delete",
+            "role": null,
+            "start": false
+          }
+        ]
+      ]
+    },
+    {
+      "id": "paragraph",
+      "label": "Paragraph",
+      "sections": [
+        [
+          {
+            "accelerators": [
+              "<Primary><Alt>d"
+            ],
+            "checkable": false,
+            "fits": "role: editor or owner",
+            "id": "format.describe",
+            "key_macos": "<Primary><Control>n",
+            "key_owner": "page",
+            "kind": "page",
+            "label": "Name & Describe\u2026",
+            "role": null,
+            "start": false
+          },
+          {
+            "accelerators": [
+              "<Primary><Alt>a"
+            ],
+            "checkable": false,
+            "fits": "role: editor or owner",
+            "id": "format.apply-style",
+            "key_macos": null,
+            "key_owner": "page",
+            "kind": "page",
+            "label": "Style\u2026",
+            "role": null,
+            "start": false
+          },
+          {
+            "accelerators": [
+              "<Primary><Alt>x"
+            ],
+            "checkable": false,
+            "fits": "role: editor or owner",
+            "id": "edit.reference",
+            "key_macos": null,
+            "key_owner": "page",
+            "kind": "page",
+            "label": "Reference in Chat",
+            "role": null,
+            "start": false
+          }
+        ]
+      ]
+    },
+    {
+      "id": "list",
+      "label": "List",
+      "sections": [
+        [
+          {
+            "accelerators": [
+              "<Primary><Alt>d"
+            ],
+            "checkable": false,
+            "fits": "role: editor or owner",
+            "id": "format.describe",
+            "key_macos": "<Primary><Control>n",
+            "key_owner": "page",
+            "kind": "page",
+            "label": "Name & Describe\u2026",
+            "role": null,
+            "start": false
+          },
+          {
+            "accelerators": [
+              "<Primary><Alt>x"
+            ],
+            "checkable": false,
+            "fits": "role: editor or owner",
+            "id": "edit.reference",
+            "key_macos": null,
+            "key_owner": "page",
+            "kind": "page",
+            "label": "Reference in Chat",
+            "role": null,
+            "start": false
+          }
+        ]
+      ]
+    },
+    {
+      "id": "tab",
+      "label": "Slide Tab",
+      "sections": [
+        [
+          {
+            "accelerators": [
+              "<Primary><Alt>d"
+            ],
+            "checkable": false,
+            "fits": "role: editor or owner",
+            "id": "format.describe",
+            "key_macos": "<Primary><Control>n",
+            "key_owner": "page",
+            "kind": "page",
+            "label": "Name & Describe\u2026",
+            "role": null,
+            "start": false
+          },
+          {
+            "accelerators": [
+              "<Primary><Alt>x"
+            ],
+            "checkable": false,
+            "fits": "role: editor or owner",
+            "id": "edit.reference",
+            "key_macos": null,
+            "key_owner": "page",
+            "kind": "page",
+            "label": "Reference in Chat",
+            "role": null,
+            "start": false
+          }
+        ]
+      ]
+    },
+    {
+      "id": "slide",
+      "label": "Slide",
+      "sections": [
+        [
+          {
+            "accelerators": [
+              "<Primary><Alt>d"
+            ],
+            "checkable": false,
+            "fits": "role: editor or owner",
+            "id": "format.describe",
+            "key_macos": "<Primary><Control>n",
+            "key_owner": "page",
+            "kind": "page",
+            "label": "Name & Describe\u2026",
+            "role": null,
+            "start": false
+          },
+          {
+            "accelerators": [
+              "<Primary><Alt>x"
+            ],
+            "checkable": false,
+            "fits": "role: editor or owner",
+            "id": "edit.reference",
+            "key_macos": null,
+            "key_owner": "page",
+            "kind": "page",
+            "label": "Reference in Chat",
+            "role": null,
+            "start": false
+          }
+        ]
+      ]
+    },
+    {
+      "id": "reference",
+      "label": "Reference",
+      "sections": [
+        [
+          {
+            "accelerators": [
+              "<Primary><Alt>Return"
+            ],
+            "checkable": false,
+            "fits": "role: anyone",
+            "id": "edit.go-to-target",
+            "key_macos": null,
+            "key_owner": "page",
+            "kind": "page",
+            "label": "Go to Target",
+            "role": null,
+            "start": false
+          }
+        ]
+      ]
+    }
+  ],
   "header_toggles": [],
+  "keys_only": [],
   "menus": [
     {
       "label": "File",
@@ -11,7 +330,9 @@
               "<Primary><Alt>n"
             ],
             "checkable": false,
+            "fits": "role: anyone",
             "id": "file.new",
+            "key_macos": null,
             "key_owner": "page",
             "kind": "page",
             "label": "New",
@@ -19,28 +340,37 @@
             "start": true
           },
           {
-            "accelerators": [
-              "<Primary>o"
+            "items": [
+              {
+                "accelerators": [
+                  "<Primary>o"
+                ],
+                "checkable": false,
+                "fits": "role: anyone",
+                "id": "file.open",
+                "key_macos": null,
+                "key_owner": "page",
+                "kind": "page",
+                "label": "Document\u2026",
+                "role": null,
+                "start": true
+              },
+              {
+                "accelerators": [
+                  "<Primary><Shift>o"
+                ],
+                "checkable": false,
+                "fits": "role: anyone",
+                "id": "file.open-file",
+                "key_macos": null,
+                "key_owner": "page",
+                "kind": "page",
+                "label": "Import from Disk\u2026",
+                "role": null,
+                "start": true
+              }
             ],
-            "checkable": false,
-            "id": "file.open",
-            "key_owner": "page",
-            "kind": "page",
-            "label": "Open\u2026",
-            "role": null,
-            "start": true
-          },
-          {
-            "accelerators": [
-              "<Primary><Shift>o"
-            ],
-            "checkable": false,
-            "id": "file.open-file",
-            "key_owner": "page",
-            "kind": "page",
-            "label": "Open a File\u2026",
-            "role": null,
-            "start": true
+            "label": "Open"
           }
         ],
         [
@@ -49,22 +379,12 @@
               "<Primary>s"
             ],
             "checkable": false,
-            "id": "file.save",
-            "key_owner": "page",
-            "kind": "page",
-            "label": "Save",
-            "role": null,
-            "start": false
-          },
-          {
-            "accelerators": [
-              "<Primary><Shift>s"
-            ],
-            "checkable": false,
+            "fits": "role: editor or owner",
             "id": "file.save-as",
+            "key_macos": null,
             "key_owner": "page",
             "kind": "page",
-            "label": "Save New Checkpoint\u2026",
+            "label": "Save Checkpoint\u2026",
             "role": null,
             "start": false
           },
@@ -73,19 +393,25 @@
               "<Primary><Alt>s"
             ],
             "checkable": false,
+            "fits": "role: anyone",
             "id": "file.download",
+            "key_macos": null,
             "key_owner": "page",
             "kind": "page",
             "label": "Download",
             "role": null,
             "start": false
-          },
+          }
+        ],
+        [
           {
             "accelerators": [
               "<Primary>p"
             ],
             "checkable": false,
+            "fits": "role: anyone",
             "id": "file.print",
+            "key_macos": null,
             "key_owner": "page",
             "kind": "page",
             "label": "Print\u2026",
@@ -101,7 +427,9 @@
                   "<Primary><Alt><Shift>s"
                 ],
                 "checkable": false,
+                "fits": "role: owner",
                 "id": "file.manage.share",
+                "key_macos": null,
                 "key_owner": "page",
                 "kind": "page",
                 "label": "Share\u2026",
@@ -113,46 +441,12 @@
                   "<Primary><Alt><Shift>w"
                 ],
                 "checkable": false,
+                "fits": "role: anyone",
                 "id": "file.manage.change-password",
+                "key_macos": null,
                 "key_owner": "page",
                 "kind": "page",
-                "label": "Change Password\u2026",
-                "role": null,
-                "start": false
-              },
-              {
-                "accelerators": [
-                  "<Primary><Alt><Shift>o"
-                ],
-                "checkable": false,
-                "id": "file.manage.assign-owner",
-                "key_owner": "page",
-                "kind": "page",
-                "label": "Assign New Owner\u2026",
-                "role": null,
-                "start": false
-              },
-              {
-                "accelerators": [
-                  "<Primary><Alt><Shift>c"
-                ],
-                "checkable": false,
-                "id": "file.manage.accept-owner",
-                "key_owner": "page",
-                "kind": "page",
-                "label": "Accept Ownership\u2026",
-                "role": null,
-                "start": false
-              },
-              {
-                "accelerators": [
-                  "<Primary><Alt><Shift>l"
-                ],
-                "checkable": false,
-                "id": "file.manage.leave",
-                "key_owner": "page",
-                "kind": "page",
-                "label": "Leave Document\u2026",
+                "label": "Password\u2026",
                 "role": null,
                 "start": false
               },
@@ -161,7 +455,9 @@
                   "<Primary><Alt><Shift>x"
                 ],
                 "checkable": false,
+                "fits": "role: anyone",
                 "id": "file.manage.export",
+                "key_macos": null,
                 "key_owner": "page",
                 "kind": "page",
                 "label": "Export\u2026",
@@ -173,22 +469,12 @@
                   "<Primary><Shift>F8"
                 ],
                 "checkable": false,
+                "fits": "role: editor or owner",
                 "id": "file.manage.redact",
+                "key_macos": null,
                 "key_owner": "page",
                 "kind": "page",
                 "label": "Redact History\u2026",
-                "role": null,
-                "start": false
-              },
-              {
-                "accelerators": [
-                  "<Primary><Alt><Shift>r"
-                ],
-                "checkable": false,
-                "id": "file.manage.delete",
-                "key_owner": "page",
-                "kind": "page",
-                "label": "Delete From Server\u2026",
                 "role": null,
                 "start": false
               }
@@ -202,19 +488,25 @@
               "<Primary><Alt>w"
             ],
             "checkable": false,
+            "fits": "role: anyone",
             "id": "file.close",
+            "key_macos": null,
             "key_owner": "page",
             "kind": "page",
-            "label": "Close Document",
+            "label": "Close",
             "role": null,
             "start": false
-          },
+          }
+        ],
+        [
           {
             "accelerators": [
               "<Primary>q"
             ],
             "checkable": false,
+            "fits": "client: desktop only",
             "id": "file.quit",
+            "key_macos": null,
             "key_owner": "shell",
             "kind": "shell",
             "label": "Quit",
@@ -233,7 +525,9 @@
               "<Primary>z"
             ],
             "checkable": false,
+            "fits": "role: editor or owner \u00b7 document: something to undo",
             "id": "edit.undo",
+            "key_macos": null,
             "key_owner": "page",
             "kind": "page",
             "label": "Undo",
@@ -245,7 +539,9 @@
               "<Primary><Shift>z"
             ],
             "checkable": false,
+            "fits": "role: editor or owner \u00b7 document: something to redo",
             "id": "edit.redo",
+            "key_macos": null,
             "key_owner": "page",
             "kind": "page",
             "label": "Redo",
@@ -259,7 +555,9 @@
               "<Primary>c"
             ],
             "checkable": false,
+            "fits": "role: editor or owner \u00b7 selection: something",
             "id": "edit.copy",
+            "key_macos": null,
             "key_owner": "view",
             "kind": "page",
             "label": "Copy",
@@ -271,7 +569,9 @@
               "<Primary>x"
             ],
             "checkable": false,
+            "fits": "role: editor or owner \u00b7 selection: something",
             "id": "edit.cut",
+            "key_macos": null,
             "key_owner": "view",
             "kind": "page",
             "label": "Cut",
@@ -283,7 +583,9 @@
               "<Primary>v"
             ],
             "checkable": false,
+            "fits": "role: editor or owner",
             "id": "edit.paste",
+            "key_macos": null,
             "key_owner": "view",
             "kind": "page",
             "label": "Paste",
@@ -297,7 +599,9 @@
                   "<Primary><Shift>v"
                 ],
                 "checkable": false,
+                "fits": "role: editor or owner",
                 "id": "edit.paste-as-plain",
+                "key_macos": null,
                 "key_owner": "view",
                 "kind": "page",
                 "label": "Plain Text",
@@ -311,53 +615,15 @@
         [
           {
             "accelerators": [
-              "<Primary>f"
+              "<Primary><Alt>d"
             ],
             "checkable": false,
-            "id": "edit.search-replace",
+            "fits": "role: editor or owner \u00b7 selection: something",
+            "id": "format.describe",
+            "key_macos": "<Primary><Control>n",
             "key_owner": "page",
             "kind": "page",
-            "label": "Search & Replace\u2026",
-            "role": null,
-            "start": false
-          }
-        ],
-        [
-          {
-            "accelerators": [
-              "<Primary><Alt>x"
-            ],
-            "checkable": false,
-            "id": "edit.reference",
-            "key_owner": "page",
-            "kind": "page",
-            "label": "Reference in Chat",
-            "role": null,
-            "start": false
-          },
-          {
-            "accelerators": [
-              "<Primary><Alt>Return"
-            ],
-            "checkable": false,
-            "id": "edit.go-to-target",
-            "key_owner": "page",
-            "kind": "page",
-            "label": "Go to Target",
-            "role": null,
-            "start": false
-          }
-        ],
-        [
-          {
-            "accelerators": [
-              "<Primary>m"
-            ],
-            "checkable": false,
-            "id": "edit.new-slide",
-            "key_owner": "page",
-            "kind": "page",
-            "label": "New Slide",
+            "label": "Name & Describe\u2026",
             "role": null,
             "start": false
           },
@@ -366,74 +632,12 @@
               "<Primary><Shift>F11"
             ],
             "checkable": false,
+            "fits": "role: editor or owner",
             "id": "edit.rename-slide",
+            "key_macos": null,
             "key_owner": "page",
             "kind": "page",
             "label": "Rename Slide\u2026",
-            "role": null,
-            "start": false
-          },
-          {
-            "accelerators": [
-              "<Primary><Alt><Shift>t"
-            ],
-            "checkable": false,
-            "id": "edit.slide-time",
-            "key_owner": "page",
-            "kind": "page",
-            "label": "Plan the Time of This Slide\u2026",
-            "role": null,
-            "start": false
-          }
-        ],
-        [
-          {
-            "accelerators": [
-              "Return"
-            ],
-            "checkable": false,
-            "id": "edit.edit-text",
-            "key_owner": "view",
-            "kind": "page",
-            "label": "Edit Text",
-            "role": null,
-            "start": false
-          },
-          {
-            "accelerators": [
-              "<Primary><Alt>b"
-            ],
-            "checkable": false,
-            "id": "edit.text-box",
-            "key_owner": "page",
-            "kind": "page",
-            "label": "Text Box",
-            "role": null,
-            "start": false
-          },
-          {
-            "accelerators": [
-              "<Primary><Alt>i"
-            ],
-            "checkable": false,
-            "id": "edit.image",
-            "key_owner": "page",
-            "kind": "page",
-            "label": "Image\u2026",
-            "role": null,
-            "start": false
-          }
-        ],
-        [
-          {
-            "accelerators": [
-              "Delete"
-            ],
-            "checkable": false,
-            "id": "edit.delete",
-            "key_owner": "view",
-            "kind": "page",
-            "label": "Delete",
             "role": null,
             "start": false
           }
@@ -449,10 +653,12 @@
               "<Primary>F2"
             ],
             "checkable": false,
+            "fits": "role: editor or owner \u00b7 document: has something to refer to",
             "id": "insert.cross-reference",
+            "key_macos": null,
             "key_owner": "page",
             "kind": "page",
-            "label": "Cross-Reference\u2026",
+            "label": "Cross Reference\u2026",
             "role": null,
             "start": false
           },
@@ -461,7 +667,9 @@
               "<Primary><Alt><Shift>i"
             ],
             "checkable": false,
+            "fits": "role: editor or owner",
             "id": "insert.contents",
+            "key_macos": null,
             "key_owner": "page",
             "kind": "page",
             "label": "Agenda",
@@ -471,13 +679,90 @@
         ],
         [
           {
+            "accelerators": [
+              "<Primary><Alt>i"
+            ],
+            "checkable": false,
+            "fits": "role: editor or owner",
+            "id": "edit.image",
+            "key_macos": null,
+            "key_owner": "page",
+            "kind": "page",
+            "label": "Image\u2026",
+            "role": null,
+            "start": false
+          },
+          {
+            "accelerators": [
+              "<Primary><Alt>b"
+            ],
+            "checkable": false,
+            "fits": "role: editor or owner",
+            "id": "edit.text-box",
+            "key_macos": null,
+            "key_owner": "page",
+            "kind": "page",
+            "label": "Text Box",
+            "role": null,
+            "start": false
+          },
+          {
+            "items": [
+              {
+                "accelerators": [
+                  "<Primary><Alt><Shift>c"
+                ],
+                "checkable": false,
+                "fits": "role: editor or owner",
+                "id": "insert.shape.circle",
+                "key_macos": null,
+                "key_owner": "page",
+                "kind": "page",
+                "label": "Circle",
+                "role": null,
+                "start": false
+              },
+              {
+                "accelerators": [
+                  "<Primary><Alt><Shift>r"
+                ],
+                "checkable": false,
+                "fits": "role: editor or owner",
+                "id": "insert.shape.rectangle",
+                "key_macos": null,
+                "key_owner": "page",
+                "kind": "page",
+                "label": "Rectangle",
+                "role": null,
+                "start": false
+              },
+              {
+                "accelerators": [
+                  "<Primary><Alt><Shift>1"
+                ],
+                "checkable": false,
+                "fits": "role: editor or owner",
+                "id": "insert.shape.triangle",
+                "key_macos": null,
+                "key_owner": "page",
+                "kind": "page",
+                "label": "Triangle",
+                "role": null,
+                "start": false
+              }
+            ],
+            "label": "Shape"
+          },
+          {
             "items": [
               {
                 "accelerators": [
                   "<Primary><Alt><Shift>f"
                 ],
                 "checkable": false,
+                "fits": "role: editor or owner \u00b7 server: has the tool for LaTeX",
                 "id": "insert.container.latex",
+                "key_macos": null,
                 "key_owner": "page",
                 "kind": "page",
                 "label": "LaTeX",
@@ -489,7 +774,9 @@
                   "<Primary><Alt><Shift>g"
                 ],
                 "checkable": false,
+                "fits": "role: editor or owner \u00b7 server: has the tool for Mermaid",
                 "id": "insert.container.mermaid",
+                "key_macos": null,
                 "key_owner": "page",
                 "kind": "page",
                 "label": "Mermaid",
@@ -501,7 +788,9 @@
                   "<Primary><Alt><Shift>y"
                 ],
                 "checkable": false,
+                "fits": "role: editor or owner \u00b7 server: has the tool for Typst",
                 "id": "insert.container.typst",
+                "key_macos": null,
                 "key_owner": "page",
                 "kind": "page",
                 "label": "Typst",
@@ -511,6 +800,22 @@
             ],
             "label": "Container"
           }
+        ],
+        [
+          {
+            "accelerators": [
+              "<Primary>m"
+            ],
+            "checkable": false,
+            "fits": "role: editor or owner",
+            "id": "edit.new-slide",
+            "key_macos": null,
+            "key_owner": "page",
+            "kind": "page",
+            "label": "New Slide",
+            "role": null,
+            "start": false
+          }
         ]
       ]
     },
@@ -519,40 +824,51 @@
       "sections": [
         [
           {
-            "accelerators": [
-              "<Primary><Alt>a"
+            "items": [
+              {
+                "accelerators": [
+                  "<Primary><Alt>a"
+                ],
+                "checkable": false,
+                "fits": "role: editor or owner \u00b7 selection: something",
+                "id": "format.apply-style",
+                "key_macos": null,
+                "key_owner": "page",
+                "kind": "page",
+                "label": "Apply\u2026",
+                "role": null,
+                "start": false
+              },
+              {
+                "accelerators": [
+                  "<Primary><Alt><Shift>h"
+                ],
+                "checkable": false,
+                "fits": "role: editor or owner \u00b7 selection: something",
+                "id": "format.look",
+                "key_macos": null,
+                "key_owner": "page",
+                "kind": "page",
+                "label": "Edit\u2026",
+                "role": null,
+                "start": false
+              },
+              {
+                "accelerators": [
+                  "<Primary><Alt><Shift>a"
+                ],
+                "checkable": false,
+                "fits": "role: editor or owner",
+                "id": "format.all-styles",
+                "key_macos": null,
+                "key_owner": "page",
+                "kind": "page",
+                "label": "All Styles\u2026",
+                "role": null,
+                "start": false
+              }
             ],
-            "checkable": false,
-            "id": "format.apply-style",
-            "key_owner": "page",
-            "kind": "page",
-            "label": "Apply Style\u2026",
-            "role": null,
-            "start": false
-          },
-          {
-            "accelerators": [
-              "<Shift>F10"
-            ],
-            "checkable": false,
-            "id": "format.look",
-            "key_owner": "shell",
-            "kind": "page",
-            "label": "Edit This Style\u2026",
-            "role": null,
-            "start": false
-          },
-          {
-            "accelerators": [
-              "<Primary><Alt><Shift>a"
-            ],
-            "checkable": false,
-            "id": "format.all-styles",
-            "key_owner": "page",
-            "kind": "page",
-            "label": "All Styles\u2026",
-            "role": null,
-            "start": false
+            "label": "Style"
           },
           {
             "items": [
@@ -561,7 +877,9 @@
                   "<Primary><Shift>8"
                 ],
                 "checkable": true,
+                "fits": "role: editor or owner \u00b7 selection: text",
                 "id": "format.bulleted-list",
+                "key_macos": null,
                 "key_owner": "page",
                 "kind": "page",
                 "label": "Bulleted List",
@@ -573,7 +891,9 @@
                   "<Primary><Shift>7"
                 ],
                 "checkable": true,
+                "fits": "role: editor or owner \u00b7 selection: text",
                 "id": "format.numbered-list",
+                "key_macos": null,
                 "key_owner": "page",
                 "kind": "page",
                 "label": "Numbered List",
@@ -585,7 +905,9 @@
                   "<Primary><Alt><Shift>p"
                 ],
                 "checkable": false,
+                "fits": "role: editor or owner \u00b7 selection: a list item",
                 "id": "format.list-continue",
+                "key_macos": null,
                 "key_owner": "page",
                 "kind": "page",
                 "label": "Continue Previous List",
@@ -597,7 +919,9 @@
                   "<Primary><Alt><Shift>n"
                 ],
                 "checkable": false,
+                "fits": "role: editor or owner \u00b7 selection: a list item",
                 "id": "format.list-start",
+                "key_macos": null,
                 "key_owner": "page",
                 "kind": "page",
                 "label": "Start At\u2026",
@@ -609,7 +933,9 @@
                   "Tab"
                 ],
                 "checkable": false,
+                "fits": "role: editor or owner \u00b7 selection: a list item",
                 "id": "format.list-indent",
+                "key_macos": null,
                 "key_owner": "view",
                 "kind": "page",
                 "label": "Indent",
@@ -621,7 +947,9 @@
                   "<Shift>Tab"
                 ],
                 "checkable": false,
+                "fits": "role: editor or owner \u00b7 selection: a list item",
                 "id": "format.list-outdent",
+                "key_macos": null,
                 "key_owner": "view",
                 "kind": "page",
                 "label": "Outdent",
@@ -633,7 +961,9 @@
                   "<Primary><Alt><Shift>b"
                 ],
                 "checkable": true,
+                "fits": "role: editor or owner \u00b7 document: has more than one slide",
                 "id": "format.number-headings",
+                "key_macos": null,
                 "key_owner": "page",
                 "kind": "page",
                 "label": "Number All Slide Titles",
@@ -645,7 +975,9 @@
                   "<Primary><Alt><Shift>j"
                 ],
                 "checkable": false,
+                "fits": "role: editor or owner",
                 "id": "format.all-numbering",
+                "key_macos": null,
                 "key_owner": "page",
                 "kind": "page",
                 "label": "All Numbering\u2026",
@@ -654,77 +986,20 @@
               }
             ],
             "label": "List"
-          }
-        ],
-        [
+          },
           {
             "accelerators": [
               "<Primary><Alt>k"
             ],
             "checkable": false,
+            "fits": "role: editor or owner",
             "id": "format.colours",
+            "key_macos": null,
             "key_owner": "page",
             "kind": "page",
-            "label": "Colours\u2026",
+            "label": "Palette\u2026",
             "role": null,
             "start": false
-          }
-        ],
-        [
-          {
-            "accelerators": [
-              "<Primary><Alt>d"
-            ],
-            "checkable": false,
-            "id": "format.describe",
-            "key_owner": "page",
-            "kind": "page",
-            "label": "Name & describe\u2026",
-            "role": null,
-            "start": false
-          }
-        ],
-        [
-          {
-            "items": [
-              {
-                "accelerators": [
-                  "<Primary><Alt>period"
-                ],
-                "checkable": false,
-                "id": "format.rotate-right",
-                "key_owner": "page",
-                "kind": "page",
-                "label": "Rotate Right 90\u00b0",
-                "role": null,
-                "start": false
-              },
-              {
-                "accelerators": [
-                  "<Primary><Alt>comma"
-                ],
-                "checkable": false,
-                "id": "format.rotate-left",
-                "key_owner": "page",
-                "kind": "page",
-                "label": "Rotate Left 90\u00b0",
-                "role": null,
-                "start": false
-              },
-              {
-                "accelerators": [
-                  "<Primary><Alt><Shift>z"
-                ],
-                "checkable": false,
-                "id": "format.rotate-by",
-                "key_owner": "page",
-                "kind": "page",
-                "label": "Rotate By\u2026",
-                "role": null,
-                "start": false
-              }
-            ],
-            "label": "Rotate"
           }
         ]
       ]
@@ -738,10 +1013,12 @@
               "<Primary><Alt>u"
             ],
             "checkable": true,
+            "fits": "role: editor or owner",
             "id": "view.authors",
+            "key_macos": null,
             "key_owner": "page",
             "kind": "page",
-            "label": "Show Who Wrote What",
+            "label": "Who Wrote What",
             "role": null,
             "start": false
           },
@@ -750,10 +1027,12 @@
               "<Primary><Alt>h"
             ],
             "checkable": true,
+            "fits": "role: anyone",
             "id": "view.panel",
+            "key_macos": "<Primary><Control>h",
             "key_owner": "page",
             "kind": "page",
-            "label": "History and Chat",
+            "label": "History & Chat",
             "role": null,
             "start": false
           },
@@ -762,10 +1041,12 @@
               "<Primary><Alt>z"
             ],
             "checkable": false,
+            "fits": "role: editor or owner",
             "id": "view.replay",
+            "key_macos": null,
             "key_owner": "page",
             "kind": "page",
-            "label": "Replay History\u2026",
+            "label": "Replay\u2026",
             "role": null,
             "start": false
           },
@@ -774,10 +1055,12 @@
               "<Primary><Shift>b"
             ],
             "checkable": false,
+            "fits": "role: anyone \u00b7 document: a place to go back to",
             "id": "view.back",
+            "key_macos": null,
             "key_owner": "page",
             "kind": "page",
-            "label": "Back where I was",
+            "label": "Back Where I Was",
             "role": null,
             "start": false
           },
@@ -786,52 +1069,26 @@
               "<Primary><Alt><Shift>d"
             ],
             "checkable": true,
+            "fits": "role: anyone",
             "id": "view.dark",
+            "key_macos": null,
             "key_owner": "page",
             "kind": "page",
             "label": "Dark Mode",
             "role": null,
             "start": true
-          }
-        ],
-        [
+          },
           {
             "accelerators": [
               "<Primary><Alt>g"
             ],
             "checkable": true,
+            "fits": "role: anyone",
             "id": "view.grid",
+            "key_macos": null,
             "key_owner": "page",
             "kind": "page",
-            "label": "Show Grid",
-            "role": null,
-            "start": false
-          }
-        ],
-        [
-          {
-            "accelerators": [
-              "F5",
-              "<Primary><Alt>p"
-            ],
-            "checkable": false,
-            "id": "view.present-start",
-            "key_owner": "page",
-            "kind": "page",
-            "label": "Present from the First Slide",
-            "role": null,
-            "start": false
-          },
-          {
-            "accelerators": [
-              "<Shift>F5",
-              "<Primary><Alt><Shift>h"
-            ],
-            "checkable": false,
-            "id": "view.present-here",
-            "key_owner": "page",
-            "kind": "page",
-            "label": "Present from This Slide",
+            "label": "Grid",
             "role": null,
             "start": false
           },
@@ -840,7 +1097,9 @@
               "<Primary><Alt>v"
             ],
             "checkable": true,
+            "fits": "role: anyone",
             "id": "view.speaker-notes",
+            "key_macos": null,
             "key_owner": "page",
             "kind": "page",
             "label": "Speaker Notes",
@@ -856,13 +1115,78 @@
         [
           {
             "accelerators": [
-              "<Primary><Alt>j"
+              "<Primary>F1"
             ],
             "checkable": false,
+            "fits": "role: anyone \u00b7 ai: the ai can really answer",
             "id": "tools.ask",
+            "key_macos": null,
             "key_owner": "page",
             "kind": "page",
-            "label": "Ask the Assistant\u2026",
+            "label": "Ask ai\u2026",
+            "role": null,
+            "start": false
+          },
+          {
+            "accelerators": [
+              "<Primary>f"
+            ],
+            "checkable": false,
+            "fits": "role: anyone",
+            "id": "edit.search-replace",
+            "key_macos": null,
+            "key_owner": "page",
+            "kind": "page",
+            "label": "Search and Replace\u2026",
+            "role": null,
+            "start": false
+          }
+        ],
+        [
+          {
+            "items": [
+              {
+                "accelerators": [
+                  "<Shift>F5"
+                ],
+                "checkable": false,
+                "fits": "role: anyone",
+                "id": "view.present-here",
+                "key_macos": null,
+                "key_owner": "page",
+                "kind": "page",
+                "label": "From Slide",
+                "role": null,
+                "start": false
+              },
+              {
+                "accelerators": [
+                  "F5"
+                ],
+                "checkable": false,
+                "fits": "role: anyone",
+                "id": "view.present-start",
+                "key_macos": null,
+                "key_owner": "page",
+                "kind": "page",
+                "label": "From Beginning",
+                "role": null,
+                "start": false
+              }
+            ],
+            "label": "Present"
+          },
+          {
+            "accelerators": [
+              "<Primary><Alt><Shift>t"
+            ],
+            "checkable": false,
+            "fits": "role: editor or owner",
+            "id": "edit.slide-time",
+            "key_macos": null,
+            "key_owner": "page",
+            "kind": "page",
+            "label": "Plan Time for Slide\u2026",
             "role": null,
             "start": false
           }
@@ -878,7 +1202,9 @@
               "<Primary>question"
             ],
             "checkable": false,
+            "fits": "role: anyone",
             "id": "config.shortcuts",
+            "key_macos": null,
             "key_owner": "page",
             "kind": "page",
             "label": "Shortcuts",
@@ -890,21 +1216,23 @@
               "<Primary><Shift><Alt>e"
             ],
             "checkable": false,
+            "fits": "role: anyone",
             "id": "config.ai",
+            "key_macos": null,
             "key_owner": "page",
             "kind": "page",
             "label": "AI\u2026",
             "role": null,
             "start": false
-          }
-        ],
-        [
+          },
           {
             "items": [
               {
                 "accelerators": [],
                 "checkable": true,
+                "fits": "role: anyone",
                 "id": "config.language.en",
+                "key_macos": null,
                 "key_owner": "page",
                 "kind": "page",
                 "label": "English",
@@ -914,7 +1242,9 @@
               {
                 "accelerators": [],
                 "checkable": true,
+                "fits": "role: anyone",
                 "id": "config.language.de",
+                "key_macos": null,
                 "key_owner": "page",
                 "kind": "page",
                 "label": "Deutsch",
@@ -936,10 +1266,12 @@
               "<Primary>F1"
             ],
             "checkable": false,
-            "id": "help.ask",
+            "fits": "ai: the ai can really answer",
+            "id": "tools.ask",
+            "key_macos": null,
             "key_owner": "page",
             "kind": "page",
-            "label": "Ask ai",
+            "label": "Ask ai\u2026",
             "role": null,
             "start": false
           },
@@ -948,7 +1280,9 @@
               "F1"
             ],
             "checkable": false,
+            "fits": "role: anyone",
             "id": "help.how-to",
+            "key_macos": null,
             "key_owner": "page",
             "kind": "page",
             "label": "How Do I\u2026?",
@@ -960,7 +1294,9 @@
               "<Shift>F1"
             ],
             "checkable": false,
+            "fits": "role: anyone",
             "id": "help.docs",
+            "key_macos": null,
             "key_owner": "page",
             "kind": "page",
             "label": "Documentation",
@@ -972,10 +1308,12 @@
               "<Primary><Shift>F1"
             ],
             "checkable": false,
+            "fits": "role: anyone",
             "id": "help.about",
+            "key_macos": null,
             "key_owner": "shell",
             "kind": "shell",
-            "label": "About Claudia Creates",
+            "label": "About",
             "role": null,
             "start": true
           }

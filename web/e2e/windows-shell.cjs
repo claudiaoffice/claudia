@@ -218,7 +218,7 @@ async function checkWindow(window, app, label) {
     throw new Error(`${label}: the front page never gave the shell a menu`)
   })
   const front = await window.firstMenuJson()
-  assert.ok(front.includes('Open…') && !front.includes('Save New Checkpoint'), `${label}: the front page has the short native menu`)
+  assert.ok(front.includes('Document…') && !front.includes('Save Checkpoint'), `${label}: the front page has the short native menu`)
 
   // D503: the front page's File menu does something the person sees
   await frame.fill('input[name=document]', 'something typed')
@@ -228,14 +228,14 @@ async function checkWindow(window, app, label) {
   })
   assert.equal(await frame.inputValue('input[name=document]'), '', `${label}: File ▸ New empties the name of the document`)
   assert.equal(await frame.evaluate(() => document.activeElement?.getAttribute('name')), 'document', `${label}: File ▸ New puts the cursor into it`)
-  await window.click('file.open', 'Open…')
+  await window.click('file.open', 'Document…')
   await frame.waitForFunction(() => document.activeElement?.getAttribute('name') === 'search', null, { timeout: 10000 }).catch(() => {
     throw new Error(`${label}: File ▸ Open… on the front page did not go to the search field`)
   })
-  // D501: Open a File… goes through the shell's own dialog. This machine has none to show, so the shell says so.
-  await window.click('file.open-file', 'Open a File…')
+  // D501: Import from Disk… goes through the shell's own dialog. This machine has none to show, so the shell says so.
+  await window.click('file.open-file', 'Import from Disk…')
   await frame.waitForSelector('.refusal:has-text("could not be shown")', { timeout: 20000 }).catch(() => {
-    throw new Error(`${label}: File ▸ Open a File… did not reach the shell's dialog; the console says:\n${window.page.consoleLines.join('\n')}`)
+    throw new Error(`${label}: File ▸ Open ▸ Import from Disk… did not reach the shell's dialog; the console says:\n${window.page.consoleLines.join('\n')}`)
   })
 
   await createDocument(frame, app, `e2e-${app}`)
@@ -243,14 +243,14 @@ async function checkWindow(window, app, label) {
     throw new Error(`${label}: the web app kept its own menu bar; the console says:\n${window.page.consoleLines.join('\n')}`)
   })
   assert.ok(await menuBarGone(frame), `${label}: the web menu bar takes no room`)
-  await window.page.waitForFunction(() => JSON.stringify(window.__menus[window.__menus.length - 1]).includes('Save New Checkpoint'), null, { timeout: 15000 }).catch(() => {})
+  await window.page.waitForFunction(() => JSON.stringify(window.__menus[window.__menus.length - 1]).includes('Save Checkpoint'), null, { timeout: 15000 }).catch(() => {})
   assert.ok((await window.menuSets()) >= 2, `${label}: the document set its own native menu after the front page's`)
-  assert.ok((await window.latestMenuJson()).includes('Save New Checkpoint'), `${label}: the native menu has the app's items`)
+  assert.ok((await window.latestMenuJson()).includes('Save Checkpoint'), `${label}: the native menu has the app's items`)
 
   // a click in the native menu does what its label says, in the document
-  await window.click('file.save-as', 'Save New Checkpoint…')
+  await window.click('file.save-as', 'Save Checkpoint…')
   await frame.waitForSelector('.modal:has-text("Save new checkpoint")', { timeout: 10000 }).catch(() => {
-    throw new Error(`${label}: "Save New Checkpoint…" in the native menu did nothing; the console says:\n${window.page.consoleLines.join('\n')}`)
+    throw new Error(`${label}: "Save Checkpoint…" in the native menu did nothing; the console says:\n${window.page.consoleLines.join('\n')}`)
   })
   await window.page.keyboard.press('Escape')
   await shot(window.page, `${label.replace(/\W+/g, '-')}`)

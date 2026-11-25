@@ -219,6 +219,7 @@ class TestWorkbook:
                 "macOS",
                 "Today's label",
                 "Today's action id",
+                "Fits when",
             ]
         )
         sheet.append(
@@ -235,14 +236,16 @@ class TestWorkbook:
                 "Cmd+S",
                 "Save New Checkpoint…",
                 "file.save-as",
+                "role: editor or owner",
             ]
         )
         (only,) = audit.workbook_rows(sheet)
-        assert (only.path, only.groups, only.shortcuts["macOS"], only.today_action) == (
+        assert (only.path, only.groups, only.shortcuts["macOS"], only.today_action, only.fits) == (
             ("Save checkpoint…",),
             {"computes": 2, "composes": 2},
             "Cmd+S",
             "file.save-as",
+            "role: editor or owner",
         )
 
 

@@ -83,9 +83,9 @@ describe('fileMenu: the same File menu in every app (D120, D141)', () => {
     expect(ids(fileMenu(c).items)).not.toContain('file.print')
   })
 
-  it('shows the save shortcut the window really listens for', () => {
-    expect(byId(fileMenu(context().c).items, 'file.save').hint).toBe(SHARED_HINTS['file.save'])
-    expect(SHARED_HINTS).toEqual({ 'edit.undo': 'Ctrl+Z', 'edit.redo': 'Ctrl+Shift+Z', 'file.save': 'Ctrl+S' })
+  it('shows the shortcuts the window really listens for: Ctrl+S is no longer File ▸ Save\'s (the menu workbook)', () => {
+    expect(byId(fileMenu(context().c).items, 'file.save').hint).toBeUndefined()
+    expect(SHARED_HINTS).toEqual({ 'edit.undo': 'Ctrl+Z', 'edit.redo': 'Ctrl+Shift+Z' })
   })
 
   it('lets only an owner share, hand over or delete, and keeps a viewer from saving', () => {

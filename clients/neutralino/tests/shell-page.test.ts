@@ -373,12 +373,12 @@ describe('messages from the frame', () => {
     await t.open()
     t.menus.length = 0
     t.fromFrame({ type: 'action_state', states: { 'file.new': { enabled: false } } })
-    t.fromFrame({ type: 'action_state', states: { 'file.open': { label: 'Open a deck…' } } })
+    t.fromFrame({ type: 'action_state', states: { 'file.close': { label: 'Close the deck' } } })
     await tick()
     expect(t.menus).toHaveLength(1)
     const items = (t.menus[0] as any[]).flatMap((m) => m.menuItems ?? []).filter((i) => i.id)
     expect(items.find((i) => i.id === 'file.new').isDisabled).toBe(true)
-    expect(items.find((i) => i.id === 'file.open').text).toBe('Open a deck…')
+    expect(items.find((i) => i.id === 'file.close').text).toBe('Close the deck')
   })
 })
 

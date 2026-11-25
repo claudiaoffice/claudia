@@ -97,9 +97,9 @@ def _close_dialog(world):
     world.ann.page.wait_for_selector("[data-testid=table-dialog]", state="detached")
 
 
-@when("I press Ctrl+Shift+F")
+@when("I press Ctrl+Shift+Alt+T")
 def _press_insert_key(world):
-    world.ann.page.keyboard.press("Control+Shift+F")
+    world.ann.page.keyboard.press("Control+Shift+Alt+T")  # Insert ▸ Table… (D1617)
 
 
 @then("the same dialog is open, with the focus in the first field")
@@ -133,7 +133,7 @@ def _insert_table(world, cols, rows, header):
 )
 def _insert_at_once(world, cols, rows):
     ann = world.ann
-    ann.page.keyboard.press("Control+Shift+F")
+    ann.page.keyboard.press("Control+Shift+Alt+T")
     ann.page.wait_for_selector("[data-testid=table-dialog]")
     return fill_dialog(ann, int(cols), int(rows), True)
 

@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { lookOnly } from '~/lib/replay'
 // What a document window has, whatever the app: the top bar, the menus, the panel with history and chat, the notices,
-// the keys for undo, redo and save, the dialogs to save, share, hand over, export and delete, and the "not connected
+// the keys for undo and redo, the dialogs to save, share, hand over, export and delete, and the "not connected
 // any more" screen. computes, composes and creates all mount it; each fills in the rest through the slots: `toolbar`
 // (under the menus), the main area (default), `side-top` (above the panel's tabs), `footer`, and `overlay` (its own
 // dialogs and popovers). The menus themselves are the app's, built mostly from `lib/document-menus.ts`.
@@ -51,7 +50,6 @@ const panel = ref<{
 } | null>(null)
 /** What the person picked to redact, while the dialog for it is open (E3.14). */
 const redaction = ref<Picked | null>(null)
-const readonly = computed(() => lookOnly(state))
 const frame = ref<HTMLElement | null>(null)
 
 /** F6 / Shift+F6: on to the next (or back to the previous) part of the window (WCAG 2.1.2, 2.4.1). */
@@ -131,9 +129,6 @@ const shortcuts = computed<ShortcutDef[]>(() => {
     ...sharedShortcuts({
       undo: () => props.session.undo(),
       redo: () => props.session.redo(),
-      save: () => {
-        if (!readonly.value) void checkpoint(null)
-      },
     }),
     ...regionShortcuts({ next: () => moveBetweenRegions(false), previous: () => moveBetweenRegions(true) }),
     ...props.extraShortcuts,

@@ -136,6 +136,8 @@ class Row:
     today_action: str | None
     absent: frozenset[str] = frozenset()
     """The platforms the workbook marks n/a: the entry is not there at all (Quit on the web)."""
+    fits: str = ""
+    """The "Fits when" column (D1605): the rule, in the words of D1601."""
 
     @property
     def target(self) -> str:
@@ -254,6 +256,7 @@ def workbook_rows(sheet: Worksheet) -> list[Row]:
                 absent=frozenset(p for p in PLATFORMS if str(values[col[p]]).strip() == "n/a"),
                 today_labels=today_labels(values[col["Today's label"]]),
                 today_action=str(values[col["Today's action id"]] or "") or None,
+                fits=str(values[col["Fits when"]] or ""),
             )
         )
     return rows
@@ -292,7 +295,7 @@ def manifest_entries(app: str) -> list[Entry]:
                             path=(*above, action.label),
                             group=1 if above else group,
                             position=len(entries),
-                            shortcut=shown(action.accelerators[0]) if action.accelerators else None,
+                            shortcut=shown(action.keys.default) if action.keys.default else None,
                             action=action.id,
                         )
                     )

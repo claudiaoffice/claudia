@@ -119,7 +119,7 @@ def test_the_front_page_gets_the_short_menu_and_a_document_the_whole_one(window)
     assert visible_menus(window) == ["File", "View", "Preferences", "Help"]
     assert window.lookup_action("file.open-file").get_enabled()
     assert not window.lookup_action("file.save").get_enabled()  # nor by its key
-    assert window.menu_file.get_menu_model().get_n_items() == 2  # New, Open…, Open a File… · Quit
+    assert window.menu_file.get_menu_model().get_n_items() == 2  # New, Open ▸ (Document…, Import from Disk…) · Quit
     page.says({**hello(), "view": "document"})
     assert visible_menus(window) == ["File", "Edit", "Insert", "Format", "View", "Tools", "Preferences", "Help"]
     assert window.lookup_action("file.save").get_enabled()

@@ -137,17 +137,17 @@ def test_an_action_is_sent_to_the_page_once_it_has_said_hello(rig) -> None:
     bridge, recorder = rig
     bridge.receive(hello())
     recorder.sent.clear()
-    assert bridge.send_action("file.save") is True
+    assert bridge.send_action("file.save-as") is True
     assert bridge.send_action("view.page", target="on") is True
     assert recorder.sent == [
-        {"type": "action", "action": "file.save"},
+        {"type": "action", "action": "file.save-as"},
         {"type": "action", "action": "view.page", "target": "on"},
     ]
 
 
 def test_an_action_is_not_sent_before_the_page_is_there(rig) -> None:
     bridge, recorder = rig
-    assert bridge.send_action("file.save") is False
+    assert bridge.send_action("file.save-as") is False
     assert recorder.sent == []
 
 
@@ -197,7 +197,7 @@ def test_reset_forgets_the_page(rig) -> None:
     bridge.receive(hello())
     bridge.reset()
     assert not bridge.ready
-    assert bridge.send_action("file.save") is False
+    assert bridge.send_action("file.save-as") is False
 
 
 def test_an_action_that_the_page_does_not_carry_out_is_never_sent_to_it(rig) -> None:

@@ -1,7 +1,7 @@
 // The Format menu, the same four entries in every app (D300, `format-menu-apply-style.svg`):
 //
 //   Apply style ▸     the styles that fit what is selected, each drawn in its look, grouped as the app groups them
-//   Edit this style…  the popover at the selection (Shift+F10)
+//   Edit this style…  the popover at the selection (its key: Ctrl+Shift+Alt+H, D1617)
 //   All styles…       the dialog, with Edit beside Rename (D302)
 //   List ▸            bullets, numbers and their levels (E9.21), numbered headings and the numbering manager (E9.22);
 //                     there in every app, disabled where it has no use

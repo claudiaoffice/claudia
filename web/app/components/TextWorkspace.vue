@@ -254,10 +254,9 @@ function openDescribe() {
 }
 const DESCRIBE = describeShortcut(openDescribe, () => !readonly.value && !!(state.selectedObject ?? state.selection))
 const LOOK: ShortcutDef = { id: 'format.look', get label() { return t('Edit This Style…') }, chord: chordOf('format.look'), run: () => openStyleMenu() }
-// D912: a soft hyphen says where a word may be broken, a non-breaking hyphen where it may not (as in Word and
-// LibreOffice). Both are invisible in the text unless the pages break there.
+// D912: a non-breaking hyphen says where a word may not be broken (as in Word and LibreOffice); its key stayed when
+// its entry left the menu (the menu workbook, "Keys without entry"). The soft hyphen's entry and key were dropped.
 const typing = () => !printing.value && !session.readOnly
-const SOFT_HYPHEN: ShortcutDef = { id: 'edit.soft-hyphen', get label() { return t('Soft Hyphen') }, chord: chordOf('edit.soft-hyphen'), run: () => session.type('\u00ad'), enabled: typing }
 const HARD_HYPHEN: ShortcutDef = { id: 'edit.nonbreaking-hyphen', get label() { return t('Non-breaking Hyphen') }, chord: chordOf('edit.nonbreaking-hyphen'), run: () => session.type('\u2011'), enabled: typing }
 // E9.21: bullets and numbers, on the keys of the digits (Google Docs' Ctrl+Shift+8 and 7), whatever they type.
 const BULLETS: ShortcutDef = { id: 'format.bulleted-list', get label() { return t('Bulleted List') }, chord: chordOf('format.bulleted-list'), run: () => makeList('bullets'), enabled: () => !readonly.value }
@@ -281,7 +280,6 @@ const extraShortcuts = [
   WRAP_TEXT,
   ...tableShortcuts({ t }, tableHost),
   PRINT,
-  SOFT_HYPHEN,
   HARD_HYPHEN,
   BULLETS,
   NUMBERS,
@@ -507,7 +505,6 @@ const menus = computed<Menu[]>(() => {
           label: t('Insert'),
           disabled: !typing(),
           items: [
-            { id: 'edit.soft-hyphen', label: t('Soft Hyphen'), disabled: !typing(), action: () => SOFT_HYPHEN.run() },
             { id: 'edit.nonbreaking-hyphen', label: t('Non-breaking Hyphen'), disabled: !typing(), action: () => HARD_HYPHEN.run() },
           ],
         },

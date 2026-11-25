@@ -66,12 +66,11 @@ describe('chordLabel', () => {
 })
 
 describe('sharedShortcuts', () => {
-  it('is exactly Undo (Ctrl+Z), Redo (Ctrl+Shift+Z) and Save (Ctrl+S) — nothing bound to Ctrl+Y', () => {
+  it('is exactly Undo (Ctrl+Z) and Redo (Ctrl+Shift+Z) — nothing bound to Ctrl+Y', () => {
     const undo = vi.fn()
     const redo = vi.fn()
-    const save = vi.fn()
-    const defs = sharedShortcuts({ undo, redo, save })
-    expect(defs.map((d) => chordLabel(d.chord))).toEqual(['Ctrl+Z', 'Ctrl+Shift+Z', 'Ctrl+S'])
+    const defs = sharedShortcuts({ undo, redo })
+    expect(defs.map((d) => chordLabel(d.chord))).toEqual(['Ctrl+Z', 'Ctrl+Shift+Z'])
     dispatch(defs, key({ key: 'y', ctrlKey: true }))
     expect(redo).not.toHaveBeenCalled()
     dispatch(defs, key({ key: 'z', ctrlKey: true, shiftKey: true }))
@@ -184,7 +183,7 @@ describe('one key table for every client (UX-35)', () => {
     expect(hintOf('config.shortcuts')).toBe('Ctrl+?') // the symbol, without the Shift that types it
     expect(hintOf('config.ai')).toBe('Ctrl+Shift+Alt+E')
     expect(hintOf('edit.clear')).toBe('Del')
-    expect(hintOf('format.look')).toBe('Shift+F10')
+    expect(hintOf('format.look')).toBe('Ctrl+Shift+Alt+H')
     expect(hintOf(undefined)).toBeUndefined()
     expect(hintOf('config.language.de')).toBeUndefined()
   })

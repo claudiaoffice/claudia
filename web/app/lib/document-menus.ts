@@ -56,7 +56,7 @@ export const PRINT_CHORD = chordOf('file.print')
 
 /** The menu hints for the shortcuts every window listens for (`sharedShortcuts`), so the two cannot drift apart. */
 export const SHARED_HINTS: Readonly<Record<string, string>> = Object.fromEntries(
-  sharedShortcuts({ undo: () => {}, redo: () => {}, save: () => {} }).map((s) => [s.id, chordLabel(s.chord)]),
+  sharedShortcuts({ undo: () => {}, redo: () => {} }).map((s) => [s.id, chordLabel(s.chord)]),
 )
 
 const separator: MenuItem = { label: '', separator: true }

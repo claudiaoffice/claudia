@@ -44,3 +44,77 @@ Left as they were: notes, decisions, changelogs and bug entries that name the ol
 **Not run:** the 64 tests that need GTK 4 and libadwaita, among them the window, the web page and the end-to-end test
 of the Linux client. PyGObject cannot be imported in this workspace (a broken `gi` of the distribution), so no window
 was opened and `window.py`'s new imports were not executed. The same tests run in CI under Xvfb.
+
+## Slice 2 · The definition is the workbook's (D1605, D1646), 2026-11-25
+
+**Test first.** `tests/test_menu_workbook.py` compares the definition with `notes/claudia-menus.xlsx`, app by app. It
+checks the menus and the context menus: their order, groups, words (D1609, D1618), keys on the web, Linux, Windows
+and macOS, and the "Fits when" rule word for word. It failed on the first missing field, then on every difference.
+
+**What the definition gained:**
+- `Keys(default, macos)`, which replaces `accelerators`;
+- `Action.fits`;
+- `ContextMenu` and `Manifest.context_menus`;
+- `Manifest.keys_only`, for the workbook's sheet "Keys without entry": Del (computes) and Ctrl+_ (composes).
+
+**How a place is modelled.** An action may stand in several places, Edit ▸ Copy and an object's Copy, say. It keeps its
+id, kind and key; the label and rule belong to the place (`_here`). `Manifest.actions` lists each action once, so the
+GTK client registers it once and the bridge knows the ids of the context menus.
+
+**The menus, rebuilt to the workbook.**
+- Inserting went to Insert, and Search and Replace… to Tools.
+- Name & Describe… went to Edit.
+- Rotate, Wrap Text, Reference in Chat and Go to Target went to the context menus (D1602, D1607).
+- The pivot table's own entries went to its context menu (D1612), and Present ▸ to Tools.
+- File lost Save, Assign New Owner…, Accept Ownership… and Leave Document…; Delete From Server… went to the front page
+  (D1608).
+- Labels follow the workbook's words, keys follow D1617 (Edit Style is Ctrl+Shift+Alt+H, Insert ▸ Table…
+  Ctrl+Shift+Alt+T), and macOS gets its own keys for Name & Describe… and History & Chat (D1616).
+
+**Not built yet.** Entries whose feature does not exist yet are listed in the test and stay out of the definition.
+Both lists only shrink:
+- `NOT_BUILT_YET`: My Role…, Select Next/Previous Object, the shapes and the text box in computes, New Page, Citation…,
+  Quiet Mode, Corkboard, Scrapbook, Bibliography…, Names… in composes and creates;
+- `CONTEXT_NOT_BUILT_YET`: Edit Text in computes and composes.
+
+**Follow-ups to keep the branch working until slice 4:**
+- **The web** still builds its menus by hand until slice 4 (D1644). The cross-check of ids
+  (`clients/linux/tests/test_manifest.py`) lists in `WEB_CATCHES_UP`, per app, the ids the web has and the workbook
+  dropped, and the shapes it lacks.
+- **Web keys:** the web's own key for File ▸ Save went, so Ctrl+S is Save Checkpoint…'s (it asks for a name now); the
+  soft hyphen went with its entry (the owner removed it, "To decide"); Edit Style's hint follows the key table.
+- **Tests that repeated what the workbook says** (places, words and keys in `test_manifest.py`) were removed; the
+  structural ones stay.
+- **Labels, keys and paths in other tests:** `web/e2e/demo.cjs`, `print.cjs`, `macos-shell.cjs` and `windows-shell.cjs`,
+  `clients/neutralino/tests/shell-page.test.ts`, `clients/linux/tests/test_bridge.py`.
+- **`specs/composes/tables.feature`:** the approved scenarios pressed Ctrl+Shift+F for Insert ▸ Table…. They press
+  Ctrl+Shift+Alt+T now, as D1617 decided; the step code follows.
+- **Translations:** every new label and tooltip is translated into German, with "Formatvorlage" for a style (D1618);
+  the catalogues, the `.mo` and the web's JSON were regenerated.
+- **Six notes** named the moved file `claudia_shell_gtk/manifest.py` as built, so `test_notes_claim_built_files.py`
+  failed after slice 1 (not run then). They name the new path now.
+
+**Assumptions** (asked in the delivery):
+- **Ask ai…** in Tools and in Help is one action, `tools.ask`, because the workbook gives both Ctrl+F1; Help's entry
+  keeps its own rule. The web's `help.ask` goes in slice 4.
+- **About** is "About", as the workbook's words say, not "About Claudia Composes".
+- **The context menus' names** for Preferences ▸ Shortcuts: Object, Cell, Paragraph, List, Table, Heading, Sheet Tab or
+  Slide Tab, Slide, Row Header, Column Header, Chart on a Sheet, Pivot Table, Reference.
+
+**Run:**
+- the workbook test;
+- the Linux client's tests (590 passed, 64 skipped for GTK) and its mypy;
+- the root tests without the browser (1408 passed);
+- the Neutralino tests (552) and its tool tests;
+- the web's unit tests (2143), type check and eslint;
+- ruff and vulture;
+- in Chromium:
+  - the tables spec: its Insert ▸ Table… scenarios pass on the new key;
+  - all 34 regression scripts, including the macOS and Windows shell scripts on their stand-in windows: 34 passed.
+    `objects.cjs` no longer presses the quarter turns' keys, which left with their entries;
+  - the `@core` specs: 142 passed, 23 expected failures (`@pending`), 80 skipped (steps not written yet).
+
+**Not run:**
+- the 64 tests that need GTK 4 (no window opens in this workspace);
+- Firefox (not installed here);
+- the Neutralino clients on a real Mac or Windows.

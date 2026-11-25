@@ -124,8 +124,19 @@ class KeyOwner(enum.Enum):
 
 
 @dataclass(frozen=True, slots=True)
+class Keys:
+    """An action's key, in GTK's notation, the same in every app (UX-35, D360): ``default`` on Linux, Windows and the
+    web, and ``macos`` where macOS keeps the default's key for itself (D1616, D1648). There ``<Primary>`` is Cmd and
+    ``<Control>`` is Ctrl; without it macOS takes the default with Cmd for Ctrl and Option for Alt."""
+
+    default: str | None = None
+    macos: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
 class Action:
-    """One menu item."""
+    """One menu item. The same action may stand in more than one place (Edit ▸ Copy and an object's Copy): its id,
+    kind and keys are the same everywhere, its label and its rule (:attr:`fits`) are those of the place."""
 
     id: str
     """``file.save``: lower case, namespaced, independent of the menu it sits in (see the shell contract)."""
@@ -133,10 +144,9 @@ class Action:
     """English label in the capitalisation of the GNOME HIG; it is the key that translations are looked up by (E5.7)."""
     kind: Kind
     tooltip: str = ""
-    accelerators: tuple[str, ...] = ()
-    """The action's key, in GTK's notation, the same in every app and every client (UX-35, D360); who listens for it
-    is :attr:`key_owner`. Empty only for the few actions that have no key on purpose (the language picker's own
-    autonyms)."""
+    keys: Keys = Keys()
+    """Who listens for the key is :attr:`key_owner`. No key only where an action has none on purpose: the language
+    picker's own autonyms, and an entry of a context menu that no menu entry shares (D1614)."""
     checkable: bool = False
     editing: str | None = None
     """For :attr:`Kind.EDITING`: the name of the WebKit editing command (``Cut``, ``Copy``, ``Paste``, ...)."""
@@ -148,7 +158,10 @@ class Action:
     that is not a standard editing command — macOS has no selector for "paste as plain text" or an app's own
     commands, and giving those a Cocoa role would route the key to a native editing action with no page effect."""
     key_owner: KeyOwner = KeyOwner.PAGE
-    """Who listens for :attr:`accelerators`: see :class:`KeyOwner`."""
+    """Who listens for :attr:`keys`: see :class:`KeyOwner`."""
+    fits: str = ""
+    """When the entry fits, in the workbook's words, word for word (D1601, D1605, D1646): ``"role: editor or owner ·
+    selection: something"``. The page judges it; ``scripts``' workbook test holds it to the workbook."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -168,6 +181,15 @@ class Submenu:
 MenuEntry = Action | Submenu
 
 
+def _actions_of(sections: tuple[tuple[MenuEntry, ...], ...]) -> Iterator[Action]:
+    for section in sections:
+        for entry in section:
+            if isinstance(entry, Submenu):
+                yield from entry.items
+            else:
+                yield entry
+
+
 @dataclass(frozen=True, slots=True)
 class Menu:
     """A menu button of the header bar. ``sections`` are groups drawn with a separator between them."""
@@ -183,12 +205,21 @@ class Menu:
     def all_actions(self) -> Iterator[Action]:
         """Every actionable item of the menu, in order — a :class:`Submenu`'s own ``items``, not the ``Submenu``
         itself, which has no id and backs no GTK action."""
-        for section in self.sections:
-            for entry in section:
-                if isinstance(entry, Submenu):
-                    yield from entry.items
-                else:
-                    yield entry
+        return _actions_of(self.sections)
+
+
+@dataclass(frozen=True, slots=True)
+class ContextMenu:
+    """The menu of a right press on a thing (D1602, D1612, D1619): ``id`` names the thing (``object``, ``cell``,
+    ``pivot``), ``label`` is what Preferences ▸ Shortcuts calls it (D1604). The page draws it in every client."""
+
+    id: str
+    label: str
+    sections: tuple[tuple[MenuEntry, ...], ...]
+
+    def all_actions(self) -> Iterator[Action]:
+        """Every actionable item, in order."""
+        return _actions_of(self.sections)
 
 
 @dataclass(frozen=True, slots=True)
@@ -198,11 +229,24 @@ class Manifest:
     app: str
     menus: tuple[Menu, ...]
     header_toggles: tuple[Action, ...] = field(default=())
+    context_menus: tuple[ContextMenu, ...] = field(default=())
+    keys_only: tuple[Action, ...] = field(default=())
+    """Keys whose entry left the menus while the key stayed (the workbook's sheet "Keys without entry")."""
 
     @property
     def actions(self) -> tuple[Action, ...]:
-        """Every action, menus first, then the header-bar toggles."""
-        return (*(a for menu in self.menus for a in menu.all_actions()), *self.header_toggles)
+        """Every action once, where it first stands: the menus, the header-bar toggles, the context menus, then the
+        keys without an entry."""
+        seen: dict[str, Action] = {}
+        everywhere = (
+            *(a for menu in self.menus for a in menu.all_actions()),
+            *self.header_toggles,
+            *(a for context in self.context_menus for a in context.all_actions()),
+            *self.keys_only,
+        )
+        for action in everywhere:
+            seen.setdefault(action.id, action)
+        return tuple(seen.values())
 
     def menu(self, label: str) -> Menu:
         """The menu called ``label``."""
@@ -227,10 +271,12 @@ class Manifest:
                 "label": action.label,
                 "kind": action.kind.value,
                 "checkable": action.checkable,
-                "accelerators": list(action.accelerators),
+                "accelerators": [action.keys.default] if action.keys.default else [],
+                "key_macos": action.keys.macos,
                 "key_owner": action.key_owner.value,
                 "role": action.role,
                 "start": on_start(action.id),
+                "fits": action.fits,
             }
 
         def entry(e: MenuEntry) -> dict[str, Any]:
@@ -238,13 +284,17 @@ class Manifest:
                 return {"label": e.label, "items": [one(a) for a in e.items]}
             return one(e)
 
+        def sections(of: tuple[tuple[MenuEntry, ...], ...]) -> list[list[dict[str, Any]]]:
+            return [[entry(e) for e in section] for section in of]
+
         return {
             "app": self.app,
-            "menus": [
-                {"label": menu.label, "sections": [[entry(e) for e in section] for section in menu.sections]}
-                for menu in self.menus
-            ],
+            "menus": [{"label": menu.label, "sections": sections(menu.sections)} for menu in self.menus],
             "header_toggles": [one(a) for a in self.header_toggles],
+            "context_menus": [
+                {"id": c.id, "label": c.label, "sections": sections(c.sections)} for c in self.context_menus
+            ],
+            "keys_only": [one(a) for a in self.keys_only],
         }
 
 
@@ -279,7 +329,7 @@ def for_start(manifest: Manifest) -> Manifest:
         )
         if sections:
             menus.append(replace(menu, sections=sections))
-    return replace(manifest, menus=tuple(menus), header_toggles=())
+    return replace(manifest, menus=tuple(menus), header_toggles=(), context_menus=(), keys_only=())
 
 
 def _page(
@@ -287,63 +337,200 @@ def _page(
     label: str,
     tooltip: str,
     *,
-    accelerators: tuple[str, ...] = (),
+    fits: str,
+    key: str | None = None,
+    mac: str | None = None,
     checkable: bool = False,
     role: str | None = None,
     key_owner: KeyOwner = KeyOwner.PAGE,
-):
-    return Action(action_id, label, Kind.PAGE, tooltip, accelerators, checkable, role=role, key_owner=key_owner)
+) -> Action:
+    return Action(
+        action_id,
+        label,
+        Kind.PAGE,
+        tooltip,
+        Keys(key, mac),
+        checkable,
+        role=role,
+        key_owner=key_owner,
+        fits=fits,
+    )
 
 
-def _shell(action_id: str, label: str, tooltip: str, *, accelerators: tuple[str, ...]) -> Action:
-    return Action(action_id, label, Kind.SHELL, tooltip, accelerators, key_owner=KeyOwner.SHELL)
+def _shell(action_id: str, label: str, tooltip: str, *, key: str, fits: str) -> Action:
+    return Action(action_id, label, Kind.SHELL, tooltip, Keys(key), key_owner=KeyOwner.SHELL, fits=fits)
 
+
+def _here(action: Action, label: str | None = None, *, fits: str) -> Action:
+    """``action`` in another place, with that place's words and rule (D1605): its id, kind and key stay."""
+    return replace(action, label=label or action.label, fits=fits)
+
+
+# The rules of the workbook's "Fits when" column that many entries share (D1601, D1615).
+ANYONE = "role: anyone"
+EDITORS = "role: editor or owner"
+SELECTED = f"{EDITORS} · selection: something"
+CELLS = f"{EDITORS} · selection: a cell or range"
+LIST_ITEM = f"{EDITORS} · selection: a list item"
 
 # --------------------------------------------------------------------------------------------- shared across apps
-# D120's shared blocks, written once so the three manifests below cannot drift from each other by a typo the way the
-# three ``onWindowKey`` handlers did on the web side before D122.
+# The menus follow the workbook ``claudiaoffice-log/notes/claudia-menus.xlsx`` (D1605): its rows, groups, words,
+# keys and rules, which ``tests/test_menu_workbook.py`` compares with this file. The labels are in the GNOME HIG's
+# header capitalisation (D1609), with "…" where a dialog opens first (D1618).
 #
-# The keys (UX-35, D360) are one table for the three apps and every client. They keep out of the way of what a browser
-# keeps for itself (Ctrl+N, Ctrl+W, Ctrl+T, Ctrl+Q never reach a page), of what Ctrl+Alt types on a German Windows
-# keyboard (AltGr: Q, E, M and the digits), and of the desktop's own (Ctrl+Alt+T, Ctrl+Alt+L on Ubuntu). An app's own
-# commands are Ctrl+Alt+letter, the rare and weighty ones of File ▸ Manage are Ctrl+Alt+Shift+letter.
+# The keys (UX-35, D360, D1617) are one table for the three apps and every client. They keep out of the way of what a
+# browser keeps for itself (Ctrl+N, Ctrl+W, Ctrl+T, Ctrl+Q never reach a page), of what Ctrl+Alt types on a German
+# Windows keyboard (AltGr: Q, E, M and the digits), and of the desktop's own (Ctrl+Alt+T, Ctrl+Alt+L on Ubuntu). An
+# app's own commands are Ctrl+Alt+letter, the rare and weighty ones Ctrl+Shift+Alt+letter.
+
+UNDO = _page(
+    "edit.undo",
+    "Undo",
+    "Take back your last step",
+    key="<Primary>z",
+    role="undo:",
+    fits=f"{EDITORS} · document: something to undo",
+)
+REDO = _page(
+    "edit.redo",
+    "Redo",
+    "Do your last undone step again",
+    key="<Primary><Shift>z",
+    role="redo:",
+    fits=f"{EDITORS} · document: something to redo",
+)
+DESCRIBE = _page(
+    "format.describe",
+    "Name & Describe…",
+    "Give the thing you have selected a name, and say what it shows to someone who cannot see it",
+    key="<Primary><Alt>d",
+    mac="<Primary><Control>n",  # Cmd+Option+D hides the Dock (D1616)
+    fits=SELECTED,
+)
+REFERENCE = _page(
+    "edit.reference",
+    "Reference in Chat",
+    "Write a tag for this thing into the chat, so that everybody can go to it",
+    key="<Primary><Alt>x",
+    fits=EDITORS,
+)
+STYLE = _page(
+    "format.apply-style",
+    "Apply…",
+    "Choose a style for the selection, each drawn in its own look",
+    key="<Primary><Alt>a",
+    fits=SELECTED,
+)
+ROTATE_BY = _page(
+    "format.rotate-by",
+    "Rotate By…",
+    "Turn the object you have selected to an angle, in whole degrees",
+    key="<Primary><Alt><Shift>z",  # Ctrl+Alt+Z is Replay's
+    fits=f"{EDITORS} · selection: an object that can turn",
+)
+DELETE = _page(
+    "edit.delete",
+    "Delete",
+    "Take away what you have selected",
+    key="Delete",
+    key_owner=KeyOwner.VIEW,
+    fits=EDITORS,
+)
+ASK = _page(
+    "tools.ask",
+    "Ask ai…",
+    "Ask the ai in the chat",
+    key="<Primary>F1",
+    fits=f"{ANYONE} · ai: the ai can really answer",
+)
 
 
-def _file_menu(*, title: str, prints: bool) -> Menu:
-    """New, Open… · Save, Save new checkpoint…, Download, Print… (the apps that lay out pages, D906) · Manage ▸
-    (Share…, Assign new owner…, Accept ownership…, Leave document…, Export…, Delete from server…) · Close document,
-    Quit (D123, D124's grouping; D141's Manage submenu)."""
-    keep: tuple[Action, ...] = (
-        _page("file.save", "Save", "Make a checkpoint of the document", accelerators=("<Primary>s",)),
-        _page(
-            "file.save-as",
-            "Save New Checkpoint…",
-            "Make a checkpoint and give it a name",
-            accelerators=("<Primary><Shift>s",),
+def _clipboard(*, native: bool) -> tuple[Action, Action, Action, Action]:
+    """Copy, Cut, Paste and Paste As ▸ Plain Text, the same in every app (D120). The keys are the browser's own in every
+    client (:attr:`KeyOwner.VIEW`): the clipboard events reach the page from there. A viewer cannot copy (D1640).
+
+    ``native=True`` (composes) dispatches the menu item straight to WebKit's own editing commands. ``native=False``
+    (computes, creates) goes through the page instead: a cell grid's paste needs to split the clipboard by tabs and
+    newlines onto the current selection, and a slide canvas's paste needs to land in whichever text frame is being
+    edited, neither of which WebKit's generic "insert this text here" command knows how to do.
+    """
+    kind = Kind.EDITING if native else Kind.PAGE
+
+    def one(action_id: str, label: str, tooltip: str, key: str, editing: str, role: str | None, fits: str) -> Action:
+        return Action(
+            action_id,
+            label,
+            kind,
+            tooltip,
+            Keys(key),
+            editing=editing if native else None,
+            role=role,
+            key_owner=KeyOwner.VIEW,
+            fits=fits,
+        )
+
+    return (
+        one("edit.copy", "Copy", "Copy the selection to the clipboard", "<Primary>c", "Copy", "copy:", SELECTED),
+        one("edit.cut", "Cut", "Move the selection to the clipboard", "<Primary>x", "Cut", "cut:", SELECTED),
+        one("edit.paste", "Paste", "Insert the clipboard", "<Primary>v", "Paste", "paste:", EDITORS),
+        one(
+            "edit.paste-as-plain",
+            "Plain Text",
+            "Insert the clipboard without formatting; with no text on it, says so",
+            "<Primary><Shift>v",
+            "PasteAsPlainText",
+            None,
+            EDITORS,
         ),
-        _page("file.download", "Download", "Download the document to this computer", accelerators=("<Primary><Alt>s",)),
     )
-    if prints:
-        keep = (*keep, _page("file.print", "Print…", "See the pages and print them", accelerators=("<Primary>p",)))
+
+
+def _file_menu(*, title: str) -> Menu:
+    """New, Open ▸ · Save Checkpoint…, Download · Print… · Manage ▸ · Close · Quit, the desktop's only (D1616).
+    Save, Assign New Owner…, Accept Ownership… and Leave Document… left the menu (the owner, 2026-11-25); Delete From
+    Server… went to the front page (D1608)."""
     return Menu(
         "File",
         (
             (
-                _page("file.new", "New", "Start a new document", accelerators=("<Primary><Alt>n",)),
-                _page(
-                    "file.open",
-                    "Open…",
-                    "Open a document from one of your places, a collection or Mine",
-                    accelerators=("<Primary>o",),
-                ),
-                _page(
-                    "file.open-file",
-                    "Open a File…",
-                    "Open a Word, Excel, PowerPoint, OpenDocument or Claudia file from this computer",
-                    accelerators=("<Primary><Shift>o",),
+                _page("file.new", "New", "Start a new document", key="<Primary><Alt>n", fits=ANYONE),
+                Submenu(
+                    "Open",
+                    (
+                        _page(
+                            "file.open",
+                            "Document…",
+                            "Open a document from one of your places, a collection or Mine",
+                            key="<Primary>o",
+                            fits=ANYONE,
+                        ),
+                        _page(
+                            "file.open-file",
+                            "Import from Disk…",
+                            "Open a Word, Excel, PowerPoint, OpenDocument or Claudia file from this computer",
+                            key="<Primary><Shift>o",
+                            fits=ANYONE,
+                        ),
+                    ),
                 ),
             ),
-            keep,
+            (
+                _page(
+                    "file.save-as",
+                    "Save Checkpoint…",
+                    "Make a checkpoint of the document and give it a name",
+                    key="<Primary>s",
+                    fits=EDITORS,
+                ),
+                _page(
+                    "file.download",
+                    "Download",
+                    "Download the document to this computer",
+                    key="<Primary><Alt>s",
+                    fits=ANYONE,
+                ),
+            ),
+            (_page("file.print", "Print…", "See the pages and print them", key="<Primary>p", fits=ANYONE),),
             (
                 Submenu(
                     "Manage",
@@ -352,488 +539,289 @@ def _file_menu(*, title: str, prints: bool) -> Menu:
                             "file.manage.share",
                             "Share…",
                             "Let other people into the document",
-                            accelerators=("<Primary><Alt><Shift>s",),
+                            key="<Primary><Alt><Shift>s",
+                            fits="role: owner",
                         ),
                         _page(
                             "file.manage.change-password",
-                            "Change Password…",
+                            "Password…",
                             "Choose a new password of your own for this document",
-                            accelerators=("<Primary><Alt><Shift>w",),
-                        ),
-                        _page(
-                            "file.manage.assign-owner",
-                            "Assign New Owner…",
-                            "Hand this document over to somebody else",
-                            accelerators=("<Primary><Alt><Shift>o",),
-                        ),
-                        _page(
-                            "file.manage.accept-owner",
-                            "Accept Ownership…",
-                            "Accept a document that was handed over to you",
-                            accelerators=("<Primary><Alt><Shift>c",),
-                        ),
-                        _page(
-                            "file.manage.leave",
-                            "Leave Document…",
-                            "Remove yourself from this document",
-                            accelerators=("<Primary><Alt><Shift>l",),
+                            key="<Primary><Alt><Shift>w",
+                            fits=ANYONE,
                         ),
                         _page(
                             "file.manage.export",
                             "Export…",
-                            "Save the document's content in Claudia's own format",
-                            accelerators=("<Primary><Alt><Shift>x",),
+                            "Save the document in another format, or in Claudia's own",
+                            key="<Primary><Alt><Shift>x",
+                            fits=ANYONE,
                         ),
                         _page(
                             "file.manage.redact",
                             "Redact History…",
                             "Take content out of the document's history and chat for good",
-                            accelerators=("<Primary><Shift>F8",),
-                        ),
-                        _page(
-                            "file.manage.delete",
-                            "Delete From Server…",
-                            "Remove this document from the server for good",
-                            accelerators=("<Primary><Alt><Shift>r",),
+                            key="<Primary><Shift>F8",
+                            fits=EDITORS,
                         ),
                     ),
                 ),
             ),
-            (
-                _page(
-                    "file.close", "Close Document", "Back to the list of documents", accelerators=("<Primary><Alt>w",)
-                ),
-                _shell("file.quit", "Quit", f"Close {title}", accelerators=("<Primary>q",)),
-            ),
+            (_page("file.close", "Close", "Back to the list of documents", key="<Primary><Alt>w", fits=ANYONE),),
+            (_shell("file.quit", "Quit", f"Close {title}", key="<Primary>q", fits="client: desktop only"),),
         ),
     )
 
 
-def _shared_edit_block() -> tuple[Action, ...]:
-    """Undo, Redo — identical in every app (D120). Each also carries its macOS role (D158): on that shell the key
-    equivalent needs one to reach the item at all."""
-    return (
-        _page("edit.undo", "Undo", "Take back your last step", accelerators=("<Primary>z",), role="undo:"),
-        _page("edit.redo", "Redo", "Do your last undone step again", accelerators=("<Primary><Shift>z",), role="redo:"),
-    )
-
-
-def _reference_block() -> tuple[MenuEntry, ...]:
-    """Reference in chat (E5.20, D551): write a tag for the selected thing into the chat message, as ``#`` does. Where
-    nothing can be selected as a thing (composes has no objects to select yet) the page keeps it disabled."""
-    return (
-        _page(
-            "edit.reference",
-            "Reference in Chat",
-            "Write a tag for the selected object into the chat, so that everybody can go to it",
-            accelerators=("<Primary><Alt>x",),
-        ),
-        _page(
-            "edit.go-to-target",
-            "Go to Target",
-            "Go to what the reference at the caret points at (Ctrl+click on a reference does the same)",
-            accelerators=("<Primary><Alt>Return",),
+def _edit_menu(*, native: bool, own: tuple[MenuEntry, ...] = ()) -> Menu:
+    """Undo, Redo · Copy, Cut, Paste, Paste As ▸ · Name & Describe… and the app's own (``own``). What adds something
+    went to Insert; Search and Replace… to Tools; Reference in Chat and Go to Target to the context menus (D1607)."""
+    copy, cut, paste, plain = _clipboard(native=native)
+    return Menu(
+        "Edit",
+        (
+            (UNDO, REDO),
+            (copy, cut, paste, Submenu("Paste As", (plain,))),
+            (DESCRIBE, *own),
         ),
     )
 
 
-def _shared_clipboard_block(*, native: bool) -> tuple[MenuEntry, ...]:
-    """Copy, Cut, Paste, Paste as ▸ Plain text — identical in every app (D120). The keys are the browser's own in
-    every client (:attr:`KeyOwner.VIEW`): the clipboard events reach the page from there.
+def _image(where: str) -> Action:
+    return _page("edit.image", "Image…", f"Put a picture {where}", key="<Primary><Alt>i", fits=EDITORS)
 
-    ``native=True`` (composes) dispatches the menu item straight to WebKit's own editing commands. ``native=False``
-    (computes, creates) goes through the page instead: a cell grid's paste needs to split the clipboard by tabs and
-    newlines onto the current selection, and a slide canvas's paste needs to land in whichever text frame is being
-    edited, neither of which WebKit's generic "insert this text here" command knows how to do.
-    """
-    view = KeyOwner.VIEW
-    if native:
-        return (
-            Action(
-                "edit.copy",
-                "Copy",
-                Kind.EDITING,
-                "Copy the selection to the clipboard",
-                ("<Primary>c",),
-                editing="Copy",
-                role="copy:",
-                key_owner=view,
-            ),
-            Action(
-                "edit.cut",
-                "Cut",
-                Kind.EDITING,
-                "Move the selection to the clipboard",
-                ("<Primary>x",),
-                editing="Cut",
-                role="cut:",
-                key_owner=view,
-            ),
-            Action(
-                "edit.paste",
-                "Paste",
-                Kind.EDITING,
-                "Insert the clipboard",
-                ("<Primary>v",),
-                editing="Paste",
-                role="paste:",
-                key_owner=view,
-            ),
-            Submenu(
-                "Paste As",
-                (
-                    Action(
-                        "edit.paste-as-plain",
-                        "Plain Text",
-                        Kind.EDITING,
-                        "Insert the clipboard without formatting",
-                        ("<Primary><Shift>v",),
-                        editing="PasteAsPlainText",
-                        key_owner=view,
-                    ),
-                ),
-            ),
+
+def _text_box(where: str) -> Action:
+    return _page("edit.text-box", "Text Box", f"Add a text box {where}", key="<Primary><Alt>b", fits=EDITORS)
+
+
+def _shapes() -> Submenu:
+    """Insert ▸ Shape ▸, the three of the shape library that the workbook names (D1617's keys)."""
+    return Submenu(
+        "Shape",
+        tuple(
+            _page(f"insert.shape.{name.lower()}", name, f"Put a {name.lower()} here", key=key, fits=EDITORS)
+            for name, key in (
+                ("Circle", "<Primary><Alt><Shift>c"),
+                ("Rectangle", "<Primary><Alt><Shift>r"),
+                ("Triangle", "<Primary><Alt><Shift>1"),
+            )
+        ),
+    )
+
+
+def _containers() -> Submenu:
+    """A container: the person writes the text and the server draws its picture (D390, D560), with the server's tool
+    for it (D1601). In alphabetical order (D1618)."""
+
+    def one(name: str, what: str, key: str) -> Action:
+        return _page(
+            f"insert.container.{name.lower()}",
+            name,
+            f"Put {what} written in {name} here",
+            key=key,
+            fits=f"{EDITORS} · server: has the tool for {name}",
         )
-    return (
-        _page(
-            "edit.copy",
-            "Copy",
-            "Copy the selection to the clipboard",
-            accelerators=("<Primary>c",),
-            role="copy:",
-            key_owner=view,
-        ),
-        _page(
-            "edit.cut",
-            "Cut",
-            "Move the selection to the clipboard",
-            accelerators=("<Primary>x",),
-            role="cut:",
-            key_owner=view,
-        ),
-        _page(
-            "edit.paste", "Paste", "Insert the clipboard", accelerators=("<Primary>v",), role="paste:", key_owner=view
-        ),
-        Submenu(
-            "Paste As",
-            (
-                _page(
-                    "edit.paste-as-plain",
-                    "Plain Text",
-                    "Insert the clipboard without formatting",
-                    accelerators=("<Primary><Shift>v",),
-                    key_owner=view,
-                ),
-            ),
+
+    return Submenu(
+        "Container",
+        (
+            one("LaTeX", "a formula or text", "<Primary><Alt><Shift>f"),
+            one("Mermaid", "a diagram", "<Primary><Alt><Shift>g"),
+            one("Typst", "a page of text", "<Primary><Alt><Shift>y"),
         ),
     )
 
 
-def _search_block(describe: str = "Find text, formulas and values, and replace them") -> tuple[Action, ...]:
-    """E5.15, E9.28, E10.19: the same entry, label and key in every app that searches (D281); only the tooltip says
-    what the app can look in. Ctrl+H, which opens the panel with Replace showing, is a second way in and has no menu
-    entry of its own."""
-    return (_page("edit.search-replace", "Search & Replace…", describe, accelerators=("<Primary>f",)),)
-
-
-def _format_menu(
-    *,
-    look: str,
-    clear_cell_style: bool = False,
-    describe: bool = False,
-    rotate: bool = False,
-    wrap: bool = False,
-    headings: tuple[str, str] = ("Number Headings", "Number every heading style: 1, 1.1, 1.2, 2 …"),
-) -> Menu:
-    """The Format menu, one shape in every app (D300): Apply Style…, Edit This Style…, All Styles…, List ▸ · Colours… ·
-    and Name & describe… (D1317, BITV 1.1.1) and, where they can be turned, Rotate ▸ (D1024) and,
-    where text flows round them, Wrap Text, one key that cycles the modes (D1064). List ▸
-    is in every app as on the web; outside a text the page reports its entries disabled. Computes adds Clear Cell
-    Style, which the web has in Apply Style's flyout. ``headings`` is what Number Headings is called and says in this
-    app (creates: Number All Slide Titles, E9.22)."""
-    styles: tuple[MenuEntry, ...] = (
-        _page(
-            "format.apply-style",
-            "Apply Style…",
-            "Choose a style for the selection, each drawn in its own look",
-            accelerators=("<Primary><Alt>a",),
-        ),
+def _cross_reference() -> Action:
+    return _page(
+        "insert.cross-reference",
+        "Cross Reference…",
+        "Put a reference to a heading, an item or a named thing at the caret; it follows what it points at",
+        key="<Primary>F2",
+        fits=f"{EDITORS} · document: has something to refer to",
     )
-    if clear_cell_style:
-        styles = (
-            *styles,
+
+
+def _contents(label: str, tooltip: str) -> Action:
+    """Table of Contents in composes, Agenda in creates (E9.31)."""
+    return _page("insert.contents", label, tooltip, key="<Primary><Alt><Shift>i", fits=EDITORS)
+
+
+def _format_menu(*, look: str, clear_cell_style: bool = False, headings: tuple[str, str, str]) -> Menu:
+    """Style ▸, List ▸ and Palette…, one shape in every app (D300). Computes adds Style ▸ Clear. ``headings`` is what
+    Number Headings is called, says and needs in this app (creates: Number All Slide Titles, E9.22). Name & Describe…
+    went to Edit, Rotate and Wrap Text to the object's context menu (D1602)."""
+    clear = (
+        (
             _page(
                 "format.clear-cell-style",
-                "Clear Cell Style",
+                "Clear",
                 "Take the selected cells' own style off, back to the table's",
-                accelerators=("<Primary><Alt><Shift>k",),
+                key="<Primary><Alt><Shift>k",
+                fits=CELLS,
             ),
         )
-    styles = (
-        *styles,
-        _page(
-            "format.look",
-            "Edit This Style…",
-            look,
-            accelerators=("<Shift>F10",),
-            # A web view keeps Shift+F10 for its own context menu, so the shell takes it first (as before UX-35).
-            key_owner=KeyOwner.SHELL,
-        ),
-        _page(
-            "format.all-styles",
-            "All Styles…",
-            "List, rename, delete and hide the styles of this document",
-            accelerators=("<Primary><Alt><Shift>a",),
-        ),
-        Submenu(
-            "List",
-            (
-                _page(
-                    "format.bulleted-list",
-                    "Bulleted List",
-                    "Make the paragraphs a list with bullets, or plain again",
-                    accelerators=("<Primary><Shift>8",),
-                    checkable=True,
-                ),
-                _page(
-                    "format.numbered-list",
-                    "Numbered List",
-                    "Make the paragraphs a numbered list, or plain again",
-                    accelerators=("<Primary><Shift>7",),
-                    checkable=True,
-                ),
-                _page(
-                    "format.list-continue",
-                    "Continue Previous List",
-                    "Go on counting where the list before this one stopped",
-                    accelerators=("<Primary><Alt><Shift>p",),
-                ),
-                _page(
-                    "format.list-start",
-                    "Start At…",
-                    "The number this list starts at",
-                    accelerators=("<Primary><Alt><Shift>n",),
-                ),
-                _page(
-                    "format.list-indent",
-                    "Indent",
-                    "Move the item one level in",
-                    accelerators=("Tab",),
-                    key_owner=KeyOwner.VIEW,
-                ),
-                _page(
-                    "format.list-outdent",
-                    "Outdent",
-                    "Move the item one level out",
-                    accelerators=("<Shift>Tab",),
-                    key_owner=KeyOwner.VIEW,
-                ),
-                _page(
-                    "format.number-headings",
-                    headings[0],
-                    headings[1],
-                    accelerators=("<Primary><Alt><Shift>b",),
-                    checkable=True,
-                ),
-                _page(
-                    "format.all-numbering",
-                    "All Numbering…",
-                    "The numbering schemes of this document: how each level of a list is drawn",
-                    accelerators=("<Primary><Alt><Shift>j",),
-                ),
-            ),
-        ),
-    )
-    sections: tuple[tuple[MenuEntry, ...], ...] = (
-        styles,
-        (
-            _page(
-                "format.colours",
-                "Colours…",
-                "The colours of this document, by what each one means",
-                accelerators=("<Primary><Alt>k",),
-            ),
-        ),
-    )
-    if describe:
-        sections = (
-            *sections,
-            (
-                _page(
-                    "format.describe",
-                    "Name & describe…",
-                    "Give the thing you have selected a name, and say what it shows to someone who cannot see it",
-                    accelerators=("<Primary><Alt>d",),
-                ),
-            ),
-        )
-    if rotate:
-        sections = (*sections, (_rotate_submenu(),))
-    if wrap:
-        sections = (
-            *sections,
-            (
-                _page(
-                    "format.wrap-text",
-                    "Wrap Text",
-                    "Move the object you have selected to the next way of letting the text flow round it",
-                    accelerators=("<Primary><Alt>r",),
-                ),
-            ),
-        )
-    return Menu("Format", sections)
-
-
-def _rotate_submenu() -> Submenu:
-    """Format ▸ Rotate ▸ (D1024): a quarter turn each way, and any angle. One shape wherever an app turns objects.
-    Ctrl+Alt+Z is Replay History's, so Rotate By… takes it with Shift."""
-    return Submenu(
-        "Rotate",
-        (
-            _page(
-                "format.rotate-right",
-                "Rotate Right 90°",
-                "Turn the object you have selected a quarter turn clockwise",
-                accelerators=("<Primary><Alt>period",),
-            ),
-            _page(
-                "format.rotate-left",
-                "Rotate Left 90°",
-                "Turn the object you have selected a quarter turn counter-clockwise",
-                accelerators=("<Primary><Alt>comma",),
-            ),
-            _page(
-                "format.rotate-by",
-                "Rotate By…",
-                "Turn the object you have selected to an angle, in whole degrees",
-                accelerators=("<Primary><Alt><Shift>z",),
-            ),
-        ),
-    )
-
-
-def _shared_view_block(*, authors: bool) -> tuple[Action, ...]:
-    """Show who wrote what, History and chat, Dark mode (D120). ``authors=False`` for computes/creates, which track
-    no per-item authorship yet — the action still exists and starts checkable (D125's visible-but-inert treatment),
-    the page itself reports it permanently disabled."""
-    return (
-        _page(
-            "view.authors",
-            "Show Who Wrote What",
-            "Colour the text by the person who wrote it" if authors else "Not available yet",
-            accelerators=("<Primary><Alt>u",),
-            checkable=True,
-        ),
-        _page(
-            "view.panel",
-            "History and Chat",
-            "Show or hide the history and the chat",
-            accelerators=("<Primary><Alt>h",),
-            checkable=True,
-        ),
-        _page(
-            "view.replay",
-            "Replay History…",
-            "Look at the document as it was, step by step (the mouse wheel over the history does the same)",
-            accelerators=("<Primary><Alt>z",),
-        ),
-        _page(
-            "view.back",
-            "Back where I was",
-            "Go back to where you were before a tag in the chat took you somewhere else",
-            accelerators=("<Primary><Shift>b",),
-        ),
-        _page(
-            "view.dark",
-            "Dark Mode",
-            "Follow or override the system's light/dark setting",
-            accelerators=("<Primary><Alt><Shift>d",),
-            checkable=True,
-        ),
-    )
-
-
-#: Insert ▸ Table of Contents as composes and computes call it; creates calls it Agenda (E9.31).
-CONTENTS_ENTRY = ("Table of Contents", "A list of the headings, each a link to its place; it follows them by itself")
-AGENDA_ENTRY = ("Agenda", "A text box listing the slide titles with their numbers; it follows them by itself")
-
-
-def _insert_menu(contents: tuple[str, str], *, tables: bool = False) -> Menu:
-    """Insert ▸ Cross-Reference… (step H, Ctrl+F2, LibreOffice's Fields key; in computes off) and Table of Contents
-    (E9.31; in creates Agenda, ``contents`` is its label and tooltip), then Container ▸
-    LaTeX, Mermaid, Typst (D560): the same in every app. Computes shows Table of Contents and the page reports it off,
-    as it does List ▸. A container: the person writes the text and the server draws its picture (D390). The
-    keys are the weighty ones, Ctrl+Alt+Shift+I (index), F (formula), G (graph) and Y (Typst), because the plain
-    Ctrl+Alt letters are used up or belong to the desktop (see above). Composes alone has Table… (E9.32, D1208,
-    ``tables``): the other two apps have their grid already."""
-    label, tooltip = contents
-    table = (
-        (
-            (
-                _page(
-                    "insert.table",
-                    "Table…",
-                    "Put a table into the text at the caret",
-                    accelerators=("<Primary><Shift>f",),
-                ),
-            ),
-        )
-        if tables
+        if clear_cell_style
         else ()
     )
+    label, tooltip, fits = headings
+    style = Submenu(
+        "Style",
+        (
+            STYLE,
+            _page("format.look", "Edit…", look, key="<Primary><Alt><Shift>h", fits=SELECTED),
+            *clear,
+            _page(
+                "format.all-styles",
+                "All Styles…",
+                "List, rename, delete and hide the styles of this document",
+                key="<Primary><Alt><Shift>a",
+                fits=EDITORS,
+            ),
+        ),
+    )
+    lists = Submenu(
+        "List",
+        (
+            _page(
+                "format.bulleted-list",
+                "Bulleted List",
+                "Make the paragraphs a list with bullets, or plain again",
+                key="<Primary><Shift>8",
+                checkable=True,
+                fits=f"{EDITORS} · selection: text",
+            ),
+            _page(
+                "format.numbered-list",
+                "Numbered List",
+                "Make the paragraphs a numbered list, or plain again",
+                key="<Primary><Shift>7",
+                checkable=True,
+                fits=f"{EDITORS} · selection: text",
+            ),
+            _page(
+                "format.list-continue",
+                "Continue Previous List",
+                "Go on counting where the list before this one stopped",
+                key="<Primary><Alt><Shift>p",
+                fits=LIST_ITEM,
+            ),
+            _page(
+                "format.list-start",
+                "Start At…",
+                "The number this list starts at",
+                key="<Primary><Alt><Shift>n",
+                fits=LIST_ITEM,
+            ),
+            _page(
+                "format.list-indent",
+                "Indent",
+                "Move the item one level in",
+                key="Tab",
+                key_owner=KeyOwner.VIEW,
+                fits=LIST_ITEM,
+            ),
+            _page(
+                "format.list-outdent",
+                "Outdent",
+                "Move the item one level out",
+                key="<Shift>Tab",
+                key_owner=KeyOwner.VIEW,
+                fits=LIST_ITEM,
+            ),
+            _page("format.number-headings", label, tooltip, key="<Primary><Alt><Shift>b", checkable=True, fits=fits),
+            _page(
+                "format.all-numbering",
+                "All Numbering…",
+                "The numbering schemes of this document: how each level of a list is drawn",
+                key="<Primary><Alt><Shift>j",
+                fits=EDITORS,
+            ),
+        ),
+    )
+    palette = _page(
+        "format.colours",
+        "Palette…",
+        "The colours of this document, by what each one means",
+        key="<Primary><Alt>k",
+        fits=EDITORS,
+    )
+    return Menu("Format", ((style, lists, palette),))
+
+
+HEADINGS = ("Number Headings", "Number every heading style: 1, 1.1, 1.2, 2 …", EDITORS)
+SLIDE_TITLES = (
+    "Number All Slide Titles",
+    "Number the title of every slide: 1, 2, 3 …",
+    f"{EDITORS} · document: has more than one slide",
+)
+
+
+def _view_menu(*, authors: bool, own: tuple[Action, ...] = ()) -> Menu:
+    """Who Wrote What, History & Chat, Replay…, Back Where I Was, Dark Mode and the app's own views, one group.
+    ``authors=False`` for computes and creates, which track no authorship yet: the page reports it disabled (D125)."""
     return Menu(
-        "Insert",
+        "View",
         (
             (
                 _page(
-                    "insert.cross-reference",
-                    "Cross-Reference…",
-                    "Put a reference to a heading, an item or a named thing at the caret; it follows what it points at",
-                    accelerators=("<Primary>F2",),
+                    "view.authors",
+                    "Who Wrote What",
+                    "Colour the text by the person who wrote it" if authors else "Not available yet",
+                    key="<Primary><Alt>u",
+                    checkable=True,
+                    fits=EDITORS,
                 ),
-                _page("insert.contents", label, tooltip, accelerators=("<Primary><Alt><Shift>i",)),
-            ),
-            *table,
-            (
-                Submenu(
-                    "Container",
-                    (
-                        _page(
-                            "insert.container.latex",
-                            "LaTeX",
-                            "Put a formula or text written in LaTeX here",
-                            accelerators=("<Primary><Alt><Shift>f",),
-                        ),
-                        _page(
-                            "insert.container.mermaid",
-                            "Mermaid",
-                            "Put a diagram written in Mermaid here",
-                            accelerators=("<Primary><Alt><Shift>g",),
-                        ),
-                        _page(
-                            "insert.container.typst",
-                            "Typst",
-                            "Put a page of text written in Typst here",
-                            accelerators=("<Primary><Alt><Shift>y",),
-                        ),
-                    ),
+                _page(
+                    "view.panel",
+                    "History & Chat",
+                    "Show or hide the history and the chat",
+                    key="<Primary><Alt>h",
+                    mac="<Primary><Control>h",  # Cmd+Option+H hides the other apps (D1616)
+                    checkable=True,
+                    fits=ANYONE,
                 ),
+                _page(
+                    "view.replay",
+                    "Replay…",
+                    "Look at the document as it was, step by step (the mouse wheel over the history does the same)",
+                    key="<Primary><Alt>z",
+                    fits=EDITORS,
+                ),
+                _page(
+                    "view.back",
+                    "Back Where I Was",
+                    "Go back to where you were before a tag in the chat took you somewhere else",
+                    key="<Primary><Shift>b",
+                    fits=f"{ANYONE} · document: a place to go back to",
+                ),
+                _page(
+                    "view.dark",
+                    "Dark Mode",
+                    "Follow or override the system's light/dark setting",
+                    key="<Primary><Alt><Shift>d",
+                    checkable=True,
+                    fits=ANYONE,
+                ),
+                *own,
             ),
         ),
     )
 
 
-def _tools_ask() -> Action:
-    return _page(
-        "tools.ask", "Ask the Assistant…", "Write to the assistant in the chat", accelerators=("<Primary><Alt>j",)
-    )
+def _search(describe: str) -> Action:
+    """E5.15, E9.28, E10.19: the same entry and key in every app (D281); only the tooltip says what the app can look
+    in. Ctrl+H opens it with Replace showing and has no entry of its own."""
+    return _page("edit.search-replace", "Search and Replace…", describe, key="<Primary>f", fits=ANYONE)
+
+
+def _names(tooltip: str) -> Action:
+    return _page("tools.names", "Names…", tooltip, key="<Primary>F3", fits=ANYONE)
 
 
 def _preferences_menu() -> Menu:
-    """Shortcuts (D120, D122: an editable remapping UI is deferred; Ctrl+? as in GNOME), AI… (E7.11, the owners'
-    consent for Claude in this document: Ctrl+Shift+Alt+E, provisional, because the wished-for H is Present from This
-    Slide), then App Language (the owner's second i18n round): one checkable ``Kind.PAGE`` action per
-    :data:`LANGUAGES` entry, in its own section/flyout.
+    """Shortcuts (Ctrl+? as in GNOME), AI… (E7.11, the owners' consent for Claude in this document) and App Language ▸,
+    one checkable ``Kind.PAGE`` action per :data:`LANGUAGES` entry (E5.7).
 
     The language entries are the one place without a key: each is a language's own name, and there may be many.
     Mutual exclusion (picking one unchecks the rest) is enforced nowhere in this data — it is just ``LANGUAGES``
@@ -849,41 +837,46 @@ def _preferences_menu() -> Menu:
                 _page(
                     "config.shortcuts",
                     "Shortcuts",
-                    "The keyboard shortcuts this app uses",
-                    accelerators=("<Primary>question",),
+                    "The keyboard shortcuts of this app, and when each fits",
+                    key="<Primary>question",
+                    fits=ANYONE,
                 ),
                 _page(
                     "config.ai",
                     "AI…",
                     "Who may answer @ai in this document, and what is sent to Anthropic if Claude does (E7.11)",
-                    accelerators=("<Primary><Shift><Alt>e",),
+                    key="<Primary><Shift><Alt>e",
+                    fits=ANYONE,
                 ),
-            ),
-            (
                 Submenu(
                     "App Language",
-                    tuple(_page(f"config.language.{tag}", label, "", checkable=True) for tag, label in LANGUAGES),
+                    tuple(
+                        _page(f"config.language.{tag}", label, "", checkable=True, fits=ANYONE)
+                        for tag, label in LANGUAGES
+                    ),
                 ),
             ),
         ),
     )
 
 
-def _help_menu(title: str) -> Menu:
-    """Ask ai, How do I…?, Documentation, About (D120, D125, D126) — identical shape in every app; only the About
-    dialog's own title differs. F1 is help, as everywhere."""
+def _help_menu() -> Menu:
+    """Ask ai…, How Do I…?, Documentation, About (D120, D125, D126) — identical in every app. Ask ai… is the same
+    action as in Tools, with Help's own rule. F1 is help, as everywhere."""
     return Menu(
         "Help",
         (
             (
-                _page("help.ask", "Ask ai", "Open the chat with an empty prompt", accelerators=("<Primary>F1",)),
-                _page("help.how-to", "How Do I…?", "Answers to what people often want to do", accelerators=("F1",)),
+                _here(ASK, fits="ai: the ai can really answer"),
+                _page("help.how-to", "How Do I…?", "Answers to what people often want to do", key="F1", fits=ANYONE),
                 _page(
-                    "help.docs", "Documentation", "Every function and feature, to look up", accelerators=("<Shift>F1",)
+                    "help.docs",
+                    "Documentation",
+                    "Every function and feature, to look up",
+                    key="<Shift>F1",
+                    fits=ANYONE,
                 ),
-                _shell(
-                    "help.about", f"About {title}", "Version, authors and licence", accelerators=("<Primary><Shift>F1",)
-                ),
+                _shell("help.about", "About", "Version, authors and licence", key="<Primary><Shift>F1", fits=ANYONE),
             ),
         ),
     )
@@ -893,126 +886,145 @@ def _manifest(
     app: str,
     title: str,
     *,
-    edit: Menu,
-    format_menu: Menu,
-    view: Menu,
-    tools: Menu,
-    prints: bool,
-    contents: tuple[str, str] = CONTENTS_ENTRY,
-    tables: bool = False,
+    menus: tuple[Menu, Menu, Menu, Menu, Menu],
+    context_menus: tuple[ContextMenu, ...],
+    keys_only: tuple[Action, ...] = (),
 ) -> Manifest:
+    """File, then the app's Edit, Insert, Format, View and Tools, then Preferences and Help."""
     return Manifest(
         app,
-        (
-            _file_menu(title=title, prints=prints),
-            edit,
-            _insert_menu(contents, tables=tables),
-            format_menu,
-            view,
-            tools,
-            _preferences_menu(),
-            _help_menu(title),
-        ),
+        (_file_menu(title=title), *menus, _preferences_menu(), _help_menu()),
+        context_menus=context_menus,
+        keys_only=keys_only,
     )
 
 
-def _table_block() -> tuple[MenuEntry, ...]:
-    """Tools ▸ Row ▸, Column ▸, Sort ▸, Merge Cells, Split Cell, Table Options… (E9.32, D1208; moved from Edit to Tools
-    by the owner, 2026-11-19, as computes has its pivot table there): composes only, and on only while the caret is in
-    a table box. Row and Column are computes' (same ids, words and keys); the others
-    take Ctrl+Shift with a letter nobody else has, F, L, G, H (Insert ▸ Table… is F), X and Y for the two sorts."""
-    return (
-        *_row_column_menus(),
-        Submenu(
-            "Sort",
-            (
-                _page(
-                    "tools.sort-ascending",
-                    "Ascending",
-                    "Order the rows of the table by the column the caret is in, smallest first",
-                    accelerators=("<Primary><Shift>x",),
-                ),
-                _page(
-                    "tools.sort-descending",
-                    "Descending",
-                    "Order the rows of the table by the column the caret is in, largest first",
-                    accelerators=("<Primary><Shift>y",),
-                ),
-            ),
-        ),
-        _page(
-            "tools.merge-cells",
-            "Merge Cells",
-            "Make this cell and the one next to it one cell",
-            accelerators=("<Primary><Shift>g",),
-        ),
-        _page(
-            "tools.split-cell",
-            "Split Cell",
-            "Make a merged cell into single cells again",
-            accelerators=("<Primary><Shift>h",),
-        ),
-        _page(
-            "tools.table-options",
-            "Table Options…",
-            "Header rows, banding, look, width and the columns of this table",
-            accelerators=("<Primary><Shift>l",),
-        ),
-    )
+# ----------------------------------------------------------------------------------------------------- context menus
+# A right press on a thing opens its menu (D1602, D1612, D1619); the first entries name and style it. The page draws
+# them in every client. An entry that is also in a menu is the same action, with the place's words and rule.
 
 
-def _row_column_menus() -> tuple[Submenu, Submenu]:
-    """Edit ▸ Row ▸ and Column ▸ (D130, confirmed by the owner 2026-11-10): grouped rather than six flat items. Computes
-    has them for the sheet; composes has them for the table the caret is in (E9.32, D1208) with the same ids, the same
-    words and the same keys, so that one action has one key in every app. The page reports them off outside a table."""
-    return (
-        Submenu(
-            "Row",
+def _thing(context: str, label: str, *more: tuple[MenuEntry, ...], style: bool = False) -> ContextMenu:
+    """A thing's menu: Name & Describe… (Style… where it has one) and Reference in Chat, then ``more``."""
+    first = (
+        _here(DESCRIBE, fits=EDITORS),
+        *((_here(STYLE, "Style…", fits=EDITORS),) if style else ()),
+        _here(REFERENCE, fits=EDITORS),
+    )
+    return ContextMenu(context, label, (first, *more))
+
+
+def _object_menu(*, native: bool, edit_text: bool, wrap: bool, grid: bool) -> ContextMenu:
+    """A picture, text box, shape, container or chart (D1229, D1024, D1064). Its Cut and Copy are Edit's: in composes
+    WebKit's, whose clipboard events the page's object clipboard hears (``object-clipboard.ts``)."""
+    copy, cut, _, _ = _clipboard(native=native)
+    first: tuple[MenuEntry, ...] = (
+        _here(DESCRIBE, fits=EDITORS),
+        _here(REFERENCE, fits=EDITORS),
+        *(
             (
                 _page(
-                    "edit.row-insert-above",
-                    "Insert Above",
-                    "Insert a row above the selection",
-                    accelerators=("<Alt><Shift>Up",),
+                    "edit.edit-text",
+                    "Edit Text",
+                    "Write in the object you have selected",
+                    key="Return",
+                    key_owner=KeyOwner.VIEW,
+                    fits=f"{EDITORS} · selection: an object that holds text",
                 ),
-                _page(
-                    "edit.row-insert-below",
-                    "Insert Below",
-                    "Insert a row below the selection",
-                    accelerators=("<Alt><Shift>Down",),
-                ),
-                _page(
-                    "edit.row-delete",
-                    "Delete",
-                    "Delete the selected rows",
-                    accelerators=("<Primary><Alt>minus",),
-                ),
-            ),
+            )
+            if edit_text
+            else ()
         ),
-        Submenu(
-            "Column",
+        _here(STYLE, "Style…", fits=EDITORS),
+        ROTATE_BY,
+        *(
             (
                 _page(
-                    "edit.column-insert-left",
-                    "Insert Left",
-                    "Insert a column to the left of the selection",
-                    accelerators=("<Alt><Shift>Left",),
+                    "format.wrap-text",
+                    "Wrap Text…",
+                    "How the text flows round the object you have selected",
+                    key="<Primary><Alt>r",
+                    fits=EDITORS,
                 ),
-                _page(
-                    "edit.column-insert-right",
-                    "Insert Right",
-                    "Insert a column to the right of the selection",
-                    accelerators=("<Alt><Shift>Right",),
-                ),
-                _page(
-                    "edit.column-delete",
-                    "Delete",
-                    "Delete the selected columns",
-                    accelerators=("<Primary><Alt>underscore",),  # Shift+- types "_"
-                ),
-            ),
+            )
+            if wrap
+            else ()
         ),
     )
+    release = (
+        _page(
+            "edit.release-from-grid",
+            "Release from Grid",
+            "Stop this object following the layout grid",
+            fits=f"{EDITORS} · selection: an object on the grid",
+        ),
+    )
+    last = (*(release if grid else ()), DELETE)
+    return ContextMenu("object", "Object", (first, (_here(cut, fits=EDITORS), _here(copy, fits=EDITORS)), last))
+
+
+def _paragraph_menus() -> tuple[ContextMenu, ...]:
+    """A paragraph and a list, in a text and in a text box (D1619)."""
+    return (_thing("paragraph", "Paragraph", style=True), _thing("list", "List"))
+
+
+def _reference_menu() -> ContextMenu:
+    """A reference, in the text or in a text box: Go to Target (D1607)."""
+    go = _page(
+        "edit.go-to-target",
+        "Go to Target",
+        "Go to what the reference points at (Ctrl+click on a reference does the same)",
+        key="<Primary><Alt>Return",
+        fits=ANYONE,
+    )
+    return ContextMenu("reference", "Reference", ((go,),))
+
+
+ROW_ABOVE = _page(
+    "edit.row-insert-above", "Row Above", "Insert a row above the selection", key="<Alt><Shift>Up", fits=CELLS
+)
+ROW_BELOW = _page(
+    "edit.row-insert-below", "Row Below", "Insert a row below the selection", key="<Alt><Shift>Down", fits=CELLS
+)
+COLUMN_LEFT = _page(
+    "edit.column-insert-left",
+    "Column Left",
+    "Insert a column to the left of the selection",
+    key="<Alt><Shift>Left",
+    fits=CELLS,
+)
+COLUMN_RIGHT = _page(
+    "edit.column-insert-right",
+    "Column Right",
+    "Insert a column to the right of the selection",
+    key="<Alt><Shift>Right",
+    fits=CELLS,
+)
+REMOVE_ROW = _page("edit.row-delete", "Row", "Remove the selected rows", key="<Primary><Alt>minus", fits=CELLS)
+REMOVE_COLUMN = _page(
+    "edit.column-delete",
+    "Column",
+    "Remove the selected columns",
+    key="<Primary><Alt>underscore",  # Shift+- types "_"
+    fits=CELLS,
+)
+
+
+def _header_menus() -> tuple[ContextMenu, ...]:
+    """The row and column headers, of a sheet and of a table in a text (D1612)."""
+    row = (
+        _here(ROW_ABOVE, fits=EDITORS),
+        _here(ROW_BELOW, fits=EDITORS),
+        _here(REMOVE_ROW, "Remove Row", fits=EDITORS),
+        _page("edit.row-height", "Row Height…", "The height of the row whose header you pressed", fits=EDITORS),
+    )
+    column = (
+        _here(COLUMN_LEFT, fits=EDITORS),
+        _here(COLUMN_RIGHT, fits=EDITORS),
+        _here(REMOVE_COLUMN, "Remove Column", fits=EDITORS),
+        _page("edit.column-width", "Column Width…", "The width of the column whose header you pressed", fits=EDITORS),
+    )
+    return (ContextMenu("row-header", "Row Header", (row,)), ContextMenu("column-header", "Column Header", (column,)))
 
 
 # ------------------------------------------------------------------------------------------------------ the three apps
@@ -1020,179 +1032,287 @@ def _row_column_menus() -> tuple[Submenu, Submenu]:
 
 def composes() -> Manifest:
     """The menus of claudia composes."""
-    edit_menu = Menu(
-        "Edit",
+    insert = Menu(
+        "Insert",
         (
-            _shared_edit_block(),
-            _shared_clipboard_block(native=True),
-            _search_block("Find words, headings, remarks and what is said in objects, and replace them"),
-            _reference_block(),
             (
-                _page("edit.image", "Image…", "Put a picture in the text", accelerators=("<Primary><Alt>i",)),
-                _page("edit.text-box", "Text Box", "Add a text box to the text", accelerators=("<Primary><Alt>b",)),
+                _contents(
+                    "Table of Contents", "A list of the headings, each a link to its place; it follows them by itself"
+                ),
+                _cross_reference(),
             ),
             (
+                _page(
+                    "insert.table",
+                    "Table…",
+                    "Put a table into the text at the caret",
+                    key="<Primary><Alt><Shift>t",
+                    fits=EDITORS,
+                ),
+            ),
+            (_image("in the text"), _text_box("to the text"), _shapes(), _containers()),
+        ),
+    )
+    view = _view_menu(
+        authors=True,
+        own=(
+            _page(
+                "view.page",
+                "Page View",
+                "Show the text as pages instead of a flowing text",
+                key="<Primary><Alt>p",
+                checkable=True,
+                fits=ANYONE,
+            ),
+        ),
+    )
+    tools = Menu(
+        "Tools", ((ASK, _search("Find words, headings, remarks and what is said in objects, and replace them")),)
+    )
+    table = ContextMenu(
+        "table",
+        "Table",
+        (
+            (
+                _here(DESCRIBE, fits=EDITORS),
+                _here(REFERENCE, fits=EDITORS),
+                _page(
+                    "tools.table-options",
+                    "Table Options…",
+                    "Header rows, banding, look, width and the columns of this table",
+                    key="<Primary><Shift>l",
+                    fits=EDITORS,
+                ),
+            ),
+            (
+                _page(
+                    "tools.merge-cells",
+                    "Merge Cells",
+                    "Make this cell and the one next to it one cell",
+                    key="<Primary><Shift>g",
+                    fits=f"{EDITORS} · selection: more than one cell of the table",
+                ),
+                _page(
+                    "tools.split-cell",
+                    "Split Cell",
+                    "Make a merged cell into single cells again",
+                    key="<Primary><Shift>h",
+                    fits=f"{EDITORS} · selection: a merged cell",
+                ),
                 Submenu(
-                    "Insert",
+                    "Sort",
                     (
                         _page(
-                            "edit.soft-hyphen",
-                            "Soft Hyphen",
-                            "Where the word may be broken at the end of a line",
-                            accelerators=("<Primary>minus",),
+                            "tools.sort-ascending",
+                            "Ascending",
+                            "Order the rows of the table by the column the caret is in, smallest first",
+                            key="<Primary><Shift>x",
+                            fits=EDITORS,
                         ),
                         _page(
-                            "edit.nonbreaking-hyphen",
-                            "Non-breaking Hyphen",
-                            "A hyphen the line is never broken at",
-                            accelerators=("<Primary>underscore",),
+                            "tools.sort-descending",
+                            "Descending",
+                            "Order the rows of the table by the column the caret is in, largest first",
+                            key="<Primary><Shift>y",
+                            fits=EDITORS,
                         ),
                     ),
                 ),
             ),
+            (_here(DELETE, "Delete Table", fits=EDITORS),),
         ),
     )
-    view_menu = Menu(
-        "View",
-        (
-            _shared_view_block(authors=True),
-            (
-                _page(
-                    "view.page",
-                    "Page",
-                    "Show the text as pages instead of a flowing text",
-                    accelerators=("<Primary><Alt>p",),
-                    checkable=True,
-                ),
-            ),
-        ),
-    )
-    # Tools has the generic entry (D126) and the table commands (D1229).
     return _manifest(
         "composes",
         "Claudia Composes",
-        edit=edit_menu,
-        format_menu=_format_menu(look="Change how this kind of paragraph looks", describe=True, wrap=True, rotate=True),
-        view=view_menu,
-        tools=Menu("Tools", ((_tools_ask(),), _table_block())),
-        prints=True,
-        tables=True,
+        menus=(
+            _edit_menu(native=True),
+            insert,
+            _format_menu(look="Change how this kind of paragraph looks", headings=HEADINGS),
+            view,
+            tools,
+        ),
+        context_menus=(
+            _object_menu(native=True, edit_text=False, wrap=True, grid=False),
+            *_paragraph_menus(),
+            table,
+            _thing("heading", "Heading"),
+            *_header_menus(),
+            _reference_menu(),
+        ),
+        keys_only=(
+            _page(
+                "edit.nonbreaking-hyphen",
+                "Non-breaking Hyphen",
+                "A hyphen the line is never broken at",
+                key="<Primary>underscore",
+                fits=EDITORS,
+            ),
+        ),
     )
 
 
 def computes() -> Manifest:
     """The menus of claudia computes."""
-    edit_menu = Menu(
-        "Edit",
-        (
-            _shared_edit_block(),
-            _shared_clipboard_block(native=False),
-            _search_block(),
-            _reference_block(),
-            (
-                _page("edit.new-sheet", "New Sheet…", "Add a new sheet to the document", accelerators=("<Shift>F11",)),
-                _page(
-                    "edit.rename-sheet",
-                    "Rename Sheet…",
-                    "Give the sheet you are on another name; the formulas that read it follow",
-                    accelerators=("<Primary><Shift>F11",),
-                ),
-                _page("edit.image", "Image…", "Put a picture on the sheet", accelerators=("<Primary><Alt>i",)),
-                _page("edit.chart", "Chart…", "Add a chart of the selected cells", accelerators=("<Primary><Alt>c",)),
+    edit = _edit_menu(
+        native=False,
+        own=(
+            _page(
+                "edit.rename-sheet",
+                "Rename Sheet…",
+                "Give the sheet you are on another name; the formulas that read it follow",
+                key="<Primary><Shift>F11",
+                fits=EDITORS,
             ),
-            _row_column_menus(),
+            Submenu("Remove", (REMOVE_ROW, REMOVE_COLUMN)),
+        ),
+    )
+    insert = Menu(
+        "Insert",
+        (
+            (
+                _image("on the sheet"),
+                _containers(),
+                _page("edit.chart", "Chart…", "Add a chart of the selected cells", key="<Primary><Alt>c", fits=EDITORS),
+            ),
             (
                 _page(
-                    "edit.clear",
-                    "Clear Cells",
-                    "Clear the selected cells",
-                    accelerators=("Delete",),
-                    key_owner=KeyOwner.VIEW,
+                    "edit.new-sheet", "New Sheet…", "Add a new sheet to the document", key="<Shift>F11", fits=EDITORS
                 ),
+                Submenu("Row or Column", (ROW_ABOVE, ROW_BELOW, COLUMN_LEFT, COLUMN_RIGHT)),
             ),
         ),
     )
-    tools_menu = Menu(
+    resample = _page(
+        "tools.resample",
+        "Re-sample",
+        "Draw new random numbers for everybody",
+        key="F9",
+        fits=f"{EDITORS} · document: has random numbers",
+    )
+    outcomes = _page(
+        "tools.outcomes",
+        "Outcomes of This Cell…",
+        "Every outcome of the alternatives this cell depends on",
+        key="<Primary><Alt>o",
+        fits=f"{ANYONE} · selection: a cell or range · document: has random numbers",
+    )
+    follow = _page(
+        "tools.follow",
+        "Follow Computation",
+        "Light up the cells that take part in this cell's computation",
+        key="<Primary><Alt>f",
+        checkable=True,
+        fits=f"{ANYONE} · selection: a cell or range",
+    )
+    tools = Menu(
         "Tools",
         (
-            # Only the generic entry (D126): "Ask for an Example Budget" was taken out (2026-11-12).
-            (_tools_ask(),),
+            (ASK, _search("Find text, formulas and values, and replace them")),
             # Random numbers, alternatives and following a computation (E6.21–E6.23, D292–D297).
             (
-                _page(
-                    "tools.random",
-                    "Random Generator…",
-                    "Pick a distribution and put RANDOM into the cell",
-                    accelerators=("<Primary><Alt>r",),
-                ),
-                _page(
-                    "tools.resample",
-                    "Resample Random Numbers",
-                    "Draw new random numbers for everybody",
-                    accelerators=("F9",),
-                ),
-                _page(
-                    "tools.outcomes",
-                    "Outcomes of This Cell…",
-                    "Every outcome of the alternatives this cell depends on",
-                    accelerators=("<Primary><Alt>o",),
-                ),
-                _page(
-                    "tools.follow",
-                    "Follow Computation",
-                    "Light up the cells that take part in this cell's computation",
-                    accelerators=("<Primary><Alt>f",),
-                    checkable=True,
+                Submenu(
+                    "Random Generator",
+                    (
+                        _page(
+                            "tools.random",
+                            "Generate…",
+                            "Pick a distribution and put RANDOM into the cell",
+                            key="<Primary><Alt>r",
+                            fits=CELLS,
+                        ),
+                        resample,
+                    ),
                 ),
             ),
-            # Names, tables and SQL() (E6.5, D600–D609).
-            (
-                _page(
-                    "tools.names",
-                    "Names…",
-                    "The named ranges and tables of this workbook",
-                    accelerators=("<Primary>F3",),
-                ),
-                _page(
-                    "tools.sql",
-                    "SQL Query…",
-                    "Put the result of a query on the selected cell",
-                    accelerators=("<Primary><Alt>y",),
-                ),
-            ),
-            # Pivot tables (E6.30, D624): the entries that work on a pivot are off while the cursor is not in one.
-            # The keys are not the mock's proposals (Ctrl+Alt+T, E, M, Q): those are the terminal on Ubuntu and
-            # AltGr+E/M/Q (€, µ, @) on a German keyboard, which this manifest's own test refuses (D627).
+            (Submenu("Tracking", (outcomes, follow)),),
+            (_names("The named ranges and tables of this workbook"),),
+            # Pivot tables (E6.30, D624); what works on one pivot table is in its context menu (D1612).
             (
                 _page(
                     "tools.pivot",
                     "Pivot Table…",
                     "Make a pivot table from a table",
-                    accelerators=("<Primary><Alt>v",),
+                    key="<Primary><Alt>v",
+                    fits=CELLS,
+                ),
+            ),
+            (
+                _page(
+                    "tools.sql",
+                    "SQL…",
+                    "Put the result of a query on the selected cell",
+                    key="<Primary><Alt>y",
+                    fits=EDITORS,
+                ),
+            ),
+        ),
+    )
+    copy, cut, paste, plain = _clipboard(native=False)
+    cell = ContextMenu(
+        "cell",
+        "Cell",
+        (
+            (_here(DESCRIBE, fits=EDITORS), _here(STYLE, "Style…", fits=EDITORS), _here(REFERENCE, fits=EDITORS)),
+            (
+                _here(copy, fits=EDITORS),
+                _here(cut, fits=EDITORS),
+                _here(paste, fits=EDITORS),
+                Submenu("Paste As", (_here(plain, fits=EDITORS),)),
+            ),
+            (
+                _here(outcomes, fits=f"{ANYONE} · document: has random numbers"),
+                _here(follow, fits=ANYONE),
+                _here(resample, fits=f"{EDITORS} · document: has random numbers"),
+            ),
+        ),
+    )
+    pivot = ContextMenu(
+        "pivot",
+        "Pivot Table",
+        (
+            (
+                _page(
+                    "tools.pivot-value",
+                    "Value Field Settings…",
+                    "How the values of a pivot table field are put together",
+                    key="<Primary><Shift><Alt>u",
+                    fits=EDITORS,
                 ),
                 _page(
                     "tools.pivot-fields",
                     "Pivot Fields",
                     "Show or hide the panel with the fields of the pivot table",
-                    accelerators=("<Primary><Shift><Alt>m",),
-                ),
-                _page(
-                    "tools.pivot-value",
-                    "Value Field Settings…",
-                    "How the values of a pivot table field are put together",
-                    accelerators=("<Primary><Shift><Alt>u",),
+                    key="<Primary><Shift><Alt>m",
+                    fits=EDITORS,
                 ),
                 _page(
                     "tools.pivot-sql",
-                    "Show Pivot Table as SQL…",
+                    "Show Pivot as SQL…",
                     "The query the pivot table asks of its source",
-                    accelerators=("<Primary><Shift><Alt>q",),
+                    key="<Primary><Shift><Alt>q",
+                    fits=ANYONE,
                 ),
                 _page(
                     "tools.pivot-delete",
                     "Delete Pivot Table…",
                     "Take the pivot table away; its source stays",
-                    accelerators=("<Primary><Shift><Alt>v",),
+                    key="<Primary><Shift><Alt>v",
+                    fits=EDITORS,
+                ),
+            ),
+        ),
+    )
+    chart = ContextMenu(
+        "chart",
+        "Chart on a Sheet",
+        (
+            (
+                _page(
+                    "edit.move-to-slide",
+                    "Move to Slide",
+                    "Make a slide right after the sheet and move the chart onto it",
+                    fits=EDITORS,
                 ),
             ),
         ),
@@ -1200,102 +1320,124 @@ def computes() -> Manifest:
     return _manifest(
         "computes",
         "Claudia Computes",
-        edit=edit_menu,
-        format_menu=_format_menu(
-            look="Change how the object you have selected looks", clear_cell_style=True, describe=True, rotate=True
+        menus=(
+            edit,
+            insert,
+            _format_menu(
+                look="Change how the object you have selected looks", clear_cell_style=True, headings=HEADINGS
+            ),
+            _view_menu(authors=False),
+            tools,
         ),
-        view=Menu("View", (_shared_view_block(authors=False),)),
-        tools=tools_menu,
-        prints=True,
+        context_menus=(
+            _object_menu(native=False, edit_text=False, wrap=False, grid=False),
+            cell,
+            _thing("paragraph", "Paragraph", style=True),
+            _thing("list", "List"),
+            _thing("table", "Table"),
+            _thing("tab", "Sheet Tab"),
+            *_header_menus(),
+            chart,
+            pivot,
+            _reference_menu(),
+        ),
+        keys_only=(
+            _page(
+                "edit.clear",
+                "Clear Cells",
+                "Clear the selected cells",
+                key="Delete",
+                key_owner=KeyOwner.VIEW,
+                fits=CELLS,
+            ),
+        ),
     )
 
 
 def creates() -> Manifest:
-    """The menus of claudia creates.
-
-    The shape library (``InsertBar``'s per-document list) is dynamic, like composes' style names — see this module's
-    docstring — so it has no entry here; only the fixed actions around it do.
-    """
-    edit_menu = Menu(
-        "Edit",
+    """The menus of claudia creates. The shape library has fixed entries for the three shapes the workbook names; the
+    rest of it stays in the slide's tool bar."""
+    edit = _edit_menu(
+        native=False,
+        own=(
+            _page(
+                "edit.rename-slide",
+                "Rename Slide…",
+                "Give the slide you are on another name; a tag in the chat keeps pointing at it",
+                key="<Primary><Shift>F11",
+                fits=EDITORS,
+            ),
+        ),
+    )
+    insert = Menu(
+        "Insert",
         (
-            _shared_edit_block(),
-            _shared_clipboard_block(native=False),
-            _search_block("Find words, labels, speaker notes and descriptions, and replace them"),
-            _reference_block(),
             (
-                _page(
-                    "edit.new-slide", "New Slide", "Add a new slide to the presentation", accelerators=("<Primary>m",)
-                ),
-                _page(
-                    "edit.rename-slide",
-                    "Rename Slide…",
-                    "Give the slide you are on another name; a tag in the chat keeps pointing at it",
-                    accelerators=("<Primary><Shift>F11",),
-                ),
-                _page(
-                    "edit.slide-time",
-                    "Plan the Time of This Slide…",
-                    "How long you want to spend on this slide; the bar below the slides adds the times up",
-                    accelerators=("<Primary><Alt><Shift>t",),
+                _cross_reference(),
+                _contents(
+                    "Agenda", "A text box listing the slide titles with their numbers; it follows them by itself"
                 ),
             ),
+            (_image("on the slide"), _text_box("to the slide"), _shapes(), _containers()),
             (
                 _page(
-                    "edit.edit-text",
-                    "Edit Text",
-                    "Write in the selected text box",
-                    accelerators=("Return",),
-                    key_owner=KeyOwner.VIEW,
-                ),
-                _page("edit.text-box", "Text Box", "Add a text box to the slide", accelerators=("<Primary><Alt>b",)),
-                _page("edit.image", "Image…", "Put a picture on the slide", accelerators=("<Primary><Alt>i",)),
-            ),
-            (
-                _page(
-                    "edit.delete",
-                    "Delete",
-                    "Take the selected object off the slide",
-                    accelerators=("Delete",),
-                    key_owner=KeyOwner.VIEW,
+                    "edit.new-slide", "New Slide", "Add a new slide to the presentation", key="<Primary>m", fits=EDITORS
                 ),
             ),
         ),
     )
-    view_menu = Menu(
-        "View",
-        (
-            _shared_view_block(authors=False),
-            (
-                _page(
-                    "view.grid",
-                    "Show Grid",
-                    "Show the grid that objects snap to",
-                    accelerators=("<Primary><Alt>g",),
-                    checkable=True,
-                ),
+    view = _view_menu(
+        authors=False,
+        own=(
+            _page(
+                "view.grid",
+                "Grid",
+                "Show the grid that objects snap to",
+                key="<Primary><Alt>g",
+                checkable=True,
+                fits=ANYONE,
             ),
-            # The show (E10.2, D344). F5 is a system key on a Mac and cannot be the only way in, so each entry also has
-            # a chord on a letter that every system leaves alone; the page handles both (``lib/present-keys.ts``).
+            _page(
+                "view.speaker-notes",
+                "Speaker Notes",
+                "Show or hide the notes under the slide",
+                key="<Primary><Alt>v",
+                checkable=True,
+                fits=ANYONE,
+            ),
+        ),
+    )
+    # The show (E10.2, D344): F5 and Shift+F5, as in every presentation program.
+    tools = Menu(
+        "Tools",
+        (
+            (ASK, _search("Find words, labels, speaker notes and descriptions, and replace them")),
             (
-                _page(
-                    "view.present-start",
-                    "Present from the First Slide",
-                    "Show the presentation full screen, beginning with the first slide",
-                    accelerators=("F5", "<Primary><Alt>p"),
+                Submenu(
+                    "Present",
+                    (
+                        _page(
+                            "view.present-here",
+                            "From Slide",
+                            "Show the presentation full screen, beginning with the slide you are on",
+                            key="<Shift>F5",
+                            fits=ANYONE,
+                        ),
+                        _page(
+                            "view.present-start",
+                            "From Beginning",
+                            "Show the presentation full screen, beginning with the first slide",
+                            key="F5",
+                            fits=ANYONE,
+                        ),
+                    ),
                 ),
                 _page(
-                    "view.present-here",
-                    "Present from This Slide",
-                    "Show the presentation full screen, beginning with the slide you are on",
-                    accelerators=("<Shift>F5", "<Primary><Alt><Shift>h"),
-                ),
-                _page(
-                    "view.speaker-notes",
-                    "Speaker Notes",
-                    "Show or hide the notes under the slide",
-                    accelerators=("<Primary><Alt>v",),
-                    checkable=True,
+                    "edit.slide-time",
+                    "Plan Time for Slide…",
+                    "How long you want to spend on this slide; the bar below the slides adds the times up",
+                    key="<Primary><Alt><Shift>t",
+                    fits=EDITORS,
                 ),
             ),
         ),
@@ -1303,17 +1445,20 @@ def creates() -> Manifest:
     return _manifest(
         "creates",
         "Claudia Creates",
-        edit=edit_menu,
-        format_menu=_format_menu(
-            look="Change how the object you have selected looks",
-            describe=True,
-            rotate=True,
-            headings=("Number All Slide Titles", "Number the title of every slide: 1, 2, 3 …"),
+        menus=(
+            edit,
+            insert,
+            _format_menu(look="Change how the object you have selected looks", headings=SLIDE_TITLES),
+            view,
+            tools,
         ),
-        view=view_menu,
-        tools=Menu("Tools", ((_tools_ask(),),)),
-        prints=True,
-        contents=AGENDA_ENTRY,
+        context_menus=(
+            _object_menu(native=False, edit_text=True, wrap=False, grid=True),
+            *_paragraph_menus(),
+            _thing("tab", "Slide Tab"),
+            _thing("slide", "Slide"),
+            _reference_menu(),
+        ),
     )
 
 

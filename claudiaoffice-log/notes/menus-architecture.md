@@ -19,7 +19,7 @@ disagree about what fits. That is the definition of done's "web app and desktop 
 
 ## 2. What I checked in the code
 
-- **The desktop menus have one definition already:** `clients/linux/src/claudia_shell_gtk/manifest.py`.
+- **The desktop menus have one definition already:** `manifest.py`, then in the Linux client (`claudia_shell_gtk`), now `clients/contract/src/claudia_menus/manifest.py` (slice 1).
   - The GTK shell builds its menus from it.
   - `scripts/generate_keys.py` makes `web/app/lib/keys.generated.ts` from it.
   - The Neutralino menus (`clients/neutralino/src/generated/menu.*.json`) are made from it too.
@@ -175,9 +175,9 @@ app by app:
 
 ## 5. Order of work (vertical slices, each red then green)
 
-1. **The definition moves** to `clients/contract/` with everything that reaches it (D1643); nothing else changes.
-2. **The definition grows** (`fits`, `keys`, context menus), rebuilt to the workbook (E5.23's content), with
-   `generate_menus.py` and the workbook test.
+1. ~~**The definition moves** to `clients/contract/` with everything that reaches it (D1643); nothing else changes.~~ Done.
+2. ~~**The definition grows** (`fits`, `keys`, context menus), rebuilt to the workbook (E5.23's content), with
+   the workbook test.~~ Done; `generate_keys.py` keeps its name until slice 4 writes the whole definition for the web.
 3. **Judging:** `fits/`, pure, with every rule of the definition parsing.
 4. **The web from the definition**, one workspace at a time, everything at "grey" first, so behaviour only changes
    where the workbook moved entries. Then the trial's default, hide.
