@@ -554,6 +554,12 @@ all-users install with the service; macOS: `./start-mac-client.sh` next to an in
 until someone stops the service. **Acceptance:** a scenario with a service of another version on the computer, where the
 person's apps start her own server and open.
 
+
+### UX-94 · "On Shared on this computer" heads the list of a place's documents · P3 · size 3 · in review
+**Seen** in the screenshot of the browser scenario of `desktop/private-place.feature` (2026-11-25): the list's heading was
+built as `t('On {place} · {count}')`, which suited "This computer" but reads "On Shared on this computer · 0" with the
+names of D1623. **Built on `mac-installer`, in review:** the heading is the place's name and the count, `{place} ·
+{count}` (German the same), as the headline above it; scenario `# UX-94` of `desktop/private-place.feature`.
 ## Found in batch 3 of the bug eater (2026-11-25; branch `batch-3`)
 
 ### UX-91 · In Firefox the down arrow does not go into a new table · P2 · size 2 · open
@@ -636,9 +642,3 @@ LibreOffice saved comes in at its place.
 which Word writes for nearly every paragraph) is counted as a `formatting` loss, though the properties of the mark are
 not visible in the text. So the import over-counts what it leaves out. **Acceptance:** a docx whose only run properties
 are those of paragraph marks reports no `formatting` loss.
-
-### UX-94 · "On Shared on this computer" heads the list of a place's documents · P3 · size 3 · in review
-**Seen** in the screenshot of the browser scenario of `desktop/private-place.feature` (2026-11-25): the list's heading was
-built as `t('On {place} · {count}')`, which suited "This computer" but reads "On Shared on this computer · 0" with the
-names of D1623. **Built on `mac-installer`, in review:** the heading is the place's name and the count, `{place} ·
-{count}` (German the same), as the headline above it; scenario `# UX-94` of `desktop/private-place.feature`.
