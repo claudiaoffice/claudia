@@ -6,6 +6,12 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 ## [Unreleased]
 
 ### Added
+- The title, subtitle and body placeholders of a pptx come in (CODE-45): `pptx_to_slides` reads one with words as a
+  text box in the place and size its layout gives it, the title's words in the theme's heading font and a body's first
+  paragraph with the bullet of its master; `pptx_import_losses` no longer counts them as `object`, and an empty one
+  (it shows nothing) as nothing. `apply_edits_to_pptx` patches them in place, so they stay placeholders; a bullet taken
+  away is written as `buNone`, so the master's does not come back. A footer, a date or a slide number stays in the
+  file (`object`), as before.
 - What people call the slides and the objects goes out and comes back (CODE-25, D550): `slides_to_pptx` and
   `apply_edits_to_pptx` write `p:cNvPr/@name` and `p:cSld/@name`, `slides_to_odp` and `apply_edits_to_odp` the
   `draw:name` of a page and of an object; `pptx_to_slides` and `odp_to_slides` read them, two things a file calls the

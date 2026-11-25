@@ -19,6 +19,7 @@ style; the markers are derived, never characters of the words. The two formats h
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 
 from lxml import etree
@@ -57,6 +58,8 @@ _STEP = 342_900
 #: What may follow the bullet in an ``a:pPr`` (the schema's order).
 _AFTER_BULLET = ("tabLst", "defRPr", "extLst")
 _BULLETS = ("buNone", "buAutoNum", "buChar", "buBlip", "buFont", "buFontTx")
+#: The elements that say whether a paragraph has a bullet (the others of ``_BULLETS`` only say how it looks).
+_SIGNS = ("buNone", "buAutoNum", "buChar", "buBlip")
 
 
 def _a(local: str) -> str:
@@ -123,9 +126,10 @@ def references(model: SlideModel) -> int:
 
 
 # -- pptx ------------------------------------------------------------------------------------------------------------
-def write_pptx_mark(paragraph: etree._Element, mark: Mark | None) -> bool:
-    """Give an ``a:p`` the bullet or automatic number of ``mark`` (none: no bullet). ``False`` when PowerPoint cannot
-    draw the marker; the paragraph then gets none."""
+def write_pptx_mark(paragraph: etree._Element, mark: Mark | None, inherited: Sequence[etree._Element] = ()) -> bool:
+    """Give an ``a:p`` the bullet or automatic number of ``mark`` (none: no bullet, also none of the list styles it
+    ``inherited`` its look from, see :func:`read_pptx_mark`). ``False`` when PowerPoint cannot draw the marker; the
+    paragraph then gets none."""
     properties = paragraph.find(_a("pPr"))
     if properties is None:
         properties = etree.Element(_a("pPr"))
@@ -136,6 +140,8 @@ def write_pptx_mark(paragraph: etree._Element, mark: Mark | None) -> bool:
         if name in properties.attrib:
             del properties.attrib[name]
     if mark is None:
+        if read_pptx_mark(paragraph, inherited) is not None:
+            _put_bullet(properties, etree.Element(_a("buNone")))  # the master's bullet is not shown either
         return True
     look = mark.look
     if not sayable_in_pptx(mark):
@@ -151,24 +157,45 @@ def write_pptx_mark(paragraph: etree._Element, mark: Mark | None) -> bool:
         properties.set("lvl", str(mark.level))
     properties.set("marL", str(_STEP * (mark.level + 1)))
     properties.set("indent", str(-_STEP))
+    _put_bullet(properties, bullet)
+    return True
+
+
+def _put_bullet(properties: etree._Element, bullet: etree._Element) -> None:
+    """Put ``bullet`` into an ``a:pPr`` where the schema wants it: before its tab stops and run defaults."""
     later = next((c for c in properties if etree.QName(c).localname in _AFTER_BULLET), None)
     if later is not None:
         later.addprevious(bullet)
     else:
         properties.append(bullet)
-    return True
 
 
-def read_pptx_mark(paragraph: etree._Element) -> tuple[int, LevelFormat, int | None] | None:
+def read_pptx_mark(
+    paragraph: etree._Element, inherited: Sequence[etree._Element] = ()
+) -> tuple[int, LevelFormat, int | None] | None:
     """The level, the look and the ``startAt`` of the bullet or automatic number of an ``a:p``; ``None`` for none, or
-    for one the model cannot draw (a picture bullet, an automatic number it has no format for)."""
+    for one the model cannot draw (a picture bullet, an automatic number it has no format for). A paragraph whose own
+    properties say nothing of a bullet takes it from the list styles it ``inherited`` its look from, nearest first
+    (``a:lstStyle`` of its layout's and its master's placeholder, the master's ``p:bodyStyle``): the first that says
+    something of the paragraph's level decides (CODE-45: the bullets of a body placeholder are its master's)."""
     properties = paragraph.find(_a("pPr"))
-    if properties is None:
-        return None
+    level = _level(properties)
+    for found in (properties, *(style.find(_a(f"lvl{level + 1}pPr")) for style in inherited)):
+        if found is not None and any(found.find(_a(sign)) is not None for sign in _SIGNS):
+            return _mark_in(found, level)
+    return None
+
+
+def _level(properties: etree._Element | None) -> int:
+    """The level (0 to 8) an ``a:pPr`` gives its paragraph."""
     try:
-        level = min(max(int(properties.get("lvl") or 0), 0), 8)
+        return min(max(int(properties.get("lvl") or 0), 0), 8) if properties is not None else 0
     except ValueError:
-        level = 0
+        return 0
+
+
+def _mark_in(properties: etree._Element, level: int) -> tuple[int, LevelFormat, int | None] | None:
+    """What the bullet of a paragraph's (or a level's) properties is, for a paragraph at ``level``."""
     sign = properties.find(_a("buChar"))
     if sign is not None:
         char = sign.get("char") or ""

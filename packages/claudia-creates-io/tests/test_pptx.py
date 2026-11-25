@@ -3,6 +3,7 @@ add_transition: a slide transition added additively."""
 
 from __future__ import annotations
 
+import re
 import struct
 import zipfile
 from dataclasses import replace
@@ -25,6 +26,7 @@ from pptx.util import Emu
 
 from claudia_core import ImageAsset, ImageImport, ObjectBody, VisualObject, decode_image, paragraph_for
 from claudia_creates import ShapeDefinition, SlideAnchor, SlideModel
+from claudia_opc_io import read_parts, write_parts
 
 
 def _object(object_id, slide, kind, x, y, w, h, style, text="", shape=None):
@@ -815,3 +817,70 @@ def test_a_pictures_name_comes_back():
     back = pptx_to_slides(slides_to_pptx(model))
     (picture,) = [obj for obj in back.objects.values() if obj.body.kind == "image"]
     assert picture.body.name == "Seal"
+
+
+def _title_and_content_deck(title: str = "Quarterly", body: str = "First point\nSecond point") -> bytes:
+    """A deck of one slide made from the default "Title and Content" layout, as PowerPoint makes nearly every slide,
+    with a theme whose heading font (Georgia) is not its body font (Calibri) (CODE-45)."""
+    prs = pptx.Presentation()
+    slide = prs.slides.add_slide(prs.slide_layouts[1])
+    if title:
+        slide.shapes.title.text = title
+    if body:
+        slide.placeholders[1].text_frame.text = body
+    data = BytesIO()
+    prs.save(data)
+    parts = read_parts(data.getvalue())
+    theme = next(name for name in parts if name.startswith("ppt/theme/"))
+    parts[theme] = re.sub(rb'(<a:majorFont><a:latin typeface=")[^"]*', rb"\1Georgia", parts[theme])
+    return write_parts(parts)
+
+
+def test_a_title_and_content_slide_imports_its_title_and_body_in_their_places():
+    model = pptx_to_slides(_title_and_content_deck())
+    title, body = model.objects_on("s1")
+    assert (title.body.paragraph.text, body.body.paragraph.text) == ("Quarterly", "First point\nSecond point")
+    # the layout's places, on the default 4:3 slide: 457200, 274638, 8229600 x 1143000 and 457200, 1600200, ...
+    assert (title.anchor.x, title.anchor.y, title.body.w, title.body.h) == (80, 36, 1440, 150)
+    assert (body.anchor.x, body.anchor.y, body.body.w, body.body.h) == (80, 210, 1440, 594)
+    font = model.styles.computed(title.body.paragraph.style)["font-family"]
+    assert font.startswith("Georgia")  # the theme's heading font
+    assert model.styles.computed(body.body.paragraph.style)["font-family"].startswith("Calibri")
+
+
+def test_the_body_of_a_title_and_content_slide_has_the_bullet_of_its_master():
+    model = pptx_to_slides(_title_and_content_deck())
+    title, body = model.objects_on("s1")
+    assert title.body.paragraph.item is None  # the master's titles have none
+    assert model.labels()[body.body.paragraph.id].marker == "•"
+
+
+def test_placeholders_with_words_are_no_import_loss_and_empty_ones_are_nothing():
+    assert pptx_import_losses(_title_and_content_deck()) == ()
+    empty = _title_and_content_deck(title="", body="")
+    assert pptx_import_losses(empty) == ()
+    assert pptx_to_slides(empty).objects_on("s1") == []
+
+
+def test_an_edited_title_is_patched_into_its_placeholder():
+    data = _title_and_content_deck()
+    baseline = pptx_to_slides(data)
+    title = baseline.objects_on("s1")[0]
+    current = pptx_to_slides(data)
+    current.replace_object(title.with_body(paragraph=title.body.paragraph.with_text("Q4", ()).written_by("ana")))
+    patched = apply_edits_to_pptx(data, baseline, current)
+    shape = pptx.Presentation(BytesIO(patched)).slides[0].shapes[0]
+    assert shape.is_placeholder and shape.text_frame.text == "Q4"
+    again = pptx_to_slides(patched)
+    assert [o.body.paragraph.text for o in again.objects_on("s1")] == ["Q4", "First point\nSecond point"]
+    assert again.objects_on("s1")[1].body.paragraph.item is not None
+
+
+def test_a_body_whose_bullet_was_taken_away_is_patched_without_the_masters_bullet():
+    data = _title_and_content_deck()
+    baseline = pptx_to_slides(data)
+    body = baseline.objects_on("s1")[1]
+    current = pptx_to_slides(data)
+    current.replace_object(body.with_body(paragraph=body.body.paragraph.with_item(None)))
+    again = pptx_to_slides(apply_edits_to_pptx(data, baseline, current))
+    assert again.objects_on("s1")[1].body.paragraph.item is None

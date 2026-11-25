@@ -85,6 +85,7 @@ from ._names import FileNames
 from ._notes import BULLET, Line, Run, lines_to_markdown, markdown_to_lines
 from ._pptx_fonts import deck_theme, mixes_fonts, shape_font, write_body_font
 from ._pptx_looks import Theme, read_look
+from ._pptx_placeholders import for_words, list_styles
 from ._styling import colour_of, is_bold, look, page_colour, points_of, style_for_font, take_body_font
 from ._unwritten import PPTX_WRITTEN, authored_objects, notes_losses, slides_unwritten_changes
 from .pptx_pictures import alt_text_of, held_picture
@@ -300,7 +301,7 @@ def pptx_import_losses(pptx_bytes: bytes) -> tuple[Loss, ...]:
         if _background(prs, pptx_slide, colours) != page:
             losses.add("look")  # one palette for the deck: the page colour of another slide is not shown
         for shape in pptx_slide.shapes:
-            if _classify(shape) is None:
+            if _classify(shape) is None and not for_words(shape):  # an empty title or body shows nothing
                 losses.add(_UNMODELED.get(shape.shape_type, "object"))
             elif _cannot_turn(shape, scale_x, scale_y):
                 losses.add("turn")
@@ -527,9 +528,11 @@ def _notes_markdown(slide) -> str:  # noqa: ANN001
 
 def _classify(shape) -> str | None:  # noqa: ANN001 (python-pptx's own shape classes are not exported as one type)
     """``"text"``/``"shape"``/``"image"`` for a shape :func:`pptx_to_slides` models, ``None`` for anything else (a
-    table, a picture the model cannot hold as it is, a chart, a group, an autoshape outside the three built-in ones)
-    -- left as beyond-claudia content, same as a table that claudia has no model for at all."""
-    if shape.shape_type == MSO_SHAPE_TYPE.TEXT_BOX:
+    table, a picture the model cannot hold as it is, a chart, a group, an autoshape outside the three built-in ones,
+    a footer -- left as beyond-claudia content, same as a table that claudia has no model for at all -- and a title or
+    body placeholder with no words, which shows nothing). A title or body placeholder with words is a text box
+    (CODE-45)."""
+    if shape.shape_type == MSO_SHAPE_TYPE.TEXT_BOX or (for_words(shape) and shape.text_frame.text):
         return "text"
     if shape.shape_type == MSO_SHAPE_TYPE.AUTO_SHAPE and shape.auto_shape_type in _SHAPE_ID:
         return "shape"
@@ -604,7 +607,11 @@ def pptx_to_slides(pptx_bytes: bytes) -> SlideModel:
             x, y = round(shape.left / scale_x), round(shape.top / scale_y)
             w, h = round(shape.width / scale_x), round(shape.height / scale_y)
             text = shape.text_frame.text if shape.has_text_frame else ""
-            said = read_pptx_mark(shape.text_frame.paragraphs[0]._p) if shape.has_text_frame else None  # noqa: SLF001
+            said = (
+                read_pptx_mark(shape.text_frame.paragraphs[0]._p, list_styles(shape))  # noqa: SLF001
+                if shape.has_text_frame
+                else None
+            )
             x, y, rotation = _turned_place(x, y, w, h, round(shape.rotation) % 360)
             object_id = f"o{next(object_ids)}"
             if kind == "image":
@@ -833,7 +840,8 @@ def apply_edits_to_pptx(original_bytes: bytes, baseline: SlideModel, current: Sl
             shape = prs.slides[slide_number].shapes[shape_indices[position]]
             _patch_shape(shape, before, after, (scale_x, scale_y), pt_per_unit, current)
             if after.body.kind != "image":
-                write_pptx_mark(shape.text_frame.paragraphs[0]._p, marks_after.get(object_id))  # noqa: SLF001
+                paragraph = shape.text_frame.paragraphs[0]._p  # noqa: SLF001
+                write_pptx_mark(paragraph, marks_after.get(object_id), list_styles(shape))
             touched_parts.add(_slide_part(members, slide_number))
 
     if baseline.print_setup != current.print_setup:
