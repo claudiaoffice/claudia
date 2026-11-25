@@ -1462,4 +1462,3 @@ def test_an_editor_cannot_land_a_result_only_the_server_works_out(book):
     with pytest.raises(RequestError) as caught:
         call(book, "apply", {"command": encode(ApplyCalculated("s1", 0, 0, 42))}, BEN)
     assert caught.value.code == "forbidden"
-

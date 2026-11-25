@@ -30,7 +30,7 @@ if TYPE_CHECKING:
     from .model import DocumentModel
     from .region import Region
 
-#: Who may send a command kind (D2007): see :attr:`Command.sender`.
+#: Who may send a command kind, as :attr:`Command.sender` says it (D2007).
 Sender = Literal["person", "server"]
 
 _KIND = re.compile(r"[a-z][a-z0-9_]*\.[A-Za-z][A-Za-z0-9_.]*")
@@ -47,8 +47,8 @@ class Command(ABC):
     schema: ClassVar[int] = 1
     undoable = True  # False for commands that are nobody's undo step (chat-like, checkpoints, ...)
     meta: ClassVar[bool] = False  # True: changes no model state, only the log (checkpoint, redaction)
-    #: Who may send this command (D2007): ``"person"`` (the app or a script sends it), or ``"server"``, which makes it
-    #: only through its own methods and their checks; :meth:`CommandRegistry.for_persons` refuses those.
+    #: Who may send this command (D2007). ``"person"``, the default, is the app or a script; ``"server"`` makes it only
+    #: through its own methods and their checks, and :meth:`CommandRegistry.for_persons` refuses it.
     sender: ClassVar[Sender] = "person"
 
     @property

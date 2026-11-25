@@ -80,6 +80,7 @@ Protocol
 .. autoclass:: claudia_server.Method
 .. autoclass:: claudia_server.Limits
 .. autoclass:: claudia_server.protocol.Context
+.. autoclass:: claudia_server.audience.Reader
 .. autoclass:: claudia_server.protocol.Param
 .. autoclass:: claudia_server.RequestError
 .. autofunction:: claudia_server.parse_request
