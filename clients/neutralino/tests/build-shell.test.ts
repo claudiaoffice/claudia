@@ -37,6 +37,11 @@ describe('the page template (what Neutralino serves)', () => {
     for (const id of ['frame', 'status', 'status-title', 'status-details']) expect(template).toContain(`id="${id}"`)
   })
 
+  it('names its icon, so the web view does not ask the server for /favicon.ico, which is not there (CODE-96, D752)', () => {
+    expect(template).toContain('<link rel="icon" href="/icon.png">')
+    for (const app of ['composes', 'computes', 'creates']) expect(existsSync(join(root, 'apps', app, 'icon.png')), app).toBe(true)
+  })
+
   it('has no inline script (nothing but the two files)', () => {
     expect(template.match(/<script(?![^>]*\bsrc=)[^>]*>/g)).toBeNull()
   })

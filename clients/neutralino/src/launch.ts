@@ -114,10 +114,11 @@ export function buildShellEnvironment(
   return environment
 }
 
-/** The Neutralino binary's command line: only where the app is. The page is the one in that folder (`url: "/"` in
- * its neutralino.config.json), and Neutralino reads everything else from there too. */
+/** The Neutralino binary's command line: where the app is, and that its resources are the files in that folder. The page
+ * is the one there (`url: "/"` in its neutralino.config.json). Left to itself Neutralino looks in its own binary and
+ * for a resources.neu first and logs an error for each (CODE-96, D752). */
 export function buildShellCommand(binary: string, appDir: string): string[] {
-  return [binary, `--path=${appDir}`]
+  return [binary, `--path=${appDir}`, '--res-mode=directory']
 }
 
 /** `path` in a form that Neutralino can put into the core's command line, which it splits at spaces and cannot quote:
