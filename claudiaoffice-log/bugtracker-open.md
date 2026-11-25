@@ -337,6 +337,11 @@ The stand-in-fonts sample uses a text box for its title for that reason. **Accep
 "Title and Content" layout imports with its title and body as objects (in their placeholder's place and size, the
 title's words in the theme's heading font), round-trips through `apply_edits_to_pptx` keeping the placeholder, and
 `pptx_import_losses` reports nothing for them. Touches the object ids, the losses and the export; its own patch.
+**Fix** on `batch-4`: a title, subtitle or body placeholder with words is read as a text box in its layout's place and
+size (the title in the heading font, a body's first paragraph with its master's bullet, read through the layout's and
+the master's list styles); an empty one shows nothing and is no loss; footers, dates and slide numbers stay `object`.
+The patch keeps the placeholder and writes `buNone` for a bullet taken away. Left out (new bug, see the batch-4 note):
+the size and alignment a placeholder inherits (a title's 44 pt, centred) are neither read nor reported.
 
 ### CODE-47 · Words of a docx with a font of their own are a `formatting` loss · P3 · new, open
 **Measured** (reported as bug C, size 3): a run with its own `w:rFonts` (not through a style) keeps the paragraph
@@ -573,7 +578,10 @@ and a sentence why or what to do, then "Everything else is in the file."; a form
 "Everything is in the file."; a format that does not report says nothing more. The words of every code are in
 `web/app/lib/export-losses.ts`; a code nobody has put into words is still said, with its code. The result is in a
 `role=status` region that is always in the dialog (BITV 4.1.3). **Test:** `web/tests/export-losses.test.ts`; used in
-the browser once (odt of a typed text: "Who typed which words").
+the browser once (odt of a typed text: "Who typed which words"). The export of a kept file reports three more kinds,
+which have words too: `not-patched` (written anew), `removed-…` (what went with a deleted part, by the kind of thing)
+and `stale-reference`. **Guard:** `tests/test_loss_words.py` reads the codes the Python sources report and finds words
+for every one an export can report (the import-only ones are named there).
 
 ### UX-71 · Text on a workbook's slide is tiny · P2 · size 2 · needs decision
 **Found** in the screenshots of `web/e2e/computes-slides.cjs`: a text box on a slide in computes is drawn in the
@@ -608,6 +616,11 @@ person's apps start her own server and open.
 them `AdminFonts.vue`, `AdminLogin.vue`, `OpenDialog.vue`, `PrintPreview.vue`, `RecoveryKeyDialog.vue`,
 `StylesDialog.vue`, `FontReportBanner.vue` and the redaction banner in `DocumentFrame.vue`. A live region that appears
 with its content may not be read out (BITV 4.1.3). UX-88 fixed the notice only.
+**Fix** on `batch-4`: 27 such regions in 22 components. The `role="status"` is now on a wrapper that is always on the page,
+and the condition is on what it says inside it; an empty one takes no room (`[role="status"]:empty` is placed
+absolutely in `app.css`, not hidden, so it stays in the accessibility tree). **Test:** `web/tests/live-regions.test.ts`
+reads every template with Vue's own parser and finds no `role="status"` or `aria-live="polite"` element made or shown by
+a condition. `role="alert"` is left as it is: an alert is announced when it appears. Not heard with a screen reader.
 
 ### UX-91 · In Firefox the down arrow does not go into a new table · P2 · size 2 · open
 **Measured** by the first Firefox job that ran (CI on `batch-3`, twice): `test_objects_in_composes.py::
@@ -627,3 +640,7 @@ PDF to print in the computer's viewer, from a folder of its own, without asking 
 `expected [] to deeply equal [ Array(1) ]` (432 ms). The push did not touch `clients/`, the same test passed at
 `30e69f2b`, and the job passed when it was run again. Not read further. **Acceptance:** the test waits for what it
 expects instead of for a time, and passes on Windows repeatedly.
+**Cause** (reproduced on Linux by giving the tests no time to settle: four tests fail, this one with the same
+`expected [] to deeply equal [ Array(1) ]`): the tests waited 10 ms for real files to be written, which a slow disk
+does not always manage. **Fix** on `batch-4`: each test waits (up to 5 s) until the core has answered its requests, and no
+longer for a time. Run ten times in a row here; Windows is CI's.
