@@ -24,7 +24,7 @@ Mocks (approved 2026-11-25): `mockups/creates-layouts-editor.svg`. Diagrams: `mo
 |---|---|---|
 | `SetPlaceholder(object, purpose)`, `DescribeLayout(id, purpose)` | `claudia_creates/layout_commands.py` | next to the six layout commands; one history, one undo |
 | `copy_layout`, `mark_placeholder`, `unmark_placeholder` | `claudia_creates/layout_plans.py` | plans build a `Batch` of commands, as `delete_layout` and `update_layout` do; marking also gives or frees the slides' boxes |
-| a built-in layout refuses changes to its objects | `SlideModel.check_anchor` and the commands' checks | the model refuses, as it does for a purpose twice in a layout; a client's check is only a courtesy |
+| a shipped layout (Basic) refuses changes to its objects | `SlideModel.check_anchor` and the commands' checks | the model refuses, as it does for a purpose twice in a layout; a client's check is only a courtesy |
 | `is_empty` also true for an image without an asset | `claudia_creates/model.py` | one rule "empty means nothing a person put there", for every kind |
 | `layouts`, `layout {layout}`, `new_layout`, `describe_layout`, `mark_placeholder`, `unmark_placeholder` | new `claudia_server/layout_methods.py` | sibling of `template_methods.py`; each ends in `done(ctx, Command, base)` |
 | object methods take a holder | `object_methods.py`, `creates.py` | the parameters keep their names (`slide`) and the value may be a layout id, so old clients are not touched |
@@ -61,7 +61,7 @@ Mocks (approved 2026-11-25): `mockups/creates-layouts-editor.svg`. Diagrams: `mo
 
 ## Seams for the tests (proposed, to be confirmed with the E2E list in step 5)
 
-1. **Model:** commands and plans through `SlideModel` (marking, unmarking, copying, built-in refused, boxes given and freed).
+1. **Model:** commands and plans through `SlideModel` (marking, unmarking, copying, Basic refused, boxes given and freed).
    Catches the rules; misses the wire.
 2. **Wire:** the six methods through the protocol with a real document. Catches parameters, `base`, events; misses the page.
 3. **Pure functions** in `layout-editor.ts` (vitest). Catches sentences and refusals; misses the DOM.
