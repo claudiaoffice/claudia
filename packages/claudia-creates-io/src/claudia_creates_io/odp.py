@@ -151,7 +151,7 @@ def _page_names(model: SlideModel) -> list[str]:
     """The ``draw:name`` of each page, in order: the slide's name, or for a slide without one the first ``page<n>`` that
     no page or other thing of the document is called (a page name is one of a kind in the file)."""
     taken = {name_key(name) for name in model.names_in_use()}
-    names = []
+    names: list[str] = []
     for slide_id in model.order:
         name = model.thing_name(slide_id)
         if not name:
