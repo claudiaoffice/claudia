@@ -44,11 +44,6 @@ class Hold:
         if not await asyncio.to_thread(self.started.wait, HOLD_PATIENCE):
             raise AssertionError("the work never began")
 
-    @property
-    def held(self) -> bool:
-        """Is work told to wait?"""
-        return not self._free.is_set()
-
     def wait_until_free(self, stop: Callable[[], bool] = lambda: False) -> bool:
         """Begin: say so, then wait until let go (``True``) or until ``stop()`` says to give up (``False``)."""
         self.started.set()
@@ -68,9 +63,11 @@ class FakeTime:
         self.now = 0.0
 
     def __call__(self) -> float:
+        """The time now, in seconds."""
         return self.now
 
     def advance(self, seconds: float) -> None:
+        """Let ``seconds`` pass."""
         self.now += seconds
 
 
@@ -111,10 +108,7 @@ class FakeModel(Hold):
             self._running += 1
             self.most_at_once = max(self.most_at_once, self._running)
         try:
-            if not self.wait_until_free(stop):
-                self.stopped_early = True
-                return "partial"
-            if not self._take(self.delay, stop):
+            if not (self.wait_until_free(stop) and self._take(self.delay, stop)):
                 self.stopped_early = True
                 return "partial"
             result = self.answer(messages)
@@ -249,8 +243,9 @@ class FakeAnthropic(Hold):
         request.wfile.write(payload)
 
     def _stream(self, request: BaseHTTPRequestHandler, messages: list[Message]) -> None:
-        self.wait_until_free(self._closing.is_set)
-        time.sleep(self.delay)
+        if not self.wait_until_free(self._closing.is_set):
+            return  # the fake is closing: nobody is listening any more
+        time.sleep(self.delay)  # work: a slow Anthropic
         failing = self._failure
         text = (failing[1] or "") if failing else self.answer(messages)
         request.send_response(200)

@@ -6,6 +6,9 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 ## [Unreleased]
 
 ### Added
+- `HostedDocument.rendered()`: returns when every picture asked for so far has been made or given up, as
+  `Assistant.idle()` does for questions (D1662, PROC-66). `MemoryProvider` stamps a new document with its `clock`
+  option.
 - An owner's export that is imported brings the history and chat of the original as one read-only note of its
   `core.Import` step (PROC-37, D2005): `log` gives that step `original`, `[{when, who, what, said}]` oldest first (each
   step as the original's history said it, each chat message for everybody; private messages stay out). The upload

@@ -27,7 +27,7 @@ Coding standards §2 says "no sleeps as synchronisation". This is how a test kee
    does not wait for (`# work:` on its line), or a bounded wait for something that must *not* happen (`# must not
    happen:`): that one may miss a bug on a slow machine and never fails a sound build.
 
-`tests/test_no_sleeps_as_waits.py` holds every Python test file to rule 4. TypeScript tests follow the same rules
+`tests/test_no_sleeps_as_waits.py` holds every Python test file and the packages' `testing.py` fakes to rule 4 (a sleep inside any loop passes as a poll's pace; that the loop has a deadline is left to review). TypeScript tests follow the same rules
 (`vi.waitFor`, fake timers) without a check yet.
 
 **Notes.** `Hold` lives in `claudia_ai.testing`, not `claudia_core.testing`, because claudia-ai depends on nothing and its

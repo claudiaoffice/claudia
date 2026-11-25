@@ -1,4 +1,5 @@
-"""A test does not wait by the clock for something to happen (coding standards §2, PROC-66).
+"""A test does not wait by the clock for something to happen (coding standards §2, PROC-66). The tests are read, and the
+fakes the packages ship for them (``testing.py``).
 
 A nap that stands in for "it has happened by now" fails whenever the machine is slower than the nap: on CI's runners
 that was a ping that took 50 ms, a model that had not started after 20 ms, a log not written after 600 ms. A test waits
@@ -23,7 +24,12 @@ SAID = ("# work:", "# must not happen:")
 def files_of_tests() -> list[Path]:
     return sorted(
         path
-        for pattern in ("packages/*/tests/**/*.py", "tests/**/*.py", "clients/*/tests/**/*.py")
+        for pattern in (
+            "packages/*/tests/**/*.py",
+            "packages/*/src/*/testing.py",
+            "tests/**/*.py",
+            "clients/*/tests/**/*.py",
+        )
         for path in ROOT.glob(pattern)
     )
 

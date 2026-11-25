@@ -157,9 +157,9 @@ def hashes_of(monkeypatch, work):
         seen.append((params.iterations, params.memory_kib, params.lanes))
         return real(password, salt, params, length, **kwargs)
 
-    monkeypatch.setattr(crypto, "argon2id", counted)
-    work()
-    monkeypatch.setattr(crypto, "argon2id", real)
+    with monkeypatch.context() as patched:
+        patched.setattr(crypto, "argon2id", counted)
+        work()
     return seen
 
 

@@ -35,7 +35,7 @@ whole suite was stopped after 35 minutes on one package; the whole suite ran unl
 
 | Kind | Where | Became |
 |---|---|---|
-| A nap for "the work has started by now" | model engine (2), AI router, AI runner (3), assistant, workers, password methods | the work is **held** until the test lets it go; the test waits for `begun()` (D1660) |
+| A nap for "the work has started by now" | model engine (2), AI router, AI runner (3), assistant, password methods | the work is **held** until the test lets it go; the test waits for `begun()` (D1660) |
 | A nap for background rendering | rendering jobs (`settle()`, 20 uses), LaTeX fonts (2) | `await hosted.rendered()` (D1662) |
 | A stopwatch on the event loop's pauses | gateway threads (2), release thread | the directory / the release is held; the test's own code running proves the loop ran |
 | A nap so two timestamps differ | sealed store (newest first), suite listing | file times set with `os.utime`; one fake clock for both providers (D1662) |
@@ -44,9 +44,9 @@ whole suite was stopped after 35 minutes on one package; the whole suite ran unl
 | A wait for something that must not happen | open during release (new), Linux client shell kill, e2e setup-code field | kept, bounded, `# must not happen:` on the line |
 | A poll's pace | sandbox, idle server, e2e start-up, GTK pump, … | kept; deadlines of 3 s and 5 s for a process to die raised to 10 s (a poll returns at once when it can) |
 | A stand-in for slow work | `_nap` in workers, the hashing of `SlowDirectory`, the planning of `SlowEngine`, the injected pause of the desktop server, child programs in strings | kept, `# work:` on the line |
-| A yield | heavy dispatch (`sleep(0)` ×14) | kept (deterministic); see §5 |
+| A yield | heavy dispatch (`sleep(0)` ×14); workers (a 50 ms nap became `sleep(0)`: the first submission claims its slot before its first `await`) | kept (deterministic); see §5 |
 
-`tests/test_no_sleeps_as_waits.py` holds every Python test file to this (a sleep is a yield, a poll's pace, or says
+`tests/test_no_sleeps_as_waits.py` holds every Python test file and the packages' `testing.py` fakes to this (a sleep is a yield, a poll's pace, or says
 `# work:` / `# must not happen:`), with a test of its own that it finds a nap.
 
 **Other clock-bound asserts** found by reading every test that reads a clock: COUNTIF over a million rows had to take
@@ -142,3 +142,4 @@ Windows-only: their first CI run is the check), Firefox, the browser end-to-end 
 * PROC-63's cause is the pipe: not reproduced (Linux pipes hold 64 KiB); the fix removes the possibility either way.
 * The search tests guard "a backtracking pattern does not run for ever"; 5 s is far from both the deadline and forever.
 * `Hold` belongs in `claudia_ai.testing` because claudia-ai may not depend on claudia-core (D1660).
+* The check takes any sleep inside a loop for a poll's pace; it does not check that the loop has a deadline.

@@ -2787,7 +2787,7 @@ new line in coding standards §2: tests check behaviour, not implementation. The
 `implementation-notes/test-quality.md`.
 
 ### PROC-63 · The real server that stops when idle timed out on Windows · P3 · size 3 · fixed
-**Measured** (CI of `main`, job "Python (windows-latest)", run 45629903442): `subprocess.TimeoutExpired` after 30 s in
+**Measured** (the timeout; the cause is **read**, not reproduced) (CI of `main`, job "Python (windows-latest)", run 45629903442): `subprocess.TimeoutExpired` after 30 s in
 `server.wait()`. The idle logic itself is tested with a fake clock and passed. The test started the server with
 `stdout=PIPE` and read the pipe only after `wait()`: a server that writes more than the pipe holds (4 KiB on Windows;
 1.4 KiB here, more on Windows with its warnings and longer paths) blocks on its own output and never stops. Not
