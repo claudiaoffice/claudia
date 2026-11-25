@@ -145,7 +145,11 @@ the changed test files three times under load; `./run-e2e.sh core` against the r
 (`CLAUDIA_CHROMIUM` set to the workspace's Chromium): 143 passed, 0 failed, 23 xfailed, 79 skipped (not automated yet,
 or checked by a unit test). On CI (run 45685996787, started by hand on `test-quality`): every job green, Windows and
 both browsers included; PROC-63's test passed on Windows.
-Not run: the macOS job (not part of that run), the GTK tests on a display here, a screen reader.
+After the second round (the five bugs): the gate clean again; `@core` in Chromium 143 passed, 0 failed; CI run
+45702535120 on `test-quality` green in every job. Windows needed two more tries for PROC-67: `os.dup` does not copy a
+socket handle there, and closing a response waits for the read that nothing wakes; the answer is now read in a thread
+of its own and the connection given up in the background.
+Not run: the macOS job (not part of those runs), the GTK tests on a display here, a screen reader.
 
 ## Assumptions
 
