@@ -5,6 +5,8 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+## [0.19.0] - 2026-11-25
+
 ### Added
 - The refusals a person can meet are `Refusal`s (CODE-78, D1510); `TextModel.name_taken` adds headings, list items
   and paragraphs ("a list item", was "an item").
