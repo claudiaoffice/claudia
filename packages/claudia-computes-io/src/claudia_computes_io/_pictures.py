@@ -12,13 +12,20 @@ from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 
 from claudia_computes import WorkbookModel
-from claudia_core import ImageAsset, Rasterise, blank_png
+from claudia_core import ImageAsset, Rasterise, VisualObject, blank_png
 from claudia_odf_io import Loss, LossLog
 
 from ._placed import Placed
 
 #: The kinds of floating object that show a picture.
 PICTURE_KINDS = ("image", "container")
+
+
+def pictures_of(model: WorkbookModel) -> dict[str, VisualObject]:
+    """The pictures of ``model`` (an image or a container) by their id."""
+    return {obj.id: obj for obj in model.objects.values() if obj.body.kind in PICTURE_KINDS}
+
+
 MEDIA_TYPES = {
     "jpeg": "image/jpeg",
     "png": "image/png",

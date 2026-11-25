@@ -20,7 +20,7 @@ from lxml import etree
 from claudia_computes import VisualObject, WorkbookModel
 from claudia_odf_io import NS, XmlPart, qname, update_manifest, xml_safe
 
-from ._pictures import MEDIA_TYPES, PICTURE_KINDS, picture_losses, written_pictures
+from ._pictures import MEDIA_TYPES, picture_losses, pictures_of, written_pictures
 from ._placed import placed_on_its_sheet, placed_on_their_sheets
 from .ods_chart_files import DrawnFrame
 from .ods_chart_patch import SheetShapes, describe
@@ -29,10 +29,6 @@ from .ods_pictures import part_name, picture_frame
 from .xlsx_patch import UnsupportedEdit
 
 _HREF = qname("xlink:href")
-
-
-def _pictures(model: WorkbookModel) -> dict[str, VisualObject]:
-    return {obj.id: obj for obj in model.objects.values() if obj.body.kind in PICTURE_KINDS}
 
 
 def _href(frame: etree._Element) -> str:
@@ -62,7 +58,7 @@ class PicturePatch:
     def run(self) -> bool:
         """Put the changes of the pictures into the file; whether there were any. Raises
         :class:`~claudia_computes_io.UnsupportedEdit` for a baseline that does not know the pictures of the file."""
-        old, new = _pictures(self.baseline), _pictures(self.current)
+        old, new = pictures_of(self.baseline), pictures_of(self.current)
         if sorted(old) != sorted(self.found):
             raise UnsupportedEdit("the baseline is not the workbook this file holds")
         for object_id, was in old.items():

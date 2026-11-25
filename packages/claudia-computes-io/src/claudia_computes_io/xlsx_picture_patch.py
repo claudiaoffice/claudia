@@ -18,16 +18,12 @@ from claudia_computes import ObjectBody, SheetId, VisualObject, WorkbookModel
 from claudia_odf_io import xml_safe
 from claudia_opc_io import ANGLE, DECORATIVE_URI, mark_decorative
 
-from ._pictures import PICTURE_KINDS, picture_losses, written_pictures
+from ._pictures import picture_losses, pictures_of, written_pictures
 from ._placed import placed_on_its_sheet, placed_on_their_sheets
 from .xlsx_chart_patch import Drawings
 from .xlsx_charts import NS, DrawnAnchor, emu
 from .xlsx_patch import UnsupportedEdit
 from .xlsx_read import q
-
-
-def _pictures(model: WorkbookModel) -> dict[str, VisualObject]:
-    return {obj.id: obj for obj in model.objects.values() if obj.body.kind in PICTURE_KINDS}
 
 
 class PicturePatch:
@@ -47,7 +43,7 @@ class PicturePatch:
 
     def run(self) -> bool:
         """Put the changes of the pictures into the file; whether there were any."""
-        old, new = _pictures(self.baseline), _pictures(self.current)
+        old, new = pictures_of(self.baseline), pictures_of(self.current)
         if sorted(old) != sorted(self.found):
             raise UnsupportedEdit("the baseline does not know the pictures of the file")
         for object_id, was in old.items():
@@ -136,6 +132,7 @@ def _describe(properties: etree._Element | None, body: ObjectBody) -> None:
     if body.decorative:
         mark_decorative(properties)
         if extensions is not None:
+            # mark_decorative has just made the a:extLst, so find() is not None; lxml's stubs cannot know that
             properties.find("a:extLst", NS)[:0] = list(extensions)  # type: ignore[index]
     else:
         if body.description:
