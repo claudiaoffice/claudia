@@ -466,6 +466,8 @@ viewer's "show who wrote what" should have no data behind it. **Options.** (a) M
 file (a viewer's snapshot would be written without them: a second snapshot); (b) accept the authorship as content and say
 so in D1261. **Proposal:** (b) until the owner says otherwise, because masking in the snapshot means the content is stored
 twice. Not built either way.
+**Decided** 2026-11-25 by the owner, option (b): who wrote which stretch is content (note of that day in D1261).
+**Guard** on `batch-5`: `test_a_viewer_receives_who_wrote_which_words_as_part_of_the_content`.
 
 ### CODE-74 · `export_content` is a third kind of export nobody asked for · P3 · new, open
 `export_content` (a JSON object with `format: "claudia-export 1"`) predates D1270 and is not called by any window. It is
@@ -577,6 +579,9 @@ cannot read in the document, and anybody she gives the file to can. (D2005 alrea
 note an imported export brings; this is the export itself.) Found by a helper (PROC-37), confirmed by reading.
 **Acceptance:** an export of a document in which Ben wrote privately to Cleo holds no such message when Ann exports it;
 one Ann wrote or received privately, the owner decides (keep, or leave out too).
+**Fix** on `batch-5` (D2008): `audience.Reader` decides what a person may read of the chat; the export with history,
+the chat log, the redaction numbers and the live push ask it. **Test:** Ann's export holds "for everybody", her own
+private message and Ben's to her, not the messages between Ben and Cleo (red: both were in it).
 
 ### SEC-25 · An editor can replace the document with a raw `Import` · P2 · size 2 · open
 **Read:** `apply` (`_apply` in `protocol.py`) decodes any command the registry knows and executes it as the editor; it
@@ -585,6 +590,10 @@ since D2005 also give it a forged `original` ("History of the original" with wor
 path is an owner's upload. Found by a helper (PROC-37), confirmed by reading. **Acceptance:** `apply` with an `Import`
 from an editor is refused (`forbidden`), and the history is unchanged; the owner says whether any other command is
 for the server's own use only.
+**Fix** on `batch-5` (D2007): every kind of change says who may send it (`Command.sender`); `apply` decodes with
+`registry.for_persons()`, which refuses `Import`, `Setup`, `Checkpoint`, `Redaction`, `Redacted`, `Restore` and `Switch`
+with `forbidden`, at any depth. `tests/command_senders.json` lists all 91 kinds. **Test:** an editor's `apply` of each
+of the seven, alone and inside a `Batch`, is refused and the history unchanged (red: all seven accepted).
 
 ### UX-93 · The font banner cannot be read · P2 · size 2 · open
 **Re-checked** (triage of 2026-11-25, computed from the CSS): 1.13:1. The same slip elsewhere: `--ink-soft` is used
@@ -666,6 +675,9 @@ is dated from the history too. **Batch 5** (owner, 2026-11-25): for a person who
 export says neither who made or changed the document nor when; a suggestion keeps its author (who wrote what is
 content, SEC-22) and is dated with the time of the export. **First test:** a viewer's odt and docx carry no creator,
 changer or date from the history.
+**Fix** on `batch-5` (D2008): the office exports of the three apps take the history from `Reader.log`, empty for a
+role without its key; a viewer's open suggestions are dated with the export. **Test:** a viewer's odt, docx, xlsx, ods,
+pptx and odp carry no creator, changer or date from the history (red in all three apps).
 
 ### SEC-27 · A picture's local path is readable by everyone who can open the document · P2 · size 2 · open
 **Measured** (triage of 2026-11-25): `add_image` takes a `source_path`; it is stored in the picture's `ImageImport`
@@ -677,6 +689,12 @@ shells pick the file but pass only its name, D501), so only a caller of the prot
 (owner, 2026-11-25): on a single desktop install it is useful to know where a picture came from, so the path is kept
 when the person asks for it on import ("save the path"), and then readable by everyone who can open the document;
 otherwise it is not stored at all.
+**Fix** on `batch-5` (D2009): Insert ▸ Image has "Don't save the path", unticked, with the hint "Everyone who can open
+this document sees it.", shown only when a desktop shell says where the picked file is (GTK and Neutralino now send
+`path` with `picked`; a browser never knows it). Ticked, an empty path goes and none is stored (`ImageImport.from_data`).
+The per-person mask (`ImageImport.masked`, `to_data_for`) is gone: a kept path is the same for everyone. **Tests:**
+server (everyone sees the same path; an empty one is nowhere), core, web (`images`, `shell-bridge`, `local-files`),
+both shells' `picked`; each seen red first.
 
 ### CODE-106 · The patch of a kept odt drops the losses it reports · P3 · size 3 · open
 **Read** (architecture review of 2026-11-25): `apply_edits_to_odt` takes a `losses` log and adds `style` and
