@@ -9,7 +9,7 @@ interface Node {
   type: number
   tag?: string
   loc: { start: { line: number } }
-  props?: { type: number, name: string, value?: { content: string } }[]
+  props?: { type: number, name: string, value?: { content: string }, arg?: { content: string }, exp?: { content: string } }[]
   children?: Node[]
   branches?: Node[]
 }
@@ -18,10 +18,13 @@ const ELEMENT = 1
 const ATTRIBUTE = 6
 const CONDITIONS = new Set(['if', 'else-if', 'else', 'show'])
 
+/** A `role="status"` or `aria-live="polite"`, written out or bound (`:role="urgent ? 'alert' : 'status'"`). */
 function isPolite(node: Node): boolean {
-  return (node.props ?? []).some((prop) => prop.type === ATTRIBUTE
-    && ((prop.name === 'role' && prop.value?.content === 'status')
-      || (prop.name === 'aria-live' && prop.value?.content === 'polite')))
+  return (node.props ?? []).some((prop) => {
+    const value = prop.type === ATTRIBUTE ? prop.value?.content : prop.name === 'bind' ? prop.exp?.content : undefined
+    const name = prop.type === ATTRIBUTE ? prop.name : prop.arg?.content
+    return (name === 'role' && /\bstatus\b/.test(value ?? '')) || (name === 'aria-live' && /\bpolite\b/.test(value ?? ''))
+  })
 }
 
 function isConditional(node: Node): boolean {
@@ -44,6 +47,11 @@ describe('polite live regions', () => {
       return template ? conditionalRegions(template.ast as unknown as Node).map((line) => `${path}:${line}`) : []
     })
     expect(conditional).toEqual([])
+  })
+
+  it('are found when their role is bound', () => {
+    const { descriptor } = parse(`<template><p v-if="said" :role="urgent ? 'alert' : 'status'">{{ said }}</p></template>`)
+    expect(conditionalRegions(descriptor.template!.ast as unknown as Node)).toEqual([1])
   })
 
   it('are found when they are made by a condition', () => {
