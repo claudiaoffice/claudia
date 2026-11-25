@@ -39,6 +39,7 @@ import { currentLocale } from '~/lib/locale'
 import { formatCodeOf, inkOf, symbolsFor } from '~/lib/number-format'
 import { chipsOf, dotFractions, outcomeCaption, type Alt, type Summary } from '~/lib/outcomes'
 import { colorOf, inkOn } from '~/lib/people'
+import { nameTagPlace } from '~/lib/name-tag'
 import { ROLE_SHAPE, roleAt, type Role } from '~/lib/follow'
 import { REFERENCE_COLORS, referencesIn } from '~/lib/pointing'
 import { viewTints } from '~/lib/replay-tint'
@@ -396,7 +397,7 @@ const selectionStyle = computed(() => {
 const activeStyle = computed(() => box(props.sel.row, props.sel.col, props.sel.row, props.sel.col))
 
 const outlines = computed(() => {
-  const out: { id: string; style: Record<string, string>; name: string; locked: boolean; ai: boolean }[] = []
+  const out: { id: string; style: Record<string, string>; name: string; locked: boolean; ai: boolean; tagInside: boolean }[] = []
   for (const [user, hold] of Object.entries(state.presence)) {
     if (user === state.me.user) continue
     const color = colorOf(state, user)
@@ -408,6 +409,7 @@ const outlines = computed(() => {
         name: user,
         locked: hold.locked,
         ai: user.toLowerCase() === 'ai',
+        tagInside: nameTagPlace(y(first.row) - HH) === 'inside',
         style: { ...box(first.row, first.col, last.row, last.col), '--who': color, '--who-ink': inkOn(color) },
       })
     })
@@ -461,6 +463,12 @@ const turnCss = (degrees: number) => (degrees ? { transform: `rotate(${degrees}d
 function objectStyle(o: SheetObject) {
   const f = frameOf(o)
   return { left: `${HW + f.x - scroll.value.left}px`, top: `${HH + f.y - scroll.value.top}px`, width: `${f.w}px`, height: `${f.h}px`, ...turnCss(interaction.rotationOf(o.id) ?? o.rotation) }
+}
+/** A colleague's selection of an object: the object's box, with her name inside its top edge where above it would be
+ * under the column letters (UX-86). */
+function otherStyle(o: SheetObject) {
+  const inside = nameTagPlace(frameOf(o).y - scroll.value.top) === 'inside'
+  return inside ? { ...objectStyle(o), '--tag-top': '0px' } : objectStyle(o)
 }
 /** What a screen reader says for an object on the sheet: its kind and description, or that it is decoration. */
 const nameOf = (o: SheetObject) => objectName(o)
@@ -1372,7 +1380,7 @@ defineExpose({
         </div>
 
         <!-- what colleagues have selected: their colour and name (D1223) -->
-        <OtherOnObject v-for="{ other, object } in others" :key="`${other.user}:${other.id}`" :other="other" :color="colorOf(state, other.user)" :style="objectStyle(object)" />
+        <OtherOnObject v-for="{ other, object } in others" :key="`${other.user}:${other.id}`" :other="other" :color="colorOf(state, other.user)" :style="otherStyle(object)" />
 
         <!-- my selection: the handles, drawn once for the three apps (the outline is the object's own) -->
         <!-- the handles are the object's: their mousedown, which follows the pointerdown, is no cell selection either -->
@@ -1381,7 +1389,7 @@ defineExpose({
         </div>
 
         <div v-for="b in replayBoxes" :key="b.id" class="replay-box" :class="b.tint" :style="b.style" data-testid="replay-tint" />
-        <div v-for="o in outlines" :key="o.id" class="outline" :class="{ locked: o.locked, ai: o.ai }" :style="o.style">
+        <div v-for="o in outlines" :key="o.id" class="outline" :class="{ locked: o.locked, ai: o.ai, 'tag-inside': o.tagInside }" :style="o.style">
           <span class="tag">{{ o.name }}<template v-if="o.locked"> {{ t('· editing') }}</template></span>
         </div>
 
@@ -1763,6 +1771,11 @@ defineExpose({
   padding: 3px 6px;
   border-radius: 6px 6px 6px 0;
   white-space: nowrap;
+}
+.outline.tag-inside .tag {
+  top: 0;
+  bottom: auto;
+  border-radius: 0 6px 6px 6px;
 }
 .active-border {
   position: absolute;
