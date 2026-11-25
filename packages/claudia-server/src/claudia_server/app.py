@@ -84,7 +84,7 @@ from .admin_api import AdminContext, admin_router
 from .auth import Account, AuthRefused, Credentials, RecoverableDirectory, UserDirectory
 from .client_address import ClientAddress
 from .fonts import FontService, font_router
-from .formats import CLAUDIA, CLAUDIA_EXPORT, import_state
+from .formats import CLAUDIA, CLAUDIA_EXPORT, Imported, import_state
 from .hosts import AllowedHosts, HostGuard
 from .http_refusal import install as install_refusals
 from .hub import Hub, HubError, same_document_message
@@ -92,6 +92,7 @@ from .hyphenation import HyphenationService, hyphenation_router
 from .i18n import localized, message_of, msg, translate
 from .idle import IdleMiddleware, IdleWatch
 from .login_throttle import LoginThrottle
+from .original_history import original_lines
 from .owner_proof import owner_router
 from .protocol import DEFAULT_LOCALE, RequestError, normalize_locale, parse_request
 from .security_headers import SecurityHeaders, WebScriptHashes
@@ -428,11 +429,9 @@ class Gateway:
         except ValueError as error:
             raise HubError("bad_request", message_of(error)) from error
 
-    async def _read_upload(
-        self, module: Module, doc_id: str, upload: Upload, locale: str
-    ) -> tuple[Upload, dict, list[dict]]:
-        """The state the import makes, read in the worker pool before anything is created (D436): a file that cannot
-        be read costs nobody a half-made document. Its things are named in ``locale``, the language of the importer."""
+    async def _read_upload(self, module: Module, doc_id: str, upload: Upload, locale: str) -> tuple[Upload, Imported]:
+        """What the import makes, read in the worker pool before anything is created (D436): a file that cannot be read
+        costs nobody a half-made document. Its things are named in ``locale``, the language of the importer."""
         if module.app != upload.app:
             raise HubError(
                 "bad_request", msg("{name} cannot become a document of {app}", name=upload.name, app=module.app)
@@ -440,13 +439,13 @@ class Gateway:
         if module.hub.exists(doc_id):
             raise HubError("bad_request", msg("{id} is here already: give the new document another name", id=doc_id))
         try:
-            state, losses = await module.hub.workers.submit(
+            imported = await module.hub.workers.submit(
                 import_state, upload.fmt, upload.data, locale, state_schema=module.hub.state_schema
             )
         except Exception as exc:  # noqa: BLE001 - whatever a reader raises, the file is not one it can read
             log.info("cannot import %s: %s", upload.name, exc)
             raise HubError("bad_request", msg("{name} cannot be read", name=upload.name)) from exc
-        return upload, state, losses
+        return upload, imported
 
     async def _import(
         self,
@@ -454,21 +453,25 @@ class Gateway:
         doc_id: str,
         hosted,
         author: str,
-        imported: tuple[Upload, dict, list[dict]],
+        imported: tuple[Upload, Imported],
         params: dict,
         details: tuple[str, tuple[str, ...]] = ("", ()),
     ) -> dict:
         """Make the new document what the file holds: one ``core.Import`` entry, the file itself kept in the document
-        unless the person said not to (D439), and the description and tags the person chose in its plain manifest.
-        Answers what the welcome says about it."""
-        upload, state, losses = imported
+        unless the person said not to (D439), and the description and tags the person chose in its plain manifest. An
+        owner's export brings the history of the original as the import's note (D2005). Answers what the welcome says
+        about it."""
+        upload, made = imported
         self.uploads.take(upload.token)
         keep = params.get("keep_original") is not False and upload.fmt != CLAUDIA_EXPORT  # an export is no original
         digest = hashlib.sha256(upload.data).hexdigest()
         kept = keep and await asyncio.to_thread(module.hub.keep_original, doc_id, upload.data)
-        hosted.document.execute(Import(upload.name, upload.fmt, state, sha256=digest, kept=kept), author=author)
+        registry = type(hosted.document.model).registry
+        original = await asyncio.to_thread(original_lines, made.history, made.chat, registry)
+        step = Import(upload.name, upload.fmt, made.state, sha256=digest, kept=kept, original=original)
+        hosted.document.execute(step, author=author)
         described = details != ("", ()) and await asyncio.to_thread(module.hub.describe, doc_id, *details)
-        return {"name": upload.name, "format": upload.fmt, "kept": kept, "losses": losses, "described": described}
+        return {"name": upload.name, "format": upload.fmt, "kept": kept, "losses": made.losses, "described": described}
 
     async def _read_hello(self, websocket: WebSocket) -> tuple[Any, dict] | None:
         """The first frame as ``(request id, params)``; the socket is closed with the reason if it is not a hello."""

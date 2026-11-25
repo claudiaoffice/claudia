@@ -213,7 +213,9 @@ const lastError = computed(() => {
       <p v-if="apply_.needsKey || (apply_.needsConfirm && !form.confirmed)" class="lead">{{ t('Apply needs a key and the confirmed sentence.') }}</p>
     </section>
 
-    <p v-if="tested" class="lead" role="status" data-testid="ai-tested">{{ t('Test answered') }}</p>
+    <div role="status">
+      <p v-if="tested" class="lead" data-testid="ai-tested">{{ t('Test answered') }}</p>
+    </div>
 
     <section v-if="refusal" class="refused" role="alert" data-testid="ai-refused">
       <strong>{{ refusal.sentence }}</strong>

@@ -49,6 +49,10 @@ msgstr ""
 msgid "(redacted, length {n})"
 msgstr ""
 
+#: web/app/components/SidePanel.vue
+msgid "(words taken away)"
+msgstr ""
+
 #: web/app/components/AdminAccessDocuments.vue
 msgid "+ Add administrator…"
 msgstr ""
@@ -269,6 +273,10 @@ msgstr ""
 msgid "A chart is not shown in a text yet."
 msgstr ""
 
+#: web/app/lib/export-losses.ts
+msgid "A chart that follows a name is written with the cells it reads now."
+msgstr ""
+
 #: web/app/lib/search.ts
 msgid "A closing bracket has no opening one."
 msgstr ""
@@ -353,6 +361,10 @@ msgstr ""
 msgid "A name like this exists already and will point here."
 msgstr ""
 
+#: web/app/lib/export-losses.ts
+msgid "A name that stands for a result is not in the file."
+msgstr ""
+
 #: packages/claudia-computes/src/claudia_computes/model.py
 msgid "A named range is renamed in the list of names, which also changes the formulas that use it"
 msgstr ""
@@ -389,6 +401,10 @@ msgstr ""
 msgid "A picture is printed without some of it: {reason}."
 msgstr ""
 
+#: web/app/lib/export-losses.ts
+msgid "A program that cannot draw vector pictures shows nothing there."
+msgstr ""
+
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "A quartile of the numbers (the old name of QUARTILE.INC)."
 msgstr ""
@@ -399,6 +415,10 @@ msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "A quartile of the numbers: 0 the smallest, 1, 2 (the median), 3, 4 the largest."
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "A remark proposes no change, so there is nothing to track."
 msgstr ""
 
 #: web/app/components/AdminAccessDocuments.vue
@@ -541,6 +561,10 @@ msgstr ""
 msgid "Accept a document that was handed over to you"
 msgstr ""
 
+#: web/app/lib/export-losses.ts
+msgid "Accept or reject them first to have the words you want in the file."
+msgstr ""
+
 #: web/app/components/AcceptOwnershipDialog.vue
 msgid "Accept ownership"
 msgstr ""
@@ -677,6 +701,10 @@ msgstr ""
 msgid "Agenda"
 msgstr ""
 
+#: web/app/lib/export-losses.ts
+msgid "Agendas are written as the lines they show now"
+msgstr ""
+
 #: web/app/components/SidePanel.vue
 msgid "Agree"
 msgstr ""
@@ -755,6 +783,10 @@ msgstr ""
 
 #: web/app/components/StylesDialog.vue
 msgid "Alt + the underlined letter acts on the style the focus is on."
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "Alternatives"
 msgstr ""
 
 #: web/app/lib/admin-fonts.ts
@@ -1161,6 +1193,14 @@ msgstr ""
 msgid "Cell"
 msgstr ""
 
+#: web/app/lib/export-losses.ts
+msgid "Cell looks beyond what the format holds"
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "Cell looks the format cannot hold"
+msgstr ""
+
 #: web/app/components/Workspace.vue
 msgid "Cell menu"
 msgstr ""
@@ -1255,6 +1295,10 @@ msgstr ""
 
 #: packages/claudia-server/src/claudia_server/thing_names.py web/app/components/SheetChartInsertDialog.vue web/app/components/SidePanel.vue web/app/lib/descriptions.ts
 msgid "Chart"
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "Charts"
 msgstr ""
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue
@@ -1417,6 +1461,10 @@ msgstr ""
 msgid "Close · Esc"
 msgstr ""
 
+#: web/app/lib/export-losses.ts
+msgid "Code in speaker notes"
+msgstr ""
+
 #: web/app/components/AdminFonts.vue
 msgid "Collection"
 msgstr ""
@@ -1523,6 +1571,14 @@ msgstr ""
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py packages/claudia-server/src/claudia_server/thing_names.py web/app/components/SidePanel.vue web/app/lib/document-menus.ts
 msgid "Container"
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "Containers"
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "Containers that are not drawn yet"
 msgstr ""
 
 #: packages/claudia-server/src/claudia_server/composes_contents.py web/app/components/PrintPreview.vue
@@ -1837,6 +1893,10 @@ msgstr ""
 msgid "Descriptions"
 msgstr ""
 
+#: web/app/lib/export-losses.ts
+msgid "Descriptions of things"
+msgstr ""
+
 #: web/app/components/DetailsDialog.vue
 msgid "Details of {id}"
 msgstr ""
@@ -2089,6 +2149,14 @@ msgstr ""
 msgid "Everything ({count})"
 msgstr ""
 
+#: web/app/components/ExportFormatDialog.vue
+msgid "Everything else is in the file."
+msgstr ""
+
+#: web/app/components/ExportFormatDialog.vue
+msgid "Everything is in the file."
+msgstr ""
+
 #: web/app/components/DeleteStyleDialog.vue
 msgid "Everything that has “{name}” gets the style you choose instead, and looks like it. What is based on “{name}” is based on that style too, and loses what “{name}” said."
 msgstr ""
@@ -2123,6 +2191,10 @@ msgstr ""
 
 #: web/app/components/ExportFormatDialog.vue
 msgid "Export this document"
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "Export to a new file to keep them."
 msgstr ""
 
 #: web/app/components/ExportFormatDialog.vue
@@ -2385,6 +2457,10 @@ msgstr ""
 msgid "Formulas"
 msgstr ""
 
+#: web/app/lib/export-losses.ts
+msgid "Formulas written as their values"
+msgstr ""
+
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "Friday 13 Nov 2026 + 1 = Monday 16 Nov"
 msgstr ""
@@ -2625,6 +2701,10 @@ msgstr ""
 msgid "History and chat are for the document's editors."
 msgstr ""
 
+#: web/app/components/SidePanel.vue
+msgid "History of the original"
+msgstr ""
+
 #: web/app/components/TableOptionsDialog.vue
 msgid "Holds"
 msgstr ""
@@ -2637,6 +2717,10 @@ msgstr ""
 msgid "How big the cells are printed"
 msgstr ""
 
+#: web/app/lib/export-losses.ts
+msgid "How each sheet is printed"
+msgstr ""
+
 #: web/app/components/FollowPill.vue
 msgid "How far the lights reach"
 msgstr ""
@@ -2647,6 +2731,14 @@ msgstr ""
 
 #: web/app/components/AdminTypesetting.vue
 msgid "How formulas, help pages and exports are typeset with LaTeX, for every document on this server."
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "How it is printed"
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "How it is printed: margins and page numbers"
 msgstr ""
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py
@@ -2699,6 +2791,10 @@ msgstr ""
 
 #: web/app/components/AdminSecurity.vue
 msgid "How passwords protect the documents on this server."
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "How random numbers are drawn"
 msgstr ""
 
 #: web/app/components/StyleColorPicker.vue
@@ -2779,6 +2875,14 @@ msgstr ""
 
 #: web/app/components/OpenDialog.vue
 msgid "In collections"
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "In the file they no longer follow the slides."
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "In the file they no longer follow what they point at."
 msgstr ""
 
 #: web/app/components/TableOptionsDialog.vue
@@ -2943,6 +3047,10 @@ msgstr ""
 
 #: web/app/lib/pivots.ts
 msgid "Its cell was written over, so it shows nothing. Delete it and make it again."
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "Its code is “{code}”."
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
@@ -3137,12 +3245,20 @@ msgstr ""
 msgid "Line · soon"
 msgstr ""
 
+#: web/app/lib/export-losses.ts
+msgid "Links in speaker notes"
+msgstr ""
+
 #: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/StyleBar.vue web/app/lib/format-menu.ts
 msgid "List"
 msgstr ""
 
 #: web/app/components/SidePanel.vue
 msgid "List item"
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "List marks"
 msgstr ""
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py
@@ -3497,8 +3613,16 @@ msgstr ""
 msgid "Named things"
 msgstr ""
 
-#: web/app/components/FormulaBar.vue web/app/components/NamesDialog.vue
+#: web/app/components/FormulaBar.vue web/app/components/NamesDialog.vue web/app/lib/export-losses.ts
 msgid "Names"
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "Names the format cannot hold as they are"
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "Names, charts or rules this program does not show still name the old sheet: check them in the file."
 msgstr ""
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/FormulaBar.vue web/app/components/Workspace.vue
@@ -3697,6 +3821,14 @@ msgstr ""
 msgid "Not hyphenated: {reason}."
 msgstr ""
 
+#: web/app/lib/export-losses.ts
+msgid "Not in the file: {what}"
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "Not kept: {what}."
+msgstr ""
+
 #: web/app/components/StyleSpec.vue
 msgid "Not now"
 msgstr ""
@@ -3873,8 +4005,12 @@ msgstr ""
 msgid "Object on slide {n}"
 msgstr ""
 
-#: web/app/components/SearchPanel.vue
+#: web/app/components/SearchPanel.vue web/app/lib/export-losses.ts
 msgid "Objects"
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "Objects added to a file that was imported"
 msgstr ""
 
 #: web/app/components/AiConsentDialog.vue
@@ -3969,6 +4105,10 @@ msgstr ""
 msgid "Only people using this server receive them."
 msgstr ""
 
+#: web/app/lib/export-losses.ts
+msgid "Only the alternative in use is in the file."
+msgstr ""
+
 #: web/app/components/SearchPanel.vue
 msgid "Only the first {count} matches are listed."
 msgstr ""
@@ -4031,6 +4171,10 @@ msgstr ""
 
 #: web/app/components/OpenDialog.vue
 msgid "Open a text, or start a new one. Everybody you invite writes in the same text, and so does the assistant: it suggests, you decide."
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "Open suggestions are not in the file"
 msgstr ""
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py
@@ -4161,6 +4305,10 @@ msgstr ""
 msgid "Page numbers"
 msgstr ""
 
+#: web/app/lib/export-losses.ts
+msgid "Page numbers in the table of contents"
+msgstr ""
+
 #: web/app/components/StyleBar.vue
 msgid "Page: the text on a page"
 msgstr ""
@@ -4187,6 +4335,10 @@ msgstr ""
 
 #: web/app/components/ResultNote.vue
 msgid "Part of the result of the query in {cell}"
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "Parts of charts"
 msgstr ""
 
 #: web/app/components/AdminLogin.vue web/app/components/FirstAdminSetup.vue web/app/components/ImportDialog.vue web/app/components/OpenDialog.vue
@@ -4277,6 +4429,18 @@ msgstr ""
 msgid "Picture properties…"
 msgstr ""
 
+#: web/app/lib/export-losses.ts
+msgid "Pictures in speaker notes"
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "Pictures marked as decoration"
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "Pictures without their image"
+msgstr ""
+
 #: web/app/components/PivotCreateDialog.vue web/app/lib/pivots.ts
 msgid "Pivot"
 msgstr ""
@@ -4295,6 +4459,10 @@ msgstr ""
 
 #: web/app/components/PivotSqlDialog.vue
 msgid "Pivot table as SQL"
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "Pivot tables"
 msgstr ""
 
 #: web/app/components/PivotCreateDialog.vue
@@ -4339,6 +4507,10 @@ msgstr ""
 
 #: web/app/components/SlideNotes.vue
 msgid "Planned time, for example 2, 2:30 or 90s"
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "Planned times of slides"
 msgstr ""
 
 #: web/app/components/SlideWorkspace.vue
@@ -4525,6 +4697,10 @@ msgstr ""
 msgid "Quit"
 msgstr ""
 
+#: web/app/lib/export-losses.ts
+msgid "Quotes in speaker notes"
+msgstr ""
+
 #: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue
 msgid "Random Generator…"
 msgstr ""
@@ -4633,6 +4809,10 @@ msgstr ""
 msgid "Reference to {what}"
 msgstr ""
 
+#: web/app/lib/export-losses.ts
+msgid "References are written as what they read now"
+msgstr ""
+
 #: web/app/components/NamesDialog.vue
 msgid "Refers to"
 msgstr ""
@@ -4651,6 +4831,10 @@ msgstr ""
 
 #: web/app/components/SearchPanel.vue
 msgid "Remarks"
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "Remarks are not in the file"
 msgstr ""
 
 #: web/app/components/AdminAccessDocuments.vue web/app/components/AdminAi.vue web/app/components/NumberingDialog.vue web/app/components/PivotPanel.vue web/app/components/SearchPanel.vue web/app/components/ShareDialog.vue
@@ -4735,6 +4919,10 @@ msgstr ""
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue
 msgid "Rename Slide…"
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "Rename a style to Body text, a heading or Quote to keep it."
 msgstr ""
 
 #: web/app/components/AdminFonts.vue
@@ -4985,6 +5173,10 @@ msgstr ""
 msgid "Rows"
 msgstr ""
 
+#: web/app/lib/export-losses.ts
+msgid "Rows or columns beyond the format’s limits"
+msgstr ""
+
 #: web/app/components/TableOptionsDialog.vue
 msgid "Rules"
 msgstr ""
@@ -5229,6 +5421,10 @@ msgstr ""
 msgid "Shape labels"
 msgstr ""
 
+#: web/app/lib/export-losses.ts
+msgid "Shapes"
+msgstr ""
+
 #: web/app/components/ShareDialog.vue
 msgid "Share this document"
 msgstr ""
@@ -5437,8 +5633,16 @@ msgstr ""
 msgid "Snap to grid"
 msgstr ""
 
+#: web/app/lib/export-losses.ts
+msgid "So what this program does not show of the original is not in it."
+msgstr ""
+
 #: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/TextWorkspace.vue
 msgid "Soft Hyphen"
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "Some programs cannot show them."
 msgstr ""
 
 #: web/app/components/AdminApp.vue
@@ -5451,6 +5655,10 @@ msgstr ""
 
 #: web/app/lib/search.ts
 msgid "Something is repeated that is not there."
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "Something this format has no place for"
 msgstr ""
 
 #: web/app/lib/base-session.ts web/app/lib/session.ts
@@ -5577,6 +5785,10 @@ msgstr ""
 msgid "Style"
 msgstr ""
 
+#: web/app/lib/export-losses.ts
+msgid "Style settings the format cannot hold: {names}"
+msgstr ""
+
 #: web/app/components/DeleteStyleDialog.vue
 msgid "Style to assign"
 msgstr ""
@@ -5591,6 +5803,10 @@ msgstr ""
 
 #: web/app/components/StyleBar.vue web/app/components/StyleMenu.vue web/app/components/StylePicker.vue web/app/components/StylesDialog.vue
 msgid "Styles"
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "Styles saved as body text: {names}"
 msgstr ""
 
 #: web/app/lib/object-menu.ts
@@ -5611,6 +5827,10 @@ msgstr ""
 
 #: web/app/components/SuggestionPopover.vue
 msgid "Suggestion"
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "Suggestions that no longer match their words"
 msgstr ""
 
 #: web/app/components/TableOptionsDialog.vue web/app/lib/pivots.ts
@@ -5721,7 +5941,7 @@ msgstr ""
 msgid "Table or range to analyse"
 msgstr ""
 
-#: web/app/components/SqlEditor.vue
+#: web/app/components/SqlEditor.vue web/app/lib/export-losses.ts
 msgid "Tables"
 msgstr ""
 
@@ -6081,6 +6301,10 @@ msgstr ""
 msgid "The document changes now: the marked places show filler (the document behind this dialog is the preview)."
 msgstr ""
 
+#: web/app/lib/export-losses.ts
+msgid "The document does not hold the image, so the file shows nothing there."
+msgstr ""
+
 #: web/app/lib/protocol.ts
 msgid "The document is full, or the connection was too slow."
 msgstr ""
@@ -6129,6 +6353,10 @@ msgstr ""
 msgid "The file could not be saved: {reason}"
 msgstr ""
 
+#: web/app/components/ExportFormatDialog.vue
+msgid "The file does not hold:"
+msgstr ""
+
 #: web/app/lib/admin-fonts.ts
 msgid "The file forbids embedding (fsType {fsType}), so no PDF could carry it."
 msgstr ""
@@ -6139,6 +6367,10 @@ msgstr ""
 
 #: web/app/lib/open.ts
 msgid "The file is too large for this server."
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "The file was written anew, not changed in place"
 msgstr ""
 
 #: web/app/components/ExportFormatDialog.vue
@@ -6171,6 +6403,22 @@ msgstr ""
 
 #: web/app/components/AdminFonts.vue
 msgid "The fonts every document on this server is laid out, shown and printed with."
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "The format cannot hold all of what these charts show or how they are turned."
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "The format cannot say that a picture is only decoration."
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "The format has no formula for them, so the file holds what they show now."
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "The format shows them in a look of its own."
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
@@ -6289,8 +6537,16 @@ msgstr ""
 msgid "The kurtosis of a sample (0 for a normal distribution): how heavy the tails are."
 msgstr ""
 
+#: web/app/lib/export-losses.ts
+msgid "The language of the document"
+msgstr ""
+
 #: web/app/components/PrintPreview.vue
 msgid "The language of the document: its words are hyphenated by it"
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "The largest areas keep their look; the rest look plain."
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
@@ -6409,6 +6665,10 @@ msgstr ""
 msgid "The named ranges and tables of this workbook"
 msgstr ""
 
+#: web/app/components/SidePanel.vue
+msgid "The names are people of the original document: they have no access to this one."
+msgstr ""
+
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "The natural logarithm of a positive number."
 msgstr ""
@@ -6497,6 +6757,14 @@ msgstr ""
 msgid "The numbers that occur most often, in order of first appearance, as a column (#N/A if none repeats)."
 msgstr ""
 
+#: web/app/lib/export-losses.ts
+msgid "The only time the format holds is when a slide moves on by itself."
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "The order of the tabs"
+msgstr ""
+
 #: web/app/components/OutcomePopover.vue
 msgid "The outcomes"
 msgstr ""
@@ -6569,6 +6837,10 @@ msgstr ""
 msgid "The product of two matrices: the first must have as many columns as the second has rows."
 msgstr ""
 
+#: web/app/lib/export-losses.ts
+msgid "The program that opens the file has to update the table to show them."
+msgstr ""
+
 #: packages/claudia-core/src/claudia_core/palette.py
 msgid "The purpose of a colour role is one line of up to {limit} characters"
 msgstr ""
@@ -6627,6 +6899,10 @@ msgstr ""
 
 #: web/app/lib/search.ts
 msgid "The replacement uses a kept part that the pattern does not have."
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "The rest of each style is in the file."
 msgstr ""
 
 #: web/app/components/PivotCreateDialog.vue
@@ -6735,6 +7011,10 @@ msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "The skewness of a whole population."
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "The slides"
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
@@ -7097,6 +7377,10 @@ msgstr ""
 msgid "These cells are filled by the query, so they are not typed into."
 msgstr ""
 
+#: web/app/lib/export-losses.ts
+msgid "These cells keep the rest of their look."
+msgstr ""
+
 #: web/app/components/AdminLogin.vue
 msgid "These settings are for administrators only. Sign in with your name and password to continue."
 msgstr ""
@@ -7113,8 +7397,24 @@ msgstr ""
 msgid "These {count} cells only"
 msgstr ""
 
+#: web/app/lib/export-losses.ts
+msgid "They are empty in the file. Export again once they are drawn."
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "They are left out of the file."
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "They are written as plain words."
+msgstr ""
+
 #: web/app/components/ImportDialog.vue
 msgid "They come with the file and cannot be changed here — use Details… after it is in."
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "They were in the original file, in a part this program does not show."
 msgstr ""
 
 #: web/app/components/StyleSpec.vue
@@ -7123,6 +7423,10 @@ msgstr ""
 
 #: web/app/components/StyleSpec.vue
 msgid "Thicker border"
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "Things in the file that may point to a sheet that is gone or renamed"
 msgstr ""
 
 #: web/app/components/SidePanel.vue
@@ -7207,6 +7511,14 @@ msgstr ""
 
 #: web/app/components/ImageImportDialog.vue
 msgid "This does not look like a picture the browser can show."
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "This format has no place for it."
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "This format has no place to keep it."
 msgstr ""
 
 #: web/app/components/OpenDialog.vue
@@ -7537,6 +7849,10 @@ msgstr ""
 msgid "Uniform"
 msgstr ""
 
+#: web/app/components/SidePanel.vue
+msgid "Unknown"
+msgstr ""
+
 #: web/app/components/PresentShow.vue
 msgid "Update now"
 msgstr ""
@@ -7605,6 +7921,14 @@ msgstr ""
 msgid "Values people type and change"
 msgstr ""
 
+#: web/app/lib/export-losses.ts
+msgid "Vector pictures"
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "Vector pictures without a plain picture beside them"
+msgstr ""
+
 #: clients/linux/src/claudia_shell_gtk/manifest.py
 msgid "Version, authors and licence"
 msgstr ""
@@ -7643,6 +7967,18 @@ msgstr ""
 
 #: web/app/components/RandomDialog.vue
 msgid "Weibull"
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "Went with what you deleted: things this program does not show"
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "Went with what you deleted: {what}"
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "What a name is for, or which table it belongs to, is not in the file."
 msgstr ""
 
 #: web/app/lib/names.ts
@@ -7795,6 +8131,10 @@ msgstr ""
 
 #: web/app/components/AddFontsDialog.vue
 msgid "Who may receive these fonts"
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "Who typed which words"
 msgstr ""
 
 #: web/app/components/AdminAccessDocuments.vue
@@ -7975,6 +8315,10 @@ msgstr ""
 
 #: web/app/components/ImportDialog.vue
 msgid "You become the owner of the new document. Nobody else is given access."
+msgstr ""
+
+#: web/app/components/ImportDialog.vue
+msgid "You become the owner of the new document. The people named in its history are not given access; their names stay in the history as former people."
 msgstr ""
 
 #: web/app/components/PaletteDialog.vue
@@ -8461,6 +8805,10 @@ msgstr ""
 msgid "and {n} more"
 msgstr ""
 
+#: web/app/lib/export-losses.ts
+msgid "animations"
+msgstr ""
+
 #: web/app/components/OpenDialog.vue
 msgid "ann"
 msgstr ""
@@ -8573,6 +8921,10 @@ msgstr ""
 msgid "cell content"
 msgstr ""
 
+#: web/app/lib/export-losses.ts
+msgid "cell looks"
+msgstr ""
+
 #: packages/claudia-server/src/claudia_server/computes.py
 msgid "cell_styles: the window must not end before it starts"
 msgstr ""
@@ -8593,6 +8945,10 @@ msgstr ""
 msgid "cells: window too large (at most {limit} positions)"
 msgstr ""
 
+#: web/app/lib/export-losses.ts
+msgid "centred across cells"
+msgstr ""
+
 #: web/app/components/RandomDialog.vue
 msgid "chance"
 msgstr ""
@@ -8607,6 +8963,10 @@ msgstr ""
 
 #: web/app/components/SheetChartInsertDialog.vue
 msgid "chart type"
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "charts"
 msgstr ""
 
 #: web/app/components/SidePanel.vue
@@ -8647,6 +9007,10 @@ msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/pivot.py
 msgid "columns: at most one column field in this version"
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "comments"
 msgstr ""
 
 #: web/app/components/Workspace.vue
@@ -8749,6 +9113,10 @@ msgstr ""
 msgid "description is text and tags are a list of words"
 msgstr ""
 
+#: web/app/lib/export-losses.ts
+msgid "diagonal lines"
+msgstr ""
+
 #: web/app/components/SearchPanel.vue
 msgid "do not contain"
 msgstr ""
@@ -8783,6 +9151,10 @@ msgstr ""
 
 #: web/app/components/TopBar.vue
 msgid "document {doc}"
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "double underlines"
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
@@ -8823,6 +9195,10 @@ msgstr ""
 
 #: web/app/lib/search.ts
 msgid "end with “{text}”"
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "endnotes"
 msgstr ""
 
 #: web/app/lib/grid-a11y.ts
@@ -8869,8 +9245,16 @@ msgstr ""
 msgid "exported unprotected"
 msgstr ""
 
+#: web/app/lib/export-losses.ts
+msgid "fields"
+msgstr ""
+
 #: packages/claudia-server/src/claudia_server/admin_fonts.py
 msgid "files must be a list of tokens from /api/admin/fonts/files"
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "fills"
 msgstr ""
 
 #: web/app/components/PivotPanel.vue
@@ -8897,8 +9281,24 @@ msgstr ""
 msgid "font {hash}… is not in the server's catalogue"
 msgstr ""
 
+#: web/app/lib/export-losses.ts
+msgid "footnotes"
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "formatting"
+msgstr ""
+
 #: web/app/components/SearchPanel.vue web/app/lib/grid-a11y.ts
 msgid "formula"
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "formulas"
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "frames"
 msgstr ""
 
 #: packages/claudia-server/src/claudia_server/thing_names.py
@@ -8927,6 +9327,10 @@ msgstr ""
 
 #: packages/claudia-server/src/claudia_server/tables.py
 msgid "give the table's rows and cols, or the words as cells"
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "gradients"
 msgstr ""
 
 #: web/app/components/OutcomePopover.vue
@@ -8993,12 +9397,20 @@ msgstr ""
 msgid "in a list, one level in or out"
 msgstr ""
 
+#: web/app/components/SidePanel.vue
+msgid "in the chat: {words}"
+msgstr ""
+
 #: web/app/components/TableMenu.vue
 msgid "in {name}"
 msgstr ""
 
 #: web/app/components/PivotValueDialog.vue
 msgid "in {source}"
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "input rules"
 msgstr ""
 
 #: web/app/components/InsertBar.vue
@@ -9115,6 +9527,10 @@ msgstr ""
 
 #: web/app/components/ContainerFace.vue
 msgid "line {line}: {message}"
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "links"
 msgstr ""
 
 #: web/app/components/SearchPanel.vue
@@ -9409,12 +9825,16 @@ msgstr ""
 msgid "not valid JSON"
 msgstr ""
 
-#: web/app/components/SearchPanel.vue
+#: web/app/components/SearchPanel.vue web/app/lib/export-losses.ts
 msgid "notes"
 msgstr ""
 
 #: packages/claudia-creates/src/claudia_creates/model.py
 msgid "notes are at most {limit} characters"
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "number formats"
 msgstr ""
 
 #: web/app/components/NumberingDialog.vue
@@ -9423,6 +9843,10 @@ msgstr ""
 
 #: web/app/components/SearchPanel.vue web/app/lib/noun-phrases.ts
 msgid "object"
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "objects"
 msgstr ""
 
 #: packages/claudia-server/src/claudia_server/styles.py
@@ -9601,6 +10025,10 @@ msgstr ""
 msgid "part of a result"
 msgstr ""
 
+#: web/app/lib/export-losses.ts
+msgid "patterns"
+msgstr ""
+
 #: web/app/components/AdminTypesetting.vue
 msgid "pdftocairo"
 msgstr ""
@@ -9623,6 +10051,10 @@ msgstr ""
 
 #: web/app/lib/noun-phrases.ts
 msgid "picture"
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "pictures"
 msgstr ""
 
 #: web/app/lib/pivots.ts
@@ -9679,6 +10111,10 @@ msgstr ""
 
 #: web/app/lib/names.ts
 msgid "query result"
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "raised and lowered text"
 msgstr ""
 
 #: packages/claudia-server/src/claudia_server/computes.py
@@ -9773,6 +10209,10 @@ msgstr ""
 msgid "rows: at most one row field in this version"
 msgstr ""
 
+#: web/app/lib/export-losses.ts
+msgid "ruby text"
+msgstr ""
+
 #: web/app/lib/audit.ts
 msgid "saved a PDF"
 msgstr ""
@@ -9849,6 +10289,10 @@ msgstr ""
 msgid "show must be one of {shows}"
 msgstr ""
 
+#: web/app/lib/export-losses.ts
+msgid "shrink to fit"
+msgstr ""
+
 #: packages/claudia-server/src/claudia_server/admin_api.py
 msgid "sign in as an administrator first"
 msgstr ""
@@ -9891,6 +10335,10 @@ msgstr ""
 
 #: web/app/lib/style-deletion.ts
 msgid "spacing"
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "speaker notes"
 msgstr ""
 
 #: web/app/components/RandomDialog.vue
@@ -9961,7 +10409,7 @@ msgstr ""
 msgid "targets is a list of 1 to {limit} targets"
 msgstr ""
 
-#: web/app/components/SearchPanel.vue
+#: web/app/components/SearchPanel.vue web/app/lib/export-losses.ts
 msgid "text"
 msgstr ""
 
@@ -9975,6 +10423,10 @@ msgstr ""
 
 #: web/app/components/SlideCanvas.vue web/app/components/TextObjectLayer.vue
 msgid "text of the object"
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "text spread from top to bottom"
 msgstr ""
 
 #: packages/claudia-server/src/claudia_server/protocol.py
@@ -10669,8 +11121,20 @@ msgstr ""
 msgid "trace: window too large (at most {limit} positions)"
 msgstr ""
 
+#: web/app/lib/export-losses.ts
+msgid "tracked changes"
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "transitions"
+msgstr ""
+
 #: web/app/components/RandomDialog.vue
 msgid "trials"
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "turned text"
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/pivot_render.py

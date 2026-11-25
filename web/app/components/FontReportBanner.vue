@@ -25,11 +25,13 @@ const getUrl = computed(() => `${adminUrl(location.origin)}#fonts`)
 </script>
 
 <template>
-  <div v-if="sentence" class="banner fonts" role="status" data-testid="font-banner">
-    <span>{{ sentence }}</span>
-    <a v-if="mayOfferGet(administrator)" class="btn get" :href="getUrl" target="_blank" rel="noopener">{{ t('Get') }}</a>
-    <span v-else>{{ t('Ask an administrator to add it.') }}</span>
-    <button type="button" class="btn" @click="dismissed = true">{{ t('Dismiss') }}</button>
+  <div role="status">
+    <div v-if="sentence" class="banner fonts" data-testid="font-banner">
+      <span>{{ sentence }}</span>
+      <a v-if="mayOfferGet(administrator)" class="btn get" :href="getUrl" target="_blank" rel="noopener">{{ t('Get') }}</a>
+      <span v-else>{{ t('Ask an administrator to add it.') }}</span>
+      <button type="button" class="btn" @click="dismissed = true">{{ t('Dismiss') }}</button>
+    </div>
   </div>
 </template>
 

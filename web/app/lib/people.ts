@@ -44,6 +44,13 @@ export function clock(iso: string, locale: string = currentLocale()): string {
     : d.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })
 }
 
+/** The day and the minute in the person's own calendar and clock, from the server's UTC time: for a step of another
+ *  document (D2005), which may be from any day. `''` for what is not a time. */
+export function dayAndClock(iso: string, locale: string = currentLocale()): string {
+  const d = new Date(iso)
+  return Number.isNaN(d.getTime()) ? '' : d.toLocaleString(locale, { dateStyle: 'short', timeStyle: 'short', hour12: false })
+}
+
 /** `just now`, `5 min ago`, `yesterday`, or the date. `locale` — see `clock` above for why it is not left implicit. */
 export function ago(iso: string, now = Date.now(), locale: string = currentLocale()): string {
   const seconds = Math.round((now - new Date(iso).getTime()) / 1000)

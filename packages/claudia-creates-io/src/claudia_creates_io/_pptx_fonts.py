@@ -8,13 +8,13 @@ from __future__ import annotations
 from typing import Any
 
 from lxml import etree
-from pptx.enum.shapes import PP_PLACEHOLDER
 from pptx.opc.constants import RELATIONSHIP_TYPE
 
 from claudia_opc_io import ThemeFonts, parse_xml
 
+from ._pptx_placeholders import TITLES
+
 _A = "{http://schemas.openxmlformats.org/drawingml/2006/main}"
-_TITLES = (PP_PLACEHOLDER.TITLE, PP_PLACEHOLDER.CENTER_TITLE)
 
 
 def deck_theme(prs: Any) -> ThemeFonts:  # noqa: ANN401
@@ -39,7 +39,7 @@ def _run_fonts(shape: Any) -> list[str | None]:  # noqa: ANN401
 
 
 def _inherited(shape: Any, theme: ThemeFonts) -> str | None:  # noqa: ANN401
-    is_title = shape.is_placeholder and shape.placeholder_format.type in _TITLES
+    is_title = shape.is_placeholder and shape.placeholder_format.type in TITLES
     return theme.major if is_title else theme.minor
 
 

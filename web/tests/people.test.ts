@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { ago, colorOf, initial, inkOn } from '~/lib/people'
+import { ago, colorOf, dayAndClock, initial, inkOn } from '~/lib/people'
 
 const state = { me: { user: 'ann', role: 'owner', color: '#d6477a' }, people: [{ id: 2, user: 'ben', color: '#13917f' }] }
 
@@ -24,5 +24,11 @@ describe('people', () => {
     expect(ago('2026-11-02T11:55:00Z', now)).toBe('5 min ago')
     expect(ago('2026-11-02T09:00:00Z', now)).toBe('3 h ago')
     expect(ago('2026-11-01T09:00:00Z', now)).toBe('yesterday')
+  })
+  it('gives the day with the time for a step of another document (D2005)', () => {
+    const said = dayAndClock('2026-11-02T09:05:00Z', 'en-GB')
+    expect(said).toContain('2026')
+    expect(said).toMatch(/\d{2}:05/)
+    expect(dayAndClock('not a time', 'en-GB')).toBe('')
   })
 })

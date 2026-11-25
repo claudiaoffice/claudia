@@ -14,14 +14,17 @@ const said = computed(() => statusText(props.status, props.label, t))
 <template>
   <div class="face" :class="[props.status.kind, { drawn: !!props.src }]" data-testid="container-face">
     <img v-if="props.src" class="picture" :src="props.src" alt="" draggable="false" >
-    <p v-if="said.text" class="state" :role="said.urgent ? 'alert' : 'status'">
-      {{ said.text }}
-      <template v-if="props.status.kind === 'failed'">
-        <span v-for="(d, i) in props.status.diagnostics.slice(0, 3)" :key="i" class="diag">
-          {{ d.line ? t('line {line}: {message}', { line: d.line, message: d.message }) : d.message }}
-        </span>
-      </template>
-    </p>
+    <!-- the region is there before what it says (UX-90); an urgent state makes it an alert -->
+    <div :role="said.urgent ? 'alert' : 'status'">
+      <p v-if="said.text" class="state">
+        {{ said.text }}
+        <template v-if="props.status.kind === 'failed'">
+          <span v-for="(d, i) in props.status.diagnostics.slice(0, 3)" :key="i" class="diag">
+            {{ d.line ? t('line {line}: {message}', { line: d.line, message: d.message }) : d.message }}
+          </span>
+        </template>
+      </p>
+    </div>
     <span class="type" aria-hidden="true">{{ props.label }}</span>
   </div>
 </template>

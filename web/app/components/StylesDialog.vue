@@ -90,12 +90,14 @@ function count(id: string) {
   <Modal :title="t('Styles')" :width="editing && !narrow ? 780 : 520" @close="emit('close')">
     <div class="panes" :class="{ two: editing && !narrow }">
       <div v-if="!(editing && narrow)" class="list-pane">
-        <div v-if="announced" class="announce" role="status" data-testid="deleted">
-          <span>{{ announced.line }}</span>
-          <span class="links">
-            <button v-if="announced.standIn" type="button" class="link" data-testid="name-it" @click="nameIt(announced.standIn)">{{ t('Name it…') }}</button>
-            <button type="button" class="link" data-testid="undo-delete" @click="undo">{{ t('Undo') }}</button>
-          </span>
+        <div role="status">
+          <div v-if="announced" class="announce" data-testid="deleted">
+            <span>{{ announced.line }}</span>
+            <span class="links">
+              <button v-if="announced.standIn" type="button" class="link" data-testid="name-it" @click="nameIt(announced.standIn)">{{ t('Name it…') }}</button>
+              <button type="button" class="link" data-testid="undo-delete" @click="undo">{{ t('Undo') }}</button>
+            </span>
+          </div>
         </div>
         <label v-if="hiddenCount && !editing" class="filter"><input v-model="showHidden" type="checkbox" data-testid="show-hidden" > {{ t('Show hidden styles') }}</label>
         <label v-if="unnamed && !editing" class="filter"><input v-model="onlyUnnamed" type="checkbox" > {{ t('Only the {unnamed} waiting for a name', { unnamed }) }}</label>

@@ -22,12 +22,16 @@ from lxml import etree
 from pivot_helpers import SALES, a_document, a_headerless_pivot_model, a_pivot_model, by_region_and_quarter, grid_of
 
 from claudia_computes import (
+    AddSheet,
     Aggregation,
     PivotFilter,
     PivotLabels,
     ValueField,
+    WorkbookModel,
     create_pivot,
 )
+from claudia_core import Document, MemoryStore
+from claudia_odf_io import LossLog
 from claudia_opc_io import read_parts, write_parts
 
 MAIN = "http://schemas.openxmlformats.org/spreadsheetml/2006/main"
@@ -462,6 +466,59 @@ def test_a_pivot_changed_in_a_kept_file_is_said_not_written():
     current.pivots.put("P", replace(entry, definition=replace(entry.definition, total_row=False)))
     current._calculate_loaded()
     assert kinds(xlsx_unwritten_changes(current, baseline)) == {"pivot-table": 1}
+
+
+def a_file_with_a_sheet_for_a_pivot() -> bytes:
+    """The sales of :func:`a_document` and an empty sheet ``Pivot``, as an xlsx file."""
+    doc = a_document()
+    doc.execute(AddSheet("s2", "Pivot"), author="ana")
+    return workbook_to_xlsx(doc.model)
+
+
+def defined_in(data: bytes, name: str = "P", anchor=("s2", 0, 0), definition=None) -> WorkbookModel:
+    """``data`` imported, with the pivot ``name`` defined in it where ``anchor`` says."""
+    doc = Document(xlsx_to_workbook(data), store=MemoryStore())
+    doc.execute(create_pivot(doc.model, name, anchor, definition or by_region_and_quarter()), author="ana")
+    return doc.model
+
+
+def test_api_a_pivot_defined_in_an_imported_file_is_in_the_export():
+    data = a_file_with_a_sheet_for_a_pivot()
+    baseline, current = xlsx_to_workbook(data), defined_in(data)
+    losses = LossLog()
+    out = apply_edits_to_xlsx(data, baseline, current, losses=losses)
+    assert xlsx_unwritten_changes(current, baseline) == ()
+    assert losses.result() == ()
+    back = xlsx_to_workbook(out)
+    assert back.pivots.get("P") == current.pivots.get("P")
+    assert grid_of(back, "s2", 6, 4) == grid_of(current, "s2", 6, 4)
+    assert xml(out, CACHE).get("refreshOnLoad") == "1"
+    assert openpyxl.load_workbook(BytesIO(out))["Pivot"]._pivots  # noqa: SLF001
+
+
+def test_api_a_pivot_defined_in_an_imported_file_that_has_one_gets_a_cache_of_its_own():
+    data = exported()
+    baseline, current = xlsx_to_workbook(data), defined_in(data, "Q", ("s2", 0, 6), by_region_and_quarter(columns=()))
+    out = apply_edits_to_xlsx(data, baseline, current)
+    assert xlsx_unwritten_changes(current, baseline) == ()
+    caches = xml(out, "xl/workbook.xml").findall("x:pivotCaches", NS)
+    assert [each.get("cacheId") for each in caches[0]] == ["1", "2"] and len(caches) == 1
+    assert read_parts(out)[TABLE] == read_parts(data)[TABLE]
+    back = xlsx_to_workbook(out)
+    assert back.pivots.get("P") == baseline.pivots.get("P")
+    assert back.pivots.get("Q") == current.pivots.get("Q")
+
+
+def test_api_a_pivot_defined_in_an_imported_file_with_no_room_for_its_filter_is_its_values_and_said():
+    data = a_file_with_a_sheet_for_a_pivot()
+    definition = by_region_and_quarter(rows=("Quarter",), columns=(), filters=(PivotFilter("Region", ("North",)),))
+    baseline, current = xlsx_to_workbook(data), defined_in(data, definition=definition)
+    losses = LossLog()
+    out = apply_edits_to_xlsx(data, baseline, current, losses=losses)
+    assert kinds(losses.result()) == {"pivot-table:room": 1}
+    assert xlsx_unwritten_changes(current, baseline) == ()
+    assert not [name for name in read_parts(out) if "pivot" in name]
+    assert grid_of(xlsx_to_workbook(out), "s2", 4, 2) == grid_of(current, "s2", 4, 2)
 
 
 def test_a_file_with_no_pivots_is_as_before():

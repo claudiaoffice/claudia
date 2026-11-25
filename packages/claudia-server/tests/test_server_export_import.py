@@ -45,6 +45,17 @@ def test_the_upload_says_who_made_the_export_and_when():
         assert answer["made_by"] and answer["made_at"].startswith("20")
 
 
+def test_the_upload_says_whether_the_export_brings_a_history():
+    """D2005: only then may the dialog say that the names in it stay as text."""
+    with server() as client:
+        data, _ = exported(client)
+        assert upload(client, data).json()["with_history"] is False
+        with_history = write_export(
+            "computes", 1, {}, exporter="x", exported_at="2026-11-19T10:00:00Z", history=[], chat=[]
+        )
+        assert upload(client, with_history).json()["with_history"] is True
+
+
 def test_an_import_makes_a_new_document_with_the_identical_state():
     with server() as client:
         data, state = exported(client)
@@ -94,3 +105,31 @@ def test_an_export_of_an_app_this_server_does_not_host_says_so():
         other = write_export("composes", 1, {}, exporter="x", exported_at="2026-11-19T10:00:00Z")
         answer = upload(client, other).json()
         assert answer["app"] == "composes" and answer["hosted"] is False
+
+
+def test_importing_an_owners_export_adds_one_note_with_who_did_what():
+    """PROC-37, D2005: the history and the chat of an owner's export come in as one read-only note of the import step,
+    text only: who did what and said what, and when. A private message stays out; nothing becomes an undo step."""
+    with server() as client:
+        with client.websocket_connect("/api/computes/docs/source/ws") as ws:
+            ws.send_json(hello(create=True))
+            assert ws.receive_json()["ok"]
+            source = hosted(client, "computes", "source").document
+            source.execute(SetCells("s1", ((0, 0, parse_input("99")),)), author="ann")
+            assert request(ws, "chat", {"text": "A1 is the budget"})["ok"]
+            assert request(ws, "chat", {"text": "@ann only for me"})["ok"]
+            shown = request(ws, "log", {})["result"]  # what the original's history panel says
+            data = base64.b64decode(request(ws, "export_claudia", {"include_history": True})["result"]["data"])
+        token = upload(client, data).json()["upload"]
+        with client.websocket_connect("/api/computes/docs/copy/ws") as ws:
+            ws.send_json(hello(user="newowner", create=True, upload=token))
+            assert ws.receive_json()["ok"]
+            steps = request(ws, "log", {})["result"]
+            undo = request(ws, "history", {})["result"]
+    assert [step["kind"] for step in steps] == ["core.Import"]
+    said = [(line["who"], line["what"], line["said"]) for line in steps[0]["original"]]
+    assert ("ann", shown[-1]["summary"], False) in said
+    assert ("ann", "A1 is the budget", True) in said
+    assert not any("only for me" in what for _, what, _ in said)
+    assert [line["when"] for line in steps[0]["original"]] == sorted(line["when"] for line in steps[0]["original"])
+    assert undo["can_undo"] is False

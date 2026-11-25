@@ -53,9 +53,11 @@ async function apply() {
 <template>
   <Modal :title="t('Members of {field}', { field })" :width="420" @close="emit('close')">
     <form class="members" data-testid="pivot-members" @submit.prevent="apply">
-      <p v-if="loading" class="muted" role="status">{{ t('Looking…') }}</p>
-      <p v-else-if="more" class="muted" role="note">{{ t('{field} has more different members than can be listed here, so the filter keeps them all.', { field }) }}</p>
-      <template v-else-if="members && members.length">
+      <div role="status">
+        <p v-if="loading" class="muted">{{ t('Looking…') }}</p>
+      </div>
+      <p v-if="!loading && more" class="muted" role="note">{{ t('{field} has more different members than can be listed here, so the filter keeps them all.', { field }) }}</p>
+      <template v-else-if="!loading && members && members.length">
         <div class="all">
           <button type="button" class="link" @click="setAll(true)">{{ t('Select all') }}</button>
           <button type="button" class="link" @click="setAll(false)">{{ t('Select none') }}</button>
@@ -67,7 +69,7 @@ async function apply() {
         </ul>
         <p v-if="kept.size === 0" class="problem" role="alert">{{ t('Keep at least one member.') }}</p>
       </template>
-      <p v-else class="muted">{{ t('The field has no members.') }}</p>
+      <p v-else-if="!loading" class="muted">{{ t('The field has no members.') }}</p>
       <div class="buttons">
         <button class="btn" type="button" @click="emit('close')">{{ t('Cancel') }}</button>
         <button class="btn primary" type="submit" :disabled="readonly || busy || more || members === null || kept.size === 0">{{ t('Apply') }}</button>

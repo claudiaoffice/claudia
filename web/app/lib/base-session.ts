@@ -68,6 +68,16 @@ export interface Step {
   kind?: string
   /** Its content was taken away (D720). */
   redacted?: boolean
+  /** The import of an owner's export: the history and chat of the original, oldest first, as text (D2005). */
+  original?: OriginalLine[]
+}
+/** One line of the history of the original (D2005): a step as its history said it, or a message for everybody
+ *  (`said`). `who` is a name as text, not a person of this document. */
+export interface OriginalLine {
+  when: string
+  who: string | null
+  what: string
+  said: boolean
 }
 export interface ChatMessage {
   number: number
@@ -1543,8 +1553,8 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
    * what the app supports: "docx", "odt", "xlsx", "ods", "pptx" or "odp"), as `{format, content_type, data}` with
    * `data` base64 — no history, no chat; just the document as it stands now. With `trackedChanges` the text app also writes its
    * open suggestions as tracked changes, dated and signed (D411); the parameter is only sent when asked for, because
-   * the other apps do not know it. An OpenDocument answer also has `losses`: what the file could not hold, as
-   * `{kind, detail, count}` codes (nothing shows them yet: the screen for that is designed first). */
+   * the other apps do not know it. The answer of a format that reports them also has `losses`: what the file could not
+   * hold, as `{kind, detail, count}` codes, which the Export dialog says in words (UX-70, `lib/export-losses.ts`). */
   async exportOffice(format: string, options: { trackedChanges?: boolean; descriptionComments?: boolean } = {}): Promise<ExportedFile | false> {
     const params: Record<string, unknown> = { format }
     if (options.trackedChanges) params.tracked_changes = true

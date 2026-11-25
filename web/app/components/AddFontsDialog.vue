@@ -141,7 +141,9 @@ async function add() {
           <span class="or">{{ t('or drop them here: TrueType, OpenType, or a .zip of them') }}</span>
           <button v-if="held.length" type="button" class="link" @click="clear">{{ t('Start again') }}</button>
         </div>
-        <p v-if="busy" class="muted" role="status">{{ t('Checking the files…') }}</p>
+        <div role="status">
+          <p v-if="busy" class="muted">{{ t('Checking the files…') }}</p>
+        </div>
       </fieldset>
 
       <label class="field">

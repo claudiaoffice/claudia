@@ -14,7 +14,7 @@ its distance from the corner of the tab (:attr:`Placed.x`, :attr:`Placed.y`).
 from __future__ import annotations
 
 import re
-from collections.abc import Mapping
+from collections.abc import Collection, Mapping
 from dataclasses import dataclass
 
 from claudia_computes import CellAnchor, SheetId, VisualObject, WorkbookModel
@@ -148,3 +148,14 @@ def placed_on_its_sheet(model: WorkbookModel, obj: VisualObject) -> Placed:
     assert isinstance(obj.anchor, CellAnchor)  # (a kept file has no slides)
     sheet = model.sheets[obj.anchor.sheet]
     return placed_object(model, obj, FileTab(sheet.id, sheet.name, is_slide=False))
+
+
+def placed_on_their_sheets(model: WorkbookModel, ids: Collection[str]) -> list[Placed]:
+    """The objects ``ids`` of the sheets of ``model`` placed on their sheets, sheet by sheet and each bottom first, at
+    its place in the stack of its sheet (for a file that is patched: what it adds)."""
+    return [
+        placed_object(model, model.get_object(object_id), FileTab(sheet.id, sheet.name, is_slide=False), layer)
+        for sheet in model.sheets.values()
+        for layer, object_id in enumerate(model.stack_of(str(sheet.id)))
+        if object_id in ids
+    ]

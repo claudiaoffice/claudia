@@ -280,6 +280,27 @@ class Setup(Batch):
         return Setup(tuple(c.redacted_in(model) for c in self.commands), self.name)
 
 
+@dataclass(frozen=True)
+class OriginalLine:
+    """One line of the history of the document an export was made of (D2005): ``when`` it happened, ``who`` did it (a
+    name as text, ``None``: unknown) and ``what``: the step as that document's history said it, or the words of a
+    message for everybody in its chat (``said``). Text only: nobody named here is given anything."""
+
+    when: str
+    who: str | None
+    what: str
+    said: bool = False
+
+    def to_data(self) -> dict:
+        """The plain-data form: ``{when, who, what, said}``."""
+        return {"when": self.when, "who": self.who, "what": self.what, "said": self.said}
+
+    @classmethod
+    def from_data(cls, data: dict) -> OriginalLine:
+        """Inverse of :meth:`to_data`."""
+        return cls(data["when"], data["who"], data["what"], bool(data.get("said", False)))
+
+
 @core_commands.register
 @dataclass(frozen=True)
 class Import(Command):
@@ -289,7 +310,11 @@ class Import(Command):
 
     It is in the history, under the name of who imported it, but nobody's undo step. It is redacted by blanking the
     state it carries, in full or in parts, with the model's own :meth:`~claudia_core.DocumentModel.blank`, which keeps
-    every id and length so that the later entries, all changes of that state, still apply (D723)."""
+    every id and length so that the later entries, all changes of that state, still apply (D723).
+
+    An owner's export brings the history and chat of the document it was made of: they come in as ``original``, one
+    read-only note of this step, oldest line first (D2005). It is part of the import, so it is nobody's undo step
+    either."""
 
     kind: ClassVar[str] = "core.Import"
     undoable = False
@@ -298,6 +323,7 @@ class Import(Command):
     state: dict = field(repr=False)
     sha256: str | None = None  # of the original file's bytes
     kept: bool = False  # is the original file kept in the document?
+    original: tuple[OriginalLine, ...] = ()  # the history of the original, when the file is an owner's export
 
     @property
     def label(self) -> str:
@@ -309,11 +335,21 @@ class Import(Command):
         return Import(self.name, self.fmt, before)
 
     def to_data(self) -> dict:
-        return {"name": self.name, "fmt": self.fmt, "state": self.state, "sha256": self.sha256, "kept": self.kept}
+        data: dict = {"name": self.name, "fmt": self.fmt, "state": self.state, "sha256": self.sha256, "kept": self.kept}
+        if self.original:
+            data["original"] = [line.to_data() for line in self.original]
+        return data
 
     @classmethod
     def from_data(cls, data: dict, registry: CommandRegistry) -> Import:
-        return cls(data["name"], data["fmt"], data["state"], data.get("sha256"), bool(data.get("kept", False)))
+        return cls(
+            data["name"],
+            data["fmt"],
+            data["state"],
+            data.get("sha256"),
+            bool(data.get("kept", False)),
+            tuple(OriginalLine.from_data(line) for line in data.get("original", ())),
+        )
 
     def redacted(self) -> Command:
         """Only the app can blank an import: see :meth:`redacted_in`. Without the model nothing is taken away."""
@@ -325,11 +361,14 @@ class Import(Command):
     def blanked(self, model: type[DocumentModel], parts: frozenset[str] | None = None) -> Import:
         """The import with its content blanked by ``model`` (D723): all of it, or only the things in ``parts`` (ids
         the app knows: paragraphs, sheets and cell ranges, slides, objects). The file goes in either case: its
-        digest and the kept original say what the file held. A full blanking also forgets the file's name, which can
-        say as much as what was in it; blanking in parts keeps it, since the person chose what to take away."""
+        digest and the kept original say what the file held. A full blanking also forgets the file's name and the
+        history of the original (D2005), which can say as much as what was in it; blanking in parts keeps both, since
+        the person chose what to take away."""
         state = model.restore(self.state)
         state.blank(parts)
-        return Import(self.name if parts is not None else "", self.fmt, state.serialize(), None, False)
+        if parts is None:
+            return Import("", self.fmt, state.serialize(), None, False)
+        return Import(self.name, self.fmt, state.serialize(), None, False, self.original)
 
 
 @core_commands.register
