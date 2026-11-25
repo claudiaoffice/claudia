@@ -200,24 +200,41 @@ class ClaudeModel:
             raise ProviderError(FailureReason.TIMED_OUT) from exc
         except OSError as exc:  # no route, refused, no DNS: whatever it is, it cannot be reached
             raise ProviderError(FailureReason.UNREACHABLE, type(exc).__name__) from exc
-        stopped = threading.Event()  # set when the question was stopped and the read was cut for it
-        threading.Thread(target=_cut_when_stopped, args=(stop, stopped, response), daemon=True).start()
-        pieces: list[str] = []
         try:
             if response.status != 200:
                 raise self._refusal(response)
-            self._read(response, stop, pieces)
-        except Exception as exc:
-            if stopped.is_set():  # the read broke because it was cut: what there is of the answer (PROC-67)
-                return "".join(pieces)
-            if isinstance(exc, TimeoutError):
-                raise ProviderError(FailureReason.TIMED_OUT) from exc
-            if isinstance(exc, OSError):  # the connection broke in the middle
-                raise ProviderError(FailureReason.UNREACHABLE, type(exc).__name__) from exc
-            raise
+            return self._answer(response, stop)
+        except TimeoutError as exc:
+            raise ProviderError(FailureReason.TIMED_OUT) from exc
+        except OSError as exc:  # the connection broke in the middle
+            raise ProviderError(FailureReason.UNREACHABLE, type(exc).__name__) from exc
         finally:
-            stopped.set()  # (ends the watch too)
             response.close()
+
+    def _answer(self, response: Response, stop: Callable[[], bool]) -> str:
+        """The answer's text, read in a thread of its own while this one watches ``stop()``: once it turns true the
+        question ends with what there is, at once, even if Anthropic has gone silent and the read would wait for the
+        read timeout (PROC-67). The read is cut as well (where the system can wake a waiting read, it ends now;
+        elsewhere at its timeout, in the background)."""
+        pieces: list[str] = []
+        failed: list[BaseException] = []
+        done = threading.Event()
+
+        def read() -> None:
+            try:
+                self._read(response, stop, pieces)
+            except BaseException as error:  # noqa: BLE001 - handed over to the thread that waits for it
+                failed.append(error)
+            finally:
+                done.set()
+
+        threading.Thread(target=read, name="claudia-claude-read", daemon=True).start()
+        while not done.wait(0.05):  # the pace of the watch
+            if stop():
+                response.close()
+                return "".join(pieces)
+        if failed and not stop():
+            raise failed[0]
         return "".join(pieces)
 
     def _refusal(self, response: Response) -> ProviderError:
@@ -248,13 +265,3 @@ class ClaudeModel:
                     raise ProviderError(reason_of(0, str(error.get("type", "")), message), message)
                 case "message_stop":
                     break
-
-
-def _cut_when_stopped(stop: Callable[[], bool], stopped: threading.Event, response: Response) -> None:
-    """Watch ``stop()`` while the answer is read; once it turns true, cut the read, which may be waiting for a silent
-    Anthropic for as long as the read timeout. Ends when ``stopped`` is set by the reader."""
-    while not stopped.wait(0.05):  # the pace of the watch
-        if stop():
-            stopped.set()
-            response.close()
-            return
