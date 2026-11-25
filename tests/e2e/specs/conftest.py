@@ -395,7 +395,7 @@ def shot_name(test: str) -> str:
     """The file name (without the person and extension) of a test's screenshots: the test's name, and for a long one
     its start, its end (where an outline's example is named) and a short digest of the whole, so that no two tests share
     a file (PROC-56)."""
-    slug = re.sub(r"\W+", "-", test).strip("-")
+    slug = re.sub(r"\W+", "-", test, flags=re.ASCII).strip("-")  # ASCII: any file system takes it
     if len(slug) <= 80:
         return slug
     digest = hashlib.sha256(test.encode()).hexdigest()[:8]

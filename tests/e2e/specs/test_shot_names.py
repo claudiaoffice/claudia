@@ -24,3 +24,7 @@ def test_a_screenshot_name_stays_short_enough_for_any_file_system():
 
 def test_a_short_name_is_kept_as_it_was():
     assert shot_name("test_vera_sees_the_text") == "test_vera_sees_the_text"
+
+
+def test_a_screenshot_name_is_plain_ascii():
+    assert shot_name("test_größe_ändert_sich[Übersicht]").isascii()
