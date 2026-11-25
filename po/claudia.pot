@@ -4045,10 +4045,6 @@ msgstr ""
 msgid "On this slide"
 msgstr ""
 
-#: web/app/components/OpenDialog.vue
-msgid "On {place} · {count}"
-msgstr ""
-
 #: web/app/lib/search.ts
 msgid "One match"
 msgstr ""
@@ -11895,6 +11891,10 @@ msgstr ""
 
 #: web/app/components/ImportDialog.vue
 msgid "{place} already holds this document, as {id}. It cannot be added a second time: open the one that is here."
+msgstr ""
+
+#: web/app/components/OpenDialog.vue
+msgid "{place} · {count}"
 msgstr ""
 
 #: packages/claudia-server/src/claudia_server/computes.py

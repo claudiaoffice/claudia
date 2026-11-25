@@ -4045,10 +4045,6 @@ msgstr "[Ôn thîs shéét àt~~~~~~]"
 msgid "On this slide"
 msgstr "[Ôn thîs slîdé~~~~~]"
 
-#: web/app/components/OpenDialog.vue
-msgid "On {place} · {count}"
-msgstr "[Ôn {place} · {count}~~~~~~~~]"
-
 #: web/app/lib/search.ts
 msgid "One match"
 msgstr "[Ôné màtch~~~~]"
@@ -11896,6 +11892,10 @@ msgstr "[{place} àlréàdy hôlds à dôcûmént càlléd {id}. À nàmé cànn
 #: web/app/components/ImportDialog.vue
 msgid "{place} already holds this document, as {id}. It cannot be added a second time: open the one that is here."
 msgstr "[{place} àlréàdy hôlds thîs dôcûmént, às {id}. Ît cànnôt bé àddéd à sécônd tîmé: ôpén thé ôné thàt îs héré.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+
+#: web/app/components/OpenDialog.vue
+msgid "{place} · {count}"
+msgstr "[{place} · {count}~~~~~~~]"
 
 #: packages/claudia-server/src/claudia_server/computes.py
 msgid "{problem}"

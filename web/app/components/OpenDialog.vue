@@ -970,7 +970,7 @@ async function go(how: 'open' | 'create' | 'recover', from?: { upload: string; k
             </div>
             <div v-if="shownCollection === null" class="list">
               <div class="list-head">
-                <h2>{{ isSuite ? t('On {place} · {count}', { place: placeLabel, count: placeCount }) : t('On this server') }}</h2>
+                <h2>{{ isSuite ? t('{place} · {count}', { place: placeLabel, count: placeCount }) : t('On this server') }}</h2>
                 <div class="filters">
                 <select v-if="placeTags.length" v-model="tagFilter" class="filter" data-testid="tag-filter" :aria-label="t('Which tags')">
                   <option value="">{{ t('all tags') }}</option>

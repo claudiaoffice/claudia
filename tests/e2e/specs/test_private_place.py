@@ -5,6 +5,7 @@ computer" is a name of the past. The file's other scenarios are checked by the u
 
 from __future__ import annotations
 
+import re
 from collections.abc import Iterator
 from urllib.parse import urlsplit
 
@@ -15,6 +16,7 @@ from pytest_bdd import given, parsers, scenarios, then, when
 scenarios("../../../claudiaoffice-log/specs/desktop/private-place.feature")
 
 PLACE_NAMES = "nav.servers .server-name"
+LIST_HEADING = ".list .list-head h2"
 
 
 @pytest.fixture
@@ -56,3 +58,13 @@ def place_called(tab: dict, name: str) -> None:
 @then(parsers.parse('no place is called "{name}"'))
 def no_place_called(tab: dict, name: str) -> None:
     assert name not in tab["page"].locator(PLACE_NAMES).all_inner_texts()
+
+
+@then(parsers.parse('the list of its documents is headed "{name}", with how many there are'))
+def list_headed(tab: dict, name: str) -> None:
+    page = tab["page"]
+
+    def headed() -> None:
+        assert re.fullmatch(rf"{re.escape(name)} · \d+", (page.locator(LIST_HEADING).text_content() or "").strip())
+
+    eventually(headed, page=page)

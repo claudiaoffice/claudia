@@ -27,7 +27,7 @@ The index is the status of record; a section below keeps the status of the round
 re-checked. **Opened** and **Fixed** are filled from 2026-11-20 on: for older items only where the status already gave
 the date.
 
-### Open (63)
+### Open (64)
 
 By priority (P1, P2, P3, then items that wait for a decision without one), then by ID.
 
@@ -91,6 +91,7 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | CODE-68 | P3 | computes | Computes cannot make a text box or a shape, though a model can hold one (a file from another app) and an export reports it as `object` | **new, open** |  |  |
 | CODE-74 | P3 | Code | `export_content` still answers `{format: "claudia-export 1", ...}`, a JSON that is neither the zip of D1270 nor documented anywhere; it is recorded as an export and the panel says "exported as claudia-export 1"; no window calls it | **new, open** (size 3; remove it or make it the zip) |  |  |
 | UX-92 | P3 | UX / i18n | History & Chat says "undo" and "redo" in English before a step, and the "History of the original" copies it | **new, open** (read) | 2026-11-25 |  |
+| UX-94 | P3 | UX / desktop clients | The list of a place's documents is headed "On {place}", which reads "On Shared on this computer" with the new place names | **in review on `mac-installer`** (E8.5; waits for the owner's acceptance) | 2026-11-25 |  |
 | CODE-101 | P3 | Code / Import | A pptx placeholder's inherited size and alignment (a title's 44 pt, centred) are neither read nor reported | **new, open** (read) | 2026-11-25 |  |
 | CODE-102 | P3 | Code / Import | A pptx box with several bulleted paragraphs comes in with one bullet (one paragraph per box), and no loss says so | **new, open** (measured) | 2026-11-25 |  |
 | CODE-103 | P3 | computes I/O | The ods chart patch: a chart in a cell that is moved and described in one export makes overlapping edits, so the kept file is written anew | **new, open** (read) | 2026-11-25 |  |
@@ -635,3 +636,9 @@ LibreOffice saved comes in at its place.
 which Word writes for nearly every paragraph) is counted as a `formatting` loss, though the properties of the mark are
 not visible in the text. So the import over-counts what it leaves out. **Acceptance:** a docx whose only run properties
 are those of paragraph marks reports no `formatting` loss.
+
+### UX-94 · "On Shared on this computer" heads the list of a place's documents · P3 · size 3 · in review
+**Seen** in the screenshot of the browser scenario of `desktop/private-place.feature` (2026-11-25): the list's heading was
+built as `t('On {place} · {count}')`, which suited "This computer" but reads "On Shared on this computer · 0" with the
+names of D1623. **Built on `mac-installer`, in review:** the heading is the place's name and the count, `{place} ·
+{count}` (German the same), as the headline above it; scenario `# UX-94` of `desktop/private-place.feature`.

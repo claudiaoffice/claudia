@@ -76,3 +76,10 @@ Feature: Each person of a computer keeps her own private place
     When I open its address in a browser tab
     Then its place is called "Shared on this computer"
     And no place is called "This computer"
+
+  # UX-94
+  @extended @firefox
+  Scenario: The list of a place's documents is headed by the place's name
+    Given a claudia server runs on this computer
+    When I open its address in a browser tab
+    Then the list of its documents is headed "Shared on this computer", with how many there are
