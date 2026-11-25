@@ -221,7 +221,7 @@ function removedWords(member: string, t: Translate): string {
     look: () => t('cell looks'),
     validation: () => t('input rules'),
   }
-  return words[member]?.() ?? member
+  return words[member]?.() ?? ''
 }
 
 /** The words of the kinds that come in families, by their prefix: the rest of the code says what of the family. */
@@ -230,10 +230,13 @@ const FAMILIES: Record<string, (member: string) => Words> = {
     title: counted(notesWords(member, t), count),
     hint: t('They are written as plain words.'),
   }),
-  'removed-': (member) => (count, _, t) => ({
-    title: counted(t('Went with what you deleted: {what}', { what: removedWords(member, t) }), count),
-    hint: t('They were in the original file, in a part this program does not show.'),
-  }),
+  'removed-': (member) => (count, _, t) => {
+    const what = removedWords(member, t)
+    return {
+      title: counted(what ? t('Went with what you deleted: {what}', { what }) : t('Went with what you deleted: things this program does not show'), count),
+      hint: what ? t('They were in the original file, in a part this program does not show.') : t('Its code is “{code}”.', { code: `removed-${member}` }),
+    }
+  },
 }
 
 /** The words of ``kind``: its own, or those of its family; none for a kind nobody has put into words yet. */

@@ -7849,6 +7849,10 @@ msgstr ""
 msgid "Uniform"
 msgstr ""
 
+#: web/app/components/SidePanel.vue
+msgid "Unknown"
+msgstr ""
+
 #: web/app/components/PresentShow.vue
 msgid "Update now"
 msgstr ""
@@ -7963,6 +7967,10 @@ msgstr ""
 
 #: web/app/components/RandomDialog.vue
 msgid "Weibull"
+msgstr ""
+
+#: web/app/lib/export-losses.ts
+msgid "Went with what you deleted: things this program does not show"
 msgstr ""
 
 #: web/app/lib/export-losses.ts

@@ -7849,6 +7849,10 @@ msgstr "[Ûndô {label}~~~~~]"
 msgid "Uniform"
 msgstr "[Ûnîfôrm~~~]"
 
+#: web/app/components/SidePanel.vue
+msgid "Unknown"
+msgstr "[Ûnknôwn~~~]"
+
 #: web/app/components/PresentShow.vue
 msgid "Update now"
 msgstr "[Ûpdàté nôw~~~~]"
@@ -7964,6 +7968,10 @@ msgstr "[Wébsîté~~~]"
 #: web/app/components/RandomDialog.vue
 msgid "Weibull"
 msgstr "[Wéîbûll~~~]"
+
+#: web/app/lib/export-losses.ts
+msgid "Went with what you deleted: things this program does not show"
+msgstr "[Wént wîth whàt yôû délétéd: thîngs thîs prôgràm dôés nôt shôw~~~~~~~~~~~~~~~~~~~~~~~~]"
 
 #: web/app/lib/export-losses.ts
 msgid "Went with what you deleted: {what}"

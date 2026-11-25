@@ -7849,6 +7849,10 @@ msgstr "Rückgängig: {label}"
 msgid "Uniform"
 msgstr "Gleichverteilung"
 
+#: web/app/components/SidePanel.vue
+msgid "Unknown"
+msgstr "Unbekannt"
+
 #: web/app/components/PresentShow.vue
 msgid "Update now"
 msgstr "Jetzt aktualisieren"
@@ -7964,6 +7968,10 @@ msgstr "Website"
 #: web/app/components/RandomDialog.vue
 msgid "Weibull"
 msgstr "Weibull"
+
+#: web/app/lib/export-losses.ts
+msgid "Went with what you deleted: things this program does not show"
+msgstr "Mit dem Gelöschten entfernt: Dinge, die dieses Programm nicht zeigt"
 
 #: web/app/lib/export-losses.ts
 msgid "Went with what you deleted: {what}"

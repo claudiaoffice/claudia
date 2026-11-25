@@ -43,6 +43,15 @@ describe('what the Export dialog says a file does not hold', () => {
     expect(lines[0]!.hint).toBe('They were in the original file, in a part this program does not show.')
   })
 
+  it('still says what went with a deleted part when nobody has put that kind into words, with its code', () => {
+    const [line] = lossLines([{ kind: 'removed-hidden-row', detail: '', count: 3 }], t)
+    expect(line).toEqual({
+      kind: 'removed-hidden-row',
+      title: 'Went with what you deleted: things this program does not show (3)',
+      hint: 'Its code is “removed-hidden-row”.',
+    })
+  })
+
   it('says when a kept file could not be changed in place and was written anew', () => {
     const [line] = lossLines([{ kind: 'not-patched', detail: 'adding a slide cannot be patched yet', count: 1 }], t)
     expect(line).toEqual({
