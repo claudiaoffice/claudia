@@ -278,3 +278,39 @@ def test_an_untranslated_entry_is_found_but_not_a_shapes_name():
 
 def test_the_built_in_shapes_are_read_from_the_creates_package():
     assert {"Circle", "Rectangle", "Triangle"} <= audit.builtin_shape_names()
+
+
+class TestAfterTheOwnersAnswers:
+    def test_renamed_context_entries_pair_up_by_their_words(self):
+        renames = audit._pair_renames(
+            ["Row above", "Remove row", "Name & describe…"], ["Insert Row Above", "Delete Rows"]
+        )
+        assert renames == {"Insert Row Above": "Row above", "Delete Rows": "Remove row"}
+
+    def test_a_platform_marked_na_is_not_compared(self):
+        quit_row = Row(
+            99,
+            "File",
+            ("Quit",),
+            {"composes": 6},
+            {"Web": None, "Linux": "Ctrl+Q", "Windows": "Ctrl+Q", "macOS": None},
+            {},
+            "file.quit",
+            frozenset({"Web", "macOS"}),
+        )
+        desktop = [entry("File", "Quit", shortcut="Ctrl+Q", action="file.quit")]
+        assert kinds(audit.compare_row(app(desktop, []), quit_row)) == []
+
+    def test_an_entry_the_context_menus_sheet_takes_moves_there(self):
+        desktop = [entry("Tools", "Pivot Fields", action="tools.pivot-fields")]
+        found = list(audit.compare_extras(app(desktop, list(desktop)), [], [], {"Pivot Fields": "Pivot table"}))
+        assert [(f.kind, f.workbook) for f in found] == [("Moves to a context menu", "context menu: Pivot table")]
+
+    def test_the_owners_answers_stay_on_a_rerun(self):
+        book = openpyxl.Workbook()
+        found = [audit.Finding("Question", "all", "built-in names in German")]
+        audit.write_sheet(book, found, "made here")
+        book[audit.SHEET]["K2"], book[audit.SHEET]["L2"] = "ok", "Q6"
+        audit.write_sheet(book, [*found, audit.Finding("Label", "composes", "File ▸ New")], "made again")
+        rows = list(book[audit.SHEET].iter_rows(min_row=2, max_row=3, values_only=True))
+        assert [(r[1], r[10], r[11]) for r in rows] == [("Question", "ok", "Q6"), ("Label", None, None)]

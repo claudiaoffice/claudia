@@ -110,6 +110,30 @@ uv run python scripts/menu_audit.py       # the comparison → sheet Diagnosis (
   - View ▸ Replay History… is greyed for a viewer and View ▸ History and Chat is not. That fits D1261 (a viewer gets no
     history, and the panel says so). It is the kind of entry phase 3 has to settle: hide it, or keep it greyed.
 
+## Phase 2, round 1: the owner's answers (2026-11-25)
+
+The owner answered all 60 rows that needed a decision. The answers are D1607–D1615 and story E5.25. They are written
+into the workbook as follows:
+
+- **Diagnosis:** the answers are in the Decision and Your comment columns. `menu_audit.py` keeps them when it rebuilds
+  the sheet, for every row that is still there.
+- **To decide:** #14, #15, #17–#21 and #25 are answered "agree".
+- **Menus and Context menus:** the new and changed rows are marked in their status column, and new cells are in blue.
+  - Page View is one switch.
+  - Tools ▸ Pivot table… is a single entry.
+  - Select Next / Previous Object are in Edit; File ▸ Quit is a desktop entry.
+  - Back where I was and AI… sit in their menus' order.
+  - The new context menus are the reference's (Go to target), the pivot table's, and the row and column headers'.
+  - Reference in chat is in every thing's context menu.
+  - The computes cell menu is complete.
+
+The rebuilt Diagnosis sheet has 439 rows. 29 of them need a decision, and all 29 carry the owner's answer: the work
+they describe is still to do (one capitalisation rule, one question, View ▸ Flow, and 26 entries the apps have and the workbook
+drops). Entries the workbook now places in a context menu are listed as "Moves to a context menu" (21). Renamed
+context-menu entries are paired with their old words instead of being listed twice.
+
+Still open: the shortcut review (To decide #18). Ctrl+Alt+G, the owner's wish for "go", is View ▸ Grid in creates.
+
 ## Bugs found (sizes 1 huge – 3 small)
 
 | ID | Size | What |

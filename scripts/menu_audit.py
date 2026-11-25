@@ -65,6 +65,7 @@ KINDS: dict[str, bool] = {
     "Not in this app yet": False,
     "Not built yet": False,
     "To remove (the workbook drops it in this app)": False,
+    "Moves to a context menu": False,
     "Web and desktop differ": False,
     "Context menu: missing entries": False,
     "Not translated": False,
@@ -133,6 +134,8 @@ class Row:
     shortcuts: dict[str, str | None]
     today_labels: dict[str, str]
     today_action: str | None
+    absent: frozenset[str] = frozenset()
+    """The platforms the workbook marks n/a: the entry is not there at all (Quit on the web)."""
 
     @property
     def target(self) -> str:
@@ -248,6 +251,7 @@ def workbook_rows(sheet: Worksheet) -> list[Row]:
                 path=tuple(part.strip() for part in str(values[col["Entry"]]).split("▸")),
                 groups={app: int(str(values[col[app]])) for app in APPS if _marked(values[col[app]])},
                 shortcuts={platform: normal_shortcut(values[col[platform]]) for platform in PLATFORMS},
+                absent=frozenset(p for p in PLATFORMS if str(values[col[p]]).strip() == "n/a"),
                 today_labels=today_labels(values[col["Today's label"]]),
                 today_action=str(values[col["Today's action id"]] or "") or None,
             )
@@ -482,24 +486,32 @@ def _label(app: App, row: Row, desktop: Entry | None, web: Entry | None, raw: En
 
 
 def _shortcuts(app: App, row: Row, desktop: Entry | None, web: Entry | None) -> Iterator[Finding]:
-    want = row.shortcuts["Web"]
+    """The web entry against the workbook's Web column, the desktop entry against its Linux column (the manifest is
+    the Linux client's, and the other desktops follow it); a platform marked n/a is not compared."""
 
     def now(entry: Entry | None) -> str:
         return "—" if entry is None else entry.shortcut or "no shortcut"
 
-    if any(entry is not None and entry.shortcut != want for entry in (web, desktop)):
+    sides = {"Web": web, "Linux": desktop}
+    wrong = [p for p, e in sides.items() if e is not None and p not in row.absent and e.shortcut != row.shortcuts[p]]
+    if wrong:
+        want = " / ".join(f"{p}: {row.shortcuts[p] or 'no shortcut'}" for p in wrong)
         yield Finding(
             "Shortcut",
             app.name,
             row.target,
-            workbook=want or "no shortcut",
+            workbook=want,
             web=now(web),
             desktop=now(desktop),
             row=row.number,
-            next_step=f"bind {want}" if want else "drop the shortcut",
+            next_step="bind the workbook's shortcut"
+            if any(row.shortcuts[p] for p in wrong)
+            else "none in the workbook (yet)",
         )
-    linux, windows, mac = row.shortcuts["Linux"], row.shortcuts["Windows"], row.shortcuts["macOS"]
-    if windows != linux or mac not in (mac_shortcut(linux), linux):
+    linux, windows, mac = (row.shortcuts[p] for p in ("Linux", "Windows", "macOS"))
+    differs = windows != linux and "Windows" not in row.absent
+    differs = differs or (mac not in (mac_shortcut(linux), linux) and "macOS" not in row.absent)
+    if differs:
         yield Finding(
             "Shortcut per platform",
             app.name,
@@ -561,8 +573,11 @@ def compare_order(app: App, rows: list[Row], late: set[int]) -> Iterator[Finding
             )
 
 
-def compare_extras(app: App, rows: list[Row], texts: list[tuple[str, str]]) -> Iterator[Finding]:
-    """What the app has that no workbook row places in it."""
+def compare_extras(
+    app: App, rows: list[Row], texts: list[tuple[str, str]], in_context: dict[str, list[str]] | None = None
+) -> Iterator[Finding]:
+    """What the app has that no row of the Menus sheet places in it: moving to a context menu (``in_context``: the
+    entries the Context menus sheet gives this app, with their context), dropped, or not in the workbook at all."""
     covered = app.covered(rows)
     actions_anywhere = {r.today_action for r in rows if r.today_action}
     for n, entry in enumerate(app.desktop):
@@ -570,6 +585,18 @@ def compare_extras(app: App, rows: list[Row], texts: list[tuple[str, str]]) -> I
         if id(entry) in covered or (entry.action or "").startswith(LANGUAGE_IDS) or entry.action in BY_DESIGN:
             continue
         today = f"{entry.shown()} ({entry.action})"
+        context = next((c for words, c in (in_context or {}).items() if same_words(words, entry.label)), None)
+        if context is not None:
+            yield Finding(
+                "Moves to a context menu",
+                app.name,
+                entry.shown(),
+                workbook=f"context menu: {context}",
+                web=_shown(web),
+                desktop=today,
+                next_step=f"move into the context menu of: {context}",
+            )
+            continue
         if entry.action in actions_anywhere:
             yield Finding(
                 "To remove (the workbook drops it in this app)",
@@ -782,7 +809,8 @@ CONTEXTS: dict[str, dict[str, tuple[str, ...]]] = {
     "Cell (range)": {"computes": ("cell",)},
     "Paragraph (in composes, or in a text box)": {"composes": ("paragraph",)},
     "Table": {"composes": ("table",)},
-    "Row and column headers (tables in composes, and computes)": {"computes": ("column header", "row header")},
+    "Row header (computes, and tables in composes)": {"computes": ("row header",)},
+    "Column header (computes, and tables in composes)": {"computes": ("column header",)},
 }
 
 
@@ -792,6 +820,22 @@ def context_items(got: Any) -> list[str] | None:
         return [i["label"] for i in got["items"] if not i.get("sep")]
     found = re.match(r"no menu; opened instead: [^:]*men(u|ü): (.*)$", str(got))
     return found.group(2).split(" / ") if found else None
+
+
+def context_entries(sheet: Worksheet) -> dict[str, dict[str, str]]:
+    """Per app, the entries the Context menus sheet gives it, by their words and by the words they had where they
+    were before ("How it is today": ``Tools ▸ Pivot Fields``), each with its context."""
+    col = columns(sheet)
+    found: dict[str, dict[str, str]] = {app: {} for app in APPS}
+    for values in sheet.iter_rows(min_row=2, values_only=True):
+        if not values[col["#"]]:
+            continue
+        before = str(values[col["How it is today"]] or "")
+        words = [str(values[col["Entry"]])] + ([before.split("▸")[-1].strip()] if "▸" in before else [])
+        for app in APPS:
+            if _marked(values[col[app]]):
+                found[app].update(dict.fromkeys(words, str(values[col["Context"]])))
+    return found
 
 
 def compare_contexts(sheet: Worksheet, captured: dict[str, Any]) -> Iterator[Finding]:
@@ -848,14 +892,20 @@ def _compare_context(app: str, where: str, entries: list[str], got: Any) -> Iter
         return
     missing = [e for e in entries if not any(same_words(e, h) for h in have)]
     extra = [h for h in have if not any(same_words(e, h) for e in entries)]
-    if missing:
+    renames = _pair_renames(missing, extra)
+    missing = [e for e in missing if e not in renames.values()]
+    extra = [h for h in extra if h not in renames]
+    if missing or renames:
+        steps = [f"rename {old} → {new}" for old, new in renames.items()] + (
+            ["add " + ", ".join(missing)] if missing else []
+        )
         yield Finding(
             "Context menu: missing entries",
             app,
             where,
             workbook=", ".join(entries),
             web=", ".join(have),
-            next_step="add " + ", ".join(missing),
+            next_step="; ".join(steps),
         )
     if extra:
         yield Finding(
@@ -866,6 +916,20 @@ def _compare_context(app: str, where: str, entries: list[str], got: Any) -> Iter
             web=", ".join(have),
             next_step="add rows for " + ", ".join(extra) + ", or drop them",
         )
+
+
+def _pair_renames(missing: list[str], extra: list[str]) -> dict[str, str]:
+    """Today's entries (``extra``) that are the workbook's entries (``missing``) under other words: Insert Row Above is
+    Row above. Paired by the most similar words, each at most once, and only when they are similar enough."""
+    from difflib import SequenceMatcher
+
+    pairs: dict[str, str] = {}
+    for old in extra:
+        scores = [(SequenceMatcher(None, old.casefold(), new.casefold()).ratio(), new) for new in missing]
+        score, best = max(((sc, n) for sc, n in scores if n not in pairs.values()), default=(0.0, ""))
+        if score >= 0.45:
+            pairs[old] = best
+    return pairs
 
 
 def context_roles_and_german(captured: dict[str, Any], data: set[str]) -> Iterator[Finding]:
@@ -967,8 +1031,8 @@ def capitalisation_rule(found: list[Finding]) -> Iterator[Finding]:
         yield Finding(
             "Workbook: capitalisation rule",
             "all",
-            f"{len(cases)} labels differ only in capitalisation",
-            workbook="sentence case (“Rename sheet…”)",
+            "labels that differ only in capitalisation",
+            workbook=f"{len(cases)} labels in sentence case (“Rename sheet…”)",
             web="header capitalisation (“Rename Sheet…”)",
             desktop="header capitalisation (manifest: “in the capitalisation of the GNOME HIG”)",
             next_step="choose one rule: the GNOME HIG asks for header capitalisation in menu items",
@@ -1024,6 +1088,7 @@ def findings(workbook: Workbook, captured: dict[str, Any]) -> list[Finding]:
     texts = workbook_texts(workbook)
     data = builtin_shape_names()
     apps = apps_from(captured)
+    in_context = context_entries(workbook["Context menus"])
     found: list[Finding] = [
         *open_decisions(workbook["To decide"]),
         *questions(),
@@ -1033,7 +1098,7 @@ def findings(workbook: Workbook, captured: dict[str, Any]) -> list[Finding]:
     for app in apps:
         found.extend(f for row in rows if app.name in row.groups for f in compare_row(app, row))
         found.extend(compare_order(app, rows, late))
-        found.extend(compare_extras(app, rows, texts))
+        found.extend(compare_extras(app, rows, texts, in_context[app.name]))
         found.extend(compare_clients(app))
         found.extend(compare_german(app.name, captured[app.name]["owner"], captured[app.name]["owner (de)"], data))
         found.extend(compare_roles(app))
@@ -1064,11 +1129,27 @@ COLUMNS = (
 )
 
 
+def answers(workbook: Workbook) -> dict[tuple[str, str, str], tuple[Any, Any]]:
+    """The owner's Decision and comment on the Diagnosis sheet as it is, by finding (kind, app, where): what a rerun
+    keeps for a finding that is still there."""
+    if SHEET not in workbook.sheetnames:
+        return {}
+    col = columns(workbook[SHEET])
+    kept = {}
+    for values in workbook[SHEET].iter_rows(min_row=2, values_only=True):
+        decision, comment = values[col["Decision"]], values[col["Your comment"]]
+        if values[col["Finding"]] and (decision or comment):
+            kept[(values[col["Finding"]], values[col["App"]], values[col["Where"]])] = (decision, comment)
+    return kept
+
+
 def write_sheet(workbook: Workbook, found: Iterable[Finding], source: str) -> None:
-    """Replace the "Diagnosis" sheet, in the look of the workbook's other sheets (ink header, yellow for the owner)."""
+    """Replace the "Diagnosis" sheet, in the look of the workbook's other sheets (ink header, yellow for the owner),
+    keeping the owner's Decision and comment of every finding that is still there."""
     from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
     from openpyxl.worksheet.datavalidation import DataValidation
 
+    kept = answers(workbook)
     if SHEET in workbook.sheetnames:
         del workbook[SHEET]
     sheet = workbook.create_sheet(SHEET, index=1)
@@ -1093,8 +1174,7 @@ def write_sheet(workbook: Workbook, found: Iterable[Finding], source: str) -> No
             f.web,
             f.desktop,
             f.next_step,
-            None,
-            None,
+            *kept.get((f.kind, f.app, f.where), (None, None)),
         )
         for n, value in enumerate(values, start=1):
             cell = sheet.cell(r, n, value)
