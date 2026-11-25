@@ -99,3 +99,17 @@ and the config is read while the launcher is alive, so a very fast failure could
 * **CODE-95:** the first version of the resize was awaited before the core was started, and the window never answered on the
   owner's machine: all apps stayed on "Starting…". It is now not awaited. Why the window does not answer is not known, so it
   is not known that the window is resized at all; the page's console (`claudia-start.exe <app> --debug`) says.
+
+## CODE-96 and CODE-97: what is assumed and what has not run
+
+* **CODE-96 (Neutralino's start-up errors):** the cause was **read** from Neutralino's documentation, not measured: the app is
+  started with `--res-mode=directory` (D752, since v6.3) so it reads `resources/` from the app folder instead of a missing
+  `resources.neu`, and the shell page names its icon (`<link rel="icon">`), so the browser does not ask for `/favicon.ico`.
+  Whether both lines are gone from `launcher.log` on a real install has not been seen.
+* **CODE-97 (a node.exe after a killed window):** **measured** in CI on a real window (windows-2022): a killed Neutralino
+  leaves the core running, a closed one does not. The first fix (watch the core's parent) failed there: the core's parent is
+  a shell, not Neutralino. The fix now is the pid of the window (`NL_PID`) which the page sends with `start` (D753). Why the
+  link to Neutralino stays up after the kill is still not known. The CI step *The core of a window ends when its window is
+  closed or killed* is the proof; its last result is in the pull request.
+* An older page that does not send `windowPid` is not watched by pid (parent watch and link only).
+* A window killed in the first second or two, before its page has sent `start`, still leaves its core (seen once in CI): the core does not know the pid yet. Offered: end a core that gets no `start` within a minute or two.

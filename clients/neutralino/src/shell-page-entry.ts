@@ -49,6 +49,7 @@ export function run(app: App, listing: ManifestListing, version: string): void {
     menu: platform.buildMainMenu(listing, identity.title),
     startMenu: platform.buildMainMenu(startListing(listing, platform.keepAtStart), identity.title),
     neutralino,
+    windowPid: (window as unknown as { NL_PID?: number }).NL_PID,
     frame: element<HTMLIFrameElement>('frame') as unknown as FrameLike,
     status,
     onWindowMessage: (listener) => window.addEventListener('message', (event) => listener(event)),

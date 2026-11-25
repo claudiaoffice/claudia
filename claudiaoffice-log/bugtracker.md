@@ -113,7 +113,7 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | PROC-59 | P3 | Process / CI | The scenarios tagged @firefox were never run in Firefox by CI | **new, open**; fix on `batch-2` (proposed) | 2026-11-25 |  |
 | PROC-61 | P3 | Process / CI | `test_calculating_a_long_chain_is_linear` failed on CI's Ubuntu runner (44x for a 10x chain, after its own second try) and passed on a rerun; here it measures 14x to 16x | **new, open** (measured) | 2026-11-25 |  |
 
-### Fixed (203)
+### Fixed (205)
 
 By ID. Items closed without a fix (superseded, wontfix) are here too.
 
@@ -265,6 +265,8 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | CODE-93 | P1 | Code / Windows | The installed Windows client opens no window: the launcher looks for its apps in a repository that an installation does not have | **fixed** 2026-11-23 on `win-installer-fix` (D746) | 2026-11-23 | 2026-11-23 |
 | CODE-94 | P2 | Code / Windows | Help ▸ About opens nothing on the start page of the Windows and macOS clients | **fixed** 2026-11-24 on `win-installer-fix` (D748) | 2026-11-24 | 2026-11-24 |
 | CODE-95 | P1 | Code / Windows | Every app of the Windows client stayed on "Starting…": the page waited for the window's resize, which never answered | **fixed** 2026-11-24 on `win-installer-fix` (D749) | 2026-11-24 | 2026-11-24 |
+| CODE-96 | P3 | Code / Windows | Neutralino logged two errors on every start of a desktop app: `NE_RS_TREEGER` (no resources.neu) and `NE_RS_UNBLDRE` (/favicon.ico) | **fixed** 2026-11-25 on `win-installer-fix` (D752) | 2026-11-25 | 2026-11-25 |
+| CODE-97 | P2 | Code / Windows | A node.exe (the core of a window) stayed running after its window was killed: Neutralino does not end its extension and the link to it did not break | **fixed** 2026-11-25 on `win-installer-fix` (D753) | 2026-11-25 | 2026-11-25 |
 | CODE-92 | P2 | Code / i18n | The server settings answer only in English: the administrator API's refusals were plain text, not messages | **fixed** 2026-11-25 (batch 1 of the bug eater, `batch-1`), D2003 | 2026-11-24 |  |
 | PROC-01 | P1 | Process | No CI workflow in the repository | fixed (verified at `54d1245`) |  |  |
 | PROC-02 | P2 | Process | The quality gate prints "everything is clean" when half of it was skipped | fixed |  |  |
@@ -2914,10 +2916,29 @@ running, holding `node\node.exe`. Both steps looked for that node by its path, w
 **Fixed** 2026-11-24: both steps find it by its command line (`...\Claudia\run\...`), the window step also ends `claudia-server`; the
 uninstall check now says what is left and which processes there are.
 **Test:** `tests/test_windows_packaging.py::test_the_window_step_ends_the_core_of_its_window_before_the_uninstall`, red before.
-**Seen, not fixed:** in that run the window's core connected to Neutralino and the step then waited 120 s for a server on
-`127.0.0.1:8765`, which only the service uses (this install has none): either the check is wrong or the window's own server did
-not start; the step is advisory and the log did not say which (CODE-93 below, if the owner wants it logged).
+**Seen, not a bug:** in that run the step waited 120 s for a server on `127.0.0.1:8765`; later runs show it is the window's
+own server that answers there (the core starts it at that port), so the check was right.
 **Escaped** because: the advisory step had never run a window until CODE-93 was fixed.
+
+### CODE-96 · Neutralino logs two errors on every start · P3 · size 3 · fixed, unverified
+**Found** in the launcher's log (UX-82): `NE_RS_TREEGER` and `NE_RS_UNBLDRE` on a start that works. **Cause** (**read**, Neutralino's
+documentation of resource modes since v6.3, not measured): started without `--res-mode`, Neutralino looks for its resources in
+its own binary and in a `resources.neu`, which an app folder served from files does not have; the web view asks for `/favicon.ico`,
+which the folder does not have. **Fixed** 2026-11-25 (D752): `--res-mode=directory`, and `<link rel="icon" href="/icon.png">` in
+the shell page. **Tests:** `launch.test.ts` and `build-shell.test.ts` (red before), the scenario in
+`specs/desktop/windows-launcher.feature`. **Unverified:** not run with the real Neutralino, and the CI log of a green run does not print `launcher.log`; the log of the owner's next start is the check.
+**Escaped** because: nothing read the log of a start until UX-82 kept one.
+
+### CODE-97 · A node.exe stays after its window is killed · P2 · size 2 · fixed
+**Found** by the owner ("leftover node process"; first seen as a node that held the files at the uninstall, PROC-58).
+**Cause** (**measured**, CI, windows-2022, 2026-11-25): the step that ends a real window `Stop-Process -Force`; 90 seconds
+later the core (`node.exe`, started by Neutralino as its extension) was still running, and its `shell.log` had no line about the
+link having broken. Neutralino does not end extensions (its release notes, v4.0.0), the core ended only when its link to Neutralino
+broke, and on Windows the link stayed up. A window **closed** with `CloseMainWindow` left nothing (same step). **Fixed** 2026-11-25 (D753):
+the page tells the core the pid of its window (`NL_PID`) and the core watches it (a watch on the core's parent alone was
+tried first and failed in CI: on Windows the core's parent is a shell, not Neutralino). **Tests:** `shell-page.test.ts`, `parent-watch.test.ts` and `core-process.test.ts` (the window process killed outright, link still up; red before), the CI step *The core of a window ends when its window is closed or killed*
+(red before on windows-2022 and 2025 in runs 45574749911 and the first of 45576250762; green after on both: run 45577231183, 2026-11-25). **Not known:** why the link stays up. **Open (size 3):** a window killed in its first second or two, before its page has sent `start`, leaves its core (seen once in CI).
+**Escaped** because: the core's end was only tested with a link that closes politely.
 
 ### UX-83 · The installer shows composes' icon for the whole suite · P3 · size 3 · fixed
 **Found** by the owner: the icon of the setup file and of the entry in Programs is the icon of composes; the three-dot icon

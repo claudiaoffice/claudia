@@ -26,6 +26,7 @@ function setup(
     stats?: unknown
     startMenu?: boolean
     platform?: PagePlatform
+    windowPid?: number
   } = {},
 ) {
   const timers: Array<() => void> = []
@@ -93,6 +94,7 @@ function setup(
     sleep: async () => {},
     after: (_ms, action) => void timers.push(action),
     log: (m) => logged.push(m),
+    ...(overrides.windowPid !== undefined ? { windowPid: overrides.windowPid } : {}),
   }
   const page = new ShellPage(env)
   const core = (message: unknown) => listeners[FROM_CORE]!({ detail: message })
@@ -119,6 +121,12 @@ function setup(
 }
 
 describe('start', () => {
+  it('tells the core which process the window is, so the core ends when that process does (CODE-97, D753)', async () => {
+    const t = setup({ windowPid: 31337 })
+    await t.page.start()
+    expect(t.dispatched).toEqual([{ id: CORE_ID, event: TO_CORE, data: { kind: 'start', windowPid: 31337 } }])
+  })
+
   it('starts Neutralino first, then listens, sets the native menu and asks the core to start', async () => {
     const t = setup()
     await t.page.start()

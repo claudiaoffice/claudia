@@ -24,3 +24,18 @@ Feature: An app of the Windows client starts without a console window and leaves
   Scenario: The start fails
     Given the launcher of an app stops with an error
     Then a message says so, with the place of the log and its last lines
+
+  # CODE-96, D752
+  @extended @unit:clients/neutralino/tests/launch.test.ts @unit:clients/neutralino/tests/build-shell.test.ts
+  Scenario: A start that works logs no error of Neutralino
+    Given I started an app of the Windows client and it works
+    Then launcher.log holds no error of Neutralino about its resources or about /favicon.ico
+
+  # CODE-97, D753
+  @core @unit:clients/neutralino/tests/shell-page.test.ts @unit:clients/neutralino/tests/parent-watch.test.ts @unit:clients/neutralino/tests/core-process.test.ts @unit:tests/test_windows_packaging.py
+  Scenario: A window that is closed or killed leaves no process of its app
+    Given I started Claudia Composes and its window shows
+    When I close the window, or end it from Task Manager
+    Then no node.exe of Claudia Composes is running within half a minute
+    # Closing is checked on a real window in CI (the step "The core of a window ends when its window is closed or killed");
+    # the killed window there, and the killed window process in core-process.test.ts.

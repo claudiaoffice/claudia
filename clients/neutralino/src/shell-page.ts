@@ -51,6 +51,8 @@ export interface StatusView {
 export interface PageEnv {
   app: App
   version: string
+  /** The process of the window (`NL_PID` on the page): the core ends with it (CODE-97, D753). */
+  windowPid?: number
   /** The native menu, as `menu.ts` built it for this app. */
   menu: readonly WindowMenuItem[]
   /** The short menu of the front page (sheet 11); without it the whole menu is always shown. */
@@ -196,7 +198,7 @@ export class ShellPage {
     const sleep = this.env.sleep ?? ((ms) => new Promise<void>((resolve) => setTimeout(resolve, ms)))
     for (let attempt = 0; attempt < START_ATTEMPTS; attempt++) {
       try {
-        await this.dispatch({ kind: 'start' })
+        await this.dispatch({ kind: 'start', ...(this.env.windowPid ? { windowPid: this.env.windowPid } : {}) })
         return true
       } catch (problem) {
         this.log(`the core is not there yet (${(problem as Error).message})`)

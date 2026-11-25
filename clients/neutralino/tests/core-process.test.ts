@@ -226,7 +226,62 @@ describe.each(PLATFORMS)('the core process built for %s', (platform) => {
     expect(await exit).toBe(0)
   })
 
-  describe('without being told anything (what a window that was not started by the launcher, or a Neutralino that passes on no environment, gives it)', () => {
+  it('ends when the process that started it is killed, though the link to Neutralino is still up (CODE-97, D753)', async () => {
+    // Neutralino's place is a process of its own, which starts the core and is then ended outright, as Task Manager does.
+    // The fake Neutralino of this test stays up, so the link does not break: only the parent is gone.
+    const auth = JSON.stringify({ nlPort: neutralino.port, nlToken: 'ext-token', nlConnectToken: 'connect-token', nlExtensionId: 'de.claudiaoffice.core' })
+    const parent = spawn(
+      process.execPath,
+      [
+        '-e',
+        `const core = require('node:child_process').spawn(process.execPath, [process.argv[1]], { stdio: ['pipe', 'ignore', 'ignore'] })
+         core.stdin.write(process.argv[2]); console.log(core.pid); setInterval(() => {}, 1000)`,
+        CORE,
+        auth,
+      ],
+      { env: coreEnvironment(home, { CLAUDIA_SHELL_APP: 'creates' }), stdio: ['ignore', 'pipe', 'inherit'] },
+    )
+    const corePid = await new Promise<number>((resolve) => parent.stdout!.once('data', (chunk) => resolve(Number(String(chunk).trim()))))
+    try {
+      await neutralino.connected()
+      parent.kill('SIGKILL')
+      const until = Date.now() + 10_000
+      while (isThere(corePid) && Date.now() < until) await new Promise((resolve) => setTimeout(resolve, 100))
+      expect(isThere(corePid), 'the core is still running 10 seconds after its parent was killed').toBe(false)
+    } finally {
+      if (isThere(corePid)) process.kill(corePid, 'SIGKILL')
+      parent.kill('SIGKILL')
+    }
+  }, 30_000)
+
+  it('ends when the window process that the page names is killed, though the link to Neutralino is still up (CODE-97, D753)', async () => {
+    // On Windows the core's parent is a shell that outlives Neutralino, and the link stayed up when Neutralino was killed
+    // (CI, 2026-11-25): the page tells the core which process the window is (NL_PID), and the core watches that.
+    const window = spawn(process.execPath, ['-e', 'setInterval(() => {}, 1000)'], { stdio: 'ignore' })
+    start({})
+    try {
+      await neutralino.connected()
+      neutralino.dispatch('claudia.core', { kind: 'start', windowPid: window.pid })
+      await neutralino.until(() => neutralino.broadcasts.length > 0)
+      window.kill('SIGKILL')
+      expect(await Promise.race([exit, new Promise((resolve) => setTimeout(() => resolve('still running'), 10_000))])).toBe(0)
+    } finally {
+      window.kill('SIGKILL')
+      if (child?.pid && isThere(child.pid)) child.kill('SIGKILL')
+    }
+  }, 30_000)
+
+  /** Whether a process is there: `kill(pid, 0)` sends nothing. */
+function isThere(pid: number): boolean {
+  try {
+    process.kill(pid, 0)
+    return true
+  } catch {
+    return false
+  }
+}
+
+describe('without being told anything (what a window that was not started by the launcher, or a Neutralino that passes on no environment, gives it)', () => {
     const suiteDir = () => suiteFolder(platform, home)
 
     function startBare(core: string): void {

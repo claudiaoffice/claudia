@@ -153,10 +153,13 @@ describe('buildShellEnvironment', () => {
 })
 
 describe('buildShellCommand', () => {
-  it('points the binary at the app folder and nothing else: the page is the one in that folder (D251)', () => {
+  it('points the binary at the app folder, and has it read the page from there and nowhere else (D251, D752)', () => {
+    // Without --res-mode Neutralino looks for resources in its own binary and in a resources.neu first, and logs an
+    // error for each when it finds none (CODE-96).
     expect(buildShellCommand('/opt/neutralino-mac_arm64', '/repo/clients/neutralino/apps/creates')).toEqual([
       '/opt/neutralino-mac_arm64',
       '--path=/repo/clients/neutralino/apps/creates',
+      '--res-mode=directory',
     ])
   })
 })
@@ -209,7 +212,7 @@ describe('run', () => {
     expect(code).toBe(0)
     expect(spawned).toHaveLength(1)
     expect(spawned[0]!.command).toBe('/bundle/Contents/MacOS/claudia-creates')
-    expect(spawned[0]!.args).toEqual(['--path=/repo/clients/neutralino/apps/creates'])
+    expect(spawned[0]!.args).toEqual(['--path=/repo/clients/neutralino/apps/creates', '--res-mode=directory'])
     expect(spawned[0]!.options.argv0).toBe('claudia creates')
     expect(spawned[0]!.options.env.CLAUDIA_SHELL_APP).toBe('creates')
     expect(spawned[0]!.options.env.NODE_OPTIONS).toBe('--use-system-ca')
@@ -431,7 +434,7 @@ describe('run on Windows (D660)', () => {
     const { deps, spawned } = windows()
     expect(await run(creates, deps)).toBe(0)
     expect(spawned[0]!.command).toBe('C:\\neutralino-win_x64.exe')
-    expect(spawned[0]!.args).toEqual([`--path=${join(APPS, 'creates')}`])
+    expect(spawned[0]!.args).toEqual([`--path=${join(APPS, 'creates')}`, '--res-mode=directory'])
     expect(spawned[0]!.options.argv0).toBeUndefined()
     expect(spawned[0]!.options.env.CLAUDIA_SHELL_APP).toBe('creates')
   })
@@ -519,7 +522,7 @@ describe('run: where the app folder is looked for (CODE-93, D746)', () => {
   it('beside the folder the launcher runs from, not in a repository: an installation has none', async () => {
     const { deps, spawned } = harness({ appDir: undefined, launcherFolder: join('install', 'client', 'dist') })
     expect(await run({ app: 'creates', server: null, debug: false }, deps)).toBe(0)
-    expect(spawned[0]!.args).toEqual([`--path=${join('install', 'client', 'apps', 'creates')}`])
+    expect(spawned[0]!.args).toEqual([`--path=${join('install', 'client', 'apps', 'creates')}`, '--res-mode=directory'])
   })
 })
 
@@ -553,7 +556,7 @@ describe('run of a packaged client (D741)', () => {
     // the binary stays in the installation; the page, the config and the core are those of the copy -- by the short
     // name of the copy, since Neutralino cannot take a space in the folder of the core
     expect(spawned[0]!.command).toBe(`${INSTALLED}\\bin\\neutralino-win_x64.exe`)
-    expect(spawned[0]!.args).toEqual(['--path=C:\\Users\\MAXMUS~1\\AppData\\Local\\Claudia\\run\\creates'])
+    expect(spawned[0]!.args).toEqual(['--path=C:\\Users\\MAXMUS~1\\AppData\\Local\\Claudia\\run\\creates', '--res-mode=directory'])
     expect(commands.every((c) => c.appDir === 'C:\\Users\\MAXMUS~1\\AppData\\Local\\Claudia\\run\\creates')).toBe(true)
     expect(commands.some((c) => c.appDir === INSTALLED)).toBe(false)
   })
@@ -614,7 +617,7 @@ describe('run of a checkout in a folder with a space on Windows', () => {
       shortName: () => 'C:\\MYPROJ~1\\claudia\\clients\\neutralino\\apps\\creates',
     })
     expect(await run({ app: 'creates', server: null, debug: false }, deps)).toBe(0)
-    expect(spawned[0]!.args).toEqual(['--path=C:\\MYPROJ~1\\claudia\\clients\\neutralino\\apps\\creates'])
+    expect(spawned[0]!.args).toEqual(['--path=C:\\MYPROJ~1\\claudia\\clients\\neutralino\\apps\\creates', '--res-mode=directory'])
   })
 })
 

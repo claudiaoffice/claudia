@@ -453,3 +453,23 @@ def test_the_window_step_ends_the_core_of_its_window_before_the_uninstall():
     # found by its command line: Windows names the node of the installation by its short path (C:\PROGRA~1\CLAUDI~1\...)
     assert "Win32_Process" in finally_part and "Claudia\\run" in finally_part and "ExecutablePath" not in finally_part
     assert "claudia-server" in finally_part
+
+
+CORE_STEP = "The core of a window ends when its window is closed or killed"
+
+
+def test_the_core_of_a_window_must_end_with_its_window_and_the_step_that_looks_fails_when_it_does_not():
+    """CODE-97: Neutralino does not end its extension (the core, a `node.exe`) when the window is gone; the core ends
+    itself when the link to Neutralino breaks. The step closes a real window the way a person does and kills one the way
+    a crash does, and fails if a core of the window is still there afterwards. Only when no window could be opened at
+    all (no desktop on the runner) it says so and passes: that is no verdict on the core."""
+    steps = _install_test_steps()
+    assert CORE_STEP in steps, "no step looks at what is left of a window"
+    step = steps[CORE_STEP]
+    assert "continue-on-error" not in step, "a core that outlives its window must fail the job"
+    assert "CloseMainWindow" in step and "Stop-Process" in step, "closed like a person does, killed like a crash does"
+    assert "connected to Neutralino" in step, "the window is closed only once its core is linked to it"
+    assert "Win32_Process" in step and "ExecutablePath" not in step, "cores are found by their command line (PROC-58)"
+    assert "claudia-start.exe" in step, "started the way the shortcut starts it"
+    names = list(steps)
+    assert names.index(CORE_STEP) < names.index("Uninstall, standard")
