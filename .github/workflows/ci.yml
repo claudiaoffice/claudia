@@ -187,16 +187,16 @@ jobs:
 
   # What the OpenDocument code writes is also opened in LibreOffice, the reference implementation (D409): the library's
   # odt, odp and ods cases and a file made from a model each are converted with `soffice` and what comes out is
-  # compared (the words of an odt or odp, the value of every cell of an ods). It
-  # may fail without failing the build until it has a track record, so that a LibreOffice release that reads a little
-  # differently does not stop anyone's work (`continue-on-error`); read its result like any other job's.
+  # compared (the words of an odt or odp, the value of every cell of an ods). A file LibreOffice cannot read fails the
+  # build (PROC-22).
   odf-libreoffice:
     name: OpenDocument in LibreOffice
     runs-on: ubuntu-24.04
     # The check itself takes under a minute; the time goes to the 111 MB of LibreOffice from the distribution's mirror,
     # which took 14 minutes on 2026-11-18 (stalls of minutes between files) and ran the job out of its 15.
+    # Blocking since PROC-22: it read every file in every round from PROC-11 on. The check's first line names the
+    # LibreOffice it ran against, so a distribution update shows in the log.
     timeout-minutes: 30
-    continue-on-error: true
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
       - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7.6.0

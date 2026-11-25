@@ -43,3 +43,18 @@ def test_every_library_case_can_be_edited_the_way_its_spec_says():
     for name, fmt, source, edited, _ in cases:
         assert fmt in ("odt", "odp", "ods"), name
         assert source and edited, name
+
+
+def test_the_check_names_the_libreoffice_it_ran_against(tmp_path):
+    """PROC-22: a distribution update of LibreOffice must be visible in the log of the run."""
+    program = tmp_path / "soffice"
+    program.write_text("#!/bin/sh\necho 'LibreOffice 24.2.7.2 420(Build:2)'\n")
+    program.chmod(0o755)
+    assert check.version(str(program)) == "LibreOffice 24.2.7.2 420(Build:2)"
+
+
+def test_a_libreoffice_that_does_not_say_its_version_is_named_so(tmp_path):
+    program = tmp_path / "soffice"
+    program.write_text("#!/bin/sh\nexit 3\n")
+    program.chmod(0o755)
+    assert check.version(str(program)) == "LibreOffice (it did not say its version)"

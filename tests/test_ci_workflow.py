@@ -142,3 +142,15 @@ def test_ci_audits_the_locked_python_dependencies():
     """SEC-08: ``npm audit`` ran in the gate; the Python side was audited by hand once in a while."""
     assert re.search(r"pip-audit .*-r \S+", CI), "ci.yml never runs pip-audit on the locked requirements"
     assert "uv export --frozen" in CI
+
+
+def _job(name: str) -> str:
+    """The text of the job ``name`` of ci.yml, up to the next job."""
+    start = CI.index(f"\n  {name}:\n")
+    following = re.search(r"\n  [a-z0-9-]+:\n", CI[start + 1 :])
+    return CI[start : start + 1 + following.start()] if following else CI[start:]
+
+
+def test_the_libreoffice_job_fails_ci_when_libreoffice_cannot_read_a_file():
+    """PROC-22: it read 31 of 31 files in every round since PROC-11; a failure must now turn CI red."""
+    assert "continue-on-error" not in _job("odf-libreoffice")

@@ -283,11 +283,22 @@ def new_pivot_workbook() -> tuple[bytes, object]:
     return data, ods_to_workbook(data)
 
 
+def version(program: str) -> str:
+    """What ``program --version`` says it is, so a distribution update of LibreOffice shows in the log (PROC-22)."""
+    try:
+        done = subprocess.run([program, "--version"], capture_output=True, text=True, timeout=60, check=False)
+    except (OSError, subprocess.TimeoutExpired):
+        done = None
+    said = done.stdout.strip().splitlines()[0] if done and done.returncode == 0 and done.stdout.strip() else ""
+    return said or "LibreOffice (it did not say its version)"
+
+
 def main() -> int:
     program = soffice()
     if program is None:
         print("skipped: soffice (LibreOffice) is not installed; nothing was checked")
         return 0
+    print(f"checking with {version(program)}")
     library = library_cases()
     cases = [(name, fmt, edited, shown) for name, fmt, _, edited, shown in library]
     cases += [(f"{name} (source)", fmt, source, [] if fmt != "ods" else None) for name, fmt, source, _, _ in library]
