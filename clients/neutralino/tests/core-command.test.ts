@@ -113,7 +113,7 @@ describe('setInspector', () => {
   })
 })
 
-describe('setLogicalPixels (UX-77, D749)', () => {
+describe('setLogicalPixels (UX-81, D749)', () => {
   const dirs: string[] = []
   afterEach(() => { for (const dir of dirs.splice(0)) rmSync(dir, { recursive: true, force: true }) })
   const configCopy = (): string => {

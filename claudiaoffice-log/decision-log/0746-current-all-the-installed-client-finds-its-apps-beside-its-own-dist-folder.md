@@ -4,7 +4,7 @@ title: "The launcher finds its apps beside its own folder, in a checkout and in 
 status: current
 applies-to: all
 date: 2026-11-23
-round: "The Windows installer, first real install (CODE-83; branch `win-installer-fix`)"
+round: "The Windows installer, first real install (CODE-93; branch `win-installer-fix`)"
 supersedes: []
 superseded-by: []
 ---

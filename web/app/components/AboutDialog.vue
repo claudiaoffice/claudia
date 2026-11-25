@@ -5,7 +5,7 @@
 //
 // Shown in a plain browser tab and in the Windows and macOS clients (Neutralino), which have no About dialog of their
 // own: there the native menu's Help ▸ About is sent to the page, which opens this (the document's menus, and the start
-// page, CODE-84). Only the Linux shell has a native dialog of its own, and never sends the action to the page. The
+// page, CODE-94). Only the Linux shell has a native dialog of its own, and never sends the action to the page. The
 // version shown is the shell-contract version both sides already agree on, not a separate build number, since the suite
 // doesn't version itself independently of the contract yet (the Linux shell's own `__version__` is that build
 // number, and has no web equivalent to show here).

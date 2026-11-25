@@ -30,7 +30,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 APPS = ("composes", "computes", "creates")
-# The icon of the suite as a whole (three dots), in clients/neutralino: what the setup and Programs show (UX-79, D751).
+# The icon of the suite as a whole (three dots), in clients/neutralino: what the setup and Programs show (UX-83, D751).
 SUITE_ICON = "suite-icon.png"
 NEUTRALINO_BINARY = "neutralino-win_x64.exe"
 LAUNCHER_PROGRAM = "claudia-start.exe"
@@ -212,7 +212,7 @@ def stage(root: Path, out: Path, node: Path, winsw: Path, launcher: Path, webvie
 
 
 def launcher_command(compiler: str, out: Path) -> list[str]:
-    """The command line that compiles the program the shortcuts start (``launcher/claudia-start.c``, UX-78, D750): of
+    """The command line that compiles the program the shortcuts start (``launcher/claudia-start.c``, UX-82, D750): of
     the GUI subsystem, so that it has no console window, with wide-character entry for paths with umlauts."""
     return [
         compiler,

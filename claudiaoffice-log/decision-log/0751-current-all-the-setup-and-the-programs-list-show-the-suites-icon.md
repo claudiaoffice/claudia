@@ -4,7 +4,7 @@ title: "The setup file and the entry in Programs show the icon of the whole suit
 status: current
 applies-to: all
 date: 2026-11-24
-round: "The Windows installer, first real install (UX-79; branch `win-installer-fix`)"
+round: "The Windows installer, first real install (UX-83; branch `win-installer-fix`)"
 supersedes: []
 superseded-by: []
 ---

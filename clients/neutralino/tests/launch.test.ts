@@ -478,7 +478,7 @@ describe('run on Windows (D660)', () => {
     expect(commands[0]!.command).toBe('C:\\PROGRA~1\\nodejs\\node.exe --use-system-ca ${NL_PATH}/ext/core.mjs --app=creates')
   })
 
-  it('asks Neutralino for sizes in logical pixels while the window runs, so the window is as big as the page needs on a scaled display (UX-77)', async () => {
+  it('asks Neutralino for sizes in logical pixels while the window runs, so the window is as big as the page needs on a scaled display (UX-81)', async () => {
     const { deps, logicalPixels } = windows()
     await run(creates, deps)
     expect(logicalPixels).toEqual([
@@ -515,7 +515,7 @@ describe('run on Windows (D660)', () => {
 // The entry guard made the launcher a silent no-op on Windows (third real run, 2026-11-09): the program runs only
 // when `import.meta.url` equals the URL of `process.argv[1]`, and a hand-made `file://` + path is not that URL for a
 // Windows path. The comparison itself, in isolation (`main()` has real side effects).
-describe('run: where the app folder is looked for (CODE-83, D746)', () => {
+describe('run: where the app folder is looked for (CODE-93, D746)', () => {
   it('beside the folder the launcher runs from, not in a repository: an installation has none', async () => {
     const { deps, spawned } = harness({ appDir: undefined, launcherFolder: join('install', 'client', 'dist') })
     expect(await run({ app: 'creates', server: null, debug: false }, deps)).toBe(0)

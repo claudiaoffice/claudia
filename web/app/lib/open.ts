@@ -260,7 +260,7 @@ export type StartPageAction =
   | { kind: 'about' }
 
 /** The start page's own action for a menu entry of the shell, or `null` for one it has nothing to do for. About is on
- * the list because the Windows and macOS clients have no About dialog of their own (CODE-84). */
+ * the list because the Windows and macOS clients have no About dialog of their own (CODE-94). */
 export function startPageAction(action: string, target?: string): StartPageAction | null {
   if (action === 'file.open-file') return { kind: 'choose-file' }
   if (action === 'file.open') return { kind: 'find-document' }

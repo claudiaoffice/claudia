@@ -154,7 +154,7 @@ export interface RunDeps {
   setCommand?: (appDir: string, command: string) => void
   /** Switches the window's web inspector on or off in the app's config (default: in neutralino.config.json). */
   setInspector?: (appDir: string, enabled: boolean) => void
-  /** Has Neutralino size the window in logical pixels, or not (default: in neutralino.config.json; UX-77, D749). */
+  /** Has Neutralino size the window in logical pixels, or not (default: in neutralino.config.json; UX-81, D749). */
   setLogicalPixels?: (appDir: string, enabled: boolean) => void
   out?: (line: string) => void
   err?: (line: string) => void

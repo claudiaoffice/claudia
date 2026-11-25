@@ -172,7 +172,7 @@ def test_the_client_is_whole_and_says_where_the_server_and_the_frontend_are(stag
 
 
 def test_the_launcher_finds_the_apps_where_the_stage_and_the_checkout_have_them(staged):
-    """CODE-83, D746: `appFolder` (clients/neutralino/src/paths.ts) is `apps/<app>` beside the launcher's own `dist/`.
+    """CODE-93, D746: `appFolder` (clients/neutralino/src/paths.ts) is `apps/<app>` beside the launcher's own `dist/`.
     The launcher of the first real install looked for them in a repository the installation does not have."""
     for client in (staged / "client", ROOT / "clients" / "neutralino"):
         for app in build.APPS:
@@ -192,7 +192,7 @@ def _install_test_steps() -> dict[str, str]:
 
 
 def test_a_launcher_that_cannot_prepare_its_window_fails_the_install_test():
-    """PROC-53: the whole step that starts a window was `continue-on-error` (a runner may have no display), so a
+    """PROC-57: the whole step that starts a window was `continue-on-error` (a runner may have no display), so a
     launcher that stopped on its own error looked like a runner without one, and the first real install was broken
     with a green CI. What needs no display is its own step and must fail the job."""
     steps = _install_test_steps()
@@ -222,7 +222,7 @@ def test_the_icons_are_there_for_the_shortcuts_and_the_setup(staged):
 
 
 def test_the_suite_has_an_icon_of_its_own_besides_those_of_the_apps(staged):
-    """UX-79: the setup and its entry in Programs stand for the whole suite, not for composes."""
+    """UX-83: the setup and its entry in Programs stand for the whole suite, not for composes."""
     assert (staged / "icons" / "claudia.ico").read_bytes()[:4] == b"\x00\x00\x01\x00"
 
 
@@ -235,7 +235,7 @@ def test_the_suite_icon_is_the_three_dot_favicon_of_the_web_app():
 
 
 def test_the_setup_and_the_programs_list_show_the_suite_icon_not_an_apps():
-    """UX-79: SetupIconFile is the icon of the installer; UninstallDisplayIcon is the one of Apps & features."""
+    """UX-83: SetupIconFile is the icon of the installer; UninstallDisplayIcon is the one of Apps & features."""
     text = iss_text()
     assert re.search(r"^UninstallDisplayIcon=\{app\}\\icons\\claudia\.ico$", text, re.M)
     assert re.search(r"^SetupIconFile=\{#StageDir\}\\icons\\claudia\.ico$", text, re.M)
@@ -339,7 +339,7 @@ def _app_starting_lines() -> list[str]:
 
 
 def test_the_shortcuts_start_the_hidden_launcher_with_the_name_of_the_app():
-    """UX-78, D750: a shortcut that starts node.exe shows node's console for as long as the app runs."""
+    """UX-82, D750: a shortcut that starts node.exe shows node's console for as long as the app runs."""
     lines = _app_starting_lines()
     started = [re.search(r'Parameters: "(\w+)"', line)[1] for line in lines]
     assert set(started) == set(build.APPS), "every app has a shortcut"
@@ -445,7 +445,7 @@ def test_the_spec_takes_every_package_of_the_workspace_by_name_not_a_list_that_g
 
 
 def test_the_window_step_ends_the_core_of_its_window_before_the_uninstall():
-    """PROC-54: the core of a window is a `node.exe` of the installation. The advisory window step ended the launcher
+    """PROC-58: the core of a window is a `node.exe` of the installation. The advisory window step ended the launcher
     and the window but not that node, which held the files, so *Uninstall, standard* failed on both images. The step
     before it looked for that node by its path, which Windows gives in the short form: it never found it."""
     step = _install_test_steps()["A window opens, and starts the server it needs"]

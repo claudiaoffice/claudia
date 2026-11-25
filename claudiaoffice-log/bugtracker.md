@@ -57,9 +57,9 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | UX-70 | P2 | UX / all apps | What an export could not keep is never shown: the losses come back with the file and no client says them (a workbook's slide written as a sheet among them) | **new, open** (read; size 2) | 2026-11-22 |  |
 | UX-71 | P2 | UX / computes | Text on a workbook's slide is drawn in the workbook's Body text (13 px), tiny on a 1600-unit slide | **needs decision** (measured; size 2) | 2026-11-22 |  |
 | UX-76 | P3 | UX / computes | The New sheet dialog proposes no name: the field is empty (placeholder "Forecast") and Add Sheet stays off until one is typed, though a new sheet is to get a name like "Sheet2" (E1.13) | open (scenario `@pending:UX-76`) | 2026-11-22 |  |
-| UX-77 | P2 | UX / Windows | The window opens at the configured size in physical pixels, so on a scaled display (200%) it is half the size the page needs | **fixed** 2026-11-24 on `win-installer-fix` (D749; second attempt after the first had no effect; not run on Windows) | 2026-11-24 | 2026-11-24 |
-| UX-78 | P2 | UX / Windows | A console window of node stays open for as long as an app of the Windows client runs, and shows only start-up lines | **fixed** 2026-11-24 on `win-installer-fix` (D750) | 2026-11-24 | 2026-11-24 |
-| UX-79 | P3 | UX / Windows | The setup file and the entry in Programs show the icon of composes, not the suite's three-dot icon | **fixed** 2026-11-24 on `win-installer-fix` (D751; not run on Windows) | 2026-11-24 | 2026-11-24 |
+| UX-81 | P2 | UX / Windows | The window opens at the configured size in physical pixels, so on a scaled display (200%) it is half the size the page needs | **fixed** 2026-11-24 on `win-installer-fix` (D749; second attempt after the first had no effect; not run on Windows) | 2026-11-24 | 2026-11-24 |
+| UX-82 | P2 | UX / Windows | A console window of node stays open for as long as an app of the Windows client runs, and shows only start-up lines | **fixed** 2026-11-24 on `win-installer-fix` (D750) | 2026-11-24 | 2026-11-24 |
+| UX-83 | P3 | UX / Windows | The setup file and the entry in Programs show the icon of composes, not the suite's three-dot icon | **fixed** 2026-11-24 on `win-installer-fix` (D751; not run on Windows) | 2026-11-24 | 2026-11-24 |
 | CODE-25 | P2 | Code / Export | A renamed object loses its name in pptx and odp without the export saying so (D450) | **new, open** |  |  |
 | CODE-31 | P2 | Code / i18n | The history speaks English to everybody: command labels and summaries are not translated | **new, open** |  |  |
 | CODE-45 | P2 | Code / Import | pptx placeholders (titles, body text) are not imported at all | **new, open** |  |  |
@@ -252,9 +252,9 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | CODE-80 | P2 | Code / AI / privacy | A question to Claude sends, before Claude asks for anything, the sheet list and the top left of the first three sheets (`workbook_lens.orient`; likewise the other two lenses' first look), so a sheet the question has nothing to do with can leave the server; the @core scenario "Claude is sent what the dialog says and nothing else" says it must not | **fixed** 2026-11-23 on `e7-2-skills-and-persona` (D1568) | 2026-11-22 | 2026-11-23 |
 | CODE-81 | P2 | Code / AI | The model was shown doubled braces where a request is explained (`HOW_TO_ASK`, the computes and creates examples), so it did not learn the form of a request: in composes it answered with nothing, in creates it pasted its list into the chat | **fixed** 2026-11-24 on `e7-2-skills-and-persona` (D1566) | 2026-11-23 | 2026-11-24 |
 | CODE-82 | P2 | Code / AI | An empty final answer read "I have nothing to add.", and Claude's answers were cut at the local model's 512 tokens, so a 300-word text failed and a one-sentence text worked | **fixed** 2026-11-24 on `e7-2-skills-and-persona` (D1564, D1565) | 2026-11-23 | 2026-11-24 |
-| CODE-83 | P1 | Code / Windows | The installed Windows client opens no window: the launcher looks for its apps in a repository that an installation does not have | **fixed** 2026-11-23 on `win-installer-fix` (D746) | 2026-11-23 | 2026-11-23 |
-| CODE-84 | P2 | Code / Windows | Help ▸ About opens nothing on the start page of the Windows and macOS clients | **fixed** 2026-11-24 on `win-installer-fix` (D748) | 2026-11-24 | 2026-11-24 |
-| CODE-85 | P1 | Code / Windows | Every app of the Windows client stayed on "Starting…": the page waited for the window's resize, which never answered | **fixed** 2026-11-24 on `win-installer-fix` (D749) | 2026-11-24 | 2026-11-24 |
+| CODE-93 | P1 | Code / Windows | The installed Windows client opens no window: the launcher looks for its apps in a repository that an installation does not have | **fixed** 2026-11-23 on `win-installer-fix` (D746) | 2026-11-23 | 2026-11-23 |
+| CODE-94 | P2 | Code / Windows | Help ▸ About opens nothing on the start page of the Windows and macOS clients | **fixed** 2026-11-24 on `win-installer-fix` (D748) | 2026-11-24 | 2026-11-24 |
+| CODE-95 | P1 | Code / Windows | Every app of the Windows client stayed on "Starting…": the page waited for the window's resize, which never answered | **fixed** 2026-11-24 on `win-installer-fix` (D749) | 2026-11-24 | 2026-11-24 |
 | PROC-01 | P1 | Process | No CI workflow in the repository | fixed (verified at `54d1245`) |  |  |
 | PROC-02 | P2 | Process | The quality gate prints "everything is clean" when half of it was skipped | fixed |  |  |
 | PROC-03 | P2 | Process | Work described as delivered is not in the repository | fixed |  |  |
@@ -300,8 +300,8 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | PROC-50 | P2 | Process / E2E | `./run-e2e.sh regression` ran 27 browser scripts, CI 30: `objects.cjs` and the two client windows ran only in CI | **fixed** 2026-11-22 (D1452, `e2e-guard`) | 2026-11-21 | 2026-11-22 |
 | PROC-51 | P2 | Process / E2E | Every full local regression stopped after the shared servers with "port 8766 is in use" (TIME_WAIT, no `SO_REUSEADDR` in the runner's probe) | **fixed** 2026-11-22 (`e2e-guard`) | 2026-11-22 | 2026-11-22 |
 | PROC-52 | P2 | Process / E2E | When the specs fail, the runner (and so CI) does not say which test: `pytest -rs` leaves failures out of the summary, and the last 20 lines it prints are skipped scenarios | **fixed** 2026-11-23 (`e2e-guard`) | 2026-11-23 | 2026-11-23 |
-| PROC-53 | P2 | Process / CI | The Windows install test let the launcher fail: its window step was advisory as a whole, so CODE-83 had a green CI | **fixed** 2026-11-23 on `win-installer-fix` (D747) | 2026-11-23 | 2026-11-23 |
-| PROC-54 | P2 | Process / CI | The Windows install test failed at *Uninstall, standard* on both images: the window step left the core's node running, which held the installation's files | **fixed** 2026-11-24 on `win-installer-fix` | 2026-11-24 | 2026-11-24 |
+| PROC-57 | P2 | Process / CI | The Windows install test let the launcher fail: its window step was advisory as a whole, so CODE-93 had a green CI | **fixed** 2026-11-23 on `win-installer-fix` (D747) | 2026-11-23 | 2026-11-23 |
+| PROC-58 | P2 | Process / CI | The Windows install test failed at *Uninstall, standard* on both images: the window step left the core's node running, which held the installation's files | **fixed** 2026-11-24 on `win-installer-fix` | 2026-11-24 | 2026-11-24 |
 | DOC-01 | P2 | Docs | Decision numbers D70–D82 and D97–D99 are used twice for different decisions | fixed |  |  |
 | DOC-02 | P3 | Docs | `start-client.sh` was renamed; the Linux README and the other launchers still named it | **fixed** 2026-11-13 |  | 2026-11-13 |
 | DOC-03 | P3 | Docs | Current decisions that later ones contradict (D2, D44, D84, D115, D242); a stale row in `ranges.md`; stale lines in two notes | **fixed** 2026-11-17 (log audit: D44, D84, D115 superseded; D2, D242 noted) |  | 2026-11-17 |
@@ -2797,10 +2797,10 @@ failure the runner prints pytest's `FAILED`/`ERROR` lines before the last lines 
 ## Round of 2026-11-23 (the first real install of the Windows installer, branch `win-installer-fix`)
 
 Found by the owner, who installed the Windows installer for the first time ("for my profile only"). The server (as a
-service) installed and answered in a browser; no icon opened a window. The owner ordered the fixes: CODE-83 and PROC-53,
+service) installed and answered in a browser; no icon opened a window. The owner ordered the fixes: CODE-93 and PROC-57,
 one commit each.
 
-### CODE-83 · The installed Windows client opens no window · P1 · size 1 · fixed
+### CODE-93 · The installed Windows client opens no window · P1 · size 1 · fixed
 **Found** by the owner: every shortcut ran `node.exe client\bin\composes.mjs`, which printed "This app has not been built
 (missing index.html, shell\shell.js, ext\core.mjs in `C:\Users\m\AppData\Local\Programs\clients\neutralino\apps\composes`)".
 That folder does not exist after the install, nor after clicking the icon. **Cause** (**measured** on Linux with the
@@ -2811,13 +2811,13 @@ reached. **Fixed** 2026-11-23 (D746): `appFolder` is `apps/<app>` beside the lau
 in an installation alike. **Tests:** `clients/neutralino/tests/paths.test.ts` (red before: `appFolder` did not exist), `launch.test.ts` (the launcher's default, red when it goes back to `defaultRepo`),
 `tests/test_windows_packaging.py::test_the_launcher_finds_the_apps_where_the_stage_and_the_checkout_have_them`, the
 scenario of `specs/desktop/windows-installer.feature`. **Escaped** because: test passed but wrong (every launcher test
-injected the app folder, none used the default) and the CI window step did not fail (PROC-53).
+injected the app folder, none used the default) and the CI window step did not fail (PROC-57).
 
-### PROC-53 · The Windows install test did not fail when the launcher could not start · P2 · size 2 · fixed
-**Found** with CODE-83: `windows.yml` started the installed launcher in one step, "A window opens, and starts the server
+### PROC-57 · The Windows install test did not fail when the launcher could not start · P2 · size 2 · fixed
+**Found** with CODE-93: `windows.yml` started the installed launcher in one step, "A window opens, and starts the server
 it needs", which is `continue-on-error: true` because a runner may have no display for WebView2 (D742). A launcher that
 exits with its own error ("This app has not been built") is the same to that step as a runner without a display. Evidence:
-**read** (the workflow); that CODE-83 reached the owner with a green CI is the proof. **Fixed** 2026-11-23 (D747): a step of
+**read** (the workflow); that CODE-93 reached the owner with a green CI is the proof. **Fixed** 2026-11-23 (D747): a step of
 its own, *The launcher finds the installed app and prepares its window*, which needs no display and is not advisory.
 **Test:** `tests/test_windows_packaging.py::test_a_launcher_that_cannot_prepare_its_window_fails_the_install_test`, red
 before (the step did not exist). **Not run on Windows:** the first run of the workflow on the branch is the check.
@@ -2826,10 +2826,10 @@ before (the step did not exist). **Not run on Windows:** the first run of the wo
 
 ## Round of 2026-11-24 (the first real use of the installed Windows client, branch `win-installer-fix`)
 
-Found by the owner on the Windows install that works since CODE-83: three usability bugs (CODE-84, UX-77, UX-78) and a
+Found by the owner on the Windows install that works since CODE-93: three usability bugs (CODE-94, UX-81, UX-82) and a
 question about the look of the native menu (not a bug: see the note).
 
-### CODE-84 · Help ▸ About opens nothing on the start page · P2 · size 2 · fixed
+### CODE-94 · Help ▸ About opens nothing on the start page · P2 · size 2 · fixed
 **Found** by the owner: the native About entry showed nothing; in an open document it works, on the start page it does
 not. **Cause** (**read**): the manifest keeps `help.about` on the start page's short menu (`_START_ACTIONS`), the shell sends
 it to the page, and `OpenDialog.vue`'s handler had no case for it. **Fixed** 2026-11-24 (D748): `startPageAction` knows it
@@ -2837,12 +2837,12 @@ and the start page mounts the About dialog of the window's app. **Test:** `web/t
 scenarios of `specs/desktop/about.feature`. **Not run** in a real window. **Escaped** because: spec gap (nothing said
 that every entry the shell keeps on a page must do something there).
 
-### UX-77 · The window is too small on a scaled display · P2 · size 2 · fixed
+### UX-81 · The window is too small on a scaled display · P2 · size 2 · fixed
 **Found** by the owner (screenshot, 3840 × 1994 at 200%): the window looks like a browser window too small for the page.
 **Cause** (**read**, and the screenshot: about 640 × 430 CSS pixels for 1280 × 860): Neutralino takes window sizes in
 physical pixels on Windows; the config's size was written as CSS pixels. **First fix** (2026-11-24, D749 as first written): the
 shell page asked the window for a larger size with `window.setSize`; **it had no effect** on the owner's machine (the window
-never answered: CODE-85). **Fixed** 2026-11-24 (D749, rewritten): the launcher writes `modes.window.useLogicalPixels: true` into the
+never answered: CODE-95). **Fixed** 2026-11-24 (D749, rewritten): the launcher writes `modes.window.useLogicalPixels: true` into the
 copy of the config the window starts from, on Windows only, and puts it back; the `setSize` code is gone. **Tests:**
 `launch.test.ts` and `core-command.test.ts` (red before), `build-shell.test.ts` (the allow-list without the two entries), the
 scenarios of `specs/desktop/window-size.feature`. **Not run on Windows or on a scaled display:** the owner's next install is the
@@ -2850,7 +2850,7 @@ check. **Limits:** at 125% or 150% on a 1080p screen the window can be taller th
 physical. **Escaped** because: spec gap (no one had said that a window's size is in CSS pixels), a unit no test on a Mac or
 on Linux can see, and a first fix that could only be tried on the owner's machine.
 
-### UX-78 · A console window stays open for as long as an app runs · P2 · size 2 · fixed
+### UX-82 · A console window stays open for as long as an app runs · P2 · size 2 · fixed
 **Found** by the owner: the window of node stays open (after closing the app too) and prints only what the start prints:
 the note that the core is started as a plain `node`, and Neutralino's `NE_RS_TREEGER` (`resources.neu` missing) and
 `NE_RS_UNBLDRE` (`/favicon.ico`). **Cause** (**read**): the shortcuts started `node.exe`, a console program. **Fixed**
@@ -2863,7 +2863,7 @@ no warnings, GUI subsystem checked in the file header) but never run; the CI ste
 the console stayed open *after* closing the app (a `node` left alive, by the launcher or by the core?); if one is left in
 the task manager now, it is invisible. **Escaped** because: spec gap (nobody had said that a shortcut must not show a console).
 
-### PROC-54 · The window step of the Windows install test left the core's node running · P2 · size 2 · fixed
+### PROC-58 · The window step of the Windows install test left the core's node running · P2 · size 2 · fixed
 **Found** by the first run of `windows.yml` on `win-installer-fix` with the three fixes of this round (run 45346029894): the
 build and every step passed, *Uninstall, standard* failed on windows-2022 and windows-2025 ("C:\Program Files\Claudia Office
 is still there after the uninstall"); the run of 2026-11-23 failed at the same step. **Cause** (**measured**, the process list of the failing
@@ -2875,10 +2875,10 @@ uninstall check now says what is left and which processes there are.
 **Test:** `tests/test_windows_packaging.py::test_the_window_step_ends_the_core_of_its_window_before_the_uninstall`, red before.
 **Seen, not fixed:** in that run the window's core connected to Neutralino and the step then waited 120 s for a server on
 `127.0.0.1:8765`, which only the service uses (this install has none): either the check is wrong or the window's own server did
-not start; the step is advisory and the log did not say which (CODE-83 below, if the owner wants it logged).
-**Escaped** because: the advisory step had never run a window until CODE-83 was fixed.
+not start; the step is advisory and the log did not say which (CODE-93 below, if the owner wants it logged).
+**Escaped** because: the advisory step had never run a window until CODE-93 was fixed.
 
-### UX-79 · The installer shows composes' icon for the whole suite · P3 · size 3 · fixed
+### UX-83 · The installer shows composes' icon for the whole suite · P3 · size 3 · fixed
 **Found** by the owner: the icon of the setup file and of the entry in Programs is the icon of composes; the three-dot icon
 stands for the suite. **Cause** (**read**): `claudia.iss` set `SetupIconFile` and `UninstallDisplayIcon` to `composes.ico`.
 **Fixed** 2026-11-24 (D751): `icons\claudia.ico`, made by `build.py stage` from `clients/neutralino/suite-icon.png` (drawn as the web
@@ -2886,12 +2886,12 @@ app's favicon). **Tests:** `tests/test_windows_packaging.py` (red before), the s
 checks that the file is installed. **Not run on Windows.** **Escaped** because: spec gap (the design system names a suite icon
 and nothing said where it is used).
 
-### CODE-85 · Every app stays on "Starting…" · P1 · size 1 · fixed
+### CODE-95 · Every app stays on "Starting…" · P1 · size 1 · fixed
 **Found** by the owner on the first install with the fixes of this round: all three apps stayed on "Starting…"; the server ran and
 answered in a browser. **Cause** (**measured**, the owner's `shell.log`: the core connected at 20:36:41 and no `<- page: start`
-followed, while the starts before show it a second after the connection): UX-77's resize (`window.setSize`, then `window.center`)
+followed, while the starts before show it a second after the connection): UX-81's resize (`window.setSize`, then `window.center`)
 was awaited before the page asked the core to start, and the window never answered. **Fixed** 2026-11-24 (D749, as first written): the page asks
-for the size and does not wait for the answer. **Since then** the page no longer asks at all (UX-77's second fix, D749 rewritten): the cause is gone with the code. **Test** (red before: it timed out): *does not wait for the window to answer* in `shell-page.test.ts`, removed with the code.
-**Not understood:** why `window.setSize` or `window.center` never answers on the owner's machine; the call is gone with the second fix of UX-77. The page's console says (`--debug`). **Escaped** because: the unit test
+for the size and does not wait for the answer. **Since then** the page no longer asks at all (UX-81's second fix, D749 rewritten): the cause is gone with the code. **Test** (red before: it timed out): *does not wait for the window to answer* in `shell-page.test.ts`, removed with the code.
+**Not understood:** why `window.setSize` or `window.center` never answers on the owner's machine; the call is gone with the second fix of UX-81. The page's console says (`--debug`). **Escaped** because: the unit test
 answered immediately, and no test can ask a real window; the CI step that starts a window has no display.
 

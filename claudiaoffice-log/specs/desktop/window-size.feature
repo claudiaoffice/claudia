@@ -1,4 +1,4 @@
-# The size of the window of the Windows client on a scaled display (UX-77, D749).
+# The size of the window of the Windows client on a scaled display (UX-81, D749).
 #
 # Found by the owner on the first real Windows install (2026-11-24): at a display scale of 200% (3840 x 1994) the window
 # was half the size the page needs. Written together with the fix, for the owner's review. What is checked: what the

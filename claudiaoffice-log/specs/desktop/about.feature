@@ -1,4 +1,4 @@
-# Help > About in the Windows and macOS clients (CODE-84, D748).
+# Help > About in the Windows and macOS clients (CODE-94, D748).
 #
 # Those two clients draw their menu with the system, but have no About dialog of their own: the entry is sent to the page,
 # which shows its About dialog. The Linux client has a native one. Found by the owner on the first real Windows install

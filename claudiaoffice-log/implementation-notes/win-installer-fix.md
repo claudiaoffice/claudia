@@ -1,4 +1,4 @@
-# Windows installer: the first real install (CODE-83, PROC-53, D746)
+# Windows installer: the first real install (CODE-93, PROC-57, D746)
 
 Branch `win-installer-fix`, written 2026-11-23. **Not run on Windows.** Run: the unit tests of `clients/neutralino`
 (534, then the new ones), `tsc` typecheck, and the real launcher (compiled before and after the change) from a folder
@@ -14,7 +14,7 @@ and Start menu) printed
 
 That folder does not exist; the apps are in `Programs\Claudia Office\client\apps\<app>`.
 
-## Cause (CODE-83)
+## Cause (CODE-93)
 
 `run()` in `launch.ts` built the app folder from `defaultRepo()`. In an installation `findRepo` finds nothing and
 `defaultRepo` returns the old "three levels up" guess: `client\dist` -> `Programs`. Reproduced on Linux with the
@@ -23,7 +23,7 @@ message, with `Programs/clients/neutralino/apps/composes`. With the change the l
 under the person's folder, and goes on (in the Linux sandbox it then stops on a folder with a space in it, which is the
 sandbox's, not the installation's).
 
-## Why nothing caught it (PROC-53)
+## Why nothing caught it (PROC-57)
 
 * Every launcher test passes `deps.appDir`; no test used the default.
 * The CI step "A window opens, and starts the server it needs" is `continue-on-error: true` as a whole, because a runner
@@ -33,14 +33,14 @@ sandbox's, not the installation's).
 
 | Commit | What |
 |---|---|
-| CODE-83 | `appFolder` (`paths.ts`), used by `launch.ts` (`RunDeps.launcherFolder` to test it); tests `paths.test.ts`, `launch.test.ts` (red when `launch.ts` goes back to `defaultRepo`), `test_windows_packaging.py`; D746; the spec `specs/desktop/windows-installer.feature` (written with the fix, for the owner's review) |
-| PROC-53 | `windows.yml`: a step of its own that needs no display and may not fail (*The launcher finds the installed app and prepares its window*); D747; `test_windows_packaging.py` |
-| CODE-84 | `startPageAction` (`web/app/lib/open.ts`) knows `help.about`; `OpenDialog.vue` mounts `AboutDialog`; `web/tests/open.test.ts`; D748; `specs/desktop/about.feature` |
-| UX-77 | `setLogicalPixels` (`core-command.ts`), `HostPlatform.windowSizeInPhysicalPixels`, called by `run()` in `launch.ts`; the first attempt (`window-size.ts`, `ShellPage.fitWindow`, `window.setSize` and `window.center` on the allow-lists) is removed; tests `launch.test.ts`, `core-command.test.ts`, `build-shell.test.ts`; D749; `specs/desktop/window-size.feature` |
-| UX-79 | `SUITE_ICON` and `claudia.ico` in `build.py`, `claudia.iss` (`SetupIconFile`, `UninstallDisplayIcon`), `clients/neutralino/suite-icon.svg` and `.png`, a check in `windows.yml`; tests `test_windows_packaging.py`; D751 |
-| UX-78 | `packaging/windows/launcher/claudia-start.c`, `build.py launcher` and `stage --launcher`, `claudia.iss` (shortcuts and post-install start), `windows.yml` (build, try, stage); tests `test_windows_packaging.py`; D750; `specs/desktop/windows-launcher.feature` |
+| CODE-93 | `appFolder` (`paths.ts`), used by `launch.ts` (`RunDeps.launcherFolder` to test it); tests `paths.test.ts`, `launch.test.ts` (red when `launch.ts` goes back to `defaultRepo`), `test_windows_packaging.py`; D746; the spec `specs/desktop/windows-installer.feature` (written with the fix, for the owner's review) |
+| PROC-57 | `windows.yml`: a step of its own that needs no display and may not fail (*The launcher finds the installed app and prepares its window*); D747; `test_windows_packaging.py` |
+| CODE-94 | `startPageAction` (`web/app/lib/open.ts`) knows `help.about`; `OpenDialog.vue` mounts `AboutDialog`; `web/tests/open.test.ts`; D748; `specs/desktop/about.feature` |
+| UX-81 | `setLogicalPixels` (`core-command.ts`), `HostPlatform.windowSizeInPhysicalPixels`, called by `run()` in `launch.ts`; the first attempt (`window-size.ts`, `ShellPage.fitWindow`, `window.setSize` and `window.center` on the allow-lists) is removed; tests `launch.test.ts`, `core-command.test.ts`, `build-shell.test.ts`; D749; `specs/desktop/window-size.feature` |
+| UX-83 | `SUITE_ICON` and `claudia.ico` in `build.py`, `claudia.iss` (`SetupIconFile`, `UninstallDisplayIcon`), `clients/neutralino/suite-icon.svg` and `.png`, a check in `windows.yml`; tests `test_windows_packaging.py`; D751 |
+| UX-82 | `packaging/windows/launcher/claudia-start.c`, `build.py launcher` and `stage --launcher`, `claudia.iss` (shortcuts and post-install start), `windows.yml` (build, try, stage); tests `test_windows_packaging.py`; D750; `specs/desktop/windows-launcher.feature` |
 
-## PROC-53 in detail
+## PROC-57 in detail
 
 The new step starts the installed launcher and waits for the copy of the app in `%LOCALAPPDATA%\Claudia\run\composes` and for
 the core's command in its configuration (written just before the window starts). If the launcher ends first, the step
@@ -57,7 +57,7 @@ and the config is read while the launcher is alive, so a very fast failure could
   failed does not depend on it, so not added; a profile-only run of the same steps is a follow-up if wanted.
 
 * The message of `missingFiles` still says "Run 'npm ci && npm run build'" for an installed client, which sent the first
-  reader the wrong way. It should say "reinstall Claudia" when `packaged.json` is there. Not part of CODE-83; offered as
+  reader the wrong way. It should say "reinstall Claudia" when `packaged.json` is there. Not part of CODE-93; offered as
   a follow-up.
 * Nothing after the lookup (copy to `%LOCALAPPDATA%\Claudia\run`, Neutralino, core, WebView2) has run on Windows yet.
 
@@ -70,7 +70,7 @@ and the config is read while the launcher is alive, so a very fast failure could
 * "The app is prepared" in CI means: the copy of the app folder is there and the launcher did not print one of its own
   start-up errors. A runner without a display may still stop the window afterwards; that part stays advisory.
 
-## UX-77 and UX-78: what is assumed and what has not run
+## UX-81 and UX-82: what is assumed and what has not run
 
 * **Neutralino's window sizes are physical pixels on Windows** (the owner's screenshot: 1280 × 860 became about 640 × 430 CSS
   pixels at 200%). `modes.window.useLogicalPixels` is documented as the switch that scales width and height by the display
@@ -79,7 +79,7 @@ and the config is read while the launcher is alive, so a very fast failure could
   minimum size. Not capped to the free screen: on a small screen at 125% or 150% the window can be taller than the screen.
   The first attempt (`window.setSize` from the page) never took effect on the owner's machine and is removed.
 * The nine tenths of the free screen of the first attempt are gone with it. A cap and a centred window are open.
-* The icon of the setup file and of the Programs entry (UX-79) is made from a committed PNG; not seen on Windows.
+* The icon of the setup file and of the Programs entry (UX-83) is made from a committed PNG; not seen on Windows.
 * **`claudia-start.exe` was compiled here** (Zig's `cc`, target `x86_64-windows-gnu`, `-municode`, GUI subsystem, no warnings)
   **and never run**: there is no Windows or Wine in this workspace. CI uses MinGW `gcc`, installed with `choco` where the
   runner has none; the flags `-mwindows -municode` are the usual ones and were not tried with that compiler.
@@ -96,6 +96,6 @@ and the config is read while the launcher is alive, so a very fast failure could
   clean with Zig's cc, nothing more. `choco install mingw` (only where the runner has no `gcc`) is unpinned (standard 7).
 * The code review found, and this change fixed: argument quoting that swallowed the closing quote of an argument ending in a
   backslash (now in the CI step), unchecked `swprintf` results, and the arguments being checked after the old log was moved.
-* **CODE-85:** the first version of the resize was awaited before the core was started, and the window never answered on the
+* **CODE-95:** the first version of the resize was awaited before the core was started, and the window never answered on the
   owner's machine: all apps stayed on "Starting…". It is now not awaited. Why the window does not answer is not known, so it
   is not known that the window is resized at all; the page's console (`claudia-start.exe <app> --debug`) says.

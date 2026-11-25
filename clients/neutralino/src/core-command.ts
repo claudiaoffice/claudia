@@ -86,7 +86,7 @@ export function setInspector(configFile: string, enabled: boolean): void {
   editWindowMode(configFile, (mode) => void (mode.enableInspector = enabled))
 }
 
-/** Has Neutralino take the window's size in logical pixels, which it multiplies by the display scale (UX-77, D749); off
+/** Has Neutralino take the window's size in logical pixels, which it multiplies by the display scale (UX-81, D749); off
  * takes the key out again, so the config is as it was found. */
 export function setLogicalPixels(configFile: string, enabled: boolean): void {
   editWindowMode(configFile, (mode) => {

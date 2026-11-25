@@ -4,7 +4,7 @@ title: "On Windows the launcher has Neutralino size the window in logical pixels
 status: current
 applies-to: all
 date: 2026-11-24
-round: "The Windows installer, first real install (UX-77; branch `win-installer-fix`)"
+round: "The Windows installer, first real install (UX-81; branch `win-installer-fix`)"
 supersedes: []
 superseded-by: []
 ---
@@ -23,7 +23,7 @@ pixels, and showed a page that is too small for it (screenshot, 2026-11-24).
 
 **What came before, and why it is gone.** The first version had the shell page ask for the size again with
 `window.setSize`, scaled by `devicePixelRatio`, and then `window.center`. On the owner's machine the window never
-answered, and with the call awaited every app stayed on "Starting…" (CODE-85). The call not awaited left the window at the
+answered, and with the call awaited every app stayed on "Starting…" (CODE-95). The call not awaited left the window at the
 config's size: the request has no effect there. The code, its two allow-list entries and its tests are removed; the
 Neutralino issues about `setSize` on scaled Windows displays (#648, #823) say it is unreliable.
 

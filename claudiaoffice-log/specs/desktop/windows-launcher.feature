@@ -1,4 +1,4 @@
-# The shortcuts of the Windows install (UX-78, D750).
+# The shortcuts of the Windows install (UX-82, D750).
 #
 # Found by the owner on the first real Windows install (2026-11-24): a console window of node stayed open for as long as
 # an app ran, and showed only the start-up lines. The owner asked to hide it and to keep what it prints in a log file.
