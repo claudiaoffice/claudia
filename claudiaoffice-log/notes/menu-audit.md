@@ -54,7 +54,7 @@ uv run python scripts/menu_audit.py       # the comparison → sheet Diagnosis (
   - **6 are the shapes** Circle, Rectangle and Triangle (composes, creates). They are in the web's Edit menu but in no
     desktop menu, because the manifest treats the shape library as per-document data (its `creates()` docstring). The
     workbook makes them fixed entries, Insert ▸ Shape ▸ … (rows 30–32), so they come with the rebuild.
-  - **6 are bug UX-90** below.
+  - **6 are bug UX-92** below.
 - **Most of the gap is rearranging, not building.** Across the three apps:
 
   | Finding | Count |
@@ -110,11 +110,11 @@ uv run python scripts/menu_audit.py       # the comparison → sheet Diagnosis (
   - View ▸ Replay History… is greyed for a viewer and View ▸ History and Chat is not. That fits D1261 (a viewer gets no
     history, and the panel says so). It is the kind of entry phase 3 has to settle: hide it, or keep it greyed.
 
-## Bugs found (sizes 1 huge – 3 small; not yet in the tracker, the owner decides fix or log)
+## Bugs found (sizes 1 huge – 3 small)
 
-| Proposed ID | Size | What |
+| ID | Size | What |
 |---|---|---|
-| UX-90 | 3 | Web and desktop disagree. Help ▸ About is "About claudia" on the web and "About Claudia Composes" (etc.) on the desktop (3). computes' Clear Cell Style sits inside Format ▸ Apply Style ▸ on the web but directly in Format on the desktop (1). composes' View has two entries, Flow and Page, on the web and one switch, Page, on the desktop (1). computes' Tools has Value Field Settings… and Pivot Fields in the opposite order (1). |
+| UX-92 | 3 | Logged in the tracker; the owner (2026-11-25): fixed later in this work, with the menu rebuild. Web and desktop disagree. Help ▸ About is "About claudia" on the web and "About Claudia Composes" (etc.) on the desktop (3). computes' Clear Cell Style sits inside Format ▸ Apply Style ▸ on the web but directly in Format on the desktop (1). composes' View has two entries, Flow and Page, on the web and one switch, Page, on the desktop (1). computes' Tools has Value Field Settings… and Pivot Fields in the opposite order (1). |
 
 Seen in passing, already in the tracker: the German Undo reads "Rückgängig: Add container" once something was
 inserted, because command names are not translated (CODE-31).

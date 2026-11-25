@@ -35,7 +35,7 @@ The index is the status of record; a section below keeps the status of the round
 re-checked. **Opened** and **Fixed** are filled from 2026-11-20 on: for older items only where the status already gave
 the date.
 
-### Open (76)
+### Open (77)
 
 By priority (P1, P2, P3, then items that wait for a decision without one), then by ID.
 
@@ -92,6 +92,7 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | UX-86 | P3 | UX / computes | A colleague's name tag on a cell or an object in row 1 is hidden under the column header | **new, open**; fix on `batch-3` (proposed) | 2026-11-25 |  |
 | UX-87 | P3 | UX / i18n | A new workbook's first sheet is "Sheet1" in every language, beside an offered "Blatt2" | **new, open**; fix on `batch-3` (proposed) | 2026-11-25 |  |
 | UX-89 | P3 | UX / a11y | A table's accessible name is "Table 1 Options…": the Options… button is inside its caption | **new, open**; fix on `batch-3` (proposed) | 2026-11-25 |  |
+| UX-92 | P3 | UX / clients | The web menus and the desktop menus disagree in six places: the About entry's words, where Clear Cell Style sits, Flow and Page in composes' View, and the order of two pivot entries | **new, open** (measured, menu audit) | 2026-11-25 |  |
 | CODE-03 | P3 | Code | README is out of date | open (not re-checked) |  |  |
 | CODE-04 | P3 | Code | Untyped functions escape the type check | verified open |  |  |
 | CODE-06 | P3 | Code | `--max-connections` is per document, not per server | open |  |  |
@@ -3166,3 +3167,19 @@ the last line of the paragraph from the rectangle of the collapsed selection (`o
 Firefox reports differently at the end of a line. A first guess (the table not there yet when it was inserted) was
 tried on CI and was wrong. **Until it is fixed** (the owner, 2026-11-25) the scenario "I can work in a new <kind>
 straight away" of `invariants/objects-in-composes.feature` carries no `@firefox` tag; put it back with the fix.
+
+### UX-92 · The web menus and the desktop menus disagree in six places · P3 · size 3 · open
+**Measured** by the menu audit (phase 1 of the menu work, branch `menus`; `scripts/menu_capture.py` and
+`scripts/menu_audit.py`, rows "Web and desktop differ" of the Diagnosis sheet in `notes/claudia-menus.xlsx`). The
+desktop clients take their menus from the manifest (`clients/linux/src/claudia_shell_gtk/manifest.py`), the web client
+from `web/app/lib/document-menus.ts` and each workspace, and they differ:
+
+- Help ▸ About is "About claudia" on the web and "About Claudia Composes" / "… Computes" / "… Creates" on the desktop
+  (all three apps).
+- computes: Clear Cell Style is inside Format ▸ Apply Style ▸ on the web, directly in Format on the desktop.
+- composes: View has two entries, Flow and Page, on the web, one switch, Page, on the desktop.
+- computes: Tools has Value Field Settings… before Pivot Fields on the web, the other way round on the desktop.
+
+Not part of it, by design: Quit (desktop only), Apply Style (D301), and the shapes of the library in Edit (web only;
+the workbook makes them fixed entries, Insert ▸ Shape ▸ …). **Fixed with the menu rebuild** on `menus` (the owner,
+2026-11-25): one menu definition for every client ends this kind of drift; until then the audit finds it.
