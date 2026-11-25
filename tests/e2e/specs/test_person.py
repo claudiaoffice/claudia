@@ -5,7 +5,7 @@ from __future__ import annotations
 from conftest import World
 
 #: The server's list of documents and kinds reaches the front page only half a second after the password is typed, as
-#: it can on a busy machine (PROC-53). The page itself is not changed: only the answer to its question comes late.
+#: it can on a busy machine (PROC-55). The page itself is not changed: only the answer to its question comes late.
 LIST_LATE = """
 const fetchNow = window.fetch.bind(window)
 window.fetch = (input, init) => {

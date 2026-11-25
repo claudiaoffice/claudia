@@ -285,7 +285,7 @@ function count(id: string) {
 }
 .hiddenflag {
   background: color-mix(in srgb, var(--mist) 60%, white);
-  color: var(--ink); /* the pill stays light in both schemes, so its words stay dark (UX-79) */
+  color: var(--ink); /* the pill stays light in both schemes, so its words stay dark (UX-80) */
 }
 .list li.hidden .sample {
   opacity: 0.6;

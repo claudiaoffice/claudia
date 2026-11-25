@@ -49,17 +49,17 @@ Fixed on the owner's word (2026-11-24), each with its test first:
 
 | Item | Change | Test | Escaped because |
 |---|---|---|---|
-| UX-79 | The Styles dialog's "hidden" pill takes `var(--ink)`: it keeps its light ground in dark mode | `web/tests/tokens.test.ts` | missing test |
+| UX-80 | The Styles dialog's "hidden" pill takes `var(--ink)`: it keeps its light ground in dark mode | `web/tests/tokens.test.ts` | missing test |
 | CODE-92 | The server settings' refusals are said in the page's App Language (`Accept-Language`, `http_refusal.py`, D2003); 32 German translations | `test_server_admin_i18n.py`, `web/tests/admin-api.test.ts` | spec gap |
-| PROC-53 | `Person.create` waits for the kinds of document the page lists before choosing one (a race, not the hashing) | `tests/e2e/specs/test_person.py` | test passed but wrong |
+| PROC-55 | `Person.create` waits for the kinds of document the page lists before choosing one (a race, not the hashing) | `tests/e2e/specs/test_person.py` | test passed but wrong |
 | UX-63 | The German for "exit record" is "Export-Log" (the owner's word) | `web/tests/print-preview-wording.test.ts` | — |
 | UX-66 | `StyleBar.vue` and `StyleMenu.vue` take `--shadow-raised` too | `web/tests/tokens.test.ts` | — |
 
-Found while fixing PROC-53 (the owner decides: fix or log):
+Found while fixing PROC-55 (the owner decides: fix or log):
 
 - **Size 3:** a failing spec's screenshot is overwritten by the next example of the same outline: `looked_after` cuts the
   file name at 80 characters, so all examples share it, and the evidence of a failure is lost.
-- The same unwaited `count()` branch as PROC-53 in `test_names.py` (lines 118 and 425) and `test_claude_consent.py` (216
+- The same unwaited `count()` branch as PROC-55 in `test_names.py` (lines 118 and 425) and `test_claude_consent.py` (216
   and 230); not checked whether they race.
 - Speed: the E2E servers run at the production password-hashing cost (about 0.75 s a hash); the lowest cost the settings
   allow makes creating a document 2–3 times faster in the specs.
@@ -125,5 +125,5 @@ Left, and why:
   protocol (E5.17).
 - The glossary lists "export log" among the words to avoid for **Exit record**, while the owner chose "Export-Log" as its
   German; the glossary is English-only and has no German column. Asked of the owner, not changed.
-- The PROC-53 test delays the server's answer by 500 ms on purpose, to provoke the race; nothing waits on that timer
+- The PROC-55 test delays the server's answer by 500 ms on purpose, to provoke the race; nothing waits on that timer
   (the fixed helper waits for the kind's button).

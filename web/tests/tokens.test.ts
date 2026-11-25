@@ -156,7 +156,7 @@ describe('colours in the components', () => {
   })
 })
 
-describe('the pills of the Styles dialog (UX-79)', () => {
+describe('the pills of the Styles dialog (UX-80)', () => {
   const dialog = readFileSync(new URL('../app/components/StylesDialog.vue', import.meta.url), 'utf8')
   /** A declaration of the `.hiddenflag` rule in the dialog's style. */
   function hiddenflag(property: string): string {

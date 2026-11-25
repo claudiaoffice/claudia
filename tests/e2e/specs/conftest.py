@@ -235,7 +235,7 @@ class Person:
         page.fill("input[name=password]", self.password)
         # A server of several apps asks which kind of document (D430). Whether it does is in its list, not in what the
         # page shows so far: the choice appears once the list has come, which on a busy machine was after the form had
-        # been filled, and Create then asked for a kind instead of making the document (PROC-53).
+        # been filled, and Create then asked for a kind instead of making the document (PROC-55).
         if len(listing.value.json().get("apps", [])) > 1:
             page.locator(".kinds").get_by_role("radio", name=KIND_WORDS[self.app]).click()
         page.click("text=Create document")
