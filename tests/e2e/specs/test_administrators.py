@@ -27,7 +27,7 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
-from conftest import BROWSER, SHOTS, eventually
+from conftest import BROWSER, SHOTS, eventually, shot_name
 from live import server
 from pytest_bdd import given, parsers, scenarios, then, when
 from test_greeting import BUILT, SKIP
@@ -184,7 +184,7 @@ def visit(browser, site, request) -> Iterator[Visit]:
     made = Visit(browser, site)
     yield made
     SHOTS.mkdir(parents=True, exist_ok=True)
-    slug = re.sub(r"\W+", "-", request.node.name)[:80]
+    slug = shot_name(request.node.name)
     with contextlib.suppress(Exception):
         made.page.screenshot(path=str(SHOTS / f"{slug}.png"))
     errors = list(made.errors)

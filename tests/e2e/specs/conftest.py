@@ -18,6 +18,7 @@ How a scenario becomes a test, and what is on purpose:
 from __future__ import annotations
 
 import contextlib
+import hashlib
 import itertools
 import json
 import os
@@ -390,11 +391,22 @@ def suite_world(browser, suite, request) -> Iterator[World]:
     yield from looked_after(World(browser, suite), request)
 
 
+def shot_name(test: str) -> str:
+    """The file name (without the person and extension) of a test's screenshots: the test's name, and for a long one
+    its start, its end (where an outline's example is named) and a short digest of the whole, so that no two tests share
+    a file (PROC-56)."""
+    slug = re.sub(r"\W+", "-", test).strip("-")
+    if len(slug) <= 80:
+        return slug
+    digest = hashlib.sha256(test.encode()).hexdigest()[:8]
+    return f"{slug[:40]}-{slug[-30:]}-{digest}"
+
+
 def looked_after(made: World, request) -> Iterator[World]:
     """Hand the world to the scenario; afterwards a screenshot of every page, and no errors in any browser console."""
     yield made
     SHOTS.mkdir(parents=True, exist_ok=True)
-    slug = re.sub(r"\W+", "-", request.node.name)[:80]
+    slug = shot_name(request.node.name)
     for name, person in made.people.items():
         with contextlib.suppress(Exception):  # a page that is gone has no picture; the test result is what matters
             person.page.screenshot(path=str(SHOTS / f"{slug}-{name.lower()}.png"))
