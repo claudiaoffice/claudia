@@ -185,6 +185,42 @@ jobs:
             .claudia/e2e/logs/
           if-no-files-found: ignore
 
+  # Firefox is the main browser people test the web app in (PROC-59); the scenarios tagged `@firefox` run there.
+  e2e-firefox:
+    name: End to end (Firefox)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      SHOTS: ${{ github.workspace }}/shots
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7.6.0
+        with:
+          python-version: "3.14"
+          enable-cache: true
+      - run: uv sync --locked
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: |
+            web/package-lock.json
+            clients/neutralino/package-lock.json
+      - name: The system libraries Firefox needs
+        run: uv run playwright install-deps firefox
+      - name: Get ready as on a computer, with Firefox
+        run: ./run-e2e.sh setup --browser firefox
+      - name: The specs in Firefox
+        run: ./run-e2e.sh specs --browser firefox --no-setup --shots "$SHOTS"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: failure()
+        with:
+          name: e2e-firefox-screenshots-and-logs
+          path: |
+            shots/
+            .claudia/e2e/logs/
+          if-no-files-found: ignore
+
   # What the OpenDocument code writes is also opened in LibreOffice, the reference implementation (D409): the library's
   # odt, odp and ods cases and a file made from a model each are converted with `soffice` and what comes out is
   # compared (the words of an odt or odp, the value of every cell of an ods). A file LibreOffice cannot read fails the

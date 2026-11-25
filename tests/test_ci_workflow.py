@@ -154,3 +154,14 @@ def _job(name: str) -> str:
 def test_the_libreoffice_job_fails_ci_when_libreoffice_cannot_read_a_file():
     """PROC-22: it read 31 of 31 files in every round since PROC-11; a failure must now turn CI red."""
     assert "continue-on-error" not in _job("odf-libreoffice")
+
+
+def test_ci_runs_the_firefox_specs_in_firefox():
+    """PROC-59: Firefox is the owner's main test browser, but CI ran the specs in Chromium only. The scenarios tagged
+    ``@firefox`` (``tests/e2e/specs/conftest.py`` keeps only those in Firefox) run there on every push."""
+    jobs = [name for name in re.findall(r"\n  ([a-z0-9-]+):\n", CI) if "--browser firefox" in _job(name)]
+    assert jobs, "no job of ci.yml runs ./run-e2e.sh with --browser firefox"
+    job = _job(jobs[0])
+    assert "./run-e2e.sh setup --browser firefox" in job
+    assert re.search(r"\./run-e2e\.sh (core|specs) --browser firefox", job)
+    assert "install-deps firefox" in job

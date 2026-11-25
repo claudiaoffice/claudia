@@ -34,7 +34,8 @@ from the files each time. Spec files that no test runs yet are listed, each with
 marked `@draft`.
 
 **One list (D1452).** The browser scripts are listed once, in `SCRIPTS` in `scripts/run_e2e.py`. CI runs
-`./run-e2e.sh setup` and `./run-e2e.sh regression`, so what passes here and what passes in CI are the same scripts. A new
+`./run-e2e.sh setup` and `./run-e2e.sh regression`, so what passes here and what passes in CI are the same scripts. A
+second job runs `./run-e2e.sh specs --browser firefox`: the scenarios tagged `@firefox`, in Firefox (PROC-59). A new
 script goes into `web/package.json` and into `SCRIPTS`; `tests/test_ci_workflow.py` fails if the two differ.
 `$CLAUDIA_CHROMIUM` points at a Chromium that is already installed (a machine that cannot download Playwright's), for
 the Python tests and the Node scripts alike (D1453); `BROWSER=firefox` starts a Node script in Firefox.
