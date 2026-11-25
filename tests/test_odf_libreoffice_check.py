@@ -45,16 +45,24 @@ def test_every_library_case_can_be_edited_the_way_its_spec_says():
         assert source and edited, name
 
 
+def a_program(folder, says: str, code: int = 0) -> str:
+    """A stand-in for ``soffice`` that prints ``says`` and ends with ``code``: a batch file on Windows, a shell script
+    elsewhere (the tests run on all three systems, though CI runs the check itself on Linux)."""
+    if sys.platform == "win32":
+        program = folder / "soffice.cmd"
+        program.write_text(f"@echo off\n{'echo ' + says if says else ''}\nexit /b {code}\n")
+    else:
+        program = folder / "soffice"
+        program.write_text(f"#!/bin/sh\n{'echo ' + repr(says) if says else ''}\nexit {code}\n")
+        program.chmod(0o755)
+    return str(program)
+
+
 def test_the_check_names_the_libreoffice_it_ran_against(tmp_path):
     """PROC-22: a distribution update of LibreOffice must be visible in the log of the run."""
-    program = tmp_path / "soffice"
-    program.write_text("#!/bin/sh\necho 'LibreOffice 24.2.7.2 420(Build:2)'\n")
-    program.chmod(0o755)
-    assert check.version(str(program)) == "LibreOffice 24.2.7.2 420(Build:2)"
+    program = a_program(tmp_path, "LibreOffice 24.2.7.2 420(Build:2)")
+    assert check.version(program) == "LibreOffice 24.2.7.2 420(Build:2)"
 
 
 def test_a_libreoffice_that_does_not_say_its_version_is_named_so(tmp_path):
-    program = tmp_path / "soffice"
-    program.write_text("#!/bin/sh\nexit 3\n")
-    program.chmod(0o755)
-    assert check.version(str(program)) == "LibreOffice (it did not say its version)"
+    assert check.version(a_program(tmp_path, "", code=3)) == "LibreOffice (it did not say its version)"
