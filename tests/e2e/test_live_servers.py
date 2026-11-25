@@ -2,8 +2,9 @@
 
 A real server measures how hard to make password hashing so that it takes ``kdf_target_seconds`` on its machine (D1267,
 0.75 s by default), and making a document hashes three times. The browser tests make hundreds of documents and test
-nothing about that cost, so their servers aim at the lowest target a person could set (``kdf_policy.MIN_TARGET_SECONDS``):
-two to three times faster to a recovery key. A test that chose a target of its own keeps it.
+nothing about that cost, so their servers aim at the lowest target a person could set
+(``kdf_policy.MIN_TARGET_SECONDS``): two to three times faster to a recovery key. A test that chose a target of its own
+keeps it.
 """
 
 from __future__ import annotations
@@ -11,10 +12,11 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from live import PASSWORD, _http, server
+
 from claudia_server.hub import DEFAULT_MAX_DOCUMENTS
 from claudia_server.kdf_policy import MIN_TARGET_SECONDS
 from claudia_server.server_settings import SecuritySettings, ServerSettings, load_settings, save_settings
-from live import PASSWORD, _http, server
 
 
 def _target_the_server_uses(url: str, state: Path) -> float:
