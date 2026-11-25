@@ -113,7 +113,7 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | PROC-22 | P3 | Process / CI | The LibreOffice job may still fail silently, though it has passed every round | **new, open** |  |  |
 | PROC-29 | P3 | Process / E2E | No scenario asserts that a second window sees a holder's outline and name tag (D1223), nor that a colleague's drag is not shown live | **new, open**; fix on `batch-2` (proposed) |  |  |
 | PROC-59 | P3 | Process / CI | The scenarios tagged @firefox were never run in Firefox by CI | **new, open**; fix on `batch-2` (proposed) | 2026-11-25 |  |
-| PROC-61 | P3 | Process / CI | `test_calculating_a_long_chain_is_linear` failed on CI's Ubuntu runner (44x for a 10x chain, after its own second try) and passed on a rerun; here it measures 14x to 16x | **new, open** (measured) | 2026-11-25 |  |
+| PROC-61 | P3 | Process / CI | `test_calculating_a_long_chain_is_linear` failed on CI's Ubuntu runner (44x for a 10x chain, after its own second try) and passed on a rerun; here it measures 14x to 16x | **fix on `batch-3-py`** (measured) | 2026-11-25 |  |
 
 ### Fixed (205)
 
@@ -3092,12 +3092,19 @@ Content-Security-Policy forbids. It only works when the condition already holds 
 `Person.wait_until_open` in `tests/e2e/specs/conftest.py` uses that form for `.health.open`. **Acceptance:** a test that
 opens the page with the health dot delayed.
 
-### PROC-61 · The chain test of computes' performance fails now and then on CI · P3 · size 3 · open
+### PROC-61 · The chain test of computes' performance fails now and then on CI · P3 · size 3 · fix on `batch-3-py`
 **Measured:** CI of `main` at `e5bb76fa`, job "Python (ubuntu-latest)": "a chain 10x as long took 44x as long to
 calculate", after the test's own second try. The rerun of the job passed. On this workspace the ratio is 14x to 16x.
 Either a shared runner stalls both tries, or the slope really is steeper on a smaller machine (cache, garbage
 collection). **Acceptance:** the ratio measured in operations counted, not in seconds, or a third try that is
 recorded when it is needed.
+**Measured** (helper): the time per formula grows with the chain here too (3.4 µs at 1,000, 6.3 µs at 10,000, 11.4 µs
+at 30,000): part of it is a real quadratic step done in C (reported apart), the rest is the memory caches, so the ratio
+of two times depends on the machine. **Fix** on `batch-3-py`: the guard counts the work (`work_of`: the Python lines
+started and the turns of loops, through `sys.monitoring`), 9.96x for a 10x chain on every machine; the bound is 15.
+**Tests** (red before: "the guard read the clock"): `test_the_chain_guard_does_not_read_the_clock`, and
+`test_the_chain_guard_catches_a_calculation_that_is_quadratic_in_the_chain` (a stand-in that looks at every waiting
+formula gives 49x). The counted guard does not see work done inside C. The file's other five guards still measure time.
 
 ## Reported 2026-11-25, while designing the macOS installer (E8.5)
 

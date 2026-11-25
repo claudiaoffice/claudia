@@ -1,14 +1,16 @@
 """Performance guards of the formula engine: how the cost of the hot paths grows with the size of the problem.
 
 Scaling tests, not stopwatches: they compare the same operation on a small and a large input and fail when the
-cost grows faster than it should, which is robust against slow machines (see the guards of claudia-core).
+cost grows faster than it should, which is robust against slow machines (see the guards of claudia-core). Where the
+time itself still depends on the machine (memory caches), the work is counted instead (:func:`work_of`, PROC-61).
 """
 
 import gc
+import sys
 import time
 
 from claudia_computes import AddSheet, InsertRows, SetCells, Structure, WorkbookModel, parse_input
-from claudia_computes.calc import Waiting
+from claudia_computes.calc import Round, Waiting
 from claudia_computes.formula import parse_formula
 from claudia_core import Document, MemoryStore
 
@@ -36,6 +38,31 @@ def best_of(repeat, fn):
     finally:
         if was_enabled:
             gc.enable()
+
+
+def work_of(fn):
+    """How much Python ``fn`` runs: the lines it starts and the turns of its loops, a one-line comprehension's too.
+    The same on every machine and on every run, however busy the machine is or how big its caches are. It does not
+    see work done inside C (``x in a_list``, a list shifted by ``del``): a guard that must see that measures time."""
+    monitoring = sys.monitoring
+    tool = next(tool for tool in range(6) if monitoring.get_tool(tool) is None)  # (coverage may hold one)
+    monitoring.use_tool_id(tool, "work_of")
+    count = 0
+
+    def counted(*_event):
+        nonlocal count
+        count += 1
+
+    events = monitoring.events.LINE | monitoring.events.JUMP
+    try:
+        monitoring.register_callback(tool, monitoring.events.LINE, counted)
+        monitoring.register_callback(tool, monitoring.events.JUMP, counted)
+        monitoring.set_events(tool, events)
+        fn()
+    finally:
+        monitoring.set_events(tool, 0)
+        monitoring.free_tool_id(tool)
+    return count
 
 
 def workbook():
@@ -70,17 +97,50 @@ def test_one_edit_costs_the_same_in_a_small_and_a_large_workbook():
     assert ratio < 4, f"one edit cost {ratio:.1f}x as much with 10x more formulas (they do not depend on it)"
 
 
-def test_calculating_a_long_chain_is_linear():
+#: How much more work a chain 10x as long may cost. Linear is 10 (measured: 9.96); a sort of the chain would make it
+#: about 13 (n log n); a formula that looks at every waiting one makes it 49 already for 200 and 2,000 formulas. It is
+#: counted, so no room is left for a slow or busy machine.
+CHAIN_BOUND = 15
+
+
+def chain_growth(small, large):
+    """How much more work it is to calculate a chain of ``large`` formulas than one of ``small``, each reading the one
+    above it, after its first cell changed."""
+
     def chain(n):
         doc = workbook()
         fill_column(doc, ["=1", *[f"=B{i}+1" for i in range(1, n)]])
         edit = SetCells(S1, ((0, 1, parse_input("=2")),))
-        return best_of(5, lambda: doc.execute(edit, author="ana"))
+        return work_of(lambda: doc.execute(edit, author="ana"))
 
-    ratio = chain(10_000) / chain(1_000)
-    if ratio >= 25:  # a shared CI runner can stall one of the two runs: a real slope shows again, noise does not
-        ratio = min(ratio, chain(10_000) / chain(1_000))
-    assert ratio < 25, f"a chain 10x as long took {ratio:.0f}x as long to calculate (linear is about 10)"
+    return chain(large) / chain(small)
+
+
+def test_calculating_a_long_chain_is_linear():
+    growth = chain_growth(1_000, 10_000)
+    assert growth < CHAIN_BOUND, f"a chain 10x as long took {growth:.1f}x the work to calculate (linear is about 10)"
+
+
+def quadratic_precedents(self, key):
+    """A stand-in for ``Round._precedents`` that looks at every waiting formula to find the ones this one names."""
+    named = set(self.calc.formulas[key].cells)
+    return [other for other in self.waiting.keys if other in named]
+
+
+def test_the_chain_guard_catches_a_calculation_that_is_quadratic_in_the_chain(monkeypatch):
+    monkeypatch.setattr(Round, "_precedents", quadratic_precedents)
+    assert chain_growth(200, 2_000) >= CHAIN_BOUND
+
+
+def test_the_chain_guard_does_not_read_the_clock(monkeypatch):
+    """PROC-61: on CI's runner a chain 10x as long took 44x as long, twice, and the rerun passed; here it takes 14x
+    to 16x. A stopwatch measures the machine as well as the calculation. Counted work is the same on every machine."""
+
+    def stopwatch():
+        raise AssertionError("the guard read the clock")
+
+    monkeypatch.setattr(time, "perf_counter", stopwatch)
+    assert chain_growth(100, 1_000) < CHAIN_BOUND
 
 
 def test_letting_formulas_go_one_by_one_in_order_is_linear():
