@@ -4061,6 +4061,10 @@ msgstr "[Ôné stép în thé hîstôry. Ûndô pûts évérythîng bàck.~~~~~~
 msgid "Only a chart on a sheet moves to a slide."
 msgstr "[Ônly à chàrt ôn à shéét môvés tô à slîdé.~~~~~~~~~~~~~~~~]"
 
+#: web/app/components/FirstAdminSetup.vue
+msgid "Only an administrator of this computer can name this server's first administrator. Ask one."
+msgstr "[Ônly àn àdmînîstràtôr ôf thîs cômpûtér càn nàmé thîs sérvér's fîrst àdmînîstràtôr. Àsk ôné.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+
 #: web/app/components/DetailsDialog.vue
 msgid "Only an editor or an owner of the document can change this."
 msgstr "[Ônly àn édîtôr ôr àn ôwnér ôf thé dôcûmént càn chàngé thîs.~~~~~~~~~~~~~~~~~~~~~~~~]"

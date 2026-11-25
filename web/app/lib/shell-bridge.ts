@@ -8,7 +8,7 @@
 //    `postMessage` (`detectParentSink`): this page posts to its parent window and hears only the parent.
 // Neither exists in a plain browser tab, so `ShellBridge` works there too: it just never becomes `ready` and
 // `nativeMenu` stays `false`.
-import { rememberSetupCode } from './setup-code'
+import { rememberAskAdministrator, rememberSetupCode } from './setup-code'
 import type { WireData } from './protocol'
 import { isBookmark, named, type Bookmark } from './server-bookmarks'
 
@@ -318,6 +318,8 @@ export class ShellBridge {
       this.windowApp = typeof message.app === 'string' && isApp(message.app) ? message.app : null
       // the setup code of the desktop app's own server, for its settings pages (D1373); never sent for another server
       if (typeof message.setup_code === 'string') rememberSetupCode(message.setup_code, 'app')
+      // the computer's shared service, which she may not set up herself: "ask an administrator" (E8.5, D1624)
+      rememberAskAdministrator(message.ask_administrator === true)
     } else if (message.type === 'action' && typeof message.action === 'string') {
       for (const handler of this.handlers) handler(message.action, message.target)
     } else if (message.type === 'servers' && Array.isArray(message.servers)) {

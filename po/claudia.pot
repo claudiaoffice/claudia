@@ -4061,6 +4061,10 @@ msgstr ""
 msgid "Only a chart on a sheet moves to a slide."
 msgstr ""
 
+#: web/app/components/FirstAdminSetup.vue
+msgid "Only an administrator of this computer can name this server's first administrator. Ask one."
+msgstr ""
+
 #: web/app/components/DetailsDialog.vue
 msgid "Only an editor or an owner of the document can change this."
 msgstr ""

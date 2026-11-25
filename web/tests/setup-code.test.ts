@@ -4,6 +4,9 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   codeField,
   forgetSetupCode,
+  mustAskAdministrator,
+  onAskAdministrator,
+  rememberAskAdministrator,
   normalizeSetupCode,
   onSetupCode,
   rememberedSetupCode,
@@ -115,5 +118,21 @@ describe('codeField', () => {
     expect(codeField(true, link, 'ok')).toBe('from-link')
     expect(codeField(true, app, 'unchecked')).toBe('none')
     expect(codeField(true, app, 'ok')).toBe('none')
+  })
+})
+
+describe('ask an administrator of this computer (E8.5, D1624)', () => {
+  it('is kept for this tab as the desktop app says it, and told to a page that waits for it', () => {
+    const store = memory()
+    const heard: boolean[] = []
+    const stop = onAskAdministrator((ask) => heard.push(ask))
+    expect(mustAskAdministrator(store)).toBe(false)
+    rememberAskAdministrator(true, store)
+    expect(mustAskAdministrator(store)).toBe(true)
+    rememberAskAdministrator(false, store)
+    expect(mustAskAdministrator(store)).toBe(false)
+    stop()
+    rememberAskAdministrator(true, store)
+    expect(heard).toEqual([true, false])
   })
 })

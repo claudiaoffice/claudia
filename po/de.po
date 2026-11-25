@@ -4061,6 +4061,10 @@ msgstr "Ein Schritt im Verlauf. Mit „Rückgängig“ ist alles wieder da."
 msgid "Only a chart on a sheet moves to a slide."
 msgstr "Nur ein Diagramm auf einem Blatt lässt sich auf eine Folie verschieben."
 
+#: web/app/components/FirstAdminSetup.vue
+msgid "Only an administrator of this computer can name this server's first administrator. Ask one."
+msgstr "Nur ein Administrator dieses Computers kann den ersten Administrator dieses Servers bestimmen. Fragen Sie einen."
+
 #: web/app/components/DetailsDialog.vue
 msgid "Only an editor or an owner of the document can change this."
 msgstr "Nur wer das Dokument bearbeiten darf oder es besitzt, kann das ändern."

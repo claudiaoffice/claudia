@@ -39,6 +39,22 @@ describe('named: the name the page gives a place (E8.5, D1623)', () => {
     const demo = { origin: 'https://demo.example.org', label: 'Demo', custom: true }
     expect(named(demo)).toEqual(demo)
   })
+
+  const service = { origin: 'http://127.0.0.1:8765', label: "tobi's server", custom: false, shared: true }
+  it('calls the computer\'s shared service "Shared on this computer", in her language, even once it has an administrator', () => {
+    expect(named(service).label).toBe('Shared on this computer')
+    expect(named(service, german).label).toBe('Geteilt auf diesem Computer')
+  })
+  it('keeps the name a person gave the shared service', () => {
+    expect(named({ ...service, label: 'Family', custom: true })).toEqual({ ...service, label: 'Family', custom: true })
+  })
+})
+
+describe('isBookmark', () => {
+  it('takes the shared service, whose flag is true or false', () => {
+    expect(isBookmark({ origin: 'http://127.0.0.1:8765', label: 'S', custom: false, shared: true })).toBe(true)
+    expect(isBookmark({ origin: 'http://127.0.0.1:8765', label: 'S', custom: false, shared: 'yes' })).toBe(false)
+  })
 })
 
 describe('list / upsert', () => {

@@ -132,14 +132,16 @@ class Visit:
             lambda m: m.type == "error" and not EXPECTED_REFUSALS.search(m.text) and self.errors.append(m.text),
         )
 
-    def as_desktop_app(self, code: str) -> None:
-        """Answer the page's hello as the GTK app does, with ``code`` in the welcome (D1373)."""
+    def as_desktop_app(self, code: str | None = None, *, ask_administrator: bool = False) -> None:
+        """Answer the page's hello as a desktop app does: with ``code`` in the welcome (D1373), or, for the computer's
+        shared service that this person may not set up, with ``ask_administrator`` (D1624)."""
         welcome = {
             "type": "welcome",
             "contract": 1,
             "shell": {"name": "gtk", "platform": "linux", "version": "test"},
             "capabilities": ["native-menu", "actions"],
-            "setup_code": code,
+            **({"setup_code": code} if code is not None else {}),
+            **({"ask_administrator": True} if ask_administrator else {}),
         }
         self.page.add_init_script(
             "window.webkit = { messageHandlers: { claudia: { postMessage(raw) {"

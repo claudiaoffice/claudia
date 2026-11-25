@@ -260,7 +260,7 @@ function settle() {
   } else {
     if (bridge.servers === null) return
     const entry = bridge.servers.find((b) => b.origin === origin.value)
-    if (entry && !entry.custom && !entry.local && entry.label !== pendingLabel) {
+    if (entry && !entry.custom && !entry.local && !entry.shared && entry.label !== pendingLabel) {
       bridge.sendServers(withBookmark(bridge.servers, origin.value, pendingLabel))
     }
   }

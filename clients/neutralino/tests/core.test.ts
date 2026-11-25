@@ -200,6 +200,11 @@ describe('Core', () => {
       ])
     })
 
+    it('is not where her window opens: that is her private place, so a new document goes there', async () => {
+      await started({ sharedService: service() })
+      expect(sent.filter((m) => m.kind === 'show')).toEqual([{ kind: 'show', origin: 'http://127.0.0.1:5000' }])
+    })
+
     it('is not listed without the service', async () => {
       const core = await started({ sharedService: null })
       core.handle({ kind: 'want_servers' })

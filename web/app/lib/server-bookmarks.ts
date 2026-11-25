@@ -16,6 +16,9 @@ export interface Bookmark {
   /** `true` for her own server on this computer ("Private on this computer"), which only a desktop shell lists (the entry
    * is the shell's, not renameable, and named by the page: `named`). */
   local?: boolean
+  /** `true` for the computer's shared service ("Shared on this computer", E8.5, D1622), which only a desktop shell lists
+   * while it is installed; named by the page (`named`) unless a person renamed it. */
+  shared?: boolean
 }
 
 const KEY = 'claudia.servers'
@@ -32,7 +35,7 @@ export function list(storage: Pick<Storage, 'getItem'> = safeStorage()): Bookmar
 
 export function isBookmark(value: unknown): value is Bookmark {
   const b = value as Partial<Bookmark>
-  return typeof b?.origin === 'string' && typeof b?.label === 'string' && typeof b?.custom === 'boolean' && (b.local === undefined || typeof b.local === 'boolean')
+  return typeof b?.origin === 'string' && typeof b?.label === 'string' && typeof b?.custom === 'boolean' && (b.local === undefined || typeof b.local === 'boolean') && (b.shared === undefined || typeof b.shared === 'boolean')
 }
 
 function save(bookmarks: Bookmark[], storage: Pick<Storage, 'setItem'> = safeStorage()): void {
@@ -89,9 +92,12 @@ export function defaultLabel(origin: string, administrator: string | null, t: ty
 }
 
 /** A place as the page names it: her own server, whatever a desktop shell called it, is "Private on this computer" in
- *  her language (E8.5, D1623); every other place keeps its label. */
+ *  her language (E8.5, D1623), and the computer's shared service "Shared on this computer" -- also once it has an
+ *  administrator -- unless a person renamed it; every other place keeps its label. */
 export function named(bookmark: Bookmark, t: typeof translate = translate): Bookmark {
-  return bookmark.local ? { ...bookmark, label: t('Private on this computer') } : bookmark
+  if (bookmark.local) return { ...bookmark, label: t('Private on this computer') }
+  if (bookmark.shared && !bookmark.custom) return { ...bookmark, label: t('Shared on this computer') }
+  return bookmark
 }
 
 /** Where that server's settings pages are: a plain navigation, same origin as everything they serve (D115-style). */

@@ -6,6 +6,9 @@
 //   `takeCodeFromAddress` removes it from the address at once, so it is not bookmarked or shared by accident;
 // * from the desktop app, which reads it in its own server's state folder and sends it in `welcome` (shell-bridge.ts).
 //
+// The computer's shared service (E8.5, D1624) is set up the same way by an administrator of the computer, whose app
+// may read its state folder; anyone else's app says so in `welcome` instead, and the setup page tells her to ask one.
+//
 // The server compares codes the same way (`claudia_server.setup_code.normalize`).
 
 import { safeSessionStorage, type Store } from './storage'
@@ -47,7 +50,21 @@ export function takeCodeFromAddress(
 
 // ------------------------------------------------------------------------------------------------------ remembering
 
-const listeners = new Set<(given: GivenCode) => void>()
+/** Listeners of one kind of news, for a page that has drawn before the desktop app's welcome came. */
+function news<T>() {
+  const listeners = new Set<(value: T) => void>()
+  return {
+    tell: (value: T) => {
+      for (const listener of listeners) listener(value)
+    },
+    listen: (listener: (value: T) => void): (() => void) => {
+      listeners.add(listener)
+      return () => void listeners.delete(listener)
+    },
+  }
+}
+
+const codes = news<GivenCode>()
 
 function isGiven(value: unknown): value is GivenCode {
   const v = value as GivenCode | null
@@ -58,7 +75,7 @@ function isGiven(value: unknown): value is GivenCode {
 export function rememberSetupCode(code: string, from: CodeSource, store: Store = safeSessionStorage()): void {
   const given = { code, from }
   store.setItem(KEY, JSON.stringify(given))
-  for (const listener of listeners) listener(given)
+  codes.tell(given)
 }
 
 /** The code this tab was given, or `null`. */
@@ -80,8 +97,28 @@ export function forgetSetupCode(store: Store = safeSessionStorage()): void {
 
 /** Be told when a code arrives (the desktop app's welcome may come after the page has drawn); returns a remover. */
 export function onSetupCode(listener: (given: GivenCode) => void): () => void {
-  listeners.add(listener)
-  return () => listeners.delete(listener)
+  return codes.listen(listener)
+}
+
+const ASK_KEY = 'claudia.admin.ask-administrator'
+const asks = news<boolean>()
+
+/** Keep for this tab whether only an administrator of this computer can set this server up (the desktop app says so
+ *  in every `welcome`, D1624), and tell a page that waits for it. */
+export function rememberAskAdministrator(ask: boolean, store: Store = safeSessionStorage()): void {
+  if (ask) store.setItem(ASK_KEY, 'yes')
+  else store.removeItem(ASK_KEY)
+  asks.tell(ask)
+}
+
+/** Must she ask an administrator of this computer for the setup code? */
+export function mustAskAdministrator(store: Store = safeSessionStorage()): boolean {
+  return store.getItem(ASK_KEY) === 'yes'
+}
+
+/** Be told when the desktop app says it (its welcome may come after the page has drawn); returns a remover. */
+export function onAskAdministrator(listener: (ask: boolean) => void): () => void {
+  return asks.listen(listener)
 }
 
 // ------------------------------------------------------------------------------------------------------- the field
