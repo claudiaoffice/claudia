@@ -22,8 +22,8 @@ library set them, and a style cannot run code.
 The connection rule names the host the request came in under. ``HostGuard`` has already refused every host the server
 does not answer to, so the value echoed here is one of the server's own names.
 
-``/api/swagger`` is the one exception: FastAPI's page loads its script from a CDN (SEC-14, open), so it only gets
-the framing rule, not the script rule, until that page is served from the package or switched off.
+``/api/swagger`` is the one exception: FastAPI's page loads its script from a CDN, so it only gets the framing rule,
+not the script rule. It is served only when the administrator starts the server with ``--api-docs`` (SEC-14).
 """
 
 from __future__ import annotations

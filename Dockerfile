@@ -24,7 +24,7 @@ RUN npm run build
 
 # ---- python: the workspace packages and their locked dependencies, in one virtual environment --
 FROM python:3.14-slim-bookworm AS python
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+COPY --from=ghcr.io/astral-sh/uv:0.11.32 /uv /usr/local/bin/uv
 ENV UV_LINK_MODE=copy \
     UV_COMPILE_BYTECODE=1 \
     UV_PYTHON_DOWNLOADS=never

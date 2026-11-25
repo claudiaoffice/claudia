@@ -23,7 +23,6 @@ from pathlib import Path
 from typing import Annotated
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Request
-from fastapi.responses import JSONResponse
 
 from claudia_ai import ClaudeModel, FailureReason, ModelError, ModelRunner, OpenVinoModel, ProviderError
 from claudia_ai.claude import DEFAULT_BASE_URL
@@ -39,6 +38,8 @@ from .ai_desk import ProviderDesk
 from .apps import has_lens, routed_assistant_for
 from .assistant import Assistant
 from .fonts import FontService
+from .http_refusal import Refused
+from .i18n import message_of, msg
 from .kdf_policy import KdfPolicy, check_target
 from .login_throttle import LoginThrottle
 from .server_settings import (
@@ -56,6 +57,7 @@ from .server_settings import (
 )
 from .setup_code import SetupCode, remove_code
 from .suite import Suite
+from .typeset_check import check_identity
 
 log = logging.getLogger("claudia_server")
 JsonBody = Annotated[dict, Body()]
@@ -82,7 +84,7 @@ class AiRefused(ValueError):
         self.reason = reason
 
 
-APPROVAL_SENTENCE = "Document content is sent to Anthropic when someone asks @ai."
+APPROVAL_SENTENCE = msg("Document content is sent to Anthropic when someone asks @ai.")
 TEST_QUESTION = [{"role": "user", "content": "Answer with the single word: ok."}]
 
 
@@ -113,7 +115,7 @@ class AiRuntime:
         """Claude, as ``settings`` describe it. ``ValueError`` if there is no key."""
         key = self.key_in_use(settings)
         if key is None:
-            raise ValueError("Claude needs a provider key.")
+            raise ValueError(msg("Claude needs a provider key."))
         return ClaudeModel(
             key, settings.claude.model, base_url=self.anthropic_url or DEFAULT_BASE_URL, read_timeout=settings.timeout
         )
@@ -151,7 +153,7 @@ class AiRuntime:
         ``ValueError`` if the AI is disabled for this server, the model cannot be loaded, Anthropic does not accept the
         key, or none of this server's apps has an assistant for the model."""
         if not self.enabled:
-            raise ValueError("the AI assistant is disabled for this server (it was started with --no-assistant)")
+            raise ValueError(msg("the AI assistant is disabled for this server (it was started with --no-assistant)"))
         if settings.provider == CLAUDE:
             await self._test_claude(settings)
         local = None
@@ -165,6 +167,9 @@ class AiRuntime:
             module = suite.module(app)
             if module is not None:
                 module.hub.assistant = factory
+        for module in suite:
+            # who answers `@ai` changed: an open window asks again, as when the owners' consent changes (UX-75)
+            module.hub.tell_open_documents("ai_consent_changed", {"provider": settings.provider})
         for runner in replaced:
             await asyncio.to_thread(runner.close)
 
@@ -186,7 +191,7 @@ class AiRuntime:
             raise ValueError(str(exc)) from exc
         if required and not any_lens(self.models):
             runner.close()
-            raise ValueError("this server's document model has no AI assistant yet")
+            raise ValueError(msg("this server's document model has no AI assistant yet"))
         return runner
 
 
@@ -239,18 +244,32 @@ ADMIN_LOGIN = (
     "\x00admin"  # the "document" of the administrators' sign-in in the login counters: no document is called so
 )
 ADMIN_SETUP = "\x00setup"  # the same for tries of the setup code (D1371); its "name" is always empty
-WRONG_CODE = "that is not this server's setup code; look in the log of its last start (a restart makes a new code)"
-TAKEN = "this server already has an administrator; sign in to add another"
+WRONG_CODE = msg("that is not this server's setup code; look in the log of its last start (a restart makes a new code)")
+TAKEN = msg("this server already has an administrator; sign in to add another")
 
 
-def _too_many(seconds: float) -> JSONResponse:
+def _too_many(seconds: float) -> Refused:
     """429 with the wait in ``Retry-After`` and ``retry_after`` (D1266)."""
     whole = max(1, math.ceil(seconds))
-    return JSONResponse(
-        status_code=429,
-        content={"detail": f"too many tries; try again in {whole} s", "retry_after": whole},
+    return Refused(
+        429,
+        msg("too many tries; try again in {seconds} s", seconds=whole),
         headers={"Retry-After": str(whole)},
+        retry_after=whole,
     )
+
+
+def _check_code(context: AdminContext, throttle: LoginThrottle | None, address: str, given: object) -> None:
+    """Refuse a try of the setup code unless ``given`` is this run's code (D1371): 429 inside a wait, 409 once somebody
+    is named, 403 for a wrong code (counted against ``address``)."""
+    if throttle is not None and (wait := throttle.check(address, ADMIN_SETUP, "")) > 0:
+        raise _too_many(wait)
+    if len(context.admins) > 0:
+        raise HTTPException(409, TAKEN)
+    if context.setup_code is None or not context.setup_code.matches(given):
+        if throttle is not None:
+            throttle.failed(address, ADMIN_SETUP, "")
+        raise HTTPException(403, WRONG_CODE)
 
 
 def _identity_routes(
@@ -281,40 +300,23 @@ def _identity_routes(
             "setup_code": not first and context.setup_code is not None,
         }
 
-    def _check_code(request: Request, given: object) -> JSONResponse | None:
-        """The refusal for a try of the setup code, or ``None`` if ``given`` is this run's code (D1371): 429 inside
-        a wait, 409 once somebody is named, 403 for a wrong code (counted)."""
-        address = address_of(request)
-        if throttle is not None and (wait := throttle.check(address, ADMIN_SETUP, "")) > 0:
-            return _too_many(wait)
-        if len(context.admins) > 0:
-            return JSONResponse(status_code=409, content={"detail": TAKEN})
-        if context.setup_code is None or not context.setup_code.matches(given):
-            if throttle is not None:
-                throttle.failed(address, ADMIN_SETUP, "")
-            return JSONResponse(status_code=403, content={"detail": WRONG_CODE})
-        return None
-
     @router.post("/setup-code", status_code=204)
     async def check_setup_code(body: JsonBody, request: Request):
         """Is this the setup code? For a code that came with a link (D1372); a try like any other."""
-        if (refused := _check_code(request, body.get("code"))) is not None:
-            return refused
-        return None
+        _check_code(context, throttle, address_of(request), body.get("code"))
 
     @router.post("/setup")
     async def setup(body: JsonBody, request: Request):
         """Become this server's first administrator, with the setup code of this run (D1370). Refused once it has
         one — sign in and add another instead."""
-        if (refused := _check_code(request, body.get("code"))) is not None:
-            return refused
+        _check_code(context, throttle, address_of(request), body.get("code"))
         name, password = body.get("name"), body.get("password")
         if not (isinstance(name, str) and isinstance(password, str)):
-            raise HTTPException(400, "a name and a password are needed")
+            raise HTTPException(400, msg("a name and a password are needed"))
         try:
             account = await asyncio.to_thread(context.admins.add, name, password, added=utc_now())
         except ValueError as exc:
-            raise HTTPException(400, str(exc)) from exc
+            raise HTTPException(400, message_of(exc)) from exc
         save_admins(context.state_dir, context.admins)
         context.setup_code = None
         remove_code(context.state_dir)
@@ -330,12 +332,12 @@ def _identity_routes(
         name, password = body.get("name"), body.get("password")
         address = address_of(request)
         if throttle is not None and (wait := throttle.check(address, ADMIN_LOGIN, name)) > 0:
-            return _too_many(wait)
+            raise _too_many(wait)
         account = await asyncio.to_thread(context.admins.verify, name, password)
         if account is None:
             if throttle is not None:
                 throttle.failed(address, ADMIN_LOGIN, name)
-            raise HTTPException(401, "wrong name or password")
+            raise HTTPException(401, msg("wrong name or password"))
         if throttle is not None:
             throttle.succeeded(address)
         token = context.sessions.issue(account.name)
@@ -378,11 +380,11 @@ def _admin_routes(router: APIRouter, context: AdminContext, require_admin: Calla
     async def add_admin(admin: Signedin, body: JsonBody):
         name, password = body.get("name"), body.get("password")
         if not (isinstance(name, str) and isinstance(password, str)):
-            raise HTTPException(400, "a name and a password are needed")
+            raise HTTPException(400, msg("a name and a password are needed"))
         try:
             account = await asyncio.to_thread(context.admins.add, name, password, added=utc_now())
         except ValueError as exc:
-            raise HTTPException(400, str(exc)) from exc
+            raise HTTPException(400, message_of(exc)) from exc
         _save()
         return _account_dict(account, signed_in_as=admin)
 
@@ -391,9 +393,9 @@ def _admin_routes(router: APIRouter, context: AdminContext, require_admin: Calla
         try:
             context.admins.remove(name)
         except KeyError:
-            raise HTTPException(404, f"{name!r} is not an administrator") from None
+            raise HTTPException(404, msg("“{name}” is not an administrator", name=name)) from None
         except ValueError as exc:
-            raise HTTPException(409, str(exc)) from exc
+            raise HTTPException(409, message_of(exc)) from exc
         context.sessions.revoke_all_of(name)
         _save()
 
@@ -401,13 +403,13 @@ def _admin_routes(router: APIRouter, context: AdminContext, require_admin: Calla
     async def change_password(name: str, admin: Signedin, body: JsonBody):
         password = body.get("password")
         if not isinstance(password, str):
-            raise HTTPException(400, "a password is needed")
+            raise HTTPException(400, msg("a password is needed"))
         try:
             await asyncio.to_thread(context.admins.change_password, name, password)
         except KeyError:
-            raise HTTPException(404, f"{name!r} is not an administrator") from None
+            raise HTTPException(404, msg("“{name}” is not an administrator", name=name)) from None
         except ValueError as exc:
-            raise HTTPException(400, str(exc)) from exc
+            raise HTTPException(400, message_of(exc)) from exc
         _save()
 
 
@@ -469,7 +471,7 @@ def _settings_routes(
     async def set_max_documents(admin: Signedin, body: JsonBody):
         value = body.get("max_documents")
         if not (isinstance(value, int) and not isinstance(value, bool) and value >= 1):
-            raise HTTPException(400, "max_documents must be a whole number of at least 1")
+            raise HTTPException(400, msg("max_documents must be a whole number of at least 1"))
         suite.max_documents = value
         context.settings.max_documents = value
         context.settings.note_changed("max_documents", admin)
@@ -485,7 +487,7 @@ def _settings_routes(
         try:
             set_access_secret(value)
         except ValueError as exc:
-            raise HTTPException(400, str(exc)) from exc
+            raise HTTPException(400, message_of(exc)) from exc
         context.settings.access_secret = value
         context.settings.note_changed("access_secret", admin)
         _save()
@@ -495,7 +497,7 @@ def _settings_routes(
     async def put_access_secret(admin: Signedin, body: JsonBody):
         value = body.get("access_secret")
         if not (value is None or isinstance(value, str)):
-            raise HTTPException(400, "access_secret must be a string or null")
+            raise HTTPException(400, msg("access_secret must be a string or null"))
         return _change_secret(value, admin)
 
     @router.post("/settings/access-secret/rotate")
@@ -511,9 +513,9 @@ def _settings_routes(
             settings = _ai_settings_asked(context, body, admin)
             await context.ai.apply(suite, settings)
         except AiRefused as exc:
-            return JSONResponse({"detail": str(exc), "reason": exc.reason.value}, status_code=400)
+            raise Refused(400, str(exc), reason=exc.reason.value) from exc
         except ValueError as exc:
-            raise HTTPException(400, str(exc)) from exc
+            raise HTTPException(400, message_of(exc)) from exc
         context.settings.ai = settings
         context.settings.note_changed("ai", admin)
         _save()
@@ -521,10 +523,21 @@ def _settings_routes(
 
     @router.put("/settings/typeset")
     async def set_typeset(admin: Signedin, body: JsonBody):
-        context.settings.typeset = TypesetSettings(xelatex=body.get("xelatex"), pdftocairo=body.get("pdftocairo"))
+        context.settings.typeset = await _typeset_settings_asked(body)
         context.settings.note_changed("typeset", admin)
         _save()
         return _dict()
+
+
+async def _typeset_settings_asked(body: dict) -> TypesetSettings:
+    """The typesetting programs a ``PUT`` asks for, each seen to name itself (SEC-16, D2002); HTTP 400 otherwise."""
+    asked = TypesetSettings(xelatex=body.get("xelatex"), pdftocairo=body.get("pdftocairo"))
+    try:
+        await check_identity("xelatex", asked.xelatex)
+        await check_identity("pdftocairo", asked.pdftocairo)
+    except ValueError as refused:
+        raise HTTPException(400, message_of(refused)) from refused
+    return asked
 
 
 def _ai_settings_asked(context: AdminContext, body: dict, admin: str) -> AiSettings:
@@ -533,9 +546,9 @@ def _ai_settings_asked(context: AdminContext, body: dict, admin: str) -> AiSetti
     model_dir = body.get("model_dir", before.model_dir) if "provider" in body else body.get("model_dir")
     provider = body.get("provider") or (LOCAL if model_dir else STAND_IN)
     if provider not in PROVIDERS:
-        raise ValueError(f"the provider must be one of: {', '.join(PROVIDERS)}")
+        raise ValueError(msg("the provider must be one of: {providers}", providers=", ".join(PROVIDERS)))
     if provider == LOCAL and not model_dir:
-        raise ValueError("the local model needs a model folder")
+        raise ValueError(msg("the local model needs a model folder"))
     asked = body.get("claude", {})
     key = None if asked.get("remove_key") else asked.get("key", before.claude.key)
     claude = ClaudeSettings(
@@ -545,13 +558,13 @@ def _ai_settings_asked(context: AdminContext, body: dict, admin: str) -> AiSetti
         max_tokens=asked.get("max_tokens", before.claude.max_tokens),
     )
     if not isinstance(claude.max_tokens, int) or isinstance(claude.max_tokens, bool) or claude.max_tokens < 1:
-        raise ValueError("the answer length must be at least 1")
+        raise ValueError(msg("the answer length must be at least 1"))
     if provider == CLAUDE:
         if context.ai.key_in_use(AiSettings(claude=claude)) is None:
-            raise ValueError("Claude needs a provider key.")
+            raise ValueError(msg("Claude needs a provider key."))
         if before.provider != CLAUDE:
             if not asked.get("confirm"):
-                raise ValueError(f"Confirm first: {APPROVAL_SENTENCE}")
+                raise ValueError(msg("Confirm first: {sentence}", sentence=APPROVAL_SENTENCE))
             claude.confirmed = Changed(admin, utc_now())
     return AiSettings(
         provider=provider,
@@ -572,7 +585,7 @@ def _security_routes(router: APIRouter, context: AdminContext, require_admin: Ca
         try:
             target = check_target(body.get("kdf_target_seconds"))
         except ValueError as exc:
-            raise HTTPException(400, str(exc)) from exc
+            raise HTTPException(400, message_of(exc)) from exc
         context.settings.security.kdf_target_seconds = target
         context.settings.note_changed("security", admin)
         save_settings(context.state_dir, context.settings)
@@ -599,7 +612,7 @@ def admin_router(
     def require_admin(request: Request) -> str:
         admin = context.sessions.resolve(_bearer_token(request))
         if admin is None:
-            raise HTTPException(401, "sign in as an administrator first", headers={"WWW-Authenticate": "Bearer"})
+            raise HTTPException(401, msg("sign in as an administrator first"), headers={"WWW-Authenticate": "Bearer"})
         return admin
 
     _identity_routes(router, context, require_admin, throttle, address_of)

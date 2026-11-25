@@ -5,9 +5,21 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-11-24
+
 Heavy functions in worker processes (E4.4, D37, D1314).
 
 ### Added
+- `WorkbookModel.sheet_ids_used`: the id of every sheet the workbook has had, removed ones too, kept in the
+  snapshot as `sheet_ids_used` (an older snapshot reads it as the sheets there are); a new sheet never takes one of them
+  (CODE-56).
+- A chart becomes a slide (E6.31 step 3, D1475): `chart_steps` makes a chart with a definition of its own in one step
+  of the history, as a slide of its own right after a tab (`as_new_slide`), on a slide (`on_slide`, half the frame in
+  its middle) or floating on a sheet (`on_sheet`), from a `NewChart`; `to_new_slide` is "Move to Slide" (a new slide
+  after the chart's sheet, the chart filling it); `removal` takes objects away with every definition nothing else shows
+  and every slide left empty. The undo of `AddSlide` is `TakeBackSlide`, which does nothing while the slide holds an
+  object. A workbook's objects may change holder between a sheet and a slide
+  (`WorkbookModel.may_change_holder`).
 - Slides in a workbook (E6.31 step 2, D1470, D1471): `WorkbookModel.slides` (the core's `Slides`) and `tabs`, the one
   order of the sheets and slides (`Tab(kind, id)`); `AddSlide`/`RemoveSlide`; objects on a slide with the core's
   `SlideAnchor` (the model is an `ObjectModel[CellAnchor | SlideAnchor]`). A slide is named and described like a
@@ -21,7 +33,7 @@ Heavy functions in worker processes (E4.4, D37, D1314).
   place, a cell or an object's words, instead of `(sheet, row, col)`. `tab_index` refuses with "there is no sheet or
   slide".
 - The refusals a person can meet are `Refusal`s (CODE-78, D1510): `PivotError`, `ChartError` and `PrintSetupError`
-  are refusals; `WorkbookModel.name_taken` adds sheets, chart tabs and named ranges.
+  are refusals; `WorkbookModel.name_taken` adds sheets, slides and named ranges.
 - `requirements()` of a workbook: the fonts its styles ask for by name (`Requirements.fonts`), for the font report a
   server makes when it is opened (E1.9, D1306).
 - A sheet, a chart tab and a named range can be described (E1.13, D1317, D1318): `WorkbookModel.thing_descriptions`, `thing_description`, `set_thing_description`, and `rename_command`, which renames a named range with `RenameName`. State schema 16: `descriptions` is new (absent: none).
@@ -32,7 +44,15 @@ Heavy functions in worker processes (E4.4, D37, D1314).
   than N present cells. A call past that threshold is deferred instead of run inline, with its arguments frozen as a
   copy at that moment, and the cell keeps showing what it showed before.
 
+### Removed
+- **Breaking** — the chart tab (E6.31 step 3, D1475): `Chart`, `AddChart`, `RemoveChart`, `WorkbookModel.charts`
+  and the event `ChartsChanged` (`charts`); a chart is an object on a sheet or a slide. The state (schema 18) has no
+  `charts`, and a state or a log with chart tabs is not read (no upgrade, D1475). `SetSheetPrint` is for sheets only.
+
 ### Changed
+- **Breaking** — the chart names of E1.18 (D1476): a chart is an object of the kind `chart`, its definitions are
+  `WorkbookModel.charts`, stored under `charts` (state schema 19); `chart_from_data` and `blank_chart` replace
+  `diagram_from_data` and `blank_diagram`. `ChartSpec` keeps its name. A state with the old names is not read.
 - **Breaking** — `names.name_problem(text)` returns the `Refusal` (or `None`), not a string. A taken name is "a
   named range" (was "a range"); a row or column size out of range says "a row is … high" or "a column is … wide".
 - **Breaking** — the glossary's holder (D1430, see `claudia-core`): `CellAnchor.holder` (was `container`),
@@ -40,7 +60,7 @@ Heavy functions in worker processes (E4.4, D37, D1314).
 - **Breaking** — `DefineDiagram`, `UpdateDiagram`, `ForgetDiagram`, `DefineImage`, `ForgetImage`, `DefineShape`,
   `ForgetShape`, `DiagramsChanged`, `ImagesChanged` and `ShapesChanged` are no longer re-exported: claudia-core's
   `DefineAsset`, `UpdateAsset`, `ForgetAsset` and `AssetsChanged` replace them (D1431). `WorkbookModel.users_of(kind,
-  asset_id)` replaces `users_of_diagram` and counts a chart tab as a user of its definition.
+  asset_id)` replaces `users_of_diagram`.
 - An object body has one `ref` instead of a field per kind (see `claudia-core`); state schema 15.
 
 Describing objects (BITV 1.1.1); named number formats (D378). State schema 8 → 10 (9: an object's description, 10:

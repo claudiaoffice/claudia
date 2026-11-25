@@ -18,7 +18,7 @@ const SERVERS: Record<string, Record<string, (params: any) => unknown>> = {
   computes: {
     sheets: () => [{ id: 's1', name: 'Sheet1' }],
     objects: () => ({ objects: [] }),
-    diagrams: () => [],
+    charts: () => [],
     charts: () => [],
     names: () => ({ names: [] }),
     styles: () => [STYLE],

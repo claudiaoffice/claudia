@@ -8,36 +8,42 @@ about the centre, the frame itself unturned: as the model has it); what it is ca
 
 An SVG is drawn as a PNG when there is something to draw it, and else written as Office 2016 and later write one: a
 picture (here a blank one) with the SVG beside it, which Excel shows instead and other programs leave empty.
+
+A picture of a file comes in as an image object (CODE-67, D1478) when the model can show it as it is
+(:mod:`claudia_core.file_pictures`): an image the app decodes, not cropped, not flipped, in its own proportions. What
+the file says of it -- its name, its description, whether it is decorative, its turn -- is the object's. Every other
+picture stays in the file and is reported as ``picture``.
 """
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from dataclasses import replace
+
 from lxml import etree
 
+from claudia_computes import MIN_OBJECT_SIZE
+from claudia_core import asset_of, keeps_proportions, picture_body
 from claudia_odf_io import xml_safe
+from claudia_opc_io import ANGLE, add_svg, cropped, is_decorative, mark_decorative, shown_part, turn_of
 
 from ._pictures import WrittenPicture
-from .xlsx_charts import EMU, NS
-
-DECORATIVE_URI = "{C183D7F6-B498-43B3-948B-1728B52AA6E4}"
-DECORATIVE_NS = "http://schemas.microsoft.com/office/drawing/2017/decorative"
-SVG_URI = "{96DAC541-7B7A-43D3-8B79-37D633B846F1}"
-SVG_NS = "http://schemas.microsoft.com/office/drawing/2016/SVG/main"
-#: Sixty thousandths of a degree: how a drawing says an angle.
-ANGLE = 60000
+from ._read_back import FileObject
+from .xlsx_charts import NS, DrawnAnchor, emu, names_of, pinned_at
 
 
 def picture_anchor(picture: WrittenPicture, number: int, rid: str, svg_rid: str | None = None) -> etree._Element:
     """The ``oneCellAnchor`` of a picture whose picture part ``rid`` points at (and, for an SVG shown as such,
     ``svg_rid`` its SVG), numbered ``number`` among the shapes of its drawing."""
-    turn = f' rot="{(picture.rotation % 360) * ANGLE}"' if picture.rotation % 360 else ""
+    placed = picture.placed
+    rotation = placed.obj.body.rotation % 360
+    turn = f' rot="{rotation * ANGLE}"' if rotation else ""
     xml = (
         f'<xdr:oneCellAnchor xmlns:xdr="{NS["xdr"]}" xmlns:a="{NS["a"]}" xmlns:r="{NS["r"]}">'
-        f"<xdr:from><xdr:col>{picture.col}</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>{picture.row}</xdr:row>"
-        f'<xdr:rowOff>0</xdr:rowOff></xdr:from><xdr:ext cx="{picture.width * EMU}" cy="{picture.height * EMU}"/>'
+        f"{pinned_at(placed.pin, placed.width, placed.height)}"
         '<xdr:pic><xdr:nvPicPr><xdr:cNvPr/><xdr:cNvPicPr><a:picLocks noChangeAspect="1"/></xdr:cNvPicPr></xdr:nvPicPr>'
         f'<xdr:blipFill><a:blip r:embed="{rid}"/><a:stretch><a:fillRect/></a:stretch></xdr:blipFill>'
-        f'<xdr:spPr><a:xfrm{turn}><a:off x="0" y="0"/><a:ext cx="{picture.width * EMU}" cy="{picture.height * EMU}"/>'
+        f'<xdr:spPr><a:xfrm{turn}><a:off x="0" y="0"/><a:ext cx="{emu(placed.width)}" cy="{emu(placed.height)}"/>'
         '</a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></xdr:spPr></xdr:pic><xdr:clientData/>'
         "</xdr:oneCellAnchor>"
     )
@@ -47,16 +53,43 @@ def picture_anchor(picture: WrittenPicture, number: int, rid: str, svg_rid: str 
     properties.set("id", str(number))
     properties.set("name", xml_safe(picture.name or f"Picture {number - 1}"))
     if picture.decorative:
-        properties.set("descr", "")
-        ext = etree.SubElement(etree.SubElement(properties, f"{{{NS['a']}}}extLst"), f"{{{NS['a']}}}ext")
-        ext.set("uri", DECORATIVE_URI)
-        etree.SubElement(ext, f"{{{DECORATIVE_NS}}}decorative", nsmap={"adec": DECORATIVE_NS}).set("val", "1")
+        mark_decorative(properties)
     elif picture.description:
         properties.set("descr", xml_safe(picture.description))
     if svg_rid is not None:
         blip = anchor.find("xdr:pic/xdr:blipFill/a:blip", NS)
         assert blip is not None
-        extension = etree.SubElement(etree.SubElement(blip, f"{{{NS['a']}}}extLst"), f"{{{NS['a']}}}ext")
-        extension.set("uri", SVG_URI)
-        etree.SubElement(extension, f"{{{SVG_NS}}}svgBlip", nsmap={"asvg": SVG_NS}).set(f"{{{NS['r']}}}embed", svg_rid)
+        add_svg(blip, svg_rid)
     return anchor
+
+
+def held_picture(drawn: DrawnAnchor, object_id: str, *, parts: Mapping[str, bytes]) -> FileObject | None:
+    """The image object of a picture anchored on a sheet (its bytes in ``parts``), or ``None`` when it is none the
+    model shows as it is."""
+    picture = drawn.anchor.find("xdr:pic", NS)
+    blip = None if picture is None else picture.find("xdr:blipFill/a:blip", NS)
+    if picture is None or blip is None or drawn.size is None:
+        return None
+    if cropped(picture.find("xdr:blipFill/a:srcRect", NS)):
+        return None
+    rotation = turn_of(picture.find("xdr:spPr/a:xfrm", NS))
+    asset = asset_of(parts.get(drawn.targets.get(shown_part(blip), "")))
+    if rotation is None or asset is None or min(drawn.size) < MIN_OBJECT_SIZE:
+        return None
+    if not keeps_proportions(asset, *drawn.size):
+        return None
+    properties = picture.find("xdr:nvPicPr/xdr:cNvPr", NS)
+    name, description = names_of(properties)
+    body = picture_body(
+        object_id,
+        asset,
+        drawn.size,
+        name=name,
+        description=description,
+        decorative=is_decorative(properties),
+        rotation=rotation,
+    )
+    body = replace(body, name=name)
+    return FileObject(
+        drawn.sheet.sheet_id, drawn.row, drawn.col, drawn.corner, body, "picture", drawn.order, image=asset
+    )

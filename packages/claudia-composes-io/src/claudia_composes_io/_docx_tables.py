@@ -21,6 +21,7 @@ from docx.oxml.ns import qn
 
 from claudia_composes import TextModel
 from claudia_core import TableDef
+from claudia_opc_io import EMU_PER_POINT
 
 from ._docx_contents import body_order
 from ._tables import CellLook, FileCell, FileTable, WriteCell, cell_look, column_shares, read_table, write_grid
@@ -32,7 +33,6 @@ _NOT_WORDS = ("w:drawing", "w:pict", "w:object", "w:footnoteReference", "w:endno
 _FIELDS = ("w:fldChar", "w:fldSimple", "w:instrText", "w:sdt")
 #: Eighths of a point to a point, for the width of a border (``w:sz``).
 _EIGHTHS = 8
-_EMU_PER_POINT = 12700
 
 
 @dataclass(frozen=True)
@@ -346,7 +346,7 @@ def _look(marks: Any, look: CellLook) -> None:  # noqa: ANN401
             else:
                 (red, green, blue), width = side
                 line.set(qn("w:val"), "single")
-                line.set(qn("w:sz"), str(max(2, round(width / _EMU_PER_POINT * _EIGHTHS))))
+                line.set(qn("w:sz"), str(max(2, round(width / EMU_PER_POINT * _EIGHTHS))))
                 line.set(qn("w:color"), f"{red:02X}{green:02X}{blue:02X}")
             borders.append(line)
         marks.append(borders)

@@ -59,9 +59,9 @@
 <text x="472" y="377" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="500" text-anchor="start">A slide</text>
 <circle cx="456" cy="398" r="6" fill="#FFFFFF" stroke="#8E889E" stroke-width="1.4"/>
 <text x="472" y="403" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="start">A floating object on the sheet</text>
-<text x="446" y="440" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="start">Name (the slide it opens as)</text>
+<text x="446" y="440" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="start">Name of the chart</text>
 <rect x="446" y="450" width="468" height="36" rx="7" fill="#FFFFFF" stroke="#CFC9BF" stroke-width="1"/>
-<text x="458" y="473" font-family="Inter, Helvetica, Arial, sans-serif" font-size="14" fill="#1F1A33" font-weight="400" text-anchor="start">Sales chart</text>
+<text x="458" y="473" font-family="Inter, Helvetica, Arial, sans-serif" font-size="14" fill="#1F1A33" font-weight="400" text-anchor="start">Sales</text>
 <text x="446" y="512" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="start">Series are in: (•) Columns, ( ) Rows</text>
 <text x="710" y="512" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="start">☑ First row is a header</text>
 <text x="446" y="544" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="start">Title (optional)</text>
@@ -79,9 +79,9 @@
 <circle cx="60" cy="260" r="10" fill="#E0B84A"/>
 <text x="60" y="264" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11" fill="#FFFFFF" font-weight="500" text-anchor="middle">1</text>
 <text x="74" y="282" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#1F1A33" font-weight="400" text-anchor="start">"A tab" becomes "A slide", still the</text>
-<text x="74" y="299" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#1F1A33" font-weight="400" text-anchor="start">default: Insert makes a slide named</text>
-<text x="74" y="316" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#1F1A33" font-weight="400" text-anchor="start">like the field, after the current tab,</text>
-<text x="74" y="333" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#1F1A33" font-weight="400" text-anchor="start">with the chart filling its frame.</text>
+<text x="74" y="299" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#1F1A33" font-weight="400" text-anchor="start">default: Insert makes a slide "Slide n"</text>
+<text x="74" y="316" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#1F1A33" font-weight="400" text-anchor="start">after the current tab, with the chart,</text>
+<text x="74" y="333" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#1F1A33" font-weight="400" text-anchor="start">named as typed, filling its frame.</text>
 <rect x="60" y="380" width="320" height="48" rx="6" fill="#FFF6D6" stroke="#E0B84A" stroke-width="1"/>
 <circle cx="60" cy="380" r="10" fill="#E0B84A"/>
 <text x="60" y="384" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11" fill="#FFFFFF" font-weight="500" text-anchor="middle">2</text>

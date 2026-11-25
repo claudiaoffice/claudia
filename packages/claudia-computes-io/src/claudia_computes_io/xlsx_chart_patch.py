@@ -15,13 +15,14 @@ chart another program drew that is drawn again is drawn the way this program dra
 from __future__ import annotations
 
 from collections.abc import Callable, Sequence
-from dataclasses import replace
 
 from lxml import etree
 
 from claudia_computes import ChartSpec, VisualObject, WorkbookModel
 
+from ._charts import chart_change, definition_of
 from ._pictures import MEDIA_TYPES, WrittenPicture
+from ._placed import Placed, placed_on_its_sheet
 from .chart_plan import chart_losses
 from .xlsx_charts import (
     CHART_TYPE,
@@ -98,19 +99,21 @@ class Drawings:
         return name
 
     # -- adding and taking away ----------------------------------------------------------------------------------
-    def add(  # noqa: PLR0913 (a chart is: where it goes, what it is, where it is pinned, how big and what it says)
-        self, sheet_part: str, xml: bytes, row: int, col: int, width: int, height: int, description: str = ""
-    ) -> None:
-        """A chart on the sheet in ``sheet_part``, pinned to the corner of cell ``row``, ``col``."""
+    def add(self, sheet_part: str, xml: bytes, placed: Placed) -> None:
+        """The chart ``xml`` on the sheet in ``sheet_part``, where ``placed`` says."""
         drawing = self._drawing_of(sheet_part)
         part = self.patch.free_name("xl/charts/chart{}.xml")
         self.patch.parts[part] = xml
         self.patch.declare(part, CHART_TYPE)
         rid = self.patch.add_relationship(drawing, "chart", part)
+        self._append(drawing, lambda number: anchor_element(rid, number, f"Chart {number - 1}", placed))
+
+    def _append(self, drawing: str, make: Callable[[int], etree._Element]) -> None:
+        """The anchor ``make(number)`` gives, at the end of ``drawing`` (in front of what it has), its shape the next
+        number the drawing has not used."""
         root = self.roots[drawing]
         used = [int(p.get("id", "0")) for p in root.iter(f"{{{NS['xdr']}}}cNvPr") if (p.get("id") or "").isdigit()]
-        number = max(used, default=0) + 1
-        root.append(anchor_element(rid, number, f"Chart {number - 1}", row, col, width, height, description))
+        root.append(make(max(used, default=0) + 1))
         self.changed.add(drawing)
 
     def _media_part(self, key: tuple[str, str], extension: str, data: bytes, media_type: str) -> str:
@@ -123,7 +126,7 @@ class Drawings:
         return self.media[key]
 
     def add_picture(self, sheet_part: str, picture: WrittenPicture) -> None:
-        """A picture on the sheet in ``sheet_part``, pinned to the corner of its cell (D1233)."""
+        """A picture on the sheet in ``sheet_part``, where it is placed (D1233)."""
         drawing = self._drawing_of(sheet_part)
         part = self._media_part((picture.asset, "picture"), picture.format, picture.data, MEDIA_TYPES[picture.format])
         rid = self.patch.add_relationship(drawing, "image", part)
@@ -131,10 +134,11 @@ class Drawings:
         if picture.svg is not None:
             svg_part = self._media_part((picture.asset, "svg"), "svg", picture.svg, MEDIA_TYPES["svg"])
             svg_rid = self.patch.add_relationship(drawing, "image", svg_part)
-        root = self.roots[drawing]
-        used = [int(p.get("id", "0")) for p in root.iter(f"{{{NS['xdr']}}}cNvPr") if (p.get("id") or "").isdigit()]
-        root.append(picture_anchor(picture, max(used, default=0) + 1, rid, svg_rid))
-        self.changed.add(drawing)
+        self._append(drawing, lambda number: picture_anchor(picture, number, rid, svg_rid))
+
+    def add_box(self, sheet_part: str, make: Callable[[int], etree._Element]) -> None:
+        """A text box or a shape on the sheet in ``sheet_part``: the anchor ``make(number)`` gives (D1479)."""
+        self._append(self._drawing_of(sheet_part), make)
 
     def remove(self, chart: FileChart) -> None:
         """A chart's anchor taken out of its drawing, and its part (with what only it uses) out of the package."""
@@ -162,21 +166,6 @@ class Drawings:
 
 
 # ------------------------------------------------------------------------------------------------ a kept file
-def _definition(model: WorkbookModel, obj: VisualObject) -> ChartSpec:
-    assert obj.body.diagram is not None  # (the caller picks diagram objects)
-    spec = model.diagrams[obj.body.diagram]
-    assert isinstance(spec, ChartSpec)
-    return spec
-
-
-def _without_id(spec: ChartSpec) -> ChartSpec:
-    return replace(spec, id="")
-
-
-def _size(obj: VisualObject) -> tuple[int, int]:
-    return obj.body.w, obj.body.h
-
-
 class ChartPatch:
     """The charts of one run of :func:`~claudia_computes_io.apply_edits_to_xlsx`."""
 
@@ -198,10 +187,8 @@ class ChartPatch:
 
     def run(self) -> bool:
         """Put the changes of the charts into the file; whether there were any."""
-        if any(tab not in self.baseline.charts for tab in self.current.charts):
-            raise UnsupportedEdit("a chart tab is a sheet in a file, and a sheet cannot be added to the original yet")
-        old = {obj.id: obj for obj in self.baseline.objects.values() if obj.body.diagram is not None}
-        new = {obj.id: obj for obj in self.current.objects.values() if obj.body.diagram is not None}
+        old = {obj.id: obj for obj in self.baseline.objects.values() if obj.body.chart is not None}
+        new = {obj.id: obj for obj in self.current.objects.values() if obj.body.chart is not None}
         if sorted(old) != sorted(self.by_object):
             raise UnsupportedEdit("the baseline does not know the charts of the file")
         for object_id, was in old.items():
@@ -221,16 +208,10 @@ class ChartPatch:
 
     # -- changes -----------------------------------------------------------------------------------------------
     def _change(self, file: FileChart, was: VisualObject, now: VisualObject) -> None:
-        spec_was, spec_now = _definition(self.baseline, was), _definition(self.current, now)
-        redefined = _without_id(spec_was) != _without_id(spec_now)
-        needs_redraw = (
-            redefined
-            or _size(was) != _size(now)
-            or self.baseline.chart_figure(spec_was.id) != self.current.chart_figure(spec_now.id)
-        )
-        if needs_redraw and not self._redraw(file, (spec_was, spec_now), redefined=redefined):
+        change = chart_change(self.baseline, self.current, was, now)
+        if change.redraw and not self._redraw(file, (change.before, change.after), redefined=change.redefined):
             return
-        if was.anchor != now.anchor or _size(was) != _size(now):
+        if was.anchor != now.anchor or (was.body.w, was.body.h) != (now.body.w, now.body.h):
             self._place(file, now)
         if was.body.description != now.body.description:
             self._describe(file, now.body.description)
@@ -258,8 +239,7 @@ class ChartPatch:
     def _place(self, file: FileChart, now: VisualObject) -> None:
         """The chart pinned to the cell it is at now and as big as it is now: its frame in an anchor of the one-cell
         kind (a file's two-cell anchor says its size by the cells it reaches, which a move would change)."""
-        anchor = now.anchor
-        moved = anchor_element("", 1, "", anchor.row, anchor.col, now.body.w, now.body.h)
+        moved = anchor_element("", 1, "", placed_on_its_sheet(self.current, now))
         placeholder = moved.find("xdr:graphicFrame", NS)
         assert placeholder is not None
         moved.replace(placeholder, file.frame)
@@ -287,19 +267,10 @@ class ChartPatch:
 
     # -- additions ---------------------------------------------------------------------------------------------
     def _add(self, now: VisualObject) -> None:
-        document = chart_xml(self.current, _definition(self.current, now))
+        document = chart_xml(self.current, definition_of(self.current, now))
         if document is None:
             return  # (it shows nothing: counted among what could not be written)
-        body = now.body
-        self.drawings.add(
-            self.sheet_parts[now.anchor.sheet],
-            document,
-            now.anchor.row,
-            now.anchor.col,
-            body.w,
-            body.h,
-            body.description,
-        )
+        self.drawings.add(self.sheet_parts[now.anchor.sheet], document, placed_on_its_sheet(self.current, now))
         self.changed = True
 
 
@@ -312,8 +283,7 @@ def patch_charts(
 ) -> bool:
     """The charts of a kept file brought up to date with ``current``; whether anything in the file changed. What a file
     cannot keep of the charts is said through ``lose`` (``chart``, with the detail). Raises
-    :class:`~claudia_computes_io.UnsupportedEdit` for a baseline that does not know the charts of the file, and for a
-    chart tab (a sheet in a file)."""
+    :class:`~claudia_computes_io.UnsupportedEdit` for a baseline that does not know the charts of the file."""
     for detail in chart_losses(current):
         lose("chart", detail)
     return ChartPatch(patch, package, baseline, current, file_charts(package), lose).run()

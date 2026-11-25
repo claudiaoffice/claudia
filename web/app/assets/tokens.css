@@ -53,6 +53,10 @@
    * (the design system's rule is still: Rose and Teal are backgrounds with white text; these two are the exception). */
   --rose-dark: #b8386a;
   --teal-dark: #0d7768;
+  /* UX-66: the words on an apricot pill (the Styles dialog's "to name"), `color.apricot-dark` in the Penpot design
+   * system: 6.3:1 on the pill's tint of 28% apricot in white. The pill keeps that light tint in the dark scheme too,
+   * so the value holds in both. */
+  --apricot-dark: #7a4710;
   /* The wordmark only: Rose lightened for a dark background (7.7:1 on `--page-dark`, 6.6:1 on `--surface-dark`) —
    * the inverse of `--rose-dark` above, which is Rose darkened for a light one. */
   --rose-light: #ef87ac;
@@ -100,6 +104,9 @@
 
   --radius: 10px;
   --shadow: 0 1px 2px rgb(31 26 51 / 8%), 0 8px 24px rgb(31 26 51 / 8%);
+  /* UX-66: the chosen segment of a switch, lifted off its track; `--shadow` lifts a whole panel off the page. Ink is
+   * no shadow on the dark surface, so the dark scheme has its own. */
+  --shadow-raised: 0 1px 2px color-mix(in srgb, var(--ink) 14%, transparent);
   /* E10.15: the creates grid overlay, a helper the view draws, not part of the slide. Not themed like `--line` —
    * a slide's own canvas (`SlideCanvas.vue`'s `.slide`) is always white, light or dark mode, like a real slide. */
   --grid: rgb(31 26 51 / 8%);
@@ -125,6 +132,7 @@
   --muted: color-mix(in srgb, var(--muted-dark) 100%, transparent);
   --line: var(--line-dark);
   --line-field: var(--line-field-dark);
+  --shadow-raised: 0 1px 2px rgb(0 0 0 / 40%);
   --surface: var(--surface-dark);
   --page: var(--page-dark);
   --wordmark: var(--rose-light);

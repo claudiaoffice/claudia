@@ -1,6 +1,6 @@
 """Names of things (D550, D551): what a name is, when two names are the same, and the name a new thing gets.
 
-Objects, slides, sheets and chart tabs of one document share one namespace, so that a person who says "figure 1" (or
+Objects, slides and sheets of one document share one namespace, so that a person who says "figure 1" (or
 types it behind a ``#`` in the chat) always means one thing. This module is the rule alone: pure functions on text.
 Where a document keeps its names and who may set them is :class:`~claudia_core.ObjectModel`'s and the apps' business.
 """

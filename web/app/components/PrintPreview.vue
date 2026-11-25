@@ -356,7 +356,7 @@ defineExpose({ print, download, status })
     <div ref="canvas" class="canvas">
       <div class="over">
         <p v-for="(n, i) in noteText" :key="i" class="note" data-testid="print-note"><span aria-hidden="true">ⓘ</span> {{ n }}</p>
-        <p class="note" data-testid="print-recorded"><span aria-hidden="true">ⓘ</span> {{ t('Printing and saving a PDF are recorded in the document\'s history: who, when and how many pages. It is written when the file is saved or the page is sent, not when the preview opens.') }}</p>
+        <p class="note" data-testid="print-recorded"><span aria-hidden="true">ⓘ</span> {{ t('Printing and saving a PDF are recorded in the document\'s exit record: who, when and how many pages. It is written when the file is saved or the page is sent, not when the preview opens.') }}</p>
         <p v-if="problem" class="note bad" role="alert" data-testid="print-problem">{{ problem }}</p>
         <p v-if="outcome" class="note" role="status" data-testid="print-outcome">{{ outcome }}</p>
         <span class="grow" />

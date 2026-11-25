@@ -62,6 +62,14 @@ def _load(cert_file: Path) -> x509.Certificate:
         raise CertificateError(f"cannot read the certificate {cert_file}: {exc}") from exc
 
 
+def _can_sign(cert: x509.Certificate) -> bool:
+    """Whether ``cert`` claims to be an authority: ours made before SEC-06 did, and is replaced (D2001)."""
+    try:
+        return cert.extensions.get_extension_for_class(x509.BasicConstraints).value.ca
+    except x509.ExtensionNotFound:
+        return False
+
+
 def wanted_names(extra: tuple[str, ...] = ()) -> list[str]:
     names = ["localhost", "127.0.0.1", "::1"]
     for candidate in (socket.gethostname(), socket.getfqdn(), *extra):
@@ -95,13 +103,13 @@ def _make(names: list[str], cert_file: Path, key_file: Path) -> None:
         .not_valid_before(now - dt.timedelta(hours=1))
         .not_valid_after(now + dt.timedelta(days=VALID_DAYS))
         .add_extension(x509.SubjectAlternativeName(alternative), critical=False)
-        # Self-signed, so it is also its own authority: that is what lets a client that was told to trust this one
-        # certificate check it with the certificate as its only authority.
-        .add_extension(x509.BasicConstraints(ca=True, path_length=0), critical=True)
+        # Not an authority (SEC-06, D2001): a client that trusts this one certificate checks it as a directly trusted
+        # end certificate; were it an authority, whoever stole its key could sign certificates for any site.
+        .add_extension(x509.BasicConstraints(ca=False, path_length=None), critical=True)
         .add_extension(
             x509.KeyUsage(
                 digital_signature=True,
-                key_cert_sign=True,
+                key_cert_sign=False,
                 content_commitment=False,
                 key_encipherment=False,
                 data_encipherment=False,
@@ -151,7 +159,7 @@ def ensure_certificate(
             soon = dt.datetime.now(dt.UTC) + RENEW_BEFORE
             # (the host name may change with every container: only what the person asked for must be there)
             required = {"localhost", "127.0.0.1", "::1", *(n.strip() for n in extra_names if n.strip())}
-            if cert.not_valid_after_utc > soon and required <= set(_names_of(cert)):
+            if cert.not_valid_after_utc > soon and required <= set(_names_of(cert)) and not _can_sign(cert):
                 return Certificate(cert_path, key_path, _fingerprint(cert), _names_of(cert), True)
         except CertificateError:
             pass  # (a damaged file of ours: replaced below)

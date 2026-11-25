@@ -34,6 +34,7 @@ from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from lxml import etree
 from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
+from playwright.sync_api import expect
 from pptx import Presentation
 from pptx.util import Inches
 from pytest_bdd import given, parsers, scenarios, then, when
@@ -54,7 +55,7 @@ PARAGRAPHS = "[data-testid=text] [data-paragraph]"
 ENTRIES = "ol.log > li.entry"
 TEXT_BOX_APPS = ("composes", "creates")  # a sheet has no text boxes
 SLIDE_TABS = "[role=tablist][aria-label=slides] [role=tab]"
-SHEET_TABS = "[role=tablist][aria-label=sheets] [role=tab]"
+SHEET_TABS = "[role=tablist][aria-label^=sheets] [role=tab]"  # "sheets", or "sheets and slides" since E6.31
 NAME_BOX = "input[aria-label=cell]"
 _documents = itertools.count(1)
 
@@ -422,10 +423,10 @@ def _add_each(scene):
         insert(computes, "a chart")
         computes.page.click("button[aria-label='new sheet']")
         dialog = computes.page.locator(DIALOG)
-        if dialog.count():  # the sheet is added once its dialog is answered with the name it offers
-            offered = dialog.locator("input").first.input_value()
-            assert offered, "the dialog of a new sheet offers no name"
-            dialog.locator("button[type=submit]").click()
+        expect(dialog).to_be_visible()  # the sheet is added once its dialog is answered with the name it offers
+        offered = dialog.locator("input").first.input_value()
+        assert offered, "the dialog of a new sheet offers no name"
+        dialog.locator("button[type=submit]").click()
 
 
 @then(parsers.parse('each has a name like "Text box 1", "Slide 2", "Sheet 2", "Chart 1"'))

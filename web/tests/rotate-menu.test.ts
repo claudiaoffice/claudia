@@ -23,7 +23,7 @@ describe('Format ▸ Rotate (D1024, D1232): one submenu in every app that turns 
 
   it.each([
     ['nothing selected', null, false],
-    ['a chart', 'diagram', false],
+    ['a chart', 'chart', false],
     ['a table', 'table', false],
     ['a document one can only look at', 'text', true],
   ])('is off for %s', (_name, kind, readonly) => {

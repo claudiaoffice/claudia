@@ -1,6 +1,6 @@
 """One asset store for what objects show and the document keeps once, by id (D1431).
 
-An image, a shape's outline, a chart's definition (``diagram``) and a container's definition (``container``) are
+An image, a shape's outline, a chart's definition (``chart``) and a container's definition (``container``) are
 defined, changed and forgotten through the same three commands, in every app. A small model with one page is enough to
 show it; each app's own tests show its objects on top of this."""
 
@@ -88,11 +88,11 @@ class PageModel(DocumentModel, ObjectModel[Spot]):
     def anchor_from_data(self, data: dict) -> Spot:
         return Spot(data["x"], data["y"])
 
-    def diagram_from_data(self, data: dict) -> Pie:
+    def chart_from_data(self, data: dict) -> Pie:
         return Pie(data["id"], data.get("label", ""))
 
     @classmethod
-    def blank_diagram(cls, definition: dict) -> dict:
+    def blank_chart(cls, definition: dict) -> dict:
         return {**definition, "label": ""}
 
 
@@ -109,7 +109,7 @@ def picture():
 ASSETS = {
     "image": (lambda: picture().to_data(), lambda m: m.images),
     "shape": (lambda: ShapeDefinition("star", "Star", "M0 0 L100 100 Z").to_data(), lambda m: m.shapes),
-    "diagram": (lambda: {"id": "pie1", "label": "Sales"}, lambda m: m.diagrams),
+    "chart": (lambda: {"id": "pie1", "label": "Sales"}, lambda m: m.charts),
     "container": (
         lambda: ContainerDefinition("r1", "mermaid", "flowchart LR\n  A --> B").to_data(),
         lambda m: m.containers,
@@ -194,7 +194,7 @@ def test_undoing_a_definition_is_refused_once_a_colleague_shows_it(doc):
 # ----------------------------------------------------------------------------- changed in place
 @pytest.mark.parametrize(
     ("kind", "change"),
-    [("diagram", {"label": "Costs"}), ("container", {"source": "flowchart TB\n  B --> A"})],
+    [("chart", {"label": "Costs"}), ("container", {"source": "flowchart TB\n  B --> A"})],
 )
 def test_a_chart_or_a_container_is_changed_in_place_and_the_undo_puts_it_back(doc, kind, change):
     data, view = ASSETS[kind][0](), ASSETS[kind][1]
@@ -242,7 +242,7 @@ def test_every_kind_is_stored_and_read_back(doc):
 
 def test_a_redacted_definition_keeps_no_words_but_the_kind_and_the_id():
     defined = DefineAsset("container", ASSETS["container"][0]()).redacted_in(PageModel)
-    chart = DefineAsset("diagram", {"id": "pie1", "label": "Sales"}).redacted_in(PageModel)
+    chart = DefineAsset("chart", {"id": "pie1", "label": "Sales"}).redacted_in(PageModel)
     shape = DefineAsset("shape", ASSETS["shape"][0]())
 
     assert defined.data["source"] == "" and defined.data["id"] == "r1"

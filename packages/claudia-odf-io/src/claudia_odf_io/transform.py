@@ -16,6 +16,9 @@ from __future__ import annotations
 import math
 import re
 
+#: Centimetres in an inch, and in a pixel (96 to the inch).
+CM_PER_INCH = 2.54
+CM_PER_PIXEL = CM_PER_INCH / 96
 _INCHES = {"cm": 1 / 2.54, "mm": 1 / 25.4, "in": 1.0, "pt": 1 / 72, "pc": 1 / 6, "px": 1 / 96}
 _NUMBER = r"-?(?:\d+\.?\d*|\.\d+)"
 _LENGTH = re.compile(rf"\s*({_NUMBER})\s*(cm|mm|in|pt|pc|px)\s*")
@@ -33,6 +36,12 @@ def inches(value: str | None) -> float | None:
     """A length of the format (``"2.5cm"``, ``"1in"``) in inches, or ``None`` if it is not one."""
     match = _LENGTH.fullmatch(value) if value else None
     return float(match.group(1)) * _INCHES[match.group(2)] if match else None
+
+
+def pixels(value: str | None) -> float | None:
+    """A length of the format in pixels (96 to the inch); ``None`` when it is none."""
+    found = inches(value)
+    return None if found is None else found * 96
 
 
 def _cm(length: str) -> float:

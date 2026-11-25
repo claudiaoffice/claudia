@@ -86,6 +86,7 @@ from .client_address import ClientAddress
 from .fonts import FontService, font_router
 from .formats import CLAUDIA, CLAUDIA_EXPORT, import_state
 from .hosts import AllowedHosts, HostGuard
+from .http_refusal import install as install_refusals
 from .hub import Hub, HubError, same_document_message
 from .hyphenation import HyphenationService, hyphenation_router
 from .i18n import localized, message_of, msg
@@ -167,10 +168,13 @@ a document here.</p>
 <h2>Use it from the desktop app</h2>
 <p>Connect to this address (HOST:PORT is what your browser's address bar shows) and give the document, your name and
 your password.</p>
-<p><a href="/api/health">/api/health</a> &middot; <a href="/api/swagger">API description</a></p>
+<p><a href="/api/health">/api/health</a><!--more-links--></p>
 </body></html>
 """
 
+
+API_DOCS = "/api/swagger"
+"""Where the interactive API description is served, with ``api_docs`` only (SEC-14)."""
 
 LOOPBACK_CLIENTS = frozenset({"127.0.0.1", "::1"})
 LOOPBACK_HOSTS = frozenset({"127.0.0.1", "localhost", "[::1]"})
@@ -255,7 +259,7 @@ class Gateway:
         login_throttle: LoginThrottle | None = None,
     ):
         if access_secret is not None and len(access_secret) < MIN_ACCESS_SECRET:
-            raise ValueError(f"the access secret needs at least {MIN_ACCESS_SECRET} characters")
+            raise ValueError(msg("the access secret needs at least {count} characters", count=MIN_ACCESS_SECRET))
         self.suite = suite
         self.allowed = allowed
         self.uploads = UploadDesk()  # files brought to become documents (D440)
@@ -293,7 +297,7 @@ class Gateway:
         anyone may then make documents or read the list. Takes effect for the next request; nobody already let in
         is affected. ``ValueError`` for a secret shorter than ``MIN_ACCESS_SECRET``."""
         if access_secret is not None and len(access_secret) < MIN_ACCESS_SECRET:
-            raise ValueError(f"the access secret needs at least {MIN_ACCESS_SECRET} characters")
+            raise ValueError(msg("the access secret needs at least {count} characters", count=MIN_ACCESS_SECRET))
         self._secret = None if access_secret is None else access_secret.encode()
 
     async def _verify(self, module: Module, doc_id: str, credentials: Credentials) -> Account | None:
@@ -706,6 +710,7 @@ def create_app(
     fonts: FontService | None = None,
     hyphenation: HyphenationService | None = None,
     idle: IdleWatch | None = None,
+    api_docs: bool = False,
 ) -> FastAPI:
     """The server for the apps of ``hub``: a ``Suite`` (one server, several apps, D430), or one ``Hub`` with the users
     of each of its documents in ``directory`` (a server of one app, as every server was before).
@@ -719,7 +724,8 @@ def create_app(
     The server answers only to ``localhost``, to IP addresses and to the host names in ``allowed_hosts`` (SEC-01, see
     ``claudia_server.hosts``); ``ValueError`` if one of them is not a host name. ``list_documents`` serves
     ``GET /api/docs`` (see ``Hub.listing``); switch it off on a shared server where the existence of a document should
-    not be visible.
+    not be visible. ``api_docs`` serves the interactive API description at ``API_DOCS``; it is off by default because
+    FastAPI's page loads its script from a CDN (SEC-14).
 
     With an ``access_secret`` (at least ``MIN_ACCESS_SECRET`` characters, ``ValueError`` otherwise) only those who know
     it can make documents or read the list. ``max_waiting`` and ``max_waiting_per_address`` bound the connections that
@@ -763,7 +769,13 @@ def create_app(
                 await idle.stop()
             await suite.stop()
 
-    app = FastAPI(title="Claudia server", docs_url="/api/swagger", openapi_url="/api/openapi.json", lifespan=lifespan)
+    # SEC-14: FastAPI's page loads its script from a CDN, so it is served only when the administrator asks for it.
+    app = FastAPI(
+        title="Claudia server",
+        docs_url=API_DOCS if api_docs else None,
+        openapi_url="/api/openapi.json",
+        lifespan=lifespan,
+    )
     if allowed:
         app.add_middleware(
             CORSMiddleware,
@@ -771,6 +783,7 @@ def create_app(
             allow_methods=["GET"],
             allow_headers=["Content-Type", "Authorization"],
         )
+    install_refusals(app)  # CODE-92: a refusal is said in the language of the page that asked
     # SEC-13: CSP, nosniff, referrer and permissions on every answer; the start page's inline scripts by hash.
     app.add_middleware(SecurityHeaders, script_hashes=WebScriptHashes(web_dir))
     if idle is not None:
@@ -802,7 +815,8 @@ def create_app(
     # The addresses with the app (D431) come after every fixed /api/<word>/... route, so that none of those is read as
     # the name of an app.
     _app_routes(app, suite, gateway, list_documents)
-    _web_routes(app, web_dir)
+    api_docs_link = f' &middot; <a href="{API_DOCS}">API description</a>' if api_docs else ""
+    _web_routes(app, web_dir, more_links=api_docs_link)
     return app
 
 
@@ -964,9 +978,10 @@ def _app_routes(app: FastAPI, suite: Suite, gateway: Gateway, list_documents: bo
         await gateway.serve(websocket, doc_id, app_name)
 
 
-def _web_routes(app: FastAPI, web_dir: str | Path | None) -> None:
+def _web_routes(app: FastAPI, web_dir: str | Path | None, *, more_links: str) -> None:
     """The web app, served from the same address: the page and the WebSocket then share an origin, so no allowed
-    origin is needed. Mounted last so /api/... wins. Without one, / says what this server is."""
+    origin is needed. Mounted last so /api/... wins. Without one, / says what this server is, with ``more_links``
+    (HTML) after its link to the health check."""
     if web_dir is not None:
         directory_path = Path(web_dir)
         if not (directory_path / "index.html").is_file():
@@ -975,7 +990,8 @@ def _web_routes(app: FastAPI, web_dir: str | Path | None) -> None:
             )
         app.mount("/", SinglePageApp(directory=directory_path, html=True), name="web")
     else:
+        landing_page = _LANDING.replace("<!--more-links-->", more_links)
 
         @app.get("/", include_in_schema=False, response_class=HTMLResponse)
         async def landing():
-            return HTMLResponse(_LANDING, headers={"Cache-Control": "no-store"})
+            return HTMLResponse(landing_page, headers={"Cache-Control": "no-store"})

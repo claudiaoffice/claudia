@@ -5,6 +5,43 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+### Changed
+- The refusals of the HTTP routes (the server settings and the uploads) are said in the first language of
+  `Accept-Language` when they are the server's own messages; a refusal with more fields is a `Refused` (`retry_after`,
+  `reason` as before); `message_of` keeps the message of a `ValueError(msg(...))` (CODE-92, D2003).
+
+## [0.45.0] - 2026-11-24
+
+### Added
+- `create_app(..., api_docs=False)` and the command-line switch `--api-docs`: the interactive API description at
+  `/api/swagger` is served only when asked for, because FastAPI's page loads its script from a CDN; the landing page
+  links it only then (SEC-14).
+- `Hub.tell_open_documents(kind, data)`; when the administrator changes the AI provider, every open document hears
+  `ai_consent_changed` (data `{provider}`, no sender), so an open window asks again who answers `@ai` (UX-75).
+- A chart becomes a slide (E6.31 step 3, D1475): computes' `insert_chart(definition, show_as, place, name?)` makes a
+  chart with its definition in one step, as a new slide after a tab (`slide`, `{after}`), on a slide (`on_slide`,
+  `{slide}`) or floating on a sheet (`sheet`, `{sheet, row, col, w, h}`); `move_to_slide(object)` puts a chart of a
+  sheet on a new slide after it. A new slide is the next free "Slide n" in the language of the request. computes'
+  `remove_object` takes a chart's definition and a slide left empty along. `free_name(kind)` (every app) is the next
+  free generic name of a kind, in the language of the request.
+
+### Removed
+- **Breaking** — the chart tabs (E6.31 step 3, D1475): computes' `charts` as the list of the tabs, `add_chart`,
+  `remove_chart`, `add_diagram_object` and the event `charts`; a chart is made with `insert_chart`, and `charts` lists
+  the charts' definitions now (D1476).
+
+### Changed
+- The server's own certificate is no longer an authority (`ca=False`, no certificate signing); one made before is
+  replaced at the next start, so a pinned fingerprint changes once (SEC-06, D2001).
+- `PUT /api/admin/settings/typeset` keeps a program only when it names itself as XeTeX or pdftocairo, run once in the
+  typesetter's sandbox; otherwise 400 with a sentence (SEC-16, D2002).
+- computes' `export_office` writes a slide as a tab of its own with its objects where they were, and no longer reports
+  `slide` among the losses (E6.31 step 5, D1477 to D1479; `claudia-computes-io`).
+- **Breaking** — the chart names of E1.18 (D1476): computes' `diagrams`, `define_diagram`, `update_diagram` and
+  `forget_diagram` are `charts`, `define_chart`, `update_chart` and `forget_chart`; `chart_figure(chart)`; the id of a
+  chart's definition is answered as `chart` (by `define_chart` and `insert_chart`), the event of a definition is
+  `chart`, and the kind of a chart object is `chart` everywhere, `free_name("chart")` included.
+
 ## [0.44.0] - 2026-11-24
 
 Skills and persona per app (E7.2, D1560–D1563), and what came with it.

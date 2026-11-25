@@ -9,12 +9,17 @@ from io import BytesIO
 
 import pytest
 from claudia_computes_io import (
+    apply_edits_to_ods,
     apply_edits_to_xlsx,
     ods_export_losses,
+    ods_import_losses,
+    ods_to_workbook,
     ods_unwritten_changes,
     workbook_to_ods,
     workbook_to_xlsx,
     xlsx_export_losses,
+    xlsx_import_losses,
+    xlsx_to_workbook,
     xlsx_unwritten_changes,
 )
 from lxml import etree
@@ -24,7 +29,7 @@ from claudia_computes import CellAnchor, ObjectBody, VisualObject, WorkbookModel
 from claudia_core import ContainerDefinition, ImageAsset, ImageImport, Paragraph, blank_png, decode_image
 from claudia_odf_io import NS as ODF
 from claudia_odf_io import Loss, problems, read_manifest
-from claudia_opc_io import read_parts
+from claudia_opc_io import read_parts, write_parts
 
 XDR = "http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing"
 A = "http://schemas.openxmlformats.org/drawingml/2006/main"
@@ -283,3 +288,57 @@ def test_a_workbook_without_pictures_is_written_as_before(write):
     assert "xl/media" not in "".join(read_parts(write(model))) and not [
         n for n in read_parts(write(model)) if n.startswith(("xl/media/", "Pictures/"))
     ]
+
+
+# --------------------------------------------------------------------------------------- a picture of a file (CODE-67)
+@pytest.mark.parametrize("fmt", ["xlsx", "ods"])
+def test_a_picture_of_a_file_is_read_in_and_written_back_where_it_was(fmt):
+    write, read, import_losses = {
+        "xlsx": (workbook_to_xlsx, xlsx_to_workbook, xlsx_import_losses),
+        "ods": (workbook_to_ods, ods_to_workbook, ods_import_losses),
+    }[fmt]
+    model = a_workbook()
+    asset = put_picture(model, at=(2, 2), size=(200, 100), rotation=15, name="Logo", description="Our logo")
+    data = write(model)
+    again = read(data)
+    (picture,) = [obj for obj in again.objects.values() if obj.body.kind == "image"]
+    assert (picture.anchor.sheet, picture.anchor.row, picture.anchor.col) == (S1, 2, 2)
+    body = picture.body
+    assert (body.w, body.h, body.rotation, body.description) == (200, 100, 15, "Our logo")
+    assert again.images[body.ref].data == asset.data
+    assert "picture" not in kinds(import_losses(data))
+    if fmt == "xlsx":
+        (anchor,) = drawing(write(again)).findall("xdr:oneCellAnchor", X)
+        assert [anchor.findtext(f"xdr:from/xdr:{n}", namespaces=X) for n in ("col", "row")] == ["2", "2"]
+        extent = anchor.find("xdr:ext", X)
+        assert (extent.get("cx"), extent.get("cy")) == (str(200 * EMU), str(100 * EMU))
+        assert anchor.find("xdr:pic/xdr:spPr/a:xfrm", X).get("rot") == str(15 * 60000)
+    else:
+        (frame,) = frames_of(write(again))
+        assert frame.get(f"{{{ODF['draw']}}}transform") == frames_of(data)[0].get(f"{{{ODF['draw']}}}transform")
+
+
+@pytest.mark.parametrize("fmt", ["xlsx", "ods"])
+def test_a_picture_of_a_file_comes_in_with_the_charts_and_an_edit_keeps_it(fmt):
+    write, read, patch = {
+        "xlsx": (workbook_to_xlsx, xlsx_to_workbook, apply_edits_to_xlsx),
+        "ods": (workbook_to_ods, ods_to_workbook, apply_edits_to_ods),
+    }[fmt]
+    model = a_workbook()
+    put_picture(model)
+    original = write(model)
+    baseline, current = read(original), read(original)
+    current.store(current.sheets[S1], 0, 0, {"t": "text", "v": "Area"})
+    again = read(patch(original, baseline, current))
+    assert [obj.body.kind for obj in again.objects.values()] == ["image"]
+
+
+def test_a_cropped_picture_of_a_file_stays_in_it_and_is_reported():
+    model = a_workbook()
+    put_picture(model)
+    parts = read_parts(workbook_to_xlsx(model))
+    drawing_part = parts["xl/drawings/drawing1.xml"]
+    parts["xl/drawings/drawing1.xml"] = drawing_part.replace(b"<a:stretch>", b'<a:srcRect l="10000"/><a:stretch>')
+    data = write_parts(parts)
+    assert [obj for obj in xlsx_to_workbook(data).objects.values() if obj.body.kind == "image"] == []
+    assert kinds(xlsx_import_losses(data))["picture"] == 1

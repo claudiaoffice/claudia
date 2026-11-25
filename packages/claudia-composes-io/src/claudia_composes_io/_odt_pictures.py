@@ -20,12 +20,10 @@ from lxml import etree
 
 from claudia_composes import DEFAULT_WRAP_GAP, ParagraphAnchor, TextModel
 from claudia_core import (
-    MIN_OBJECT_SIZE,
     ImageAsset,
     ObjectBody,
     Rasterise,
     VisualObject,
-    keeps_proportions,
     picture_body,
 )
 from claudia_odf_io import (
@@ -35,12 +33,11 @@ from claudia_odf_io import (
     description_of,
     detach,
     frames_of,
-    inches,
+    held_frame,
     insert_elements,
     name_of,
+    odf_properties,
     offset_of,
-    picture_of,
-    turned_box,
     xml_safe,
 )
 
@@ -52,12 +49,9 @@ from ._wrap import (
     odf_name,
     odf_offset_of,
     odf_place,
-    odf_properties,
     odf_wrap_of,
 )
 
-_PX_PER_INCH = 96
-_CM_PER_INCH = 2.54
 #: The name of the style of the frame of a picture: no wrapping, in front of the text, where its character is.
 PICTURE_STYLE = "Claudia_20_picture"
 
@@ -83,19 +77,6 @@ _MEDIA_TYPE = {"svg": "image/svg+xml", "png": "image/png", "jpeg": "image/jpeg",
 
 def _q(prefix: str, local: str) -> str:
     return f"{{{NS[prefix]}}}{local}"
-
-
-def graphic_styles(*roots: etree._Element | None) -> dict[str, etree._Element]:
-    """Every style of graphics of the parts ``roots`` (content and styles), by name."""
-    found: dict[str, etree._Element] = {}
-    for root in roots:
-        if root is None:
-            continue
-        for style in root.iter(_q("style", "style")):
-            name = style.get(_q("style", "name"))
-            if name and style.get(_q("style", "family")) == "graphic":
-                found[name] = style
-    return found
 
 
 @dataclass(frozen=True)
@@ -128,32 +109,6 @@ class FilePicture:
             description=self.description,
             rotation=self.rotation,
         )
-
-
-def _pixels(length: str | None) -> float | None:
-    found = inches(length)
-    return None if found is None else found * _PX_PER_INCH
-
-
-def held_frame(
-    frame: etree._Element, graphics: Mapping[str, etree._Element], parts: Mapping[str, bytes]
-) -> tuple[ImageAsset, tuple[int, int], int] | None:
-    """``(asset, size in pixels, rotation)`` of a ``draw:frame`` that is a picture the model shows as it is, else
-    ``None``."""
-    asset = picture_of(frame, graphics, parts)
-    width, height = _pixels(frame.get(_q("svg", "width"))), _pixels(frame.get(_q("svg", "height")))
-    if asset is None or width is None or height is None:
-        return None
-    size = (round(width), round(height))
-    rotation = 0
-    if transform := frame.get(_q("draw", "transform")):
-        turned = turned_box(transform, width, height)
-        if turned is None:
-            return None
-        rotation = round(turned[0]) % 360
-    if min(size) < MIN_OBJECT_SIZE or not keeps_proportions(asset, *size):
-        return None
-    return asset, size, rotation
 
 
 def file_pictures(

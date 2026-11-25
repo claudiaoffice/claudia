@@ -8,43 +8,19 @@ import { ref } from 'vue' // only the Vue wiring at the end uses these
 import { AdminApiError, adminApi, type AdminApi } from './admin-api'
 
 import { translate as t } from './i18n'
+import { safeSessionStorage } from './storage'
 const KEY = 'claudia.admin.token'
 
-export function readToken(storage: Pick<Storage, 'getItem'> = safeStorage()): string | null {
-  try {
-    return storage.getItem(KEY)
-  } catch {
-    return null
-  }
+export function readToken(storage: Pick<Storage, 'getItem'> = safeSessionStorage()): string | null {
+  return storage.getItem(KEY)
 }
 
-export function storeToken(token: string, storage: Pick<Storage, 'setItem'> = safeStorage()): void {
-  try {
-    storage.setItem(KEY, token)
-  } catch {
-    /* private window, or storage full: the sign-in still works for the rest of this visit */
-  }
+export function storeToken(token: string, storage: Pick<Storage, 'setItem'> = safeSessionStorage()): void {
+  storage.setItem(KEY, token)
 }
 
-export function clearToken(storage: Pick<Storage, 'removeItem'> = safeStorage()): void {
-  try {
-    storage.removeItem(KEY)
-  } catch {
-    /* nothing to clear */
-  }
-}
-
-function safeStorage(): Pick<Storage, 'getItem' | 'setItem' | 'removeItem'> {
-  try {
-    return sessionStorage
-  } catch {
-    const memory = new Map<string, string>()
-    return {
-      getItem: (k) => memory.get(k) ?? null,
-      setItem: (k, v) => void memory.set(k, v),
-      removeItem: (k) => void memory.delete(k),
-    }
-  }
+export function clearToken(storage: Pick<Storage, 'removeItem'> = safeSessionStorage()): void {
+  storage.removeItem(KEY)
 }
 
 /** Why naming the first administrator was refused (D1371): a wrong setup code, too many tries, somebody faster, or

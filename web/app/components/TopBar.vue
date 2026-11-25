@@ -17,7 +17,7 @@ const everybody = computed(() => [
 </script>
 
 <template>
-  <header class="bar">
+  <div class="bar">
     <div class="brand">
       <Wordmark />
       <span class="app"><AppIcon :size="22" :app="state.app" /> {{ state.app || 'claudia' }}</span>
@@ -38,7 +38,7 @@ const everybody = computed(() => [
       <ConnectionIndicator :session="session" />
       <button class="btn panel" type="button" :aria-pressed="panelOpen" @click="$emit('togglePanel')">{{ t('History & chat') }}</button>
     </div>
-  </header>
+  </div>
 </template>
 
 <style scoped>

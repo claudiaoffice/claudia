@@ -17,6 +17,7 @@ import { useI18n } from '~/lib/i18n'
 import { goToThis, thisOnly } from '~/lib/noun-phrases'
 import { headingChoices, headingSetting, settingValue } from '~/lib/heading-level'
 import { numberingChoices, numberingValue } from '~/lib/numbering'
+import { remember, remembered } from '~/lib/storage'
 
 const { t } = useI18n()
 
@@ -106,21 +107,8 @@ async function setNumbering(value: string) {
 }
 
 const KEY = 'claudia.style-view'
-function remembered(): 'controls' | 'css' {
-  try {
-    return localStorage.getItem(KEY) === 'css' ? 'css' : 'controls'
-  } catch {
-    return 'controls'
-  }
-}
-const view = ref<'controls' | 'css'>(remembered())
-watch(view, (v) => {
-  try {
-    localStorage.setItem(KEY, v)
-  } catch {
-    /* nothing to remember in a private window */
-  }
-})
+const view = ref<'controls' | 'css'>(remembered(KEY, ['controls', 'css'], 'controls'))
+watch(view, (v) => remember(KEY, v))
 
 async function run(job: Promise<boolean>) {
   if (await job) emit('edited')
@@ -206,13 +194,13 @@ const ALIGN = computed(
           <input type="checkbox" :checked="editor.hyphenates" :disabled="off" data-testid="hyphenate" @change="run(editor.setHyphens(($event.target as HTMLInputElement).checked))" >
           <span>{{ t('Hyphenate') }}</span>
         </label>
-        <label v-if="headings" class="row" :title="t('A heading starts a part of the text at its level: the title above all, then level 1, level 2 and so on')">
+        <label v-if="headings" class="row field" :title="t('A heading starts a part of the text at its level: the title above all, then level 1, level 2 and so on')">
           <span class="label">{{ t('Heading') }}</span>
           <select :value="settingValue(current!)" :disabled="off" data-testid="heading-level" @change="setHeading(($event.target as HTMLSelectElement).value)">
             <option v-for="choice in headings" :key="choice.value" :value="choice.value">{{ choice.label }}</option>
           </select>
         </label>
-        <label v-if="numberings" class="row" :title="t('Headings numbered in one list count together as one outline: 1, 1.1, 1.2, 2 …')">
+        <label v-if="numberings" class="row field" :title="t('Headings numbered in one list count together as one outline: 1, 1.1, 1.2, 2 …')">
           <span class="label">{{ t('Numbering') }}</span>
           <select :value="numberingValue(current!)" :disabled="off" data-testid="heading-numbering" @change="setNumbering(($event.target as HTMLSelectElement).value)">
             <option v-for="choice in numberings" :key="choice.value" :value="choice.value">{{ choice.label }}</option>
@@ -336,7 +324,7 @@ h3 {
 .switch button[aria-pressed='true'] {
   background: var(--surface);
   color: var(--text);
-  box-shadow: 0 1px 2px rgb(31 26 51 / 14%);
+  box-shadow: var(--shadow-raised);
 }
 .scope {
   display: grid;

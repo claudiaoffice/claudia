@@ -90,7 +90,7 @@ const APPS = {
         return JSON.stringify([paragraph ? [...document.querySelectorAll('[data-paragraph]')].indexOf(paragraph) : -1, s?.anchorOffset ?? -1])
       }),
     // D1232: the words of a box or a shape are written as typed (`write_words`), as in creates
-    editable: (kind) => kind !== 'image' && kind !== 'diagram',
+    editable: (kind) => kind !== 'image' && kind !== 'chart',
     wrap: true,
     grid: false,
   },
@@ -99,7 +99,7 @@ const APPS = {
     ready: '[data-testid=slide]',
     objects: '[data-testid=slide] .obj',
     below: async () => '', // the slide has nothing under an object but the slide
-    editable: (kind) => kind !== 'image' && kind !== 'diagram', // a picture and a chart have no words (D1225)
+    editable: (kind) => kind !== 'image' && kind !== 'chart', // a picture and a chart have no words (D1225)
     wrap: false,
     grid: true,
   },
@@ -115,7 +115,7 @@ const KINDS = {
     creates: (p) => p.click('.bar button[aria-label="Rectangle"]'),
   },
   image: { computes: (p) => insertPicture(p), composes: (p) => insertPicture(p), creates: (p) => insertPicture(p) },
-  diagram: { computes: (p) => insertChart(p), composes: 'a text has no charts', creates: 'a slide has no charts' },
+  chart: { computes: (p) => insertChart(p), composes: 'a text has no charts', creates: 'a slide has no charts' },
   container: { computes: (p) => insertContainer(p), composes: (p) => insertContainer(p), creates: (p) => insertContainer(p) },
   table: { computes: 'a sheet is the table', composes: 'its own battery, below (tables are in the flow)', creates: 'a slide has no tables' },
 }
@@ -125,10 +125,11 @@ const KINDS = {
 function menuFor(app, kind) {
   const a = APPS[app]
   const items = ['Name & describe…']
-  if (kind !== 'image' && kind !== 'diagram' && a.editable(kind)) items.push('Edit text')
+  if (kind !== 'image' && kind !== 'chart' && a.editable(kind)) items.push('Edit text')
   items.push('Style…')
-  if (kind !== 'diagram') items.push('Rotate by…')
+  if (kind !== 'chart') items.push('Rotate by…')
   if (a.wrap) items.push('Wrap text…')
+  if (kind === 'chart' && app === 'computes') items.push('Move to Slide') // a chart on a sheet (E6.31, D1475)
   if (kind === 'image') items.push('Cut', 'Copy')
   if (a.grid) items.push(/^(Snap to grid|Release from grid)$/)
   items.push('Delete')
@@ -186,7 +187,7 @@ async function insertChart(page) {
   await page.keyboard.press('Shift+ArrowDown')
   await page.keyboard.press('Shift+ArrowDown')
   await menu(page, 'Edit', 'Chart…')
-  await page.check('.modal input[value=object]')
+  await page.check('.modal input[value=sheet]')
   await page.click('.modal button[type=submit]')
 }
 async function insertContainer(page) {
@@ -241,7 +242,7 @@ async function battery(app, kind, ann, ben) {
   const where = `${app} ${kind}`
   const a = APPS[app]
   const obj = ann.locator(a.objects)
-  const turns = kind !== 'diagram' && kind !== 'table'
+  const turns = kind !== 'chart' && kind !== 'table'
   const hist0 = await entries(ann)
   assert.equal(await count(ann, app), 1, `${where}: one object was made`)
   if (ben) await ben.waitForFunction(([sel]) => document.querySelectorAll(sel).length === 1, [a.objects], { timeout: 8000 })

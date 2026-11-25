@@ -62,7 +62,7 @@ describe('what a kind of object has', () => {
   })
 
   it('calls each kind what a person would call it', () => {
-    expect([nounOf('shape'), nounOf('text'), nounOf('image'), nounOf('diagram')]).toEqual([
+    expect([nounOf('shape'), nounOf('text'), nounOf('image'), nounOf('chart')]).toEqual([
       'shape',
       'text box',
       'picture',
@@ -143,7 +143,7 @@ describe('the object as a style host', () => {
 
 describe('the slots an object is styled in (D304)', () => {
   it('works on a shape’s outline, a text box’s words and everything else’s box', () => {
-    expect([slotOf('shape'), slotOf('text'), slotOf('image'), slotOf('diagram')]).toEqual(['outline', 'words', 'box', 'box'])
+    expect([slotOf('shape'), slotOf('text'), slotOf('image'), slotOf('chart')]).toEqual(['outline', 'words', 'box', 'box'])
   })
 
   it('reads a text box’s style from its words', () => {

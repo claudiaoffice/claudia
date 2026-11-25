@@ -23,6 +23,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from hashing import lower_hashing_cost
 from websockets.sync.client import ClientConnection, connect
 
 ROOT = Path(__file__).resolve().parent.parent.parent
@@ -108,8 +109,10 @@ def _http(url: str, body: bytes | None = None, headers: dict[str, str] | None = 
 
 @contextmanager
 def server(folder: Path, *extra: str) -> Iterator[Live]:
-    """A server of every app on a free port of this computer, with its documents sealed in ``folder/documents``."""
+    """A server of every app on a free port of this computer, with its documents sealed in ``folder/documents``, that
+    hashes passwords at the lowest cost (``hashing.lower_hashing_cost``)."""
     port = free_port()
+    lower_hashing_cost(folder / "state")
     documents = folder / "documents"
     command = [
         sys.executable,

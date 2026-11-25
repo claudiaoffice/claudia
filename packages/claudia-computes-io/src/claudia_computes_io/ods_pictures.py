@@ -7,21 +7,26 @@ one has no place of its own: its ``draw:transform`` turns it about its centre an
 drawing of the suite uses, :func:`claudia_odf_io.transform_of`). ODF 1.3 has no way to say a picture is decorative, so
 that is reported (``decorative``). Where there is nothing to draw an SVG as a PNG, the SVG is the picture
 (``svg-fallback``).
+
+A picture of a file comes in as an image object (CODE-67, D1478) when the model can show it as it is
+(:func:`claudia_odf_io.held_frame`); every other picture stays in the file and is reported as ``picture``.
 """
 
 from __future__ import annotations
 
 import re
+from collections.abc import Mapping
+from dataclasses import replace
 
 from lxml import etree
 
-from claudia_computes import SheetId, WorkbookModel
-from claudia_odf_io import NS, qname, transform_of, xml_safe
+from claudia_core import picture_body
+from claudia_odf_io import NS, description_of, held_frame, name_of, qname, xml_safe
 
-from ._pictures import MEDIA_TYPES, WrittenPicture
-from .chart_plan import offset_of
-from .ods_charts import Parts
-from .ods_layout import _CM_PER_PIXEL, text_of  # noqa: PLC2701 (one length, one conversion)
+from ._pictures import WrittenPicture
+from ._read_back import FileObject
+from .ods_chart_files import DrawnFrame, drawing_name
+from .ods_charts import place_of
 
 #: What the package calls each format: ``image/jpeg`` pictures are ``.jpg`` files in an OpenDocument package.
 EXTENSIONS = {"jpeg": "jpg", "png": "png", "gif": "gif", "bmp": "bmp", "svg": "svg"}
@@ -32,22 +37,15 @@ def part_name(picture: WrittenPicture) -> str:
     return f"Pictures/{re.sub(r'[^A-Za-z0-9_-]', '_', picture.asset)}.{EXTENSIONS[picture.format]}"
 
 
-def picture_frame(picture: WrittenPicture, offset: tuple[float, float], number: int) -> etree._Element:
-    """The ``draw:frame`` of ``picture`` on a sheet whose cell ``(row, col)`` is ``offset`` pixels from its corner;
-    ``number`` names a picture that has no name of its own."""
+def picture_frame(picture: WrittenPicture, number: int) -> etree._Element:
+    """The ``draw:frame`` of ``picture``; ``number`` names a picture that has no name of its own."""
+    placed = picture.placed
     frame = etree.Element(qname("draw:frame"), nsmap={p: u for p, u in NS.items() if p != "xml"})
     attributes = {
-        "draw:z-index": str(picture.layer),
+        "draw:z-index": str(placed.layer),
         "draw:name": xml_safe(picture.name or f"Picture {number}"),
-        "svg:width": text_of(picture.width),
-        "svg:height": text_of(picture.height),
+        **place_of(placed, placed.obj.body.rotation),
     }
-    box = tuple(pixels * _CM_PER_PIXEL for pixels in (*offset, picture.width, picture.height))
-    transform = transform_of(picture.rotation, box)  # type: ignore[arg-type]
-    if transform is None:
-        attributes |= {"svg:x": text_of(offset[0]), "svg:y": text_of(offset[1])}
-    else:
-        attributes["draw:transform"] = transform
     for key, value in attributes.items():
         frame.set(qname(key), value)
     image = etree.SubElement(frame, qname("draw:image"))
@@ -58,22 +56,20 @@ def picture_frame(picture: WrittenPicture, offset: tuple[float, float], number: 
     return frame
 
 
-def add_pictures(
-    model: WorkbookModel,
-    pictures: tuple[WrittenPicture, ...],
-    shapes: dict[SheetId, etree._Element],
-    new_shapes,  # noqa: ANN001 (``ods_charts.new_shapes``: an empty ``table:shapes``)
-) -> Parts:
-    """The frames of ``pictures`` put into the ``table:shapes`` of their sheets (made where a sheet has none yet),
-    and the parts that hold their bytes, each once."""
-    parts: Parts = {}
-    for number, picture in enumerate(pictures, start=1):
-        sheet = model.sheets[picture.sheet]
-        shapes.setdefault(picture.sheet, new_shapes()).append(
-            picture_frame(picture, offset_of(sheet.col_widths, sheet.row_heights, picture.row, picture.col), number)
-        )
-        parts[part_name(picture)] = (picture.data, MEDIA_TYPES[picture.format])
-    return parts
+def held_picture(
+    drawn: DrawnFrame, object_id: str, *, parts: Mapping[str, bytes], graphics: Mapping[str, etree._Element]
+) -> FileObject | None:
+    """The image object of a picture of a file (its bytes in ``parts``, its graphic styles ``graphics``), or ``None``
+    when it is none the model holds."""
+    held = None if drawn.frame.find("draw:image", NS) is None else held_frame(drawn.frame, graphics, parts)
+    if held is None:
+        return None
+    asset, size, rotation = held
+    body = picture_body(
+        object_id, asset, size, name=name_of(drawn.frame), description=description_of(drawn.frame), rotation=rotation
+    )
+    body = replace(body, name=drawing_name(drawn.frame))
+    return FileObject(drawn.sheet, drawn.row, drawn.col, drawn.corner, body, "picture", drawn.order, image=asset)
 
 
 def decorative_count(pictures: tuple[WrittenPicture, ...]) -> int:
@@ -81,4 +77,4 @@ def decorative_count(pictures: tuple[WrittenPicture, ...]) -> int:
     return sum(1 for picture in pictures if picture.decorative)
 
 
-__all__ = ["add_pictures", "decorative_count", "part_name", "picture_frame"]
+__all__ = ["decorative_count", "held_picture", "part_name", "picture_frame"]

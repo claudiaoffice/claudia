@@ -326,3 +326,19 @@ def test_the_page_gives_the_reason_of_the_last_failure_in_the_administrators_wor
         "sentence": "Anthropic does not know the model “claude-x”.",
         "when": "2026-11-22T10:00:00Z",
     }
+
+
+# -- UX-75: an open window follows the administrator's change
+
+
+def test_an_open_document_hears_that_the_administrator_changed_the_provider(tmp_path, anthropic):
+    """The badge and the consent dialog of a window read who answers at join and when the consent changes; a change
+    of the provider must reach them too, or the window keeps its old badge until it is reloaded."""
+    app, hub, _ = serve(tmp_path, anthropic)
+    seen = []
+    with TestClient(app) as client:
+        hosted = client.portal.call(hub.open, "budget", True)
+        hosted.document.subscribe(seen.append)
+        assert apply_claude(client, signed_in(client)).status_code == 200
+    heard = [e.message.kind for e in seen if getattr(e, "message", None)]
+    assert "ai_consent_changed" in heard

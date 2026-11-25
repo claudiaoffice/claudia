@@ -5,6 +5,7 @@
 // the Linux shell (D115), and it means none of this ever has to think about CORS.
 
 import { translate as t } from './i18n'
+import { safeStorage } from './storage'
 
 export interface Bookmark {
   /** `protocol//host`, e.g. `https://demo.claudiaoffice.de` — the canonical key, and what every link is built from. */
@@ -17,15 +18,6 @@ export interface Bookmark {
 }
 
 const KEY = 'claudia.servers'
-
-function safeStorage(): Pick<Storage, 'getItem' | 'setItem'> {
-  try {
-    return localStorage
-  } catch {
-    const memory = new Map<string, string>()
-    return { getItem: (k) => memory.get(k) ?? null, setItem: (k, v) => void memory.set(k, v) }
-  }
-}
 
 export function list(storage: Pick<Storage, 'getItem'> = safeStorage()): Bookmark[] {
   try {
@@ -43,11 +35,7 @@ export function isBookmark(value: unknown): value is Bookmark {
 }
 
 function save(bookmarks: Bookmark[], storage: Pick<Storage, 'setItem'> = safeStorage()): void {
-  try {
-    storage.setItem(KEY, JSON.stringify(bookmarks))
-  } catch {
-    /* private window, or storage full: the bookmark still works for the rest of this visit */
-  }
+  storage.setItem(KEY, JSON.stringify(bookmarks))
 }
 
 /** `bookmarks` with `origin` added, or its label refreshed with `defaultLabel` — unless a person already renamed it

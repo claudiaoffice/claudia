@@ -7,7 +7,7 @@ from claudia_core import AddObject, ObjectBody, paragraph_for
 from claudia_core.commands import core_commands
 from claudia_core.testing import body_before_ref
 
-POINTERS = ("shape", "image", "diagram", "container", "table")
+POINTERS = ("shape", "image", "chart", "container", "table")
 
 
 def body(kind: str, ref: str | None = "x1") -> ObjectBody:
@@ -36,9 +36,10 @@ def legacy(kind: str, **more) -> dict:
     return {**body_before_ref(body(kind).to_data()), **more}
 
 
-#: The kinds old bodies had under the names they still have. A container's was ``rendered`` then, a kind that is not
-#: read any more (E1.18, D1430): there is no old body of the kind ``container``.
-OLD_KINDS = ("shape", "image", "diagram", "table")
+#: The kinds old bodies had under the names they still have. A container's was ``rendered`` then and a chart's
+#: ``diagram``, kinds that are not read any more (E1.18, D1430, D1476): there is no old body of the kind ``container``
+#: or ``chart``.
+OLD_KINDS = ("shape", "image", "table")
 
 
 @pytest.mark.parametrize("kind", OLD_KINDS)
@@ -47,9 +48,9 @@ def test_a_body_written_with_a_field_for_each_kind_reads_with_its_pointer_as_ref
 
 
 def test_a_body_of_the_last_generation_before_tables_reads_too():
-    old = legacy("diagram")
+    old = legacy("image")
     del old["table"]
-    assert ObjectBody.from_data(old) == body("diagram")
+    assert ObjectBody.from_data(old) == body("image")
 
 
 def test_a_legacy_body_with_a_pointer_of_another_kind_is_refused():

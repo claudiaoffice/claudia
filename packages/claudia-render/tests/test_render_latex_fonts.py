@@ -57,3 +57,17 @@ async def test_a_font_that_goes_away_is_not_used_any_more(tmp_path):
     current["catalogue"] = _catalogue(tmp_path / "none", ("Other", False))
 
     assert "'Latin Modern Roman' is not available" in await _render(plugin)
+
+
+def test_the_latex_container_keys_its_pictures_by_the_fonts_it_draws_with(tmp_path):
+    """CODE-54: the service keeps a picture under the plugin's cache token; a replaced font must change it."""
+    current = {"catalogue": _catalogue(tmp_path / "one", ("Latin Modern Roman", False))}
+    plugin = builtin_registry(lambda: current["catalogue"], tmp_path / "plugins").get("latex")
+    before = plugin.cache_token()
+    replaced = tmp_path / "two"  # the same family and style, a newer version of the font
+    replaced.mkdir()
+    make_font(replaced / "font-0.ttf", "Latin Modern Roman", version="2.0")
+    record = CollectionRecord(name="two", licence="OFL-1.1", redistributable=True)
+    current["catalogue"] = Catalogue.from_collections([Collection(replaced, record)])
+    assert before and plugin.cache_token() != before
+    assert plugin.cache_token() == current["catalogue"].digest

@@ -1,6 +1,6 @@
 // Where the settings pages get a setup code from (SEC-12, D1372, D1373): a link from the server's log, or the desktop
 // app's welcome; and when the setup page shows a field for it.
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   codeField,
   forgetSetupCode,
@@ -10,6 +10,7 @@ import {
   rememberSetupCode,
   takeCodeFromAddress,
 } from '../app/lib/setup-code'
+import { forgetBrowser, refuseEveryCall } from './refusing-browser'
 
 function memory(): Storage {
   const items = new Map<string, string>()
@@ -57,6 +58,8 @@ describe('takeCodeFromAddress', () => {
 })
 
 describe('remembering a code for this tab', () => {
+  afterEach(forgetBrowser)
+
   it('keeps the code and where it came from, until it is forgotten', () => {
     const storage = memory()
     expect(rememberedSetupCode(storage)).toBeNull()
@@ -83,9 +86,13 @@ describe('remembering a code for this tab', () => {
     const storage = memory()
     storage.setItem('claudia.admin.setup-code', '{"code": 5}')
     expect(rememberedSetupCode(storage)).toBeNull()
-    const broken = { ...memory(), getItem: () => { throw new Error('denied') }, setItem: () => { throw new Error('denied') } } as Storage
-    expect(() => rememberSetupCode('K7QM-4TXR-92HB', 'link', broken)).not.toThrow()
-    expect(rememberedSetupCode(broken)).toEqual({ code: 'K7QM-4TXR-92HB', from: 'link' }) // kept in memory instead
+    storage.setItem('claudia.admin.setup-code', '{not json')
+    expect(rememberedSetupCode(storage)).toBeNull()
+    refuseEveryCall()
+    expect(() => rememberSetupCode('K7QM-4TXR-92HB', 'link')).not.toThrow()
+    expect(rememberedSetupCode()).toEqual({ code: 'K7QM-4TXR-92HB', from: 'link' }) // kept in memory instead
+    forgetSetupCode()
+    expect(rememberedSetupCode()).toBeNull()
   })
 })
 

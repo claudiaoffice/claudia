@@ -12,8 +12,8 @@ only the cells that changed onto the original bytes (``apply_edits_to_ods``), ea
 be kept (``ods_export_losses``, ``ods_import_losses``). Formulas are translated between the model's Excel language
 and OpenFormula by :func:`to_openformula` and :func:`from_openformula`.
 
-Neither format has slides: a workbook's slide is written as a sheet of its own, with its objects on it, and the
-export says so (``slide_plan``, E6.31, D1473).
+Neither format has slides: a workbook's slide is written as a tab of its own without cells, its objects where they are
+on it, ``SlideSize`` pixels to one unit of the slide (``_placed``, E6.31, D1477).
 
 The names, by kind::
 
@@ -23,8 +23,10 @@ The names, by kind::
    ods    workbook_to_ods, ods_to_workbook, apply_edits_to_ods, ods_export_losses, ods_import_losses,
           ods_unwritten_changes
    formulas   to_openformula, from_openformula, Untranslatable
+   slides SlideSize
 """
 
+from ._placed import SlideSize
 from ._version import __version__
 from .ods import (
     apply_edits_to_ods,
@@ -49,6 +51,7 @@ from .xlsx_read import XlsxError
 
 __all__ = [
     "__version__",
+    "SlideSize",
     "UnsupportedEdit",
     "Untranslatable",
     "XlsxError",

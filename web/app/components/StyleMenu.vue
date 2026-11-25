@@ -171,7 +171,7 @@ h3 {
   background: var(--surface);
   color: var(--text);
   font-weight: 600;
-  box-shadow: 0 1px 2px rgb(31 26 51 / 14%);
+  box-shadow: var(--shadow-raised);
 }
 .held {
   font-weight: 400;

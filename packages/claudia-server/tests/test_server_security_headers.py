@@ -112,9 +112,12 @@ def test_without_a_web_app_the_landing_page_is_covered_too():
     assert rules["frame-ancestors"] == FRAME_ANCESTORS
 
 
-def test_the_api_description_keeps_only_the_framing_rule_for_now(client):
-    """FastAPI's page loads its script from a CDN (SEC-14): a script rule would leave it blank."""
-    response = client.get("/api/swagger")
+def test_the_api_description_keeps_only_the_framing_rule_for_now():
+    """FastAPI's page loads its script from a CDN (SEC-14): a script rule would leave it blank. It is served only when
+    the administrator asks for it (``--api-docs``)."""
+    app = create_app(Hub(MemoryProvider(ListModel)), ScryptDirectory(cost=2**4), api_docs=True)
+    with TestClient(app) as client:
+        response = client.get("/api/swagger")
     assert response.headers["content-security-policy"] == f"frame-ancestors {FRAME_ANCESTORS}"
     assert response.headers["x-content-type-options"] == "nosniff"
 

@@ -250,7 +250,7 @@ const writers = () => [state.me.user, ...state.people.map((p) => p.user)].filter
 .segmented button[aria-pressed='true'] {
   background: var(--surface);
   color: var(--text);
-  box-shadow: 0 1px 2px rgb(31 26 51 / 14%);
+  box-shadow: var(--shadow-raised);
 }
 .legend {
   display: inline-flex;

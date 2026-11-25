@@ -13,13 +13,12 @@ import re
 
 from lxml import etree
 
-from claudia_opc_io import parse_xml
+from claudia_opc_io import EMU_PER_POINT, parse_xml
 
 from ._file_looks import Look
 
 _A = "http://schemas.openxmlformats.org/drawingml/2006/main"
 _P = "http://schemas.openxmlformats.org/presentationml/2006/main"
-_EMU_PER_POINT = 12_700
 _HEX = re.compile(r"[0-9a-fA-F]{6}")
 #: Which theme colour a ``schemeClr`` stands for (the master's own mapping is the identity for all but every deck).
 _SCHEME = {"bg1": "lt1", "tx1": "dk1", "bg2": "lt2", "tx2": "dk2"}
@@ -78,7 +77,7 @@ def read_look(shape_element: etree._Element, theme: Theme, units_per_emu: float,
     if not outline:
         look.unread |= any(look.outline.get(prop, "none") != "none" for prop in ("fill", "stroke"))
         look.outline.clear()
-    _read_words(look, shape_element, theme, style, units_per_emu * _EMU_PER_POINT)
+    _read_words(look, shape_element, theme, style, units_per_emu * EMU_PER_POINT)
     return look
 
 

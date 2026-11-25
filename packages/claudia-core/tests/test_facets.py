@@ -108,7 +108,7 @@ def test_every_thing_that_can_be_styled_has_its_slots():
         "text": [("box", ["box"], "box"), ("words", ["text", "paragraph"], "paragraph")],
         "shape": [("outline", ["outline"], "outline"), ("label", ["text", "paragraph"], "paragraph")],
         "image": [("box", [], "box")],
-        "diagram": [("box", ["box"], "box")],
+        "chart": [("box", ["box"], "box")],
         "container": [("box", ["box"], "box")],
         "table": [("box", ["box"], "box")],
         "cell": [("box", ["box"], "box"), ("words", ["text", "paragraph"], "paragraph")],
@@ -148,7 +148,7 @@ def test_asking_for_a_thing_or_slot_that_does_not_exist_says_so():
 
 # ----------------------------------------------------------------------------- the table is open (D315)
 def test_a_later_thing_is_one_more_row_and_changes_nothing_else():
-    """D315: a slide background, a page, the parts of a diagram — each comes later as a row of the table, without
+    """D315: a slide background, a page, the parts of a chart — each comes later as a row of the table, without
     touching the facets, the kinds, or anything that reads the table."""
     later = SLOTS.with_row("slide", (Slot("background", (BOX_FACET,), "box"),))
     assert later.slots_of("slide")[0].name == "background"

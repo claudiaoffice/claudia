@@ -25,6 +25,21 @@ describe('createAdminApi', () => {
     expect(status).toEqual({ needs_administrator: false, exposed: true, administrator: 'tobi' })
   })
 
+  it('asks to be answered in the App Language of the page (CODE-92)', async () => {
+    let seenHeaders: Record<string, string> = {}
+    const fetchImpl = fakeFetch((_url, init) => {
+      seenHeaders = (init?.headers as Record<string, string>) ?? {}
+      return { status: 200, body: {} }
+    })
+    let language = 'de'
+    const api = createAdminApi(fetchImpl, () => language)
+    await api.status()
+    expect(seenHeaders['accept-language']).toBe('de')
+    language = 'en'
+    await api.status()
+    expect(seenHeaders['accept-language']).toBe('en')
+  })
+
   it('sends a bearer token when one is given, and none when not', async () => {
     let seenHeaders: Record<string, string> = {}
     const fetchImpl = fakeFetch((_url, init) => {
@@ -96,7 +111,7 @@ describe('createAdminApi', () => {
   it('falls back to a generic message when the error body has no usable detail', async () => {
     const fetchImpl = fakeFetch(() => ({ status: 500, body: null }))
     const api = createAdminApi(fetchImpl)
-    await expect(api.login('tobi', 'nope')).rejects.toThrow('request failed (500)')
+    await expect(api.login('tobi', 'nope')).rejects.toThrow('The server answered with an error (500).')
   })
 
   it('still raises cleanly when the error response body is not JSON at all', async () => {

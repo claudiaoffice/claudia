@@ -16,6 +16,7 @@ from claudia_computes_io import (
     xlsx_import_losses,
     xlsx_to_workbook,
 )
+from claudia_computes_io._placed import placed_on_its_sheet
 from claudia_computes_io.xlsx_chart_patch import Drawings
 from claudia_computes_io.xlsx_patch import PackagePatch
 from claudia_computes_io.xlsx_read import open_package
@@ -24,12 +25,10 @@ from test_ods_charts import S1, a_chart_workbook, a_range, a_workbook, put_chart
 
 from claudia_computes import (
     CellAnchor,
-    Chart,
     ChartSpec,
     NamedRange,
     ObjectBody,
     Sheet,
-    SheetId,
     VisualObject,
     WorkbookModel,
 )
@@ -128,7 +127,7 @@ def test_a_sheet_name_with_a_space_is_quoted_in_the_addresses_of_a_chart():
     model.sheets[S1].name = "Q1 Data"
     data = workbook_to_xlsx(model)
     assert chart_part(data).findtext(".//c:val//c:f", namespaces=NS) == "'Q1 Data'!$B$2:$B$4"
-    assert xlsx_to_workbook(data).diagrams
+    assert xlsx_to_workbook(data).charts
 
 
 def test_the_charts_of_a_workbook_get_one_part_each_and_one_drawing_for_a_sheet():
@@ -171,7 +170,7 @@ def test_the_description_of_a_chart_is_what_the_frame_says_to_someone_who_cannot
 
 def test_a_chart_reads_its_sheet_by_name_whatever_the_case():
     data = edited(workbook_to_xlsx(a_chart_workbook()), b"Data!", b"DATA!")
-    assert xlsx_to_workbook(data).diagrams
+    assert xlsx_to_workbook(data).charts
 
 
 @pytest.mark.parametrize(
@@ -190,7 +189,7 @@ def test_a_chart_reads_its_sheet_by_name_whatever_the_case():
 )
 def test_a_chart_that_is_not_the_one_the_model_draws_stays_in_the_file_and_is_counted(old, new):
     data = edited(workbook_to_xlsx(a_chart_workbook()), old, new)
-    assert xlsx_to_workbook(data).diagrams == {}
+    assert xlsx_to_workbook(data).charts == {}
     assert kinds(xlsx_import_losses(data)) == {"chart": 1}
 
 
@@ -202,7 +201,7 @@ def test_a_chart_of_two_kinds_is_not_the_models():
     plot.insert(1, extra)
     parts = read_parts(data)
     parts["xl/charts/chart1.xml"] = etree.tostring(chart)
-    assert xlsx_to_workbook(write_parts(parts)).diagrams == {}
+    assert xlsx_to_workbook(write_parts(parts)).charts == {}
 
 
 def _pinned_by_two_cells(extent: tuple[int, int]) -> bytes:
@@ -246,7 +245,7 @@ def test_a_chart_too_small_for_an_object_of_the_model_is_not_held():
     parts["xl/drawings/drawing1.xml"] = parts["xl/drawings/drawing1.xml"].replace(
         f'cx="{480 * 9525}"'.encode(), b'cx="9525"'
     )
-    assert xlsx_to_workbook(write_parts(parts)).diagrams == {}
+    assert xlsx_to_workbook(write_parts(parts)).charts == {}
 
 
 def test_the_import_counts_only_the_charts_the_model_does_not_hold():
@@ -258,34 +257,11 @@ def test_the_import_counts_only_the_charts_the_model_does_not_hold():
 
 
 # -- what a file cannot keep ------------------------------------------------------------------------------------------
-def test_a_chart_tab_is_a_sheet_with_the_chart_in_it_and_that_is_said():
-    model = WorkbookModel()
-    model.add_sheet(Sheet(S1, "Data"), None)
-    model.store(model.sheets[S1], 0, 0, {"t": "int", "v": 3})
-    model.diagrams.define(ChartSpec(id="c1", kind="bar", range=a_range((0, 0), (0, 0)), title="Sales"))
-    model.charts["t1"] = Chart("t1", "Sales chart", "c1")
-    data = workbook_to_xlsx(model)
-    back = xlsx_to_workbook(data)
-    assert [sheet.name for sheet in back.sheets.values()] == ["Data", "Sales chart"]
-    (found,) = back.objects.values()
-    assert found.anchor == CellAnchor(SheetId("s2"), 0, 0) and found.body.w >= 20
-    assert kinds(xlsx_export_losses(model)) == {"chart:tab": 1}
-
-
-def test_a_chart_tab_takes_a_name_excel_allows_that_no_sheet_has():
-    model = a_chart_workbook()
-    model.charts["t1"] = Chart("t1", "data", "c1")
-    model.charts["t2"] = Chart("t2", "A very long name for a chart sheet: [too long?]", "c1")
-    names = [sheet.name for sheet in xlsx_to_workbook(workbook_to_xlsx(model)).sheets.values()]
-    assert names[:2] == ["Data", "data (2)"]
-    assert len(names[2]) <= 31 and not set(names[2]) & set("[]:*?/\\")
-
-
 def test_a_chart_that_follows_a_name_is_written_as_the_cells_the_name_is_now():
     model = a_workbook()
     model.names.put(NamedRange("Sales", None, a_range(), header=True))
-    model.diagrams.define(ChartSpec(id="c1", kind="bar", source="Sales"))
-    body = ObjectBody("o1", "diagram", 480, 300, "plain-image", ref="c1")
+    model.charts.define(ChartSpec(id="c1", kind="bar", source="Sales"))
+    body = ObjectBody("o1", "chart", 480, 300, "plain-image", ref="c1")
     model.insert_object(VisualObject(body, CellAnchor(S1, 5, 1)))
     spec, _ = the_chart(xlsx_to_workbook(workbook_to_xlsx(model)))
     assert (spec.range, spec.source) == (a_range(), "")
@@ -295,11 +271,11 @@ def test_a_chart_that_follows_a_name_is_written_as_the_cells_the_name_is_now():
 def test_a_chart_that_reads_nothing_is_not_written_and_that_is_said():
     model = WorkbookModel()
     model.add_sheet(Sheet(S1, "Data"), None)
-    model.diagrams.define(ChartSpec(id="c1", kind="bar", source="Gone"))
-    body = ObjectBody("o1", "diagram", 480, 300, "plain-image", ref="c1")
+    model.charts.define(ChartSpec(id="c1", kind="bar", source="Gone"))
+    body = ObjectBody("o1", "chart", 480, 300, "plain-image", ref="c1")
     model.insert_object(VisualObject(body, CellAnchor(S1, 5, 1)))
     data = workbook_to_xlsx(model)
-    assert xlsx_to_workbook(data).diagrams == {}
+    assert xlsx_to_workbook(data).charts == {}
     assert not [name for name in read_parts(data) if name.startswith("xl/charts")]
     assert kinds(xlsx_export_losses(model)) == {"chart:empty": 1}
 
@@ -319,10 +295,17 @@ def test_the_drawing_of_a_sheet_goes_where_the_standard_has_it():
     sheet = patch.parts["xl/worksheets/sheet1.xml"]
     patch.parts["xl/worksheets/sheet1.xml"] = sheet.replace(b"</worksheet>", b'<tableParts count="0"/></worksheet>')
     drawings = Drawings(patch)
-    drawings.add("xl/worksheets/sheet1.xml", b"<c:chartSpace/>", 0, 0, 100, 100)
+    drawings.add("xl/worksheets/sheet1.xml", b"<c:chartSpace/>", _placed_at(0, 0))
     drawings.finish()
     names = [etree.QName(e).localname for e in etree.fromstring(patch.parts["xl/worksheets/sheet1.xml"])]
     assert names.index("drawing") == names.index("tableParts") - 1
+
+
+def _placed_at(row: int, col: int):
+    """A chart of 100 by 100 pinned to the cell ``row``, ``col`` of the sheet Data, placed for a file."""
+    model = a_workbook()
+    obj = VisualObject(ObjectBody("o9", "chart", 100, 100, "plain-image", ref="c9"), CellAnchor(S1, row, col))
+    return placed_on_its_sheet(model, obj)
 
 
 def a_workbook_without_charts() -> WorkbookModel:
@@ -334,7 +317,7 @@ def test_a_second_chart_on_a_sheet_goes_in_the_drawing_the_sheet_has_with_an_id_
     package = open_package(data)
     patch = PackagePatch(package.parts)
     drawings = Drawings(patch, {"xl/drawings/drawing1.xml": etree.fromstring(patch.parts["xl/drawings/drawing1.xml"])})
-    drawings.add("xl/worksheets/sheet1.xml", b"<c:chartSpace/>", 9, 9, 100, 100)
+    drawings.add("xl/worksheets/sheet1.xml", b"<c:chartSpace/>", _placed_at(9, 9))
     drawings.finish()
     ids = [p.get("id") for p in etree.fromstring(patch.parts["xl/drawings/drawing1.xml"]).iter(f"{{{XDR}}}cNvPr")]
     assert len(ids) == 2 and len(set(ids)) == 2
@@ -395,7 +378,7 @@ def test_a_new_chart_is_a_new_anchor_and_a_new_part_in_a_kept_file():
     back = xlsx_to_workbook(patched)
     second = back.objects["o2"]
     assert (second.anchor, second.body.w, second.body.h) == (CellAnchor(S1, 12, 2), 300, 200)
-    assert back.diagrams["c2"].title == "Rows" and back.diagrams["c2"].series_in == "rows"
+    assert back.charts["c2"].title == "Rows" and back.charts["c2"].series_in == "rows"
 
 
 def test_the_first_chart_of_a_kept_file_that_has_none_makes_the_drawing_of_the_sheet():
@@ -410,7 +393,7 @@ def test_the_first_chart_of_a_kept_file_that_has_none_makes_the_drawing_of_the_s
 def test_a_chart_that_was_removed_is_taken_out_with_its_part():
     original, baseline, current = a_kept_file()
     current.delete_object("o1")
-    current.diagrams.forget("c1")
+    current.charts.forget("c1")
     patched = apply_edits_to_xlsx(original, baseline, current)
     parts = read_parts(patched)
     assert not [name for name in parts if name.startswith("xl/charts/")]
@@ -430,7 +413,7 @@ def test_a_chart_that_was_moved_and_resized_has_its_anchor_changed_and_its_part_
 
 def test_a_chart_whose_definition_changed_is_drawn_again_the_way_it_was_before():
     original, baseline, current = a_kept_file(title="Before")
-    current.diagrams.replace(replace(current.diagrams["c1"], title="After", legend=False))
+    current.charts.replace(replace(current.charts["c1"], title="After", legend=False))
     losses = LossLog()
     patched = apply_edits_to_xlsx(original, baseline, current, losses=losses)
     assert losses.result() == ()
@@ -459,13 +442,6 @@ def test_the_description_of_a_chart_is_patched_into_its_frame_and_taken_out_agai
     assert xlsx_to_workbook(apply_edits_to_xlsx(patched, again, cleared)).objects["o1"].body.description == ""
 
 
-def test_a_chart_tab_cannot_be_added_to_a_kept_file_yet():
-    original, baseline, current = a_kept_file()
-    current.charts["t1"] = Chart("t1", "Tab", "c1")
-    with pytest.raises(UnsupportedEdit):
-        apply_edits_to_xlsx(original, baseline, current)
-
-
 def test_a_baseline_that_does_not_know_the_charts_of_the_file_is_refused():
     original, _, current = a_kept_file()
     plain = a_workbook_without_charts()
@@ -486,7 +462,7 @@ def test_what_a_kept_file_cannot_keep_of_a_chart_is_said():
 def test_a_chart_libreoffice_saved_is_held_with_the_definition_it_has():
     original = LIBRARY.read_bytes()
     model = xlsx_to_workbook(original)
-    first, second = model.diagrams["c1"], model.diagrams["c2"]
+    first, second = model.charts["c1"], model.charts["c2"]
     assert (first.title, first.x_title, first.y_title, first.series_in) == ("Sales", "Region", "Euro", "columns")
     assert (second.series_in, second.legend) == ("rows", False)
     assert xlsx_import_losses(original) == ()
@@ -510,11 +486,11 @@ def test_a_chart_libreoffice_saved_is_moved_and_resized_without_being_drawn_agai
 def test_a_chart_libreoffice_saved_is_drawn_our_way_when_its_definition_changed_and_that_is_said():
     original = LIBRARY.read_bytes()
     baseline, current = xlsx_to_workbook(original), xlsx_to_workbook(original)
-    current.diagrams.replace(replace(current.diagrams["c1"], title="Changed"))
+    current.charts.replace(replace(current.charts["c1"], title="Changed"))
     losses = LossLog()
     patched = apply_edits_to_xlsx(original, baseline, current, losses=losses)
     assert kinds(losses.result()) == {"chart:look": 1}
-    assert xlsx_to_workbook(patched).diagrams["c1"].title == "Changed"
+    assert xlsx_to_workbook(patched).charts["c1"].title == "Changed"
 
 
 def test_a_chart_libreoffice_saved_whose_numbers_changed_keeps_its_own_drawing():

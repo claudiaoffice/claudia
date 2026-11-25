@@ -203,8 +203,8 @@
    "to_data_for": "(self, viewer: 'str') -> 'dict'"
   },
   "properties": [
+   "chart",
    "container",
-   "diagram",
    "image",
    "shape",
    "table"
@@ -599,6 +599,7 @@
    "join": "(self, paragraph_id: 'str', into: 'str', at: 'int') -> 'Paragraph'",
    "labels": "(self) -> 'dict[str, Label]'",
    "list_in_use": "(self, list_id: 'str') -> 'bool'",
+   "may_change_holder": "(self, obj: 'TextObject', new: 'ParagraphAnchor') -> 'bool'",
    "move_objects": "(self, command: 'TextCommand') -> 'list[dict]'",
    "move_suggestions": "(self, command: 'TextCommand') -> 'list[dict]'",
    "name_is_fixed": "(self, thing_id: 'str') -> 'bool'",

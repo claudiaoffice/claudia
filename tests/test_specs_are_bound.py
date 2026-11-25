@@ -27,7 +27,6 @@ TEST_TAGS = ("@unit:", "@io:", "@e2e:")
 NOT_BOUND_YET = {
     "document-file/requirements.feature": "E1.9 Document manifest and requirements",
     "invariants/objects-in-composes.feature": "PROC-40, recommendation 4 of notes/e2e-rework-plan.md",
-    "computes/slides.feature": "E6.31 Slides in computes, approved 2026-11-22; branch e6-31-slides-in-computes",
 }
 HOW_TO_FIX = (
     "Bind the file in a tests/e2e/specs/test_<feature>.py with scenarios(...); or tag every scenario with the test that"

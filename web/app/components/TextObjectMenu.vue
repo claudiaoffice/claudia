@@ -81,7 +81,7 @@ const items = computed<MenuItem[]>(() => {
       },
     },
     // a picture and a chart carry no words (D1232: the words of a box or a shape are written with `write_words`)
-    { wrap, edit: o.kind !== 'image' && o.kind !== 'diagram' },
+    { wrap, edit: o.kind !== 'image' && o.kind !== 'chart' },
   )
 })
 

@@ -62,6 +62,22 @@ describe('the dialog "AI in this document"', () => {
     expect(consentDialog({ ...view, offered: false }, 'viewer').mode).toBe('no-remote')
   })
 
+  it('lets an owner withdraw a consent given earlier while the server has no Claude (UX-74)', () => {
+    const given = { ...view, offered: false, allowed: true, by: 'anna', at: '2026-11-22T09:40:00Z' }
+    // the owner's check box: it starts as the consent is (ticked) and she can clear it
+    expect(consentDialog(given, 'owner').mode).toBe('owner')
+    expect(consentDialog(given, 'editor').mode).toBe('no-remote')
+    expect(consentDialog({ ...view, offered: false, allowed: false }, 'owner').mode).toBe('no-remote')
+  })
+
+  it('tells an owner who may withdraw a consent that the server has no Claude now (UX-74)', () => {
+    const given = { ...view, offered: false, allowed: true, by: 'anna', at: '2026-11-22T09:40:00Z' }
+    expect(consentDialog(given, 'owner')).toMatchObject({ mode: 'owner', noRemoteNote: true })
+    expect(consentDialog(given, 'editor')).toMatchObject({ mode: 'no-remote', noRemoteNote: true })
+    expect(consentDialog({ ...given, offered: true }, 'owner').noRemoteNote).toBe(false)
+    expect(consentDialog(view, 'viewer').noRemoteNote).toBe(false)
+  })
+
   it('says who decided last, and for whom', () => {
     const on = consentDialog({ ...view, allowed: true, by: 'anna', at: '2026-11-22T09:40:00Z' }, 'owner')
     expect(on.allowedLine).toMatch(/^Allowed by anna, .+ · for Claude \(Anthropic\)$/)

@@ -5,9 +5,35 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+### Fixed
+- CODE-67: the pictures of an xlsx or ods file are read in as image objects, on sheets and slides (D1478), and no
+  longer reported as `picture`.
+
+### Removed
+- `slide_plan` (D1477): a slide is no longer a copy of the workbook turned into a sheet, and writing one is not reported
+  (the loss `slide` is gone).
+- The chart tab (E6.31 step 3, D1475): `xlsx_charts.written_charts(model)` gives the charts of the sheets only, the ods
+  writer and the patches write and keep no chart sheet, and the loss `chart`/`tab` is gone.
+
+### Changed
+- A slide's text boxes and shapes are written to xlsx (`xdr:sp`, words formatted directly) and ods (frames and shapes,
+  words in a named paragraph style) in the look of their styles, and read back with the styles the mark keeps for them
+  (E6.31 step 5c, D1479); a box restyled elsewhere has the plain style and the import says `look`. A box on a sheet is
+  still `object`. New export losses: `authorship`, and in ods `decorative` for a box.
+- A file written from a workbook with slides says which tabs are slides and at what size, in the custom property
+  "Claudia slides" (E6.31 step 5b, D1478); read back, such a tab is a slide while it has kept its name and has no cells,
+  else a sheet. Charts and pictures are written and read with their names.
+- A slide is a tab of its own in xlsx and ods, its objects where they are on it (E6.31 step 5, D1477): one unit of the
+  slide is one pixel of the tab by default; `workbook_to_xlsx` and `workbook_to_ods` take `slide_size`
+  (`SlideSize(px_per_unit)`). An object is pinned to the cell its corner is in and how far into it (xlsx
+  `colOff`/`rowOff`), or placed from the corner of the tab (ods). The tabs, charts and pictures of both formats come from
+  one plan (`_placed`, `_charts`, `_pictures`); the chart code both formats had twice is written once
+  (`definition_of`, `chart_change`, `hold_charts`, `FileChart`).
+- A chart is an object of the kind `chart` (D1476) in what is written and read back.
+
 ### Added
 - A workbook's slides in xlsx and ods (E6.31 step 2, D1473, `slide_plan`): each is written as a sheet without cells in
-  its place among the sheets, its objects scaled from 1600 × 900 to the size a chart tab is written at and hung at the
+  its place among the sheets, its objects scaled from 1600 × 900 to 720 × 432 (`slide_plan.SHEET_SIZE`) and hung at the
   nearest cell; the export losses say `slide` with its name. An edited import with a slide is not patched
   (`UnsupportedEdit`): it is written afresh.
 

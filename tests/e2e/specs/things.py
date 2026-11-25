@@ -107,8 +107,9 @@ def insert_chart(person: Person) -> None:
     page.keyboard.press("Shift+ArrowDown")
     page.keyboard.press("Shift+ArrowDown")
     person.menu("Edit", "Chart…")
-    page.check(".modal input[value=object]")
+    page.check(".modal input[value=sheet]")
     page.click(".modal button[type=submit]")
+    page.wait_for_selector(f"{OBJECTS['computes']} .js-plotly-plot .main-svg", state="attached")  # drawn: it is there
 
 
 INSERT = {

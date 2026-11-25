@@ -8,7 +8,7 @@ import { translate as t } from '../i18n'
 /** The scale as the server stores it: a percentage only for `percent`. */
 export type ScaleData = { kind: 'fit-width' } | { kind: 'fit-page' } | { kind: 'percent'; percent: number }
 
-/** The print setup of one sheet or chart tab, as `print_setup` sends it and `set_sheet_print` takes it. */
+/** The print setup of one sheet, as `print_setup` sends it and `set_sheet_print` takes it. */
 export interface SheetPrintData {
   orientation: 'portrait' | 'landscape'
   scale: ScaleData
@@ -93,7 +93,7 @@ export function withScale(setup: SheetPrintData, id: string): SheetPrintData {
   return scale ? { ...setup, scale } : setup
 }
 
-/** What of a workbook was printed, for the status line: how many sheets and chart tabs, how many slides, the name of
+/** What of a workbook was printed, for the status line: how many sheets, how many slides, the name of
  *  the first, and how it lies when it is the only one (`null` for more than one). */
 export interface PrintedTabs {
   sheets: number

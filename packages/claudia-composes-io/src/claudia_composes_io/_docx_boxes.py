@@ -31,13 +31,23 @@ from claudia_core import (
     VisualObject,
     box_body,
 )
-from claudia_odf_io import LossLog, xml_safe
+from claudia_odf_io import BoxLook, LossLog, default_name, look_of, xml_safe
+from claudia_opc_io import (
+    ANGLE,
+    DECORATIVE_URI,
+    EMU_PER_PIXEL,
+    PRESET,
+    SHAPE_OF,
+    is_decorative,
+    look_in,
+    outline,
+    solid,
+    turn_of,
+)
 
-from ._boxes import UNKNOWN, BoxLook, all_boxes, look_of, shown_words
+from ._boxes import all_boxes, shown_words
 from ._docx_pictures import (
-    _DECORATIVE_URI,
     _NS,
-    EMU,
     PictureWriter,
     _escape,
     _mark_decorative,
@@ -59,15 +69,11 @@ from ._wrap import (
 _BOX_URI = "http://schemas.microsoft.com/office/word/2010/wordprocessingShape"
 _MC = "http://schemas.openxmlformats.org/markup-compatibility/2006"
 _SPACE = {**_NS, "wps": "http://schemas.microsoft.com/office/word/2010/wordprocessingShape", "mc": _MC}
-#: Word's name of the outline of each shape of the model, and back.
-_PRESET = {"circle": "ellipse", "rectangle": "rect", "triangle": "triangle"}
-_SHAPE_OF = {word: ours for ours, word in _PRESET.items()}
 #: The ids of the object styles of boxes the model has with the name Word shows for their words, for import.
 _WORDS_STYLE = {
     **{style.name: style.id for style in BUILTIN_STYLES if style.kind == "paragraph"},
     **{word: ours for ours, word in WORD_NAMES.items()},
 }
-_ANGLE = 60000
 
 
 def _wps(name: str) -> str:
@@ -89,7 +95,6 @@ _SHAPES = _path(
     + "']/wps:wsp"
 )
 _DOC_PR = _path("./wp:docPr")
-_DECORATIVE = _path("./a:extLst/a:ext/adec:decorative/@val")
 _TRANSFORM = _path("./wps:spPr/a:xfrm")
 _GEOMETRY = _path("./wps:spPr/a:prstGeom/@prst")
 _CONTENT = _path("./wps:txbx/w:txbxContent")
@@ -118,18 +123,6 @@ def _first(found: list[Any]) -> Any:  # noqa: ANN401
     return found[0] if found else None
 
 
-def _turn_of(transform: Any) -> int | None:  # noqa: ANN401
-    """The whole degrees (clockwise, 0 to 359) a ``a:xfrm`` turns by; ``None`` when it flips the shape."""
-    if transform is None:
-        return 0
-    if transform.get("flipH") in ("1", "true") or transform.get("flipV") in ("1", "true"):
-        return None
-    try:
-        return round(int(transform.get("rot", "0")) / _ANGLE) % 360
-    except ValueError:
-        return 0
-
-
 def _words_of(content: Any) -> tuple[str, str | None] | None:  # noqa: ANN401
     """``(the words, the name of their style)`` of a ``w:txbxContent`` that holds one paragraph of plain runs; ``None``
     for anything else (more paragraphs, a table, a field)."""
@@ -147,45 +140,9 @@ def _words_of(content: Any) -> tuple[str, str | None] | None:  # noqa: ANN401
     return "".join(words), None if style is None else style.get(qn("w:val"))
 
 
-def _colour(properties: Any, tag: str) -> tuple[int, int, int] | None:  # noqa: ANN401
-    """The colour of the fill (``tag`` ``a:solidFill``) of ``properties``: ``None`` for none, :data:`UNKNOWN` for one
-    that is not plain, or absent where the shape's own style would say."""
-    if properties is None or properties.find(qn("a:noFill")) is not None:
-        return None
-    fill = properties.find(qn(tag))
-    if fill is None:
-        return None
-    plain = fill.find(qn("a:srgbClr"))
-    if plain is None or not (value := plain.get("val", "")) or len(value) != 6:
-        return UNKNOWN
-    try:
-        return int(value[0:2], 16), int(value[2:4], 16), int(value[4:6], 16)
-    except ValueError:
-        return UNKNOWN
-
-
 def _look_of_file(shape: Any) -> BoxLook:  # noqa: ANN401
     """The fill and the line a ``wps:wsp`` says it has."""
-    properties = shape.find(_wps("spPr"))
-    styled = shape.find(_wps("style")) is not None
-    fill = _colour(properties, "a:solidFill")
-    if (
-        styled
-        and properties is not None
-        and not any(properties.find(qn(tag)) is not None for tag in ("a:solidFill", "a:noFill"))
-    ):
-        fill = UNKNOWN  # (the fill the style of the shape gives it)
-    outline = None if properties is None else properties.find(qn("a:ln"))
-    line = _colour(outline, "a:solidFill")
-    if styled and outline is None:
-        line = UNKNOWN
-    width = 0
-    if line is not None and outline is not None:
-        try:
-            width = int(outline.get("w", "0"))
-        except ValueError:
-            width = 0
-    return BoxLook(fill, line, width)
+    return BoxLook(*look_in(shape.find(_wps("spPr")), styled=shape.find(_wps("style")) is not None))
 
 
 def held_box(drawing: Any) -> tuple[str | None, tuple[int, int], int, str, bool, str, str | None, BoxLook] | None:  # noqa: ANN401
@@ -197,10 +154,10 @@ def held_box(drawing: Any) -> tuple[str | None, tuple[int, int], int, str, bool,
         return None
     shape = shapes[0]
     extent = frames[0].find(qn("wp:extent"))
-    rotation = _turn_of(_first(_TRANSFORM(shape)))
+    rotation = turn_of(_first(_TRANSFORM(shape)))
     preset = _first(_GEOMETRY(shape))
     content = _first(_CONTENT(shape))
-    if extent is None or rotation is None or content is None or preset not in _SHAPE_OF:
+    if extent is None or rotation is None or content is None or preset not in SHAPE_OF:
         return None
     words = _words_of(content)
     if words is None:
@@ -212,12 +169,12 @@ def held_box(drawing: Any) -> tuple[str | None, tuple[int, int], int, str, bool,
         (flagged is not None and flagged.get("txBox") in ("1", "true")) or (look.fill is None and look.line is None)
     )
     size = (pixels(extent.get("cx")), pixels(extent.get("cy")))
-    ours = None if is_box else _SHAPE_OF[preset]
+    ours = None if is_box else SHAPE_OF[preset]
     if min(size) < MIN_OBJECT_SIZE or (ours == "circle" and abs(size[0] - size[1]) > ASPECT_TOLERANCE):
         return None
     properties = _first(_DOC_PR(frames[0]))
     description = properties.get("descr", "") if properties is not None else ""
-    decorative = properties is not None and "1" in _DECORATIVE(properties)
+    decorative = is_decorative(properties)
     return ours, size, rotation, description, decorative, words[0], words[1], look
 
 
@@ -274,21 +231,21 @@ class BoxWriter:
     def run(self, obj: VisualObject) -> Any:  # noqa: ANN401
         """The ``w:r`` that carries the drawing of ``obj``."""
         body = obj.body
-        width, height = body.w * EMU, body.h * EMU
+        width, height = body.w * EMU_PER_PIXEL, body.h * EMU_PER_PIXEL
         number, self.ids.next_id = self.ids.next_id, self.ids.next_id + 1
-        title = f"{'Text box' if body.kind == 'text' else 'Shape'} {number}"
+        title = default_name(body, number)
         alt = "" if body.decorative else _escape(body.description)
         decorative = (
-            f'<a:extLst><a:ext uri="{_DECORATIVE_URI}"><adec:decorative xmlns:adec="{_NS["adec"]}" val="1"/></a:ext>'
+            f'<a:extLst><a:ext uri="{DECORATIVE_URI}"><adec:decorative xmlns:adec="{_NS["adec"]}" val="1"/></a:ext>'
             "</a:extLst>"
             if body.decorative
             else ""
         )
-        turn = f' rot="{body.rotation * _ANGLE}"' if body.rotation else ""
+        turn = f' rot="{body.rotation * ANGLE}"' if body.rotation else ""
         look = look_of(self.model, body)
-        fill = _solid(look.fill)
-        line = f'<a:ln w="{look.width}">{_solid(look.line)}</a:ln>' if look.line else "<a:ln><a:noFill/></a:ln>"
-        preset = "rect" if body.kind == "text" else _PRESET[body.shape or "rectangle"]
+        fill = solid(look.fill)
+        line = outline(look.line, look.width)
+        preset = "rect" if body.kind == "text" else PRESET[body.shape or "rectangle"]
         box = ' txBox="1"' if body.kind == "text" else ""
         centre = "ctr" if body.kind == "shape" else "t"
         xml = (
@@ -325,13 +282,6 @@ class BoxWriter:
         return element
 
 
-def _solid(colour: tuple[int, int, int] | None) -> str:
-    """The fill of a shape for ``colour`` (``None``: none)."""
-    if colour is None:
-        return "<a:noFill/>"
-    return f'<a:solidFill><a:srgbClr val="{colour[0]:02X}{colour[1]:02X}{colour[2]:02X}"/></a:solidFill>'
-
-
 # ------------------------------------------------------------------------------------------------------ changing
 def _same_but(before: ObjectBody, after: ObjectBody) -> bool:
     """Do ``before`` and ``after`` differ in nothing but what :func:`restyle` can change in place?"""
@@ -348,7 +298,7 @@ def restyle(box: FileBox, before: ObjectBody, after: ObjectBody, document: Any, 
         properties.set("descr", "" if after.decorative else after.description)
         _mark_decorative(properties, after.decorative)
     if (before.w, before.h) != (after.w, after.h):
-        cx, cy = str(after.w * EMU), str(after.h * EMU)
+        cx, cy = str(after.w * EMU_PER_PIXEL), str(after.h * EMU_PER_PIXEL)
         frame.find(qn("wp:extent")).set("cx", cx)
         frame.find(qn("wp:extent")).set("cy", cy)
         transform = _first(_TRANSFORM(shape))
@@ -357,7 +307,7 @@ def restyle(box: FileBox, before: ObjectBody, after: ObjectBody, document: Any, 
             extent.set("cy", cy)
     if before.rotation != after.rotation and (transform := _first(_TRANSFORM(shape))) is not None:
         if after.rotation:
-            transform.set("rot", str(after.rotation * _ANGLE))
+            transform.set("rot", str(after.rotation * ANGLE))
         elif "rot" in transform.attrib:
             del transform.attrib["rot"]
     if before.paragraph != after.paragraph and after.paragraph is not None:

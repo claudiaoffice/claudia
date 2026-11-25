@@ -167,6 +167,11 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--no-list", action="store_true", help="do not serve the list of documents (/api/docs)")
     parser.add_argument(
+        "--api-docs",
+        action="store_true",
+        help="serve the interactive API description at /api/swagger (its page loads a script from a CDN)",
+    )
+    parser.add_argument(
         "--fonts",
         action="append",
         default=[],
@@ -801,6 +806,7 @@ def make_plan(argv: list[str] | None = None) -> Plan:
         proxy_hops=_proxy_hops(args),
         web_dir=args.web,
         list_documents=not args.no_list,
+        api_docs=args.api_docs,
         admin=admin,
         fonts=fonts,
         hyphenation=hyphenation,

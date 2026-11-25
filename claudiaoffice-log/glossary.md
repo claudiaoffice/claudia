@@ -191,6 +191,7 @@ _avoid_: download, save as
 **Exit record**
 The sealed list of everything that left a document in a readable form (an export, a print, a PDF): who, when, what and which parts. It is not part of the history, and nothing removes an entry from it.
 _avoid_: audit log, export log, history
+_German_: Export-Log (the owner's word, 2026-11-24; the English "export log" stays avoided)
 
 **Original**
 The file an imported document was made from, kept sealed inside the document if the person chose to keep it.

@@ -25,3 +25,8 @@ One exception, decided by the owner on 2026-11-16: when commands moved from an a
 structure every app shares (`composes.SetListItem`, `composes.InsertText` and `composes.DeleteText` became
 `core.SetListItem`, `core.InsertText` and `core.DeleteText`), the old kinds were dropped, not kept as aliases. A command
 log with them no longer replays; snapshots still open.
+
+Before the first stable release the owner also chose renames and removals without an upgrade (coding standards §4):
+the glossary's words in the code (E1.18, D1430, D1433, D1434, D1476) and the chart tabs of computes (E6.31, D1475). A
+document, log or file written with the old names or with chart tabs does not open; the decision and the changelog say
+which.

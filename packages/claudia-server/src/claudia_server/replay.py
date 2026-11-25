@@ -50,7 +50,6 @@ VIEW_READS = frozenset(
         "cells",
         "sizes",
         "charts",
-        "diagrams",
         "chart_figure",
         "names",
         "number_formats",
@@ -168,7 +167,7 @@ def add_thing_history_method(table: MethodTable) -> None:
 
     @table.method("thing_last_seen", "id:str", reads="history")
     def thing_last_seen(ctx: Context, *, id: str) -> dict:  # noqa: A002 - the wire name
-        """Where a thing (an object, slide, sheet or chart tab, by id) is in the history of the line the document is on
+        """Where a thing (an object, slide or sheet, by id) is in the history of the line the document is on
         (D551): `{present, revision}`. `present` is whether it is there now; `revision` is the last step after which it
         was, `null` if it never was. A tag in the chat to something deleted since takes a replay there."""
         model = ctx.document.model

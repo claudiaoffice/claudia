@@ -210,19 +210,19 @@ def test_a_cell_that_shows_a_result_cannot_be_typed_into(book):
 def test_a_chart_may_read_a_named_table_and_follows_it(book):
     define(book)
     given = {"kind": "bar", "source": "Sales", "source_scope": None}
-    diagram = call(book, "define_diagram", {"definition": given})["diagram"]
-    (listed,) = call(book, "diagrams")
+    chart = call(book, "define_chart", {"definition": given})["chart"]
+    (listed,) = call(book, "charts")
     assert listed["source"] == "Sales" and "range" not in listed
-    first = call(book, "chart_figure", {"diagram": diagram})["figure"]
+    first = call(book, "chart_figure", {"chart": chart})["figure"]
     assert first["data"][0]["x"] == ["North", "South"]
     typed(book, "s1", [(3, 0, "East"), (3, 1, "6"), (3, 2, "5")])  # typed right below: the table grows
-    again = call(book, "chart_figure", {"diagram": diagram})["figure"]
+    again = call(book, "chart_figure", {"chart": chart})["figure"]
     assert again["data"][0]["x"] == ["North", "South", "East"]
 
 
 def test_a_chart_cannot_read_a_name_that_does_not_exist(book):
     with pytest.raises(RequestError) as caught:
-        call(book, "define_diagram", {"definition": {"kind": "bar", "source": "Nope"}})
+        call(book, "define_chart", {"definition": {"kind": "bar", "source": "Nope"}})
     assert caught.value.code == "command_error" and "Nope" in str(caught.value)
 
 

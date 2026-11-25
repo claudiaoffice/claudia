@@ -36,11 +36,9 @@ from claudia_core import (
     Refusal,
     Region,
     Requirements,
-    Run,
     SchemeBook,
     SetLanguage,
     StyleBook,
-    TextCommand,
     TextStructure,
     VisualObject,
     builtin_palette,
@@ -181,7 +179,7 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
             "times": dict(self.times),
             "styles": self.styles.to_data(),
             "palette": self.palette.to_data(),
-            **self.assets_to_data(),  # images, shapes, diagrams, containers, tables (D1431)
+            **self.assets_to_data(),  # images, shapes, charts, containers, tables (D1431)
             "objects": self.objects_to_data(),
             "print_setup": self.print_setup.to_data(),
             "language": self.language,
@@ -342,20 +340,7 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         """The object whose words they are."""
         return self.selection_of(paragraph_id)
 
-    # -- typing (claudia_core.TypingHost): the words of an object, character by character (step G) ----------------
-    def insert_text(
-        self, paragraph_id: str, offset: int, text: str, runs: list[Run], fields: tuple[Field, ...] = ()
-    ) -> tuple[object, ...]:
-        """Type into the words of an object; the event that tells the clients."""
-        return (self.insert_object_text(paragraph_id, offset, text, runs, fields),)
-
-    def remove_text(
-        self, paragraph_id: str, start: int, end: int
-    ) -> tuple[str, list[Run], tuple[Field, ...], tuple[object, ...]]:
-        """Cut characters out of the words of an object."""
-        text, runs, fields, event = self.remove_object_text(paragraph_id, start, end)
-        return text, runs, fields, (event,)
-
+    # -- fields (step H); typing is the core's (ObjectModel.insert_text and the rest) ---------------------------
     def fields_of(self, paragraph_id: str) -> tuple[Field, ...]:
         """The fields in the words of an object (step H)."""
         return self.object_fields(paragraph_id)
@@ -363,14 +348,6 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
     def put_fields(self, paragraph_id: str, fields: tuple[Field, ...]) -> tuple[object, ...]:
         """Give the words of an object other fields; the event that tells the clients."""
         return (self.put_object_fields(paragraph_id, fields),)
-
-    def text_regions(self, paragraph_id: str, start: int, end: int) -> tuple[Region, ...]:
-        """The object whose words change."""
-        return self.selection_of(paragraph_id)
-
-    def text_moved(self, command: TextCommand) -> tuple[object, ...]:
-        """Nothing on a slide hangs from words: nothing follows."""
-        return ()
 
     def settle(self, ctx) -> None:
         """Tell the clients which labels changed: a text box taken away may renumber every one after it."""

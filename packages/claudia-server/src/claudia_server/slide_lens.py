@@ -30,7 +30,7 @@ KINDS = {
     "text": "text box",
     "shape": "shape",
     "image": "picture",
-    "diagram": "chart",
+    "chart": "chart",
     "container": "container (a picture made from text, such as a formula or a diagram)",  # D390
 }
 

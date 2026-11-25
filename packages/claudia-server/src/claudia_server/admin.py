@@ -29,6 +29,8 @@ import re
 import unicodedata
 from dataclasses import dataclass
 
+from .i18n import msg
+
 MIN_ADMIN_PASSWORD = 8
 _NAME = re.compile(r"[\w .@-]{1,40}")
 _DECOY_PASSWORD = "no such administrator"
@@ -49,7 +51,7 @@ class AdminAccount:
 
     def __post_init__(self):
         if not _NAME.fullmatch(self.name):
-            raise ValueError(f"invalid administrator name {self.name!r}")
+            raise ValueError(msg("invalid administrator name “{name}”", name=self.name))
 
 
 @dataclass(frozen=True)
@@ -85,7 +87,7 @@ class AdminDirectory:
         account = AdminAccount(name, added)
         key = normalized(name)
         if key in self._admins:
-            raise ValueError(f"{name!r} is already an administrator")
+            raise ValueError(msg("“{name}” is already an administrator", name=name))
         salt = os.urandom(16)
         self._admins[key] = _Record(account, salt, self._hash(password, salt))
         return account
@@ -94,7 +96,7 @@ class AdminDirectory:
         """``ValueError`` if :meth:`add` would refuse ``name`` and ``password`` for their form (a name taken aside)."""
         AdminAccount(name, "")
         if len(password) < MIN_ADMIN_PASSWORD:
-            raise ValueError(f"the password needs at least {MIN_ADMIN_PASSWORD} characters")
+            raise ValueError(msg("the password needs at least {count} characters", count=MIN_ADMIN_PASSWORD))
 
     def clear(self) -> None:
         """Forget every administrator (``--reset-administrators``, D1375): the one way past :meth:`remove`'s rule
@@ -108,7 +110,7 @@ class AdminDirectory:
         if key not in self._admins:
             raise KeyError(name)
         if len(self._admins) <= 1:
-            raise ValueError("the last administrator cannot be removed")
+            raise ValueError(msg("the last administrator cannot be removed"))
         del self._admins[key]
 
     def verify(self, name: object, password: object) -> AdminAccount | None:
@@ -130,7 +132,7 @@ class AdminDirectory:
         if key not in self._admins:
             raise KeyError(name)
         if len(password) < MIN_ADMIN_PASSWORD:
-            raise ValueError(f"the password needs at least {MIN_ADMIN_PASSWORD} characters")
+            raise ValueError(msg("the password needs at least {count} characters", count=MIN_ADMIN_PASSWORD))
         record = self._admins[key]
         salt = os.urandom(16)
         self._admins[key] = _Record(record.account, salt, self._hash(password, salt))

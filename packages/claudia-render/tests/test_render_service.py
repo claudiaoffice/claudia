@@ -138,6 +138,29 @@ async def test_a_new_version_of_the_plugin_does_not_find_the_old_pictures(tmp_pa
 
 
 @runs_in_a_loop
+async def test_a_picture_is_drawn_again_when_what_the_plugin_draws_with_has_changed(tmp_path):
+    """CODE-54: the LaTeX container draws with the server's fonts; after a font is replaced, a formula drawn before
+    is drawn again with the new one instead of being taken from the cache."""
+
+    class WithFonts(CliPlugin):
+        fonts = "catalogue one"
+
+        def cache_token(self) -> str:
+            return self.fonts
+
+    plugins = PluginRegistry()
+    plugin = WithFonts(parse_manifest(boxer_manifest()), tmp_path / "work")
+    plugins.register(plugin)
+    tools = ToolRegistry({"boxer": str(fake_tool(tmp_path / "bin", "boxer", BOXER))})
+    service = RenderService(plugins, tools, tmp_path / "service")
+    first = await service.render("boxer", "hello", {})
+    plugin.fonts = "catalogue two"
+    redrawn = await service.render("boxer", "hello", {})
+    again = await service.render("boxer", "hello", {})
+    assert (first.cached, redrawn.cached, again.cached) == (False, False, True)
+
+
+@runs_in_a_loop
 async def test_a_failure_is_not_remembered(tmp_path):
     service, _ = make(tmp_path)
     with pytest.raises(RenderFailed) as failed:

@@ -5,10 +5,17 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-24
+
 ### Changed
 - `ToolRegistry` takes its settings as a mapping or as a function that returns one. A function is asked again on
   every use, and the tools found under a table that has changed are looked for again, so a setting changed while a
   server runs takes effect at once (CODE-55).
+
+### Added
+- `Plugin.cache_token()`: what a picture depends on besides its text, settings and tools; part of the key under which
+  `RenderService` keeps it. `LatexPlugin` gives the font catalogue's digest, so a formula is drawn again after a font
+  is replaced (CODE-54).
 
 ## [0.2.0] - 2026-11-17
 

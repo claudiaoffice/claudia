@@ -14,7 +14,7 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
-from conftest import BROWSER, SHOTS
+from conftest import BROWSER, SHOTS, shot_name
 from live import server
 from playwright.sync_api import expect
 from pytest_bdd import given, parsers, scenarios, then, when
@@ -78,7 +78,7 @@ def admin(browser, request) -> Iterator[Admin]:
             made = Admin(browser, live.url, fake)
             yield made
             SHOTS.mkdir(parents=True, exist_ok=True)
-            slug = re.sub(r"\W+", "-", request.node.name)[:80]
+            slug = shot_name(request.node.name)
             with contextlib.suppress(Exception):
                 made.page.screenshot(path=str(SHOTS / f"{slug}.png"))
             errors = list(made.errors)

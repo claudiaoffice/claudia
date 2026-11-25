@@ -2,26 +2,19 @@
 // `:root[data-theme='dark']` without waiting on `prefers-color-scheme` alone (a person can still ask for dark on a
 // light system, or the reverse — the View menu item D120 asks for needs a tri-state: Light, Dark, or Match system).
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue' // only the Vue wiring at the end uses these
+import { safeStorage } from './storage'
 
 export type ThemeChoice = 'light' | 'dark' | 'system'
 const KEY = 'claudia.theme'
 const CHOICES: readonly ThemeChoice[] = ['light', 'dark', 'system']
 
 export function readStoredTheme(storage: Pick<Storage, 'getItem'> = safeStorage()): ThemeChoice {
-  try {
-    const value = storage.getItem(KEY)
-    return (CHOICES as readonly string[]).includes(value ?? '') ? (value as ThemeChoice) : 'system'
-  } catch {
-    return 'system'
-  }
+  const value = storage.getItem(KEY)
+  return (CHOICES as readonly string[]).includes(value ?? '') ? (value as ThemeChoice) : 'system'
 }
 
 export function storeTheme(choice: ThemeChoice, storage: Pick<Storage, 'setItem'> = safeStorage()): void {
-  try {
-    storage.setItem(KEY, choice)
-  } catch {
-    /* private window: nothing to remember, the choice still applies for this visit */
-  }
+  storage.setItem(KEY, choice)
 }
 
 /** What `choice` resolves to right now, given whether the system is in dark mode. */
@@ -34,15 +27,6 @@ export function resolvedTheme(choice: ThemeChoice, systemPrefersDark: boolean): 
 export function applyTheme(root: { setAttribute(name: string, value: string): void; removeAttribute(name: string): void }, resolved: 'light' | 'dark'): void {
   if (resolved === 'dark') root.setAttribute('data-theme', 'dark')
   else root.removeAttribute('data-theme')
-}
-
-function safeStorage(): Pick<Storage, 'getItem' | 'setItem'> {
-  try {
-    return localStorage
-  } catch {
-    const memory = new Map<string, string>()
-    return { getItem: (k) => memory.get(k) ?? null, setItem: (k, v) => void memory.set(k, v) }
-  }
 }
 
 // ------------------------------------------------------------------------------------------------------- Vue wiring

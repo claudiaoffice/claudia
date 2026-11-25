@@ -6,6 +6,21 @@ While the major version is 0, a minor version may break the API; every break is 
 
 ## [Unreleased]
 
+### Added
+- The words of an object are typed by the core (CODE-83): `ObjectModel.insert_text`, `remove_text`, `text_regions` and
+  `text_moved` (the `TypingHost` of `InsertText` and `DeleteText`), which creates had; a workbook's slides use them.
+  composes answers them itself.
+
+### Changed
+- **Breaking** — the chart names of E1.18 (D1476): the object kind `diagram` is `chart`, `DiagramDefinition` is
+  `ChartDefinition`, the asset kind `DIAGRAM` is `CHART` (stored under `charts`, event `chart`), `ObjectModel.diagrams`
+  is `charts`, `ObjectBody.diagram` is `.chart`, `diagram_from_data` and `blank_diagram` are `chart_from_data` and
+  `blank_chart`, the style slot of a chart is `chart` and its history label "Add chart"; `testing.diagram_object` is
+  `chart_object`. A stored document with the old names is not read (no upgrade).
+- **Breaking** — `ObjectModel.objects_change_holder` is `ObjectModel.may_change_holder(obj, new)` (E6.31 step 3,
+  D1475): whether this object, where it is now, may go to the holder of `new`; false by default. composes lets any
+  object go to another paragraph, computes a chart from a sheet to a slide and back.
+
 ## [0.37.0] - 2026-11-22
 
 ### Added

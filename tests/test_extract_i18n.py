@@ -165,7 +165,7 @@ def test_render_pot_is_sorted_and_deterministic():
     rendered = extract_i18n.render_pot(catalog)
     assert rendered == extract_i18n.render_pot(catalog)  # same input, same bytes
     assert rendered.index('msgid "Cancel"') < rendered.index('msgid "Save"')  # sorted by msgid
-    assert "#: a.py:1 a.py:3" in rendered  # occurrences sorted too
+    assert "#: a.py\n" in rendered  # the files, once each and sorted (not the lines: PROC-31)
     assert rendered.startswith(extract_i18n.HEADER)
 
 
@@ -251,3 +251,13 @@ def test_extract_python_finds_the_servers_msg_calls_with_their_parameters(tmp_pa
     found, problems = extract_i18n.extract_python(source)
     assert set(found) == {"{what}: at most {limit} cells", "plain"}
     assert [(p.line, "msg(...)" in p.reason) for p in problems] == [(2, True)]
+
+
+# ------------------------------------------------------------------------------------------------- the template
+def test_moving_a_translated_text_to_another_line_leaves_the_template_as_it_was():
+    """PROC-31: every merge that moved a line of a file with translated texts changed ``po/claudia.pot`` (only its
+    ``#:`` places), and the i18n check failed on it. The template names the files a text is in, not the lines."""
+    before = extract_i18n.render_pot({"Save": ["web/a.vue:12", "web/a.vue:40", "web/b.ts:3"]})
+    after = extract_i18n.render_pot({"Save": ["web/a.vue:15", "web/a.vue:41", "web/b.ts:9"]})
+    assert before == after
+    assert '\n#: web/a.vue web/b.ts\nmsgid "Save"\n' in after

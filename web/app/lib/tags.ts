@@ -5,12 +5,11 @@
 
 import type { ObjectKind } from '@claudia/layout'
 
-/** What can be named, by what it is: an object's own kind, or the slide, sheet, chart tab or named range it is. */
+/** What can be named, by what it is: an object's own kind, or the slide, sheet or named range it is. */
 export type ThingKind =
   | ObjectKind
   | 'slide'
   | 'sheet'
-  | 'chart'
   | 'range'
   // the paragraphs of a text (D554)
   | 'heading'

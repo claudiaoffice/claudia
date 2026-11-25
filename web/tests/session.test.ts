@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { STYLE_MODEL } from './style-model.fixture'
 import { ProtocolError, type CloseHandler, type EventHandler, type LinkLike, type Welcome } from '~/lib/protocol'
-import { Session } from '~/lib/session'
+import { chartRange, Session } from '~/lib/session'
 
 const ASSET = { id: 'a'.repeat(64), format: 'gif', width: 20, height: 10, animated: false, data: 'AA==', first_frame: null }
 const IMPORT = { asset: ASSET.id, alt: 'a chart', imported_by: 'ann', imported_at: '2026-11-07T10:00:00.000Z', source: 'disk', source_name: 'chart.gif', source_path: '/Users/ann/chart.gif' }
@@ -132,7 +132,7 @@ function server(link: FakeLink) {
     ping: () => ({ revision: 'main:3', branch: 'main' }),
     sizes: () => ({ revision: 'main:3', rows: [[3, 52]], cols: [] }),
     resize_lines: () => ({ revision: 'main:4' }),
-    diagrams: () => [],
+    charts: () => [],
     charts: () => [],
     names: () => ({ revision: 'main:3', names: [] }),
     pivots: () => ({ revision: 'main:3', pivots: [] }),
@@ -1427,7 +1427,7 @@ describe('names, tables and queries (E6.5)', () => {
   it('asks again for the figure of a chart that reads a name when any cell changes', async () => {
     const { session, link } = await opened()
     link.handlers.chart_figure = () => ({ revision: 'main:3', figure: { data: [], layout: {} } })
-    link.push('diagram', { id: 'c1', definition: { format: 1, id: 'c1', kind: 'bar', source: 'Sales', source_scope: null } })
+    link.push('chart', { id: 'c1', definition: { format: 1, id: 'c1', kind: 'bar', source: 'Sales', source_scope: null } })
     await session.ensureFigure('c1')
     expect(session.figureOf('c1')).not.toBeNull()
     link.push('cells', { sheet: 's2', positions: [[40, 40]], cells: [] })
@@ -1778,14 +1778,13 @@ describe('the language of the server’s own messages (D323)', () => {
 })
 
 describe('tags to things in a workbook (E5.20, D551)', () => {
-  it('offers the sheet in sight, the chart tabs and the named things floating on the sheet', async () => {
+  it('offers the sheet in sight and the named things floating on the sheet', async () => {
     const link = new FakeLink()
     server(link)
     link.handlers.sheets = () => [
       { id: 's1', name: 'Budget', rows: 2, cols: 2 },
       { id: 's2', name: 'Plan', rows: 2, cols: 2 },
     ]
-    link.handlers.charts = () => [{ id: 'c1', name: 'Revenue', spec_id: 'd1' }]
     link.handlers.objects = (p: any) => ({
       revision: 'main:3',
       sheet: p.sheet,
@@ -1795,7 +1794,7 @@ describe('tags to things in a workbook (E5.20, D551)', () => {
     })
     const session = new Session(() => link, { retryDelays: [0], storage: memoryStorage() })
     await session.open()
-    expect((await session.taggableThings()).map((t) => t.name).sort()).toEqual(['Budget', 'Logo s1', 'Revenue'])
+    expect((await session.taggableThings()).map((t) => t.name).sort()).toEqual(['Budget', 'Logo s1'])
     await session.goToThing('s2-pic')
     expect(session.state.activeSheet).toBe('s2')
     expect(session.state.pointed).toMatchObject({ id: 's2-pic', holder: 's2' })
@@ -1979,5 +1978,50 @@ describe('slides among the sheets (E6.31, D1471, D1473)', () => {
   it('keeps working with a server from before slides: the tabs are its sheets', async () => {
     const { session } = await opened()
     expect(session.state.tabs).toEqual([{ kind: 'sheet', id: 's1', name: 'Budget' }])
+  })
+})
+
+describe('a chart becomes a slide (E6.31, D1475)', () => {
+  const DRAFT = { range: chartRange('s1', 0, 0, 3, 1), series_in: 'columns' as const, header_row: true, title: '', x_title: '', y_title: '', legend: true, gridlines: true }
+
+  it('makes a chart as a new slide after the tab shown, on the slide shown or on the sheet shown, in one call', async () => {
+    const { session, link } = await opened()
+    link.handlers.insert_chart = (p: any) => ({ revision: 'main:4', object: 'o9', slide: p.show_as === 'sheet' ? null : 'p1', chart: 'g1' })
+    expect(await session.insertChart(DRAFT, 'slide', 'Sales')).toEqual({ object: 'o9', slide: 'p1' })
+    expect(link.last('insert_chart')).toMatchObject({ definition: { kind: 'bar', ...DRAFT }, show_as: 'slide', place: { after: 's1' }, name: 'Sales' })
+    session.state.activeSlide = 'p1'
+    await session.insertChart(DRAFT, 'slide', '')
+    expect(link.last('insert_chart')).toMatchObject({ place: { after: 'p1' } })
+    await session.insertChart(DRAFT, 'on_slide', 'Sales 2')
+    expect(link.last('insert_chart')).toMatchObject({ show_as: 'on_slide', place: { slide: 'p1' } })
+    session.state.activeSlide = ''
+    expect(await session.insertChart(DRAFT, 'sheet', 'Sales 3', { row: 5, col: 1, w: 480, h: 300 })).toEqual({ object: 'o9', slide: null })
+    expect(link.last('insert_chart')).toMatchObject({ show_as: 'sheet', place: { sheet: 's1', row: 5, col: 1, w: 480, h: 300 } })
+  })
+
+  it('says why a chart was not made, and makes nothing', async () => {
+    const { session, link } = await opened()
+    link.handlers.insert_chart = () => {
+      throw new ProtocolError('command_error', 'There is already a sheet called "Sales".')
+    }
+    expect(await session.insertChart(DRAFT, 'slide', 'Sales')).toBeNull()
+    expect(session.state.notice?.text).toContain('already a sheet called')
+  })
+
+  it('moves a chart of a sheet to a new slide and gives its id', async () => {
+    const { session, link } = await opened()
+    link.handlers.move_to_slide = () => ({ revision: 'main:4', slide: 'p1' })
+    expect(await session.moveToSlide('o9')).toBe('p1')
+    expect(link.last('move_to_slide')).toMatchObject({ object: 'o9' })
+  })
+
+  it('asks the server for the next free name, and has none from an older one', async () => {
+    const { session, link } = await opened()
+    link.handlers.free_name = (p: any) => ({ name: p.kind === 'chart' ? 'Chart 2' : '?' })
+    expect(await session.freeName('chart')).toBe('Chart 2')
+    link.handlers.free_name = () => {
+      throw new ProtocolError('unknown_method', 'free_name')
+    }
+    expect(await session.freeName('chart')).toBeNull()
   })
 })

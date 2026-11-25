@@ -21,6 +21,11 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
   (`text:continue-list`), with a list style of the scheme, and reads it back. Patching a kept pptx writes the
   markers that changed; a kept odp whose lists changed is written anew.
 
+### Changed
+- odp and pptx take a box's elements, outlines, graphic styles and DrawingML marks from `claudia_odf_io` and
+  `claudia_opc_io` (CODE-84, D1480). An odp shape's line width is written in points.
+- The loss of a chart on a slide is `chart` (was `diagram`, D1476).
+
 ### Fixed
 - Everything in a file that anybody may have written is read through `claudia_opc_io.parse_xml` (no entity is expanded, none fetched) and unpacked only after `claudia_opc_io.check_package` has judged its size (SEC-15); the pptx reader's presentation, slide and theme parts, and the unpacking of a kept pptx, now use them.
 - `pptx_to_slides` and `odp_to_slides` read the fonts of the deck (E3.13, bug 2): Body text takes the deck's body font

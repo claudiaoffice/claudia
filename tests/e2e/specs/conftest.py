@@ -18,6 +18,7 @@ How a scenario becomes a test, and what is on purpose:
 from __future__ import annotations
 
 import contextlib
+import hashlib
 import itertools
 import json
 import os
@@ -228,13 +229,16 @@ class Person:
 
     def create(self) -> None:
         page = self.page
-        page.goto(self.url + "/", wait_until="domcontentloaded")
+        with page.expect_response(lambda answer: answer.url.endswith("/api/docs")) as listing:
+            page.goto(self.url + "/", wait_until="domcontentloaded")
         page.fill("input[name=document]", self.document)
         page.fill("input[name=user]", self.name.lower())
         page.fill("input[name=password]", self.password)
-        kinds = page.locator(".kinds")  # a server of several apps asks which kind of document (D430)
-        if kinds.count():
-            kinds.get_by_role("radio", name=KIND_WORDS[self.app]).click()
+        # A server of several apps asks which kind of document (D430). Whether it does is in its list, not in what the
+        # page shows so far: the choice appears once the list has come, which on a busy machine was after the form had
+        # been filled, and Create then asked for a kind instead of making the document (PROC-55).
+        if len(listing.value.json().get("apps", [])) > 1:
+            page.locator(".kinds").get_by_role("radio", name=KIND_WORDS[self.app]).click()
         page.click("text=Create document")
         page.wait_for_selector("[data-testid=recovery-key]")
         page.check(".modal input[type=checkbox]")
@@ -387,11 +391,27 @@ def suite_world(browser, suite, request) -> Iterator[World]:
     yield from looked_after(World(browser, suite), request)
 
 
+def shot_name(test: str) -> str:
+    """The file name (without the person and extension) of a test's screenshots: the test's name, and for a long one
+    the start of the test's name, its example (``[...]``, which says the app) and a short digest of the whole, so that
+    no two tests share a file (PROC-56). Plain ASCII, so any file system takes it."""
+
+    def slug(text: str) -> str:
+        return re.sub(r"\W+", "-", text, flags=re.ASCII).strip("-")
+
+    if len(slug(test)) <= 80:
+        return slug(test)
+    name, _, example = test.partition("[")
+    example = slug(example)[:50]
+    digest = hashlib.sha256(test.encode()).hexdigest()[:8]
+    return "-".join(part for part in (slug(name)[: 70 - len(example)], example, digest) if part)
+
+
 def looked_after(made: World, request) -> Iterator[World]:
     """Hand the world to the scenario; afterwards a screenshot of every page, and no errors in any browser console."""
     yield made
     SHOTS.mkdir(parents=True, exist_ok=True)
-    slug = re.sub(r"\W+", "-", request.node.name)[:80]
+    slug = shot_name(request.node.name)
     for name, person in made.people.items():
         with contextlib.suppress(Exception):  # a page that is gone has no picture; the test result is what matters
             person.page.screenshot(path=str(SHOTS / f"{slug}-{name.lower()}.png"))

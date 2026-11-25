@@ -10,6 +10,8 @@ module turns that into ``meta.xml``.
   splicing, so what the file says that Claudia has no use for -- the program that made it, how long it was edited, its
   statistics, the keywords, the user-defined properties -- stays exactly as it was.
 * :func:`update_package_meta` does that for the parts of a whole package, also when the file has no ``meta.xml``.
+* :func:`user_defined` reads the text properties a file defines (``meta:user-defined``), which :func:`new_meta` writes
+  for a new file (E6.31, D1478).
 
 Dates are written as UTC to the second, with a ``Z``: LibreOffice reads that (and any offset) and says so in every
 format it converts to. :func:`odf_date` is the one place that turns the server's times into them."""
@@ -17,6 +19,7 @@ format it converts to. :func:`odf_date` is the one place that turns the server's
 from __future__ import annotations
 
 import copy
+from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import cast
 from xml.sax.saxutils import escape
@@ -33,6 +36,7 @@ from .splice import OdfError, XmlPart
 GENERATOR = "Claudia"
 _DECLARATION = b'<?xml version="1.0" encoding="UTF-8"?>\n'
 _MANIFEST = "META-INF/manifest.xml"
+_QUOTE = {'"': "&quot;"}
 
 
 @dataclass(frozen=True)
@@ -83,10 +87,15 @@ def _fields(info: DocumentInfo, *, with_generator: bool) -> list[tuple[str, str,
     return [(prefix, local, value) for prefix, local, value in wanted if value is not None]
 
 
-def new_meta(info: DocumentInfo) -> bytes:
-    """The ``meta.xml`` of a new file: what ``info`` knows, and Claudia as the generator. The same input always gives
-    the same bytes."""
+def new_meta(info: DocumentInfo, properties: Mapping[str, str] | None = None) -> bytes:
+    """The ``meta.xml`` of a new file: what ``info`` knows, Claudia as the generator and the text ``properties`` the
+    file defines, by name. The same input always gives the same bytes."""
     body = "".join(_field(prefix, local, value) for prefix, local, value in _fields(info, with_generator=True))
+    body += "".join(
+        f'<meta:user-defined meta:name="{escape(xml_safe(name), _QUOTE)}" meta:value-type="string">'
+        f"{escape(xml_safe(value))}</meta:user-defined>"
+        for name, value in (properties or {}).items()
+    )
     return (
         _DECLARATION
         + f'<office:document-meta xmlns:office="{NS["office"]}" xmlns:meta="{NS["meta"]}" xmlns:dc="{NS["dc"]}" '
@@ -128,6 +137,20 @@ def read_info(meta_xml: bytes) -> DocumentInfo:
         date("dc", "date"),
         text("dc", "creator"),
     )
+
+
+def user_defined(meta_xml: bytes) -> dict[str, str]:
+    """The text properties a ``meta.xml`` defines, by name (a property of another type is left out); none for one that
+    is not XML."""
+    try:
+        meta = _meta_element(etree.fromstring(meta_xml, etree.XMLParser(resolve_entities=False, no_network=True)))
+    except (etree.XMLSyntaxError, OdfError):
+        return {}
+    return {
+        prop.get(qname("meta:name"), ""): prop.text or ""
+        for prop in meta.iterfind("meta:user-defined", NS)
+        if prop.get(qname("meta:value-type"), "string") == "string" and prop.get(qname("meta:name"))
+    }
 
 
 def update_meta(meta_xml: bytes | None, info: DocumentInfo) -> bytes:

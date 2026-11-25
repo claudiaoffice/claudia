@@ -8,8 +8,10 @@ from claudia_computes import AddSheet, AddSlide, RemoveSheet, RemoveSlide, Tab, 
 from claudia_core import (
     AddObject,
     CommandLog,
+    DeleteText,
     DescribeThing,
     Document,
+    InsertText,
     MemoryStore,
     MoveObject,
     ObjectBody,
@@ -103,6 +105,27 @@ def test_a_text_box_sits_on_a_slide_and_must_stay_in_its_frame(doc):
         doc.execute(MoveObject("t1", SlideAnchor("p1", 1300, 700).to_data()), author="ana")
 
 
+def test_only_a_chart_leaves_its_slide_for_a_sheet_so_a_slide_loses_an_object_only_when_it_is_taken_away(doc):
+    doc.execute(AddSlide("p1", "Slide 1"), author="ana")
+    doc.execute(text_box(), author="ana")
+    with pytest.raises(ValueError, match="cannot change its holder"):
+        doc.execute(MoveObject("t1", {"kind": "cell", "holder": S1, "row": 0, "col": 0}), author="ana")
+    assert doc.model.get_object("t1").anchor == SlideAnchor("p1", 100, 100)
+
+
+def test_the_words_of_a_text_box_on_a_slide_are_written_as_in_creates_and_undone(doc):
+    # CODE-83: writing in a text box on a workbook's slide was an internal error
+    doc.execute(AddSlide("p1", "Slide 1"), author="ana")
+    doc.execute(text_box(), author="ana")
+    doc.execute(InsertText("t1", 4, " leads"), author="ana")
+    assert doc.model.get_object("t1").body.paragraph.text == "East leads"
+    doc.execute(DeleteText("t1", 0, 5), author="ana")
+    assert doc.model.get_object("t1").body.paragraph.text == "leads"
+    doc.undo("ana")
+    doc.undo("ana")
+    assert doc.model.get_object("t1").body.paragraph.text == "East"
+
+
 @pytest.mark.parametrize(
     ("anchor", "refusal"),
     [
@@ -172,8 +195,9 @@ def test_slides_and_their_objects_survive_being_stored_loaded_and_replayed(doc):
     assert again.serialize() == state
     replayed = Document.open(WorkbookModel, CommandLog.from_data(doc.log.to_data(), WorkbookModel.registry))
     assert replayed.model.serialize() == state
-    # 17: tabs, one order of sheets and slides, and the slides as records (E6.31, D1471)
-    assert WorkbookModel.state_schema == 17
+    # 17: tabs, one order of sheets and slides, and the slides as records (E6.31, D1471); 18: no chart tabs (D1475);
+    # 19: the chart names (D1476)
+    assert WorkbookModel.state_schema == 19
 
 
 def test_a_stored_state_whose_tabs_miss_a_sheet_or_a_slide_is_refused(doc):
