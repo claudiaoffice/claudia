@@ -39,6 +39,7 @@ renumbering table), `bugtracker.md` (SEC/PERF/UX/CODE/PROC/DOC items) and `qa-re
 | `organisations-entry-continuity-exit.pdf` | **Not decided** (proposal, no decision number): how an organisation and its members could work with documents at entry, continuity and exit; the atlas (the organisation's places), the steward key slot (visible, two custodians, a last resort), the hand-over wizard; what exists today and what would be new; open questions including more than one owner. Reconstructed from sheet 7 of the conversation of 2026-11-14; source `organisations-entry-continuity-exit.html` | 2026-11-21 |
 | `bug-eater.md` | The brief of the bug-eater chat: its four tracks (bugs, architecture, domain language, tests), the batch loop from branch to marking items fixed, helpers (two sub-agents, Fable as advisor); its queue is `bug-eater-queue.md` | 2026-11-24 |
 | `bug-eater-queue.md` | The triage of every open tracker item against `backlog` at the time it was written: still real or not, class, cluster, size, the failing test to write first, and the proposed batches | 2026-11-24 |
+| `menu-audit.md` | Menu audit, phase 1: the workbook `claudia-menus.xlsx` against the menus of all three apps on web and desktop; how `scripts/menu_capture.py` and `scripts/menu_audit.py` make the workbook's Diagnosis sheet, the picture, the bugs found, what could not be run | 2026-11-25 |
 
 ## Three documents were deliberately not copied
 
