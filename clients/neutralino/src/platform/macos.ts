@@ -43,4 +43,5 @@ export const MACOS_HOST: HostPlatform = {
   shortPath: () => null,
   endTheServer: 'Or quit its Python process in Activity Monitor.',
   account: () => ({ uid: userInfo().uid }),
+  sharedServiceFile: () => '/Library/Application Support/Claudia/service.json',
 }

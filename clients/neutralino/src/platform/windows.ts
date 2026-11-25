@@ -70,4 +70,5 @@ export const WINDOWS_HOST: HostPlatform = {
   shortPath: (path) => shortPathOf(path),
   endTheServer: 'Or end its python.exe in the Task Manager.',
   account: (home) => ({ profileFolder: home }),
+  sharedServiceFile: (env) => join(env.ProgramData || 'C:\\ProgramData', 'Claudia', 'service.json'),
 }

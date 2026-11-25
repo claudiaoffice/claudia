@@ -51,6 +51,8 @@ export interface HostPlatform {
   /** Who she is on this computer, which her private server's port follows (private-port.ts, E8.5, D1621): her account
    * number on a Mac, her profile folder (`home`) on Windows, which has no account numbers. */
   account(home: string): Account
+  /** Where the installer of the computer's service writes its marker (shared-service.ts, E8.5, D1622). */
+  sharedServiceFile(env: Env): string
 }
 
 /** The host platform of this build (src/platform/id.ts). */
