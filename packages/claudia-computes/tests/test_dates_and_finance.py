@@ -17,7 +17,7 @@ def evaluate(formula: str, cells: dict[tuple[int, int], object] | None = None):
         sheet.cells[position] = {"t": kind, "v": value}
     sheet.cells[(99, 9)] = {"t": "formula", "v": formula}
     model.open_holder("s1")
-    model._calculate_loaded()  # noqa: SLF001
+    model.calculate_loaded()
     value = sheet.grid.get((99, 9))
     return getattr(value, "code", value)
 
@@ -132,7 +132,7 @@ def test_a_reference_only_asked_where_it_is_is_no_circle():
     sheet.cells[(3, 1)] = {"t": "formula", "v": "=ROW(B4)+ROWS((B1:B4))"}
     sheet.cells[(4, 1)] = {"t": "formula", "v": "=ROWS(B1:B5)+SUM(B1:B5)"}  # read as well: still a circle
     model.open_holder("s1")
-    model._calculate_loaded()  # noqa: SLF001
+    model.calculate_loaded()
     assert sheet.grid.get((2, 1)) == 2026
     assert sheet.grid.get((2, 2)) == 2027
     assert sheet.grid.get((3, 1)) == 8

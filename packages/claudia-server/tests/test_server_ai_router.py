@@ -97,8 +97,8 @@ def anthropic():
         yield fake
 
 
-def claude_runner(fake, timeout=5):
-    return ModelRunner(ClaudeModel(KEY, "claude-sonnet-5-5", base_url=fake.url), timeout=timeout)
+def claude_runner(fake, timeout=5, **model_options):
+    return ModelRunner(ClaudeModel(KEY, "claude-sonnet-5-5", base_url=fake.url, **model_options), timeout=timeout)
 
 
 def claude_desk(fake, *, local=None):
@@ -134,6 +134,7 @@ def test_where_the_owners_did_not_allow_it_the_servers_own_provider_answers_and_
     served(test, claude_desk(anthropic, local=runner_of("the local model")))
 
 
+@pytest.mark.must_not_break("E7.11")  # nothing of a document reaches Anthropic without the owners' consent
 def test_the_stand_in_answers_where_claude_is_not_allowed_and_there_is_no_local_model(anthropic):
     async def test(hosted, ann, desk):
         _, via = await ask(hosted, ann)
@@ -255,10 +256,12 @@ def test_when_the_owners_withdraw_consent_a_running_question_stops_at_its_next_s
 def test_when_the_administrator_switches_provider_a_running_question_stops_the_same_way(anthropic):
     async def test(hosted, ann, desk):
         ann.request("set_ai_consent", {"allowed": True})
-        anthropic.delay = 0.5
+        anthropic.hold()
         question = asyncio.create_task(ask(hosted, ann))
-        await asyncio.sleep(0.2)  # Claude is working
-        for runner in desk.install(provider="local", local=runner_of("the local model")):
+        await anthropic.begun()  # Claude is working
+        replaced = desk.install(provider="local", local=runner_of("the local model"))
+        anthropic.let_go()  # Claude's step ends after the switch: the question stops there
+        for runner in replaced:
             await asyncio.to_thread(runner.close)
         text, via = await question
         assert text.endswith(STOPPED) and via == STOPPED_VIA

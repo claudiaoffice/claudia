@@ -44,6 +44,7 @@ from claudia_fonts import (
     NotServable,
     WebFontCache,
     collection_folders,
+    to_woff2,
 )
 
 #: The format of ``GET /api/fonts``; it rises when a field changes meaning or goes away.
@@ -67,6 +68,8 @@ class FontService:
     """The folders collections are read from (a collection folder or a folder of them), in order, with their origin."""
     added_root: Path | None = None
     """Where the server settings add collections (``STATE_DIR/fonts``); ``None`` for a server that cannot."""
+    make_webfont: Callable[[bytes], bytes] = to_woff2
+    """How a WOFF2 file is made of a font file (a test gives a slow one, CODE-106)."""
     _origins: dict[Path, Origin] = field(default_factory=dict, repr=False)
 
     @classmethod
@@ -143,7 +146,7 @@ def font_router(
     """The ``/api/fonts`` routes of a server. ``local`` says whether a request comes from the server's own people,
     who may also get the fonts for this server only (D1041)."""
     router = APIRouter(prefix="/api/fonts")
-    cache = WebFontCache(service.webfont_dir)
+    cache = WebFontCache(service.webfont_dir, compress=service.make_webfont)
 
     def find(sha256: str, request: Request) -> FontFile:
         font = service.catalogue.by_hash(sha256) if _HASH.fullmatch(sha256) else None

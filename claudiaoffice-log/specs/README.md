@@ -41,6 +41,9 @@ A feature file starts with a `# title` comment line, then `Feature:`. Which test
   - `@pending:<id>`: the behaviour is decided but not built (or somebody else builds it); the scenario is written and
     **expected to fail**. It is strict: when it passes, the run fails until the tag is taken off.
   - `@app:computes|composes|creates`: the apps a scenario runs in; none means all that the file's folder says.
+  - `@must-not-break:<story>`: this scenario tests the key risk of the story (coding standards §2). A unit test says it
+    with `@pytest.mark.must_not_break("<story>")`, a vitest test with `[must not break: <story>]` in its title.
+    `tests/test_must_not_break.py` wants one for every story that is done.
   - `@e2e:<file>`: the browser test is a script in `web/e2e/`; `@unit:<path>` and `@io:<path>`: the scenario is tested
     by a unit or a file-format test because no browser is needed. These are not run by `tests/e2e/specs`.
   - `@draft` (on the `Feature:` line only): the file is a draft waiting for the owner's review. When the owner approves

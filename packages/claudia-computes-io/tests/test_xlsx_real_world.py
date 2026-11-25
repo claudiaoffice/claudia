@@ -516,7 +516,7 @@ def test_a_new_workbook_writes_excels_name_for_a_newer_function():
     sheet.cells[(0, 0)] = {"t": "int", "v": 1}
     sheet.cells[(0, 1)] = {"t": "formula", "v": '=IFS(A1>0,"yes",TRUE,"no")'}
     model.add_sheet(sheet, None)
-    model._calculate_loaded()  # noqa: SLF001
+    model.calculate_loaded()
     assert b"_xlfn.IFS(" in part(workbook_to_xlsx(model), "xl/worksheets/sheet1.xml")
 
 

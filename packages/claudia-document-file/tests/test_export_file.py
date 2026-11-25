@@ -165,10 +165,11 @@ def test_a_part_that_is_not_json_cannot_be_written():
         made(chat=[b"not json"])
 
 
-def test_a_part_that_claims_a_wrong_size_is_refused(monkeypatch):
-    monkeypatch.setattr("claudia_document_file.export_file._MAX_INFO_BYTES", 5)
+def test_an_export_json_beyond_its_limit_is_refused():
+    entries = entries_of(made())
+    entries["export.json"] = b'{"pad": "' + b"x" * (64 * 1024) + b'"}'  # the info of an export is a few hundred bytes
     with pytest.raises(ExportRefused, match="too large"):
-        read_export(made())
+        read_export(rebuilt(entries))
 
 
 def test_an_export_without_export_json_is_refused():

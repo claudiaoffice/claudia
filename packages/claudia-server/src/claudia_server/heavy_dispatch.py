@@ -67,7 +67,14 @@ class HeavyDispatcher:
         self.workers = workers
         self.timeout = timeout
         self._inflight: set[Key] = set()
+        self._running: set[asyncio.Task] = set()
         self._unsubscribe = document.subscribe(self._on_event)
+
+    async def idle(self) -> None:
+        """Return when every call sent to the workers so far has been answered and its answer applied or discarded
+        (including the calls those answers woke), as ``Assistant.idle`` does for questions (PROC-69)."""
+        while self._running:
+            await asyncio.gather(*self._running, return_exceptions=True)
 
     def close(self) -> None:
         """Stop watching (the document is being let go). In-flight tasks finish on their own; their ``execute``
@@ -97,7 +104,9 @@ class HeavyDispatcher:
         except RuntimeError:
             self._inflight.discard(key)
             return  # no event loop (a test without one): left pending, nobody is waiting on an answer yet
-        loop.create_task(self._run(key, deferred))
+        task = loop.create_task(self._run(key, deferred))
+        self._running.add(task)
+        task.add_done_callback(self._running.discard)
 
     # -- running and landing the answer -----------------------------------------------------
     async def _run(self, key: Key, deferred: Deferred) -> None:

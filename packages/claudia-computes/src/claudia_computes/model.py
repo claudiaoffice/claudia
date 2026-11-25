@@ -578,7 +578,7 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor | SlideAnchor]):
             model.print_page = PageSetup.from_data(state["print_page"])
         model.sheet_print = {key: SheetPrintSetup.from_data(item) for key, item in state.get("sheet_print", {}).items()}
         model.language = state.get("language")
-        model._calculate_loaded()
+        model.calculate_loaded()
         return model
 
     # -- redaction (D720, D723) -----------------------------------------------------
@@ -966,8 +966,9 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor | SlideAnchor]):
         sheet_id, row0, col0, row1, col1 = region
         return self.sheets[sheet_id], CellRef(row0, col0), CellRef(row1, col1), named.header or named.anchor is not None
 
-    def _calculate_loaded(self) -> None:
-        """Fill the values from the contents: constants as they are, formulas calculated."""
+    def calculate_loaded(self) -> None:
+        """Fill the values from the contents: constants as they are, formulas calculated. For a model whose contents
+        were put in place directly, as ``restore`` and the importers do (CODE-106: they called it by a private name)."""
         self.calc.reset()
         self._ids = None
         for sheet in self.sheets.values():

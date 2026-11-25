@@ -71,7 +71,7 @@ def test_a_message_inside_a_message_is_said_in_german_too() -> None:
 
 
 def test_a_translation_with_the_wrong_placeholders_falls_back_to_english(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(i18n, "_lookup", lambda template, locale: "{gone} is wrong")
+    monkeypatch.setattr(i18n, "translate", lambda template, locale: "{gone} is wrong")  # a catalog gone wrong
     assert localized(msg("{name} is not allowed", name="x"), "de") == "x is not allowed"
 
 

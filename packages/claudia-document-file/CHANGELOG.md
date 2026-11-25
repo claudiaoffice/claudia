@@ -5,6 +5,10 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+### Added
+- `crypto.warm_clock` (the clock warm login material expires on) and `crypto.warm_material_names()` (what it is filed
+  under, never a password or a name), for tests and the threat model (CODE-106).
+
 ## [0.13.0] - 2026-11-22
 
 ### Added

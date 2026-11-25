@@ -246,7 +246,7 @@ def styled_workbook():
         sheet.cell_styles.replace(slot, "range", (0, 0, 0, 1), [((0, 0, 0, 1), "header")])
         sheet.cell_styles.replace(slot, "range", (1, 1, 1, 1), [((1, 1, 1, 1), "heat")])
         sheet.cell_styles.replace(slot, "column", (0, 3, MAX_ROWS - 1, 3), [((0, 3, MAX_ROWS - 1, 3), "input")])
-    model._calculate_loaded()
+    model.calculate_loaded()
     return model
 
 

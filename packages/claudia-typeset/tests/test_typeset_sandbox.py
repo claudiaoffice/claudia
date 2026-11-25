@@ -50,7 +50,7 @@ def alive(pid):
     return True
 
 
-async def gone(*pids, within=3.0):
+async def gone(*pids, within=10.0):  # polls: a dead process answers at once, a busy machine reaps it late
     deadline = time.monotonic() + within
     while time.monotonic() < deadline:
         if not any(alive(pid) for pid in pids):

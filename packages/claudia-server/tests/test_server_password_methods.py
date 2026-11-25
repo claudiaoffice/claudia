@@ -5,36 +5,40 @@ could ask in a loop. The hashing is done in a thread, behind the same cap as a l
 handled; the handler then finds the result ready.
 """
 
-import functools
 import json
 import threading
-import time
 
 import pytest
 from starlette.testclient import TestClient
 from test_server_app import Peer
 
+from claudia_ai.testing import Hold
 from claudia_core.testing import ListModel
-from claudia_document_file import KdfParams
-from claudia_document_file.kdf import calibrate
+from claudia_document_file import KdfParams, crypto
 from claudia_server.app import create_app
 from claudia_server.hub import Hub
 from claudia_server.login_throttle import LoginThrottle
 from claudia_server.sealed import SealedDocuments
 
 SLOW = KdfParams(iterations=3, memory_kib=64 * 1024, lanes=1)  # the least: a tenth of a second on a fast machine
-SEEN_AFTER = 0.15
-"""Hashing must take longer than this for "another window is answered quickly" to mean anything (PROC-38)."""
+PATIENCE = 10.0
+"""Seconds a test waits for something that happens at once when the server works: only a broken server reaches it."""
 
 
-@functools.cache
-def slow_enough() -> KdfParams:
-    """``SLOW``, with as many passes as this machine needs to take about twice ``SEEN_AFTER`` per hash (PROC-38).
+def held_hashing(monkeypatch) -> Hold:
+    """Every password hash of the server waits until the test lets it go (PROC-66).
 
-    A fixed cost took 0.12 s on the runners of CI, below what the test needs, and 0.15 s or more on a slower machine;
-    what the test needs is a time, not a number of passes, so it measures the machine like the server does (D1267).
-    """
-    return calibrate(2 * SEEN_AFTER, max_memory_kib=SLOW.memory_kib, floor=SLOW)
+    "Another window is answered while a password is hashed" was measured with a stopwatch (a ping under 50 ms while a
+    hash took 0.3 s), and a busy runner made it fail now and then. Held, the hash takes as long as the test wants: a
+    server that hashed on its event loop could answer nobody until it is let go, on any machine."""
+    hashing, real = Hold(), crypto.argon2id
+
+    def held(*args, **kwargs):
+        hashing.wait_until_free()
+        return real(*args, **kwargs)
+
+    monkeypatch.setattr(crypto, "argon2id", held)
+    return hashing
 
 
 ANN, ANN_PW = "Annabelle", "Correct-Horse-9"
@@ -54,7 +58,7 @@ def window(client, **kw):
 
 @pytest.fixture
 def served(tmp_path):
-    store = SealedDocuments(tmp_path, ListModel, kdf=slow_enough())
+    store = SealedDocuments(tmp_path, ListModel, kdf=SLOW)
     app = create_app(Hub(store), store, login_throttle=LoginThrottle(free_tries=10**6))
     with TestClient(app) as client:
         try:
@@ -71,21 +75,14 @@ def send(peer, method, params=None):
     return peer._next
 
 
-def pings_while(other, busy):
-    """How long a ``ping`` of ``other`` takes while ``busy`` (a request of another window) is being worked on."""
-    request = send(busy[0], *busy[1:])
-    time.sleep(0.02)  # let the server start on it
-    started = time.perf_counter()
-    assert other.request("ping")["ok"]
-    waited = time.perf_counter() - started
-    assert busy[0].wait_for(request)["ok"], "the slow request itself is answered"
-    return waited
-
-
-def hashing_takes_long_enough_to_see(store):
-    started = time.perf_counter()
-    store.verify("plan", __import__("claudia_server").auth.Credentials(ANN, "wrong-Pass-1"))
-    return time.perf_counter() - started
+def answered_in_time(peer, method) -> bool:
+    """Whether ``peer``'s ``method`` is answered, and well, before ``PATIENCE`` runs out (asked from a thread, so a
+    server that answers nobody fails the test instead of hanging it)."""
+    answers = []
+    asking = threading.Thread(target=lambda: answers.append(peer.request(method)), daemon=True)
+    asking.start()
+    asking.join(PATIENCE)
+    return bool(answers) and answers[0]["ok"]
 
 
 def two_windows(client):
@@ -104,13 +101,18 @@ def two_windows(client):
     ],
     ids=lambda call: call[0],
 )
-def test_another_window_is_answered_quickly_while_a_password_is_hashed(served, call):
-    client, store = served
+def test_another_window_is_answered_while_a_password_is_hashed(served, call, monkeypatch):
+    client, _ = served
     first, second = two_windows(client)
-    took = hashing_takes_long_enough_to_see(store)
-    assert took > SEEN_AFTER, f"this machine hashes too fast for the test to mean anything ({took:.3f} s)"
-    waited = pings_while(second, (first, *call))
-    assert waited < 0.05, f"{call[0]} stopped the other window for {waited:.3f} s"
+    hashing = held_hashing(monkeypatch)
+    hashing.hold()
+    try:
+        request = send(first, *call)
+        assert hashing.started.wait(PATIENCE), f"{call[0]} hashed no password"
+        assert answered_in_time(second, "ping"), f"{call[0]} stopped the other window while it hashed"
+    finally:
+        hashing.let_go()
+    assert first.wait_for(request)["ok"], "the request that hashed is answered too"
 
 
 def test_the_work_really_is_done_by_the_request(served):

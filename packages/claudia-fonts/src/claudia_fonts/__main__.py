@@ -4,13 +4,14 @@ from __future__ import annotations
 
 import argparse
 import sys
+from collections.abc import Callable
 
 from claudia_file_writer import FetchError
 
 from .starter import fetch
 
 
-def main(argv: list[str] | None = None) -> int:
+def main(argv: list[str] | None = None, *, download: Callable[[str], bytes] | None = None) -> int:
     """Run the command line; the exit status."""
     parser = argparse.ArgumentParser(
         prog="python -m claudia_fonts", description="The font collection of a Claudia server."
@@ -20,7 +21,7 @@ def main(argv: list[str] | None = None) -> int:
     get.add_argument("folder", help="where the collections go, one subfolder each; give it to the server with --fonts")
     args = parser.parse_args(argv)
     try:
-        folders = fetch(args.folder, report=lambda line: print(line, flush=True))
+        folders = fetch(args.folder, download=download, report=lambda line: print(line, flush=True))
     except FetchError as error:
         print(f"error: {error}", file=sys.stderr)
         return 1

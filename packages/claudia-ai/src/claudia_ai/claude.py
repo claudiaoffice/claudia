@@ -14,7 +14,10 @@ The provider key is sent in a request header and nowhere else: it is not in any 
 
 from __future__ import annotations
 
+import contextlib
 import json
+import socket
+import threading
 import urllib.error
 import urllib.request
 from collections.abc import Callable, Iterator
@@ -83,7 +86,7 @@ class Response(Protocol):
         ...
 
     def close(self) -> None:
-        """Give the connection up."""
+        """Give the connection up. May be called from another thread while ``lines`` waits: that wait ends."""
         ...
 
 
@@ -104,6 +107,15 @@ class _UrllibResponse:
         yield from self._raw  # type: ignore[misc]  # an http.client.HTTPResponse is an iterator of lines
 
     def close(self) -> None:
+        # A read that waits in another thread is not woken by closing the file, only by shutting the connection down
+        # (PROC-67). The socket is borrowed by its number and handed back (detach) without being closed: the response
+        # closes it. Not a duplicate: on Windows a socket's number is a handle, which os.dup cannot copy.
+        with contextlib.suppress(OSError, ValueError, AttributeError):  # (already closed, or an error answer)
+            same = socket.socket(fileno=self._raw.fileno())  # type: ignore[attr-defined]
+            try:
+                same.shutdown(socket.SHUT_RDWR)
+            finally:
+                same.detach()
         self._raw.close()  # type: ignore[attr-defined]
 
 
@@ -188,16 +200,44 @@ class ClaudeModel:
             raise ProviderError(FailureReason.TIMED_OUT) from exc
         except OSError as exc:  # no route, refused, no DNS: whatever it is, it cannot be reached
             raise ProviderError(FailureReason.UNREACHABLE, type(exc).__name__) from exc
-        try:
-            if response.status != 200:
+        if response.status != 200:
+            try:
                 raise self._refusal(response)
-            return self._read(response, stop)
+            finally:
+                response.close()
+        try:
+            return self._answer(response, stop)
         except TimeoutError as exc:
             raise ProviderError(FailureReason.TIMED_OUT) from exc
         except OSError as exc:  # the connection broke in the middle
             raise ProviderError(FailureReason.UNREACHABLE, type(exc).__name__) from exc
-        finally:
-            response.close()
+
+    def _answer(self, response: Response, stop: Callable[[], bool]) -> str:
+        """The answer's text, read in a thread of its own while this one watches ``stop()``: once it turns true the
+        question ends with what there is, at once, even if Anthropic has gone silent and the read would wait for the
+        read timeout (PROC-67). The connection is given up in the background: closing it waits for the read, which
+        ends at once where the system can wake it, and elsewhere at its timeout. ``response`` is closed either way."""
+        pieces: list[str] = []
+        failed: list[BaseException] = []
+        done = threading.Event()
+
+        def read() -> None:
+            try:
+                self._read(response, stop, pieces)
+            except BaseException as error:  # noqa: BLE001 - handed over to the thread that waits for it
+                failed.append(error)
+            finally:
+                done.set()
+
+        threading.Thread(target=read, name="claudia-claude-read", daemon=True).start()
+        while not done.wait(0.05):  # the pace of the watch
+            if stop():
+                threading.Thread(target=response.close, name="claudia-claude-close", daemon=True).start()
+                return "".join(pieces)
+        response.close()
+        if failed and not stop():
+            raise failed[0]
+        return "".join(pieces)
 
     def _refusal(self, response: Response) -> ProviderError:
         text = b"".join(response.lines()).decode("utf-8", "replace")
@@ -210,8 +250,8 @@ class ClaudeModel:
             reason_of(response.status, str(error.get("type", "")), message), message or f"HTTP {response.status}"
         )
 
-    def _read(self, response: Response, stop: Callable[[], bool]) -> str:
-        pieces: list[str] = []
+    def _read(self, response: Response, stop: Callable[[], bool], pieces: list[str]) -> None:
+        """Add the answer's text to ``pieces`` as it streams in, until it ends or ``stop()`` turns true."""
         for line in response.lines():
             if stop():
                 break
@@ -227,4 +267,3 @@ class ClaudeModel:
                     raise ProviderError(reason_of(0, str(error.get("type", "")), message), message)
                 case "message_stop":
                     break
-        return "".join(pieces)

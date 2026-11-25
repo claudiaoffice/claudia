@@ -307,7 +307,7 @@ def _model_of(package: Package) -> tuple[WorkbookModel, tuple[Loss, ...]]:
     hold(model, sheets, held, tabs)
     for named in names:
         model.names.put(named)
-    model._calculate_loaded()  # noqa: SLF001 (the restore()-mirroring construction idiom; see model.py's own)
+    model.calculate_loaded()
     pivots = read_pivots(package, model)
     return model, (*pivots.losses.result(), *adopt_pivots(model, pivots.found).losses)
 
