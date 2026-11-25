@@ -27,7 +27,7 @@ The index is the status of record; a section below keeps the status of the round
 re-checked. **Opened** and **Fixed** are filled from 2026-11-20 on: for older items only where the status already gave
 the date.
 
-### Open (63)
+### Open (68)
 
 By priority (P1, P2, P3, then items that wait for a decision without one), then by ID.
 
@@ -36,9 +36,12 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | SEC-19 | P2 | Security / Perf | Imports run on the worker pool with no memory cap; `check_package` bounds the input, not the parsed model | **new, open** |  |  |
 | SEC-22 | P2 | Security | Who wrote which stretch (`runs`, E9.10) is part of the content state, so a viewer still receives it: in the `blocks` method, in `text` events, in the snapshot and in her own sealed file, although D1261 says no data should be behind "show who wrote what" for a viewer | **new, open**, needs the owner's decision (mask it live and in the viewer's file, or accept it as content) |  |  |
 | SEC-24 | P2 | Security / privacy | An owner's export writes every chat message into the file, also the private ones between other people that she cannot read in the document | **new, open** (read) | 2026-11-25 |  |
-| SEC-25 | P2 | Security | An editor can send a whole `Import` command through `apply` and so replace the document (or write a forged "History of the original") | **new, open** (read) | 2026-11-25 |  |
+| SEC-25 | P2 | Security | Through `apply` an editor can send any command the server knows: wipe the document with `Import` (no undo), forge checkpoints, redaction and restore records, also inside a `Batch` | **new, open** (measured; widened 2026-11-25) | 2026-11-25 |  |
+| SEC-26 | P2 | Security | A viewer's office export (odt, docx) says who made and last changed the document and when, and dates the open suggestions, all from the history her role may not read | **new, open** (measured) | 2026-11-25 |  |
+| SEC-27 | P2 | Security / privacy | A picture's local path (`source_path`) is stored in the document's content, so every key holder reads it (snapshot, sealed file, export), although only the importer was meant to see it | **new, open** (measured; no app sends a path today) | 2026-11-25 |  |
 | PERF-02 | P2 | Performance | Journal `fsync` on the event loop for every edit | verified open (2026-11-12; see CODE-13) |  |  |
 | PERF-10 | P2 | Performance | What-if outcomes are recalculated on the event loop: 9 s per edit in a 1,000-cell model | **new, open** |  |  |
+| PERF-14 | P2 | Performance | Exporting a kept workbook (xlsx, ods) recalculates the whole live model on the event loop | **new, open** (read) | 2026-11-25 |  |
 | UX-22 | P2 | UX | The history speaks three dialects: one per app | **new, open** |  |  |
 | UX-42 | P2 | UX / all | A document cannot be renamed: its name is sealed into the file, which the uid was meant to avoid | **decided, open** (D536, E5.21) |  |  |
 | UX-51 | P2 | UX / composes | The words go round the unturned frame of a turned object, not its bounding box (D1226 decides the box); turning is on screen in composes since D1232 | **new, open** (read) |  |  |
@@ -48,6 +51,7 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | UX-91 | P2 | UX / composes / Firefox | In Firefox the down arrow from the paragraph above a new table does not put the caret in its first box (Chromium does) | **new, open** (measured on CI) | 2026-11-25 |  |
 | UX-93 | P2 | UX / a11y | The font banner ("This document uses fonts this server does not have …") is dark text on a dark ground, about 1.1:1 (BITV 1.4.3 asks 4.5:1) | **new, open** (measured) | 2026-11-25 |  |
 | CODE-31 | P2 | Code / i18n | The history speaks English to everybody: command labels and summaries are not translated | **new, open** |  |  |
+| CODE-107 | P2 | computes I/O | In a kept xlsx, a formula Excel cannot say is written as its value, and no `formula` loss says so | **new, open** (read) | 2026-11-25 |  |
 | CODE-99 | P2 | Code / desktop clients | A person's apps use any Claudia server on port 8765 of the computer as their own, also another person's or a service's: with two people logged in, the second one's documents are saved in the first one's home folder | **new, open** (read); fix on the macOS installer branch (E8.5) | 2026-11-25 |  |
 | CODE-100 | P2 | Code / desktop clients | Next to a service of another version, the apps refuse to start and say it stops after ten minutes, which a service never does | **new, open** (read); fix on the macOS installer branch (E8.5) | 2026-11-25 |  |
 | PROC-15 | P2 | Process | The tracker and the backlog lag the code: fixed items still "open", 64 stories at a placeholder 50 % | partly fixed 2026-11-25 (batch 1: the index guard); the backlog's placeholder 50 % stays open |  |  |
@@ -96,6 +100,7 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | CODE-103 | P3 | computes I/O | The ods chart patch: a chart in a cell that is moved and described in one export makes overlapping edits, so the kept file is written anew | **new, open** (read) | 2026-11-25 |  |
 | CODE-104 | P3 | computes I/O | The pictures of an xlsx that LibreOffice wrote are not read in, nor the turned ones of such an ods | **new, open** (measured) | 2026-11-25 |  |
 | CODE-105 | P3 | composes I/O | docx: a paragraph mark's own run properties count as a `formatting` loss, though nothing is lost | **new, open** (measured) | 2026-11-25 |  |
+| CODE-106 | P3 | composes I/O | The patch of a kept odt reports losses (`style`, `removed-…`) that the server never passes on: they are not in the Export dialog | **new, open** (read) | 2026-11-25 |  |
 
 ## Security
 
@@ -582,6 +587,10 @@ from an editor is refused (`forbidden`), and the history is unchanged; the owner
 for the server's own use only.
 
 ### UX-93 · The font banner cannot be read · P2 · size 2 · open
+**Re-checked** (triage of 2026-11-25, computed from the CSS): 1.13:1. The same slip elsewhere: `--ink-soft` is used
+without a fallback and defined nowhere (`NumberingDialog.vue`, `ContentsDialog.vue`), and `--panel` and `--border` are
+not defined either. The fix should come with a guard: every `var(--x)` the web uses is defined in the tokens or set at
+run time.
 **Measured** in Chromium (batch 4, opening a pptx in creates): `[data-testid=font-banner]` has the background
 `rgb(42, 35, 66)` (the fallback of `--panel-2`, which is not defined) and the text `rgb(31, 26, 51)` (`--ink`): a
 contrast of about 1.1:1. BITV 1.4.3 asks 4.5:1, so this is a divergence from the standard. `FontReportBanner.vue` was
@@ -621,9 +630,71 @@ and the export falls back to a fresh file (`not-patched`), losing what the kept 
 without any of its pictures; such an ods loses the turned ones. Files we write, fresh or patched, are read back with
 their pictures. The cause was not found. **Acceptance:** a picture (and a turned one) of an xlsx and an ods that
 LibreOffice saved comes in at its place.
+**Re-measured** (triage of 2026-11-25, LibreOffice 24.2): our own fresh xlsx and ods, with a turned picture, survive
+LibreOffice in all four directions. What fails is an ods we patched, saved by LibreOffice as xlsx: 0 of 2 pictures.
+Cause: `xlsx_pictures.py` takes a `twoCellAnchor`'s size from its cells (36×20), `keeps_proportions`
+(`file_pictures.py`) rejects that against the 40×20 picture, and the anchor's own `a:xfrm/a:ext` is not read. The turned
+ods case was not reproduced. **First test:** a `twoCellAnchor editAs="absolute"` whose cells differ from its `a:ext`
+comes in at its size.
 
 ### CODE-105 · docx: a paragraph mark's run properties count as a loss · P3 · size 3 · open
 **Measured** by a helper (CODE-47 analysis): a docx paragraph whose mark has run properties of its own (`w:pPr/w:rPr`,
 which Word writes for nearly every paragraph) is counted as a `formatting` loss, though the properties of the mark are
 not visible in the text. So the import over-counts what it leaves out. **Acceptance:** a docx whose only run properties
 are those of paragraph marks reports no `formatting` loss.
+
+## Found in the architecture review of 2026-11-25
+
+Logged by the owner's word of 2026-11-25 (`/tmp` report "Architecture review · claudia", candidates 1, 3 and 6, and the
+triage that went with it). SEC-25 was widened by the same triage.
+
+### SEC-25, widened (2026-11-25, measured)
+Not only `Import`: `_apply` (`protocol.py`) decodes every command the registry knows and refuses only the assistant. As
+an editor the triage sent `core.Import` (the document wiped, no undo, a forged "History of the original" taken),
+`core.Checkpoint` (listed by `checkpoints` as "Approved by legal"), `core.Redaction` (a record that 1 change and 1
+message were redacted, when nothing was) and `core.Restore`; all were accepted. `Switch` and `Setup` are of the same
+kind. A check of the top-level command alone is not enough: `Batch.from_data` decodes nested commands. No client sends
+raw commands (only the server's tests use `apply`). **Batch 5** (owner, 2026-11-25): every command kind says whether a
+person may send it, kept in a golden file; `apply` checks every nested command.
+
+### SEC-26 · A viewer's office export carries who and when from the history · P2 · size 3 · open
+**Measured** (triage of 2026-11-25): a viewer's `log` is refused, but her odt from `export_office` carries
+`meta:initial-creator`, `meta:creation-date`, `dc:creator` and `dc:date`, and her docx `dc:creator`, `lastModifiedBy`,
+`created` and `modified`: `export_info(ctx.document.log, …)` (`claudia_composes_io/_history.py`, used by
+`composes.py`'s `_export_office`; computes and creates the same, by reading). With tracked changes, each open suggestion
+is dated from the history too. **Batch 5** (owner, 2026-11-25): for a person whose role does not hold the history, the
+export says neither who made or changed the document nor when; a suggestion keeps its author (who wrote what is
+content, SEC-22) and is dated with the time of the export. **First test:** a viewer's odt and docx carry no creator,
+changer or date from the history.
+
+### SEC-27 · A picture's local path is readable by everyone who can open the document · P2 · size 2 · open
+**Measured** (triage of 2026-11-25): `add_image` takes a `source_path`; it is stored in the picture's `ImageImport`
+(`claudia_core/assets.py`), in the content state and in the command in the history. `objects` and the pushed events
+mask it for everybody but the importer (`ImageImport.masked`), but `model.serialize()` does not: a viewer's `snapshot`
+and her `export_claudia` `content.json` hold e.g. `/home/ann/Private/medical/red.gif`, and so does the content part of
+the document file, which every key holder can open. No app sends a path today (a browser cannot know it; the desktop
+shells pick the file but pass only its name, D501), so only a caller of the protocol has stored one. **Batch 5**
+(owner, 2026-11-25): on a single desktop install it is useful to know where a picture came from, so the path is kept
+when the person asks for it on import ("save the path"), and then readable by everyone who can open the document;
+otherwise it is not stored at all.
+
+### CODE-106 · The patch of a kept odt drops the losses it reports · P3 · size 3 · open
+**Read** (architecture review of 2026-11-25): `apply_edits_to_odt` takes a `losses` log and adds `style` and
+`removed-<kind>` losses to it (`odt.py`), but the server's patch lambda in `composes.py` (`_export_office`, the odt
+branch of `export_with_original`) ignores the log it is given (`_`), so these losses never reach the Export dialog.
+`apply_edits_to_pptx` takes no log at all. **First test:** a kept odt whose edit removes a part with a comment says
+`removed-comment` in `export_office`'s `losses`.
+
+### CODE-107 · A kept xlsx loses formulas without a word · P2 · size 2 · open
+**Read** (architecture review of 2026-11-25): in the patch of a kept xlsx, `written()` (`xlsx_patch.py`) returns the
+cell's value and `lost` for a formula Excel cannot say, but `_write_sheet` (`xlsx.py`) never looks at `lost`, so the
+formula is written as its value and no `formula` loss is reported; a fresh export reports it (`xlsx_export_losses`).
+The same holds for `authorship`, `notes-…`, `agenda` and `reference` on every kept file: a patched export never calls
+`*_export_losses`. **First test:** a kept xlsx with a formula Excel cannot say reports `formula` in `export_office`.
+
+### PERF-14 · Exporting a kept workbook recalculates the live model on the event loop · P2 · size 2 · open
+**Read** (architecture review of 2026-11-25): `export_office` runs synchronously in `dispatch`; the patch path hands the
+live model to the xlsx and ods patches, which both call `current.calc.recalculate_all()` (`xlsx.py`, `ods.py`): a full
+recalculation on the loop for every export of a kept workbook, while everybody else's edits wait. The loss walk
+translates every formula a second time. Not timed. Belongs with A1 (the execution model). **First test:** another
+person's `ping` is answered within 50 ms while a kept 10,000-formula workbook is exported.
