@@ -5,6 +5,11 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+### Security
+- `apply` refuses with `forbidden` a change only the server makes (SEC-25, D2007), also inside a batch: an editor could
+  replace the document with a raw `core.Import` and write checkpoint, redaction and restore records that skip their
+  methods' checks. `tests/command_senders.json` lists who may send each kind of change, so a new kind is reviewed.
+
 ### Added
 - An owner's export that is imported brings the history and chat of the original as one read-only note of its
   `core.Import` step (PROC-37, D2005): `log` gives that step `original`, `[{when, who, what, said}]` oldest first (each

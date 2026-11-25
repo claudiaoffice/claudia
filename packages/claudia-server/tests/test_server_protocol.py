@@ -5,13 +5,16 @@ edits carry the revision they were made against, and the errors of the kernel ha
 """
 
 import json
+from pathlib import Path
 
 import pytest
 
 from claudia_composes import TextModel
 from claudia_computes import WorkbookModel
 from claudia_core import Document, MemoryStore, Revision
+from claudia_core.commands import Batch, Checkpoint, Import, Redacted, Redaction, Restore, Setup, Switch, encode
 from claudia_core.testing import Insert, Interval, Remove
+from claudia_creates import SlideModel
 from claudia_server.auth import Account
 from claudia_server.composes import composes_methods
 from claudia_server.computes import computes_methods
@@ -241,6 +244,62 @@ def test_the_assistant_cannot_apply_a_raw_command_even_if_apply_were_in_its_allo
         call(doc, ai, "apply", {"command": INSERT})
     assert caught.value.code == "forbidden"
     assert doc.model.items == []
+
+
+# SEC-25 (D2007): the changes only the server makes, through its own methods and their checks (who may restore, redact,
+# mark a checkpoint, import). Sent raw, by anybody, they are refused, also inside a batch, and nothing changes.
+SERVER_ONLY = {
+    "core.Import": Import(name="other.odt", fmt="odt", state={"items": []}, sha256=None),
+    "core.Setup": Setup((Insert(0, 1),), "Set up the document"),
+    "core.Checkpoint": Checkpoint("Approved by legal", Revision("main", 1)),
+    "core.Redaction": Redaction((Revision("main", 1),), (1,)),
+    "core.Redacted": Redacted("list.Insert", {}),
+    "core.Restore": Restore("Before the edits", Revision("main", 1), "main"),
+    "core.Switch": Switch("main"),
+}
+
+
+@pytest.mark.parametrize("kind", sorted(SERVER_ONLY))
+def test_an_editor_cannot_send_a_change_only_the_server_makes(doc, ann, kind):
+    call(doc, ann, "apply", {"command": INSERT})
+
+    def log_now():
+        return call(doc, ann, "branches"), call(doc, ann, "checkpoints"), call(doc, ann, "ping")
+
+    before = log_now()
+    for sent in (SERVER_ONLY[kind], Batch((Insert(0, 2), SERVER_ONLY[kind]), "Two changes")):
+        with pytest.raises(RequestError) as caught:
+            call(doc, ann, "apply", {"command": encode(sent)})
+        assert caught.value.code == "forbidden", kind
+        assert log_now() == before
+        assert doc.model.items == [5]
+
+
+SENDERS = Path(__file__).with_name("command_senders.json")
+
+
+def test_every_kind_of_change_is_in_the_reviewed_list_with_who_may_send_it():
+    """D2007: a new kind of change cannot come in unreviewed: it is added to tests/command_senders.json as "person" (an
+    app or a script may send it through `apply`) or "server" (made only through the server's own methods)."""
+    reviewed = json.loads(SENDERS.read_text(encoding="utf-8"))
+    actual = {}
+    for model in (TextModel, WorkbookModel, SlideModel):
+        for kind in model.registry.schemas():
+            actual[kind] = model.registry.class_of(kind).sender
+    assert set(actual) - set(reviewed) == set(), (
+        "a new kind of change: say who may send it in tests/command_senders.json"
+    )
+    assert set(reviewed) - set(actual) == set(), (
+        "a kind of change was removed: remove it from tests/command_senders.json"
+    )
+    assert {kind: sender for kind, sender in actual.items() if sender != reviewed[kind]} == {}, (
+        "declared and reviewed differ"
+    )
+
+
+def test_an_editor_may_still_send_a_batch_of_her_own_changes(doc, ann):
+    call(doc, ann, "apply", {"command": encode(Batch((Insert(0, 1), Insert(1, 2)), "Two numbers"))})
+    assert doc.model.items == [1, 2]
 
 
 # --------------------------------------------------------------------------------------- undo / redo

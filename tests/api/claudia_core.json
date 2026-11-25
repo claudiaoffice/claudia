@@ -377,6 +377,7 @@
   "methods": {
    "class_of": "(self, kind: 'str') -> 'type[Command]'",
    "decode": "(self, envelope: 'dict') -> 'Command'",
+   "for_persons": "(self) -> 'CommandRegistry'",
    "known": "(self, kind: 'str') -> 'bool'",
    "merged": "(self, other: 'CommandRegistry') -> 'CommandRegistry'",
    "register": "(self, cls: 'type[Command]') -> 'type[Command]'",
@@ -2054,6 +2055,14 @@
   "methods": {
    "to_data": "(self) -> 'dict'"
   },
+  "properties": []
+ },
+ "ServerOnly": {
+  "class": [
+   "KernelError"
+  ],
+  "init": "(kind: 'str')",
+  "methods": {},
   "properties": []
  },
  "SetColumn": {

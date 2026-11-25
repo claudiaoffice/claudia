@@ -47,6 +47,7 @@ from claudia_core import (
     RegionHeld,
     Revision,
     SchemaTooNew,
+    ServerOnly,
     StaleEdit,
     UndoConflict,
     UnknownCommand,
@@ -1032,11 +1033,17 @@ def _apply(ctx, command, base):
     colleague holds the part it touches; `command_error` if the command itself is rejected. Nothing changes on any
     error. Refused with `forbidden` for the assistant (SEC-10): a raw command would walk around the checks an app's
     own methods make against it (a place that is not there, a picture without words, the page set up by people),
-    whatever `apply` itself is allowed to call."""
+    whatever `apply` itself is allowed to call. Refused with `forbidden` for anybody, also inside a batch, for a change
+    only the server makes through its own methods and their checks (SEC-25, D2007): an import, a document's setup, a
+    checkpoint, a redaction, a restore, a switch of line."""
     if ctx.account.system:
         raise RequestError("forbidden", msg("the assistant cannot apply a raw command; use the app's own methods"))
     try:
-        parsed = ctx.document.model.registry.decode(command)
+        parsed = ctx.document.model.registry.for_persons().decode(command)
+    except ServerOnly as exc:
+        raise RequestError(
+            "forbidden", msg("{kind} is made by the server only, through its own methods", kind=exc.kind)
+        ) from exc
     except (UnknownCommand, SchemaTooNew) as exc:
         raise RequestError("bad_request", message_of(exc)) from exc
     except (KeyError, TypeError, ValueError, AttributeError) as exc:
