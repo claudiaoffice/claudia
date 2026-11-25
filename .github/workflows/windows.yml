@@ -450,13 +450,17 @@ jobs:
           $linked = { (Test-Path $log) -and ((Get-Content $log -ErrorAction SilentlyContinue | Where-Object { $_ -match 'connected to Neutralino' }).Count -gt $script:linkedBefore) }
           $failures = @()
           try {
-            foreach ($how in 'closed', 'killed') {
+            foreach ($how in 'killed', 'closed') {
               Get-Process neutralino-win_x64, claudia-server -ErrorAction SilentlyContinue | Stop-Process -Force
               $script:linkedBefore = if (Test-Path $log) { (Get-Content $log | Where-Object { $_ -match 'connected to Neutralino' }).Count } else { 0 }
               $started = Start-Process $launcher -ArgumentList 'composes' -PassThru
               if (-not (Wait-For $linked 90)) {
                 Write-Host "No window of composes came up in 90 seconds ($how): this runner may have no desktop. Nothing to say about the core."
                 if (Test-Path $log) { Get-Content $log -Tail 20 }
+                Write-Host '--- launcher.log'
+                Get-Content "$env:LOCALAPPDATA\Claudia\composes\state\launcher.log" -ErrorAction SilentlyContinue
+                Write-Host '--- processes'
+                Get-Process neutralino-win_x64, node, claudia-server, claudia-start, msedgewebview2 -ErrorAction SilentlyContinue | Format-Table Id, Name, StartTime -AutoSize | Out-String | Write-Host
                 return
               }
               $cores = Get-Cores
