@@ -104,4 +104,5 @@ Paste As ▸ Plain text with no text on the clipboard stays shown and, when chos
    (phase 2).~~ Done.
 2. ~~Mock-ups: an emptied menu, an emptied context menu, the shortcut notice, Preferences ▸ Shortcuts with "fits
    when".~~ Done, for review.
-3. Architecture with a class diagram, then Gherkin scenarios. Both go to the owner for review before any code.
+3. Architecture with a class diagram: proposed in `menus-architecture.md`, for the owner. Then Gherkin scenarios.
+   Both go to the owner for review before any code.

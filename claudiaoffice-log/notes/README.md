@@ -41,6 +41,7 @@ renumbering table), `bugtracker.md` (SEC/PERF/UX/CODE/PROC/DOC items) and `qa-re
 | `bug-eater-queue.md` | The triage of every open tracker item against `backlog` at the time it was written: still real or not, class, cluster, size, the failing test to write first, and the proposed batches | 2026-11-24 |
 | `menu-audit.md` | Menu audit, phase 1: the workbook `claudia-menus.xlsx` against the menus of all three apps on web and desktop; how `scripts/menu_capture.py` and `scripts/menu_audit.py` make the workbook's Diagnosis sheet, the picture, the bugs found, what could not be run | 2026-11-25 |
 | `menus-that-fit.md` | Menus that show only what fits (D1600–D1606): the words of "fits when" per reason, the trial of hiding against greying, what follows for the build, next steps | 2026-11-25 |
+| `menus-architecture.md` | Menus architecture (E5.23, E5.24), a proposal: one definition, judged in the page, drawn by every client; the class diagram, the seams to test, the order of work, the decisions for the owner | 2026-11-25 |
 
 ## Three documents were deliberately not copied
 
