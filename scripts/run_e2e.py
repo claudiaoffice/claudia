@@ -63,6 +63,9 @@ from dataclasses import dataclass
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "tests" / "e2e"))  # live.py: how a test server is set up, shared with the specs
+from live import quick_hashing  # noqa: E402, I001
+
 WEB = ROOT / "web"
 CLIENT = ROOT / "clients" / "neutralino"  # the Windows and macOS client, whose windows two scripts test
 STATE = ROOT / ".claudia" / "e2e"
@@ -336,6 +339,7 @@ class Runner:
                         command += [flag, str(STATE / name)]
                 self.say("$ " + " ".join(command[:6]) + " ...")
                 if not self.args.dry_run:
+                    quick_hashing(work / f"state-{port}")
                     processes.append(
                         subprocess.Popen(
                             command,
@@ -461,6 +465,7 @@ class Runner:
                 raise Failure("could not make the sample fonts.")
             if self.args.dry_run:
                 return
+            quick_hashing(work / "state")
             process = subprocess.Popen(
                 [
                     sys.executable,
