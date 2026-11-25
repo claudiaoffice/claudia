@@ -4121,6 +4121,10 @@ msgstr ""
 msgid "Only an editor or an owner of the document can change this."
 msgstr ""
 
+#: web/app/lib/fits/conditions.ts
+msgid "Only an owner can do this."
+msgstr ""
+
 #: web/app/lib/search.ts
 msgid "Only in cells matching"
 msgstr ""
@@ -4741,6 +4745,14 @@ msgstr ""
 msgid "Put the cursor in a pivot table first."
 msgstr ""
 
+#: web/app/lib/fits/conditions.ts
+msgid "Put the cursor into a list first."
+msgstr ""
+
+#: web/app/lib/fits/conditions.ts
+msgid "Put the cursor into a text first."
+msgstr ""
+
 #: clients/contract/src/claudia_menus/manifest.py
 msgid "Put the result of a query on the selected cell"
 msgstr ""
@@ -5353,7 +5365,7 @@ msgstr ""
 msgid "Sandboxed execution"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/files.py web/app/components/AdminAccessDocuments.vue web/app/components/AiConsentDialog.vue web/app/components/DocumentFrame.vue web/app/components/NameAndDescribeDialog.vue web/app/components/StylesDialog.vue web/app/components/TextObjectMenu.vue web/app/lib/document-menus.ts web/app/lib/shortcuts.ts
+#: clients/linux/src/claudia_shell_gtk/files.py web/app/components/AdminAccessDocuments.vue web/app/components/AiConsentDialog.vue web/app/components/DocumentFrame.vue web/app/components/NameAndDescribeDialog.vue web/app/components/StylesDialog.vue web/app/components/TextObjectMenu.vue web/app/lib/document-menus.ts
 msgid "Save"
 msgstr ""
 
@@ -5473,6 +5485,14 @@ msgstr ""
 msgid "Seed of the random numbers"
 msgstr ""
 
+#: web/app/lib/fits/conditions.ts
+msgid "Select a cell first."
+msgstr ""
+
+#: web/app/lib/fits/conditions.ts
+msgid "Select a merged cell first."
+msgstr ""
+
 #: web/app/components/SlideWorkspace.vue
 msgid "Select a text box or a shape with words to put a reference into."
 msgstr ""
@@ -5481,16 +5501,36 @@ msgstr ""
 msgid "Select all"
 msgstr ""
 
+#: web/app/lib/fits/conditions.ts
+msgid "Select an object on the grid first."
+msgstr ""
+
+#: web/app/lib/fits/conditions.ts
+msgid "Select an object that can turn first."
+msgstr ""
+
 #: web/app/components/SlideWorkspace.vue
 msgid "Select an object to style it"
+msgstr ""
+
+#: web/app/lib/fits/conditions.ts
+msgid "Select an object with words in it first."
 msgstr ""
 
 #: web/app/components/Workspace.vue
 msgid "Select cells or an object to style them"
 msgstr ""
 
+#: web/app/lib/fits/conditions.ts
+msgid "Select more than one cell of the table first."
+msgstr ""
+
 #: web/app/components/PivotMembersDialog.vue
 msgid "Select none"
+msgstr ""
+
+#: web/app/lib/fits/conditions.ts
+msgid "Select something first."
 msgstr ""
 
 #: web/app/components/ResultNote.vue
@@ -5783,10 +5823,6 @@ msgstr ""
 
 #: web/app/lib/export-losses.ts
 msgid "So what this program does not show of the original is not in it."
-msgstr ""
-
-#: web/app/components/TextWorkspace.vue
-msgid "Soft Hyphen"
 msgstr ""
 
 #: web/app/lib/export-losses.ts
@@ -6275,6 +6311,10 @@ msgstr ""
 
 #: web/app/components/AdminAi.vue
 msgid "The administrator decides: add credit, or choose another provider."
+msgstr ""
+
+#: web/app/lib/fits/conditions.ts
+msgid "The ai is not set up on this server."
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
@@ -7453,6 +7493,10 @@ msgstr ""
 msgid "The “[” at character {position} has no “]”. Nothing is replaced."
 msgstr ""
 
+#: web/app/lib/fits/conditions.ts
+msgid "There are no random numbers here."
+msgstr ""
+
 #: packages/claudia-core/src/claudia_core/objects.py
 msgid "There is already a chart called “{name}”"
 msgstr ""
@@ -7513,6 +7557,10 @@ msgstr ""
 msgid "There is no list {numbering!r} to number the style “{name}” in"
 msgstr ""
 
+#: web/app/lib/fits/conditions.ts
+msgid "There is no place to go back to."
+msgstr ""
+
 #: web/app/lib/protocol.ts
 msgid "There is no such document."
 msgstr ""
@@ -7525,12 +7573,28 @@ msgstr ""
 msgid "There is no table to analyse yet. Select cells with a header row, type a word in the box left of the formula bar and press Enter — then it can be a pivot table’s source."
 msgstr ""
 
+#: web/app/lib/fits/conditions.ts
+msgid "There is nothing here to refer to yet."
+msgstr ""
+
 #: web/app/components/SidePanel.vue
 msgid "There is nothing in this to redact."
 msgstr ""
 
 #: web/app/lib/base-session.ts
 msgid "There is nothing like that in this document."
+msgstr ""
+
+#: web/app/lib/fits/conditions.ts
+msgid "There is nothing to redo."
+msgstr ""
+
+#: web/app/lib/fits/conditions.ts
+msgid "There is nothing to undo."
+msgstr ""
+
+#: web/app/lib/fits/conditions.ts
+msgid "There is only one slide."
 msgstr ""
 
 #: web/app/components/OpenDialog.vue
@@ -7705,6 +7769,10 @@ msgstr ""
 msgid "This is not enough on its own: the owner of each document must also allow Claude (Preferences ▸ AI…, off by default). Until it is allowed, @ai in that document uses the local model or the stand-in, and says so."
 msgstr ""
 
+#: web/app/lib/fits/conditions.ts
+msgid "This is only in the desktop app."
+msgstr ""
+
 #: web/app/components/RecoveryKeyDialog.vue
 msgid "This is the only way back into {doc} for somebody who has forgotten their password."
 msgstr ""
@@ -7823,6 +7891,10 @@ msgstr ""
 
 #: web/app/lib/containers.ts
 msgid "This server has no tool set up to draw {type}."
+msgstr ""
+
+#: web/app/lib/fits/conditions.ts
+msgid "This server has no {tool} set up."
 msgstr ""
 
 #: web/app/components/AdminSecurity.vue
@@ -8493,7 +8565,7 @@ msgstr ""
 msgid "You can change it anyway — this is a warning, not a refusal."
 msgstr ""
 
-#: web/app/lib/base-session.ts
+#: web/app/lib/fits/conditions.ts
 msgid "You can only look at this document."
 msgstr ""
 

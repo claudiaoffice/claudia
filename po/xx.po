@@ -4121,6 +4121,10 @@ msgstr "[Ônly à chàrt ôn à shéét môvés tô à slîdé.~~~~~~~~~~~~~~~~]
 msgid "Only an editor or an owner of the document can change this."
 msgstr "[Ônly àn édîtôr ôr àn ôwnér ôf thé dôcûmént càn chàngé thîs.~~~~~~~~~~~~~~~~~~~~~~~~]"
 
+#: web/app/lib/fits/conditions.ts
+msgid "Only an owner can do this."
+msgstr "[Ônly àn ôwnér càn dô thîs.~~~~~~~~~~]"
+
 #: web/app/lib/search.ts
 msgid "Only in cells matching"
 msgstr "[Ônly în célls màtchîng~~~~~~~~~]"
@@ -4741,6 +4745,14 @@ msgstr "[Pût ît în~~~~]"
 msgid "Put the cursor in a pivot table first."
 msgstr "[Pût thé cûrsôr în à pîvôt tàblé fîrst.~~~~~~~~~~~~~~~]"
 
+#: web/app/lib/fits/conditions.ts
+msgid "Put the cursor into a list first."
+msgstr "[Pût thé cûrsôr întô à lîst fîrst.~~~~~~~~~~~~~]"
+
+#: web/app/lib/fits/conditions.ts
+msgid "Put the cursor into a text first."
+msgstr "[Pût thé cûrsôr întô à téxt fîrst.~~~~~~~~~~~~~]"
+
 #: clients/contract/src/claudia_menus/manifest.py
 msgid "Put the result of a query on the selected cell"
 msgstr "[Pût thé résûlt ôf à qûéry ôn thé séléctéd céll~~~~~~~~~~~~~~~~~~]"
@@ -5353,7 +5365,7 @@ msgstr "[Sàndbôx~~~]"
 msgid "Sandboxed execution"
 msgstr "[Sàndbôxéd éxécûtîôn~~~~~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/files.py web/app/components/AdminAccessDocuments.vue web/app/components/AiConsentDialog.vue web/app/components/DocumentFrame.vue web/app/components/NameAndDescribeDialog.vue web/app/components/StylesDialog.vue web/app/components/TextObjectMenu.vue web/app/lib/document-menus.ts web/app/lib/shortcuts.ts
+#: clients/linux/src/claudia_shell_gtk/files.py web/app/components/AdminAccessDocuments.vue web/app/components/AiConsentDialog.vue web/app/components/DocumentFrame.vue web/app/components/NameAndDescribeDialog.vue web/app/components/StylesDialog.vue web/app/components/TextObjectMenu.vue web/app/lib/document-menus.ts
 msgid "Save"
 msgstr "[Sàvé~~]"
 
@@ -5473,6 +5485,14 @@ msgstr "[Séé thé pàgés ànd prînt thém~~~~~~~~~~~]"
 msgid "Seed of the random numbers"
 msgstr "[Sééd ôf thé ràndôm nûmbérs~~~~~~~~~~]"
 
+#: web/app/lib/fits/conditions.ts
+msgid "Select a cell first."
+msgstr "[Séléct à céll fîrst.~~~~~~~~]"
+
+#: web/app/lib/fits/conditions.ts
+msgid "Select a merged cell first."
+msgstr "[Séléct à mérgéd céll fîrst.~~~~~~~~~~~]"
+
 #: web/app/components/SlideWorkspace.vue
 msgid "Select a text box or a shape with words to put a reference into."
 msgstr "[Séléct à téxt bôx ôr à shàpé wîth wôrds tô pût à référéncé întô.~~~~~~~~~~~~~~~~~~~~~~~~~~]"
@@ -5481,17 +5501,37 @@ msgstr "[Séléct à téxt bôx ôr à shàpé wîth wôrds tô pût à référ�
 msgid "Select all"
 msgstr "[Séléct àll~~~~]"
 
+#: web/app/lib/fits/conditions.ts
+msgid "Select an object on the grid first."
+msgstr "[Séléct àn ôbjéct ôn thé grîd fîrst.~~~~~~~~~~~~~~]"
+
+#: web/app/lib/fits/conditions.ts
+msgid "Select an object that can turn first."
+msgstr "[Séléct àn ôbjéct thàt càn tûrn fîrst.~~~~~~~~~~~~~~~]"
+
 #: web/app/components/SlideWorkspace.vue
 msgid "Select an object to style it"
 msgstr "[Séléct àn ôbjéct tô stylé ît~~~~~~~~~~~]"
+
+#: web/app/lib/fits/conditions.ts
+msgid "Select an object with words in it first."
+msgstr "[Séléct àn ôbjéct wîth wôrds în ît fîrst.~~~~~~~~~~~~~~~~]"
 
 #: web/app/components/Workspace.vue
 msgid "Select cells or an object to style them"
 msgstr "[Séléct célls ôr àn ôbjéct tô stylé thém~~~~~~~~~~~~~~~~]"
 
+#: web/app/lib/fits/conditions.ts
+msgid "Select more than one cell of the table first."
+msgstr "[Séléct môré thàn ôné céll ôf thé tàblé fîrst.~~~~~~~~~~~~~~~~~~]"
+
 #: web/app/components/PivotMembersDialog.vue
 msgid "Select none"
 msgstr "[Séléct nôné~~~~]"
+
+#: web/app/lib/fits/conditions.ts
+msgid "Select something first."
+msgstr "[Séléct sôméthîng fîrst.~~~~~~~~~]"
 
 #: web/app/components/ResultNote.vue
 msgid "Select {blocker}"
@@ -5784,10 +5824,6 @@ msgstr "[Snàp tô grîd~~~~~]"
 #: web/app/lib/export-losses.ts
 msgid "So what this program does not show of the original is not in it."
 msgstr "[Sô whàt thîs prôgràm dôés nôt shôw ôf thé ôrîgînàl îs nôt în ît.~~~~~~~~~~~~~~~~~~~~~~~~~~]"
-
-#: web/app/components/TextWorkspace.vue
-msgid "Soft Hyphen"
-msgstr "[Sôft Hyphén~~~~]"
 
 #: web/app/lib/export-losses.ts
 msgid "Some programs cannot show them."
@@ -6276,6 +6312,10 @@ msgstr "[Thé àddréss ôf à céll às téxt, frôm îts rôw ànd côlûmn n�
 #: web/app/components/AdminAi.vue
 msgid "The administrator decides: add credit, or choose another provider."
 msgstr "[Thé àdmînîstràtôr décîdés: àdd crédît, ôr chôôsé ànôthér prôvîdér.~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+
+#: web/app/lib/fits/conditions.ts
+msgid "The ai is not set up on this server."
+msgstr "[Thé àî îs nôt sét ûp ôn thîs sérvér.~~~~~~~~~~~~~~]"
 
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "The angle in radians (from -pi/2 to pi/2) whose sine is the number, which must be from -1 to 1."
@@ -7453,6 +7493,10 @@ msgstr "[Thé “)” àt chàràctér {position} hàs nô “(”. Nôthîng î
 msgid "The “[” at character {position} has no “]”. Nothing is replaced."
 msgstr "[Thé “[” àt chàràctér {position} hàs nô “]”. Nôthîng îs réplàcéd.~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
+#: web/app/lib/fits/conditions.ts
+msgid "There are no random numbers here."
+msgstr "[Théré àré nô ràndôm nûmbérs héré.~~~~~~~~~~~~~]"
+
 #: packages/claudia-core/src/claudia_core/objects.py
 msgid "There is already a chart called “{name}”"
 msgstr "[Théré îs àlréàdy à chàrt càlléd “{name}”~~~~~~~~~~~~~~~~]"
@@ -7513,6 +7557,10 @@ msgstr "[Théré îs àlréàdy à téxt bôx càlléd “{name}”~~~~~~~~~~~~~
 msgid "There is no list {numbering!r} to number the style “{name}” in"
 msgstr "[Théré îs nô lîst {nûmbérîng!r} tô nûmbér thé stylé “{name}” în~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
+#: web/app/lib/fits/conditions.ts
+msgid "There is no place to go back to."
+msgstr "[Théré îs nô plàcé tô gô bàck tô.~~~~~~~~~~~~~]"
+
 #: web/app/lib/protocol.ts
 msgid "There is no such document."
 msgstr "[Théré îs nô sûch dôcûmént.~~~~~~~~~~]"
@@ -7525,6 +7573,10 @@ msgstr "[Théré îs nô tàblé càlléd {name} (àny môré).~~~~~~~~~~~~~~~~~
 msgid "There is no table to analyse yet. Select cells with a header row, type a word in the box left of the formula bar and press Enter — then it can be a pivot table’s source."
 msgstr "[Théré îs nô tàblé tô ànàlysé yét. Séléct célls wîth à héàdér rôw, typé à wôrd în thé bôx léft ôf thé fôrmûlà bàr ànd préss Éntér — thén ît càn bé à pîvôt tàblé’s sôûrcé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
+#: web/app/lib/fits/conditions.ts
+msgid "There is nothing here to refer to yet."
+msgstr "[Théré îs nôthîng héré tô référ tô yét.~~~~~~~~~~~~~~~]"
+
 #: web/app/components/SidePanel.vue
 msgid "There is nothing in this to redact."
 msgstr "[Théré îs nôthîng în thîs tô rédàct.~~~~~~~~~~~~~~]"
@@ -7532,6 +7584,18 @@ msgstr "[Théré îs nôthîng în thîs tô rédàct.~~~~~~~~~~~~~~]"
 #: web/app/lib/base-session.ts
 msgid "There is nothing like that in this document."
 msgstr "[Théré îs nôthîng lîké thàt în thîs dôcûmént.~~~~~~~~~~~~~~~~~~]"
+
+#: web/app/lib/fits/conditions.ts
+msgid "There is nothing to redo."
+msgstr "[Théré îs nôthîng tô rédô.~~~~~~~~~~]"
+
+#: web/app/lib/fits/conditions.ts
+msgid "There is nothing to undo."
+msgstr "[Théré îs nôthîng tô ûndô.~~~~~~~~~~]"
+
+#: web/app/lib/fits/conditions.ts
+msgid "There is only one slide."
+msgstr "[Théré îs ônly ôné slîdé.~~~~~~~~~~]"
 
 #: web/app/components/OpenDialog.vue
 msgid "These are slides. Open them with Claudia Creates."
@@ -7705,6 +7769,10 @@ msgstr "[Thîs îs nôt à fîlé Clàûdîà càn ôpén.~~~~~~~~~~~~~~]"
 msgid "This is not enough on its own: the owner of each document must also allow Claude (Preferences ▸ AI…, off by default). Until it is allowed, @ai in that document uses the local model or the stand-in, and says so."
 msgstr "[Thîs îs nôt énôûgh ôn îts ôwn: thé ôwnér ôf éàch dôcûmént mûst àlsô àllôw Clàûdé (Préféréncés ▸ ÀÎ…, ôff by défàûlt). Ûntîl ît îs àllôwéd, @àî în thàt dôcûmént ûsés thé lôcàl môdél ôr thé stànd-în, ànd sàys sô.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
+#: web/app/lib/fits/conditions.ts
+msgid "This is only in the desktop app."
+msgstr "[Thîs îs ônly în thé désktôp àpp.~~~~~~~~~~~~~]"
+
 #: web/app/components/RecoveryKeyDialog.vue
 msgid "This is the only way back into {doc} for somebody who has forgotten their password."
 msgstr "[Thîs îs thé ônly wày bàck întô {doc} fôr sômébôdy whô hàs fôrgôttén théîr pàsswôrd.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
@@ -7824,6 +7892,10 @@ msgstr "[Thîs sérvér hàs nô rémôté ÀÎ, sô nôthîng în thîs dôcûm
 #: web/app/lib/containers.ts
 msgid "This server has no tool set up to draw {type}."
 msgstr "[Thîs sérvér hàs nô tôôl sét ûp tô dràw {type}.~~~~~~~~~~~~~~~~~~]"
+
+#: web/app/lib/fits/conditions.ts
+msgid "This server has no {tool} set up."
+msgstr "[Thîs sérvér hàs nô {tool} sét ûp.~~~~~~~~~~~~~]"
 
 #: web/app/components/AdminSecurity.vue
 msgid "This server keeps no sealed documents, so there is nothing to set here."
@@ -8493,7 +8565,7 @@ msgstr "[Yôû bécômé thé ôwnér ôf thé néw dôcûmént. Thé péôplé 
 msgid "You can change it anyway — this is a warning, not a refusal."
 msgstr "[Yôû càn chàngé ît ànywày — thîs îs à wàrnîng, nôt à réfûsàl.~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/base-session.ts
+#: web/app/lib/fits/conditions.ts
 msgid "You can only look at this document."
 msgstr "[Yôû càn ônly lôôk àt thîs dôcûmént.~~~~~~~~~~~~~~]"
 

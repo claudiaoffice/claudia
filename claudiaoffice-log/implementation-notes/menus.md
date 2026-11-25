@@ -127,3 +127,40 @@ Both lists only shrink:
 - **Must not break.** The test that covers a feature's key risk carries `@pytest.mark.must_not_break`. The marker is
   registered in the root and the Linux client's `pyproject.toml`, and the convention, with its TypeScript form, is in
   `coding-standards.md` §2. The menu workbook test is the first.
+
+## Slice 3 · Judging what fits (`web/app/lib/fits/`), 2026-11-25
+
+**Test first.** `web/tests/fits.test.ts` tests at the seam agreed for this slice: rules in, verdicts out, plain data.
+- A rule is read from the workbook's words; an unknown phrase throws rather than hiding an entry; every rule of the
+  definition reads, in all three apps.
+- What fits is offered.
+- What does not is hidden by default with its sentence, or greyed when the trial says so; an entry's own setting beats
+  its reason's.
+- The first failing reason in the order of D1642 is named; an entry's own sentence replaces its reason's (D1650).
+- Every selected thing must fit.
+- A caret in text is text but not "something selected".
+- The server's tools, the client and the ai are asked.
+- The trial's setting is read from the address.
+
+**The modules** (pure TypeScript, no Vue):
+- `facts.ts`: the facts and the reasons in their order.
+- `conditions.ts`: the registry, one entry per phrase the definition uses, with its sentence.
+- `rule.ts`: `parseRule`, cached.
+- `policy.ts`: `policyFromAddress`: `?fits=role:grey&fits-entry=edit.undo:show`; every reason starts at hide.
+- `judge.ts`: `judge` → `Verdict`.
+
+**Changes outside `fits/`:**
+- **The look-only sentence.** "You can only look at this document." is the rule "role: editor or owner"'s sentence
+  (D1650), so it is written in `conditions.ts` and the session says it through `lookOnlyWords`.
+  `tests/look-only.test.ts` (CODE-98) now names that file as its one writer.
+- **German.** 19 new sentences are translated.
+
+**Assumptions:**
+- An entry set to "show" and one set to "grey" behave alike: an entry that does not fit cannot be used, so it is
+  greyed. "show" is kept because D1606 names it.
+- The sentences of the conditions are mine; the owner reviews them with the notices (slice 5).
+- The test reads the rules from the macOS and Windows menus' JSON (`clients/neutralino/src/generated/`), the
+  definition as plain data, until slice 4 generates the definition for the web.
+
+**Run:** the web's unit tests (2157), type check and eslint; the root tests without the browser (1408); the catalogue
+tests.

@@ -178,7 +178,7 @@ app by app:
 1. ~~**The definition moves** to `clients/contract/` with everything that reaches it (D1643); nothing else changes.~~ Done.
 2. ~~**The definition grows** (`fits`, `keys`, context menus), rebuilt to the workbook (E5.23's content), with
    the workbook test.~~ Done; `generate_keys.py` keeps its name until slice 4 writes the whole definition for the web.
-3. **Judging:** `fits/`, pure, with every rule of the definition parsing.
+3. ~~**Judging:** `fits/`, pure, with every rule of the definition parsing.~~ Done.
 4. **The web from the definition**, one workspace at a time, everything at "grey" first, so behaviour only changes
    where the workbook moved entries. Then the trial's default, hide.
 5. **Keys and the Shortcuts dialog** (D1604, D1642).

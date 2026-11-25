@@ -4121,6 +4121,10 @@ msgstr "Nur ein Diagramm auf einem Blatt lässt sich auf eine Folie verschieben.
 msgid "Only an editor or an owner of the document can change this."
 msgstr "Nur wer das Dokument bearbeiten darf oder es besitzt, kann das ändern."
 
+#: web/app/lib/fits/conditions.ts
+msgid "Only an owner can do this."
+msgstr "Das kann nur eine Eigentümerin oder ein Eigentümer."
+
 #: web/app/lib/search.ts
 msgid "Only in cells matching"
 msgstr "Nur in Zellen, die passen zu"
@@ -4741,6 +4745,14 @@ msgstr "Ablegen in"
 msgid "Put the cursor in a pivot table first."
 msgstr "Setzen Sie den Cursor zuerst in eine PivotTable."
 
+#: web/app/lib/fits/conditions.ts
+msgid "Put the cursor into a list first."
+msgstr "Setzen Sie den Cursor zuerst in eine Liste."
+
+#: web/app/lib/fits/conditions.ts
+msgid "Put the cursor into a text first."
+msgstr "Setzen Sie den Cursor zuerst in einen Text."
+
 #: clients/contract/src/claudia_menus/manifest.py
 msgid "Put the result of a query on the selected cell"
 msgstr "Das Ergebnis einer Abfrage in die ausgewählte Zelle setzen"
@@ -5353,7 +5365,7 @@ msgstr "Sandbox"
 msgid "Sandboxed execution"
 msgstr "Ausführung in der Sandbox"
 
-#: clients/linux/src/claudia_shell_gtk/files.py web/app/components/AdminAccessDocuments.vue web/app/components/AiConsentDialog.vue web/app/components/DocumentFrame.vue web/app/components/NameAndDescribeDialog.vue web/app/components/StylesDialog.vue web/app/components/TextObjectMenu.vue web/app/lib/document-menus.ts web/app/lib/shortcuts.ts
+#: clients/linux/src/claudia_shell_gtk/files.py web/app/components/AdminAccessDocuments.vue web/app/components/AiConsentDialog.vue web/app/components/DocumentFrame.vue web/app/components/NameAndDescribeDialog.vue web/app/components/StylesDialog.vue web/app/components/TextObjectMenu.vue web/app/lib/document-menus.ts
 msgid "Save"
 msgstr "Speichern"
 
@@ -5473,6 +5485,14 @@ msgstr "Die Seiten ansehen und drucken"
 msgid "Seed of the random numbers"
 msgstr "Startwert der Zufallszahlen"
 
+#: web/app/lib/fits/conditions.ts
+msgid "Select a cell first."
+msgstr "Wählen Sie zuerst eine Zelle aus."
+
+#: web/app/lib/fits/conditions.ts
+msgid "Select a merged cell first."
+msgstr "Wählen Sie zuerst eine verbundene Zelle aus."
+
 #: web/app/components/SlideWorkspace.vue
 msgid "Select a text box or a shape with words to put a reference into."
 msgstr "Wählen Sie ein Textfeld oder eine Form mit Wörtern, um einen Verweis einzusetzen."
@@ -5481,17 +5501,37 @@ msgstr "Wählen Sie ein Textfeld oder eine Form mit Wörtern, um einen Verweis e
 msgid "Select all"
 msgstr "Alle auswählen"
 
+#: web/app/lib/fits/conditions.ts
+msgid "Select an object on the grid first."
+msgstr "Wählen Sie zuerst ein Objekt am Raster aus."
+
+#: web/app/lib/fits/conditions.ts
+msgid "Select an object that can turn first."
+msgstr "Wählen Sie zuerst ein Objekt aus, das sich drehen lässt."
+
 #: web/app/components/SlideWorkspace.vue
 msgid "Select an object to style it"
 msgstr "Wählen Sie ein Objekt aus, um es zu formatieren"
+
+#: web/app/lib/fits/conditions.ts
+msgid "Select an object with words in it first."
+msgstr "Wählen Sie zuerst ein Objekt mit Text darin aus."
 
 #: web/app/components/Workspace.vue
 msgid "Select cells or an object to style them"
 msgstr "Wählen Sie Zellen oder ein Objekt aus, um sie zu formatieren"
 
+#: web/app/lib/fits/conditions.ts
+msgid "Select more than one cell of the table first."
+msgstr "Wählen Sie zuerst mehr als eine Zelle der Tabelle aus."
+
 #: web/app/components/PivotMembersDialog.vue
 msgid "Select none"
 msgstr "Keine auswählen"
+
+#: web/app/lib/fits/conditions.ts
+msgid "Select something first."
+msgstr "Wählen Sie zuerst etwas aus."
 
 #: web/app/components/ResultNote.vue
 msgid "Select {blocker}"
@@ -5784,10 +5824,6 @@ msgstr "Am Raster ausrichten"
 #: web/app/lib/export-losses.ts
 msgid "So what this program does not show of the original is not in it."
 msgstr "Was dieses Programm vom Original nicht zeigt, ist darum nicht darin."
-
-#: web/app/components/TextWorkspace.vue
-msgid "Soft Hyphen"
-msgstr "Bedingter Trennstrich"
 
 #: web/app/lib/export-losses.ts
 msgid "Some programs cannot show them."
@@ -6276,6 +6312,10 @@ msgstr "Die Adresse einer Zelle als Text, aus Zeilen- und Spaltennummer. Das dri
 #: web/app/components/AdminAi.vue
 msgid "The administrator decides: add credit, or choose another provider."
 msgstr "Die Administration entscheidet: Guthaben aufladen oder einen anderen Anbieter wählen."
+
+#: web/app/lib/fits/conditions.ts
+msgid "The ai is not set up on this server."
+msgstr "Die KI ist auf diesem Server nicht eingerichtet."
 
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "The angle in radians (from -pi/2 to pi/2) whose sine is the number, which must be from -1 to 1."
@@ -7453,6 +7493,10 @@ msgstr "Zur „)“ bei Zeichen {position} fehlt die „(“. Es wird nichts ers
 msgid "The “[” at character {position} has no “]”. Nothing is replaced."
 msgstr "Zur „[“ bei Zeichen {position} fehlt die „]“. Es wird nichts ersetzt."
 
+#: web/app/lib/fits/conditions.ts
+msgid "There are no random numbers here."
+msgstr "Hier gibt es keine Zufallszahlen."
+
 #: packages/claudia-core/src/claudia_core/objects.py
 msgid "There is already a chart called “{name}”"
 msgstr "Es gibt schon ein Diagramm namens „{name}“"
@@ -7513,6 +7557,10 @@ msgstr "Es gibt schon ein Textfeld namens „{name}“"
 msgid "There is no list {numbering!r} to number the style “{name}” in"
 msgstr "Es gibt keine Liste {numbering!r}, in der das Format „{name}“ nummeriert werden könnte"
 
+#: web/app/lib/fits/conditions.ts
+msgid "There is no place to go back to."
+msgstr "Es gibt keine Stelle, zu der Sie zurückgehen können."
+
 #: web/app/lib/protocol.ts
 msgid "There is no such document."
 msgstr "Es gibt kein solches Dokument."
@@ -7525,6 +7573,10 @@ msgstr "Es gibt keine Tabelle namens {name} (mehr)."
 msgid "There is no table to analyse yet. Select cells with a header row, type a word in the box left of the formula bar and press Enter — then it can be a pivot table’s source."
 msgstr "Es gibt noch keine Tabelle zum Auswerten. Wählen Sie Zellen mit einer Kopfzeile aus, tippen Sie ein Wort in das Feld links der Formelleiste und drücken Sie die Eingabetaste – dann kann sie die Quelle einer PivotTable sein."
 
+#: web/app/lib/fits/conditions.ts
+msgid "There is nothing here to refer to yet."
+msgstr "Hier gibt es noch nichts, worauf Sie verweisen können."
+
 #: web/app/components/SidePanel.vue
 msgid "There is nothing in this to redact."
 msgstr "Hier gibt es nichts zu schwärzen."
@@ -7532,6 +7584,18 @@ msgstr "Hier gibt es nichts zu schwärzen."
 #: web/app/lib/base-session.ts
 msgid "There is nothing like that in this document."
 msgstr "So etwas gibt es in diesem Dokument nicht."
+
+#: web/app/lib/fits/conditions.ts
+msgid "There is nothing to redo."
+msgstr "Es gibt nichts zu wiederholen."
+
+#: web/app/lib/fits/conditions.ts
+msgid "There is nothing to undo."
+msgstr "Es gibt nichts rückgängig zu machen."
+
+#: web/app/lib/fits/conditions.ts
+msgid "There is only one slide."
+msgstr "Es gibt nur eine Folie."
 
 #: web/app/components/OpenDialog.vue
 msgid "These are slides. Open them with Claudia Creates."
@@ -7705,6 +7769,10 @@ msgstr "Das ist keine Datei, die Claudia öffnen kann."
 msgid "This is not enough on its own: the owner of each document must also allow Claude (Preferences ▸ AI…, off by default). Until it is allowed, @ai in that document uses the local model or the stand-in, and says so."
 msgstr "Das allein genügt nicht: Die Eigentümerin oder der Eigentümer jedes Dokuments muss Claude dort ebenfalls erlauben (Einstellungen ▸ KI…, standardmäßig aus). Bis das geschehen ist, antwortet @ai in diesem Dokument mit dem lokalen Modell oder dem Platzhalter und sagt das auch."
 
+#: web/app/lib/fits/conditions.ts
+msgid "This is only in the desktop app."
+msgstr "Das gibt es nur in der Desktop-App."
+
 #: web/app/components/RecoveryKeyDialog.vue
 msgid "This is the only way back into {doc} for somebody who has forgotten their password."
 msgstr "Das ist der einzige Weg zurück in {doc} für jemanden, der sein Passwort vergessen hat."
@@ -7824,6 +7892,10 @@ msgstr "Dieser Server hat keine KI in der Ferne, daher verlässt nichts aus dies
 #: web/app/lib/containers.ts
 msgid "This server has no tool set up to draw {type}."
 msgstr "Auf diesem Server ist kein Werkzeug eingerichtet, um {type} zu zeichnen."
+
+#: web/app/lib/fits/conditions.ts
+msgid "This server has no {tool} set up."
+msgstr "Auf diesem Server ist kein {tool} eingerichtet."
 
 #: web/app/components/AdminSecurity.vue
 msgid "This server keeps no sealed documents, so there is nothing to set here."
@@ -8493,7 +8565,7 @@ msgstr "Sie werden Eigentümer des neuen Dokuments. Die in seinem Verlauf genann
 msgid "You can change it anyway — this is a warning, not a refusal."
 msgstr "Sie können es trotzdem ändern – das ist eine Warnung, keine Ablehnung."
 
-#: web/app/lib/base-session.ts
+#: web/app/lib/fits/conditions.ts
 msgid "You can only look at this document."
 msgstr "Sie können dieses Dokument nur ansehen."
 
