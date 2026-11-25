@@ -48,7 +48,7 @@ def _paragraph(world, words):
     page = world.ann.page
     page.click("[data-testid=text]")
     page.keyboard.type(words)
-    page.wait_for_function("document.querySelector('.health.open')")
+    page.locator(".health.open").wait_for(state="attached")
 
 
 @given("Ben is an editor of the document")
@@ -252,7 +252,7 @@ def _name_and_open(world, name):
     world.ann.finish_import(name)
     page = world.ann.page
     page.wait_for_selector("[data-testid=text]", timeout=20000)
-    page.wait_for_function("document.querySelector('.health.open')", timeout=20000)
+    page.locator(".health.open").wait_for(state="attached", timeout=20000)
 
 
 @then(parsers.parse('the new document has the paragraph "{words}"'))

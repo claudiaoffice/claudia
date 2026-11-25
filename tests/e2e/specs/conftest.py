@@ -275,7 +275,7 @@ class Person:
 
     def wait_until_open(self, timeout: float = 15000) -> None:
         self.page.wait_for_selector(READY[self.app], timeout=timeout)
-        self.page.wait_for_function("document.querySelector('.health.open')", timeout=timeout)
+        self.page.locator(".health.open").wait_for(state="attached", timeout=timeout)
 
     def notices(self) -> list[str]:
         """Every notice this page has shown since it was loaded, in order."""

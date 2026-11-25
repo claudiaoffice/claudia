@@ -23,7 +23,7 @@ def _paragraph(world, words):
     page = world.ann.page
     page.click("[data-testid=text]")
     page.keyboard.type(words)
-    page.wait_for_function("document.querySelector('.health.open')")
+    page.locator(".health.open").wait_for(state="attached")
 
 
 @given("Vera is a viewer of the document")

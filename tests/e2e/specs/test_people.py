@@ -26,7 +26,7 @@ def _paragraph(world, words):
     page = world.ann.page
     page.click("[data-testid=text]")
     page.keyboard.type(words)
-    page.wait_for_function("document.querySelector('.health.open')")
+    page.locator(".health.open").wait_for(state="attached")
 
 
 @given("Ben is an editor of the document")
@@ -180,7 +180,7 @@ def _ann_types(world):
     page.keyboard.press("Control+End")
     page.keyboard.press("Enter")
     page.keyboard.type("After the renewal")
-    page.wait_for_function("document.querySelector('.health.open')", timeout=20000)
+    page.locator(".health.open").wait_for(state="attached", timeout=20000)
     page.wait_for_timeout(2000)  # typing is sent in small batches; give the last one the time to reach the server
     world.ann.leave()
     world.ann.open()

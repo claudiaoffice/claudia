@@ -113,7 +113,7 @@ def _numbers(claude_world, first, last):
     for number in range(first, last + 1):
         page.keyboard.type(str(number))
         page.keyboard.press("Enter")
-    page.wait_for_function("document.querySelector('.health.open')")
+    page.locator(".health.open").wait_for(state="attached")
 
 
 def _consent(world: World) -> dict:
@@ -423,7 +423,7 @@ def _formula_in_b7(claude_world):
     page.locator(".viewport").click(position={"x": 188, "y": 195})  # B7
     page.keyboard.type("=A7/C7")
     page.keyboard.press("Enter")
-    page.wait_for_function("document.querySelector('.health.open')")
+    page.locator(".health.open").wait_for(state="attached")
 
 
 @given(parsers.parse('Anna withdrew the consent for Claude in "{name}"'))

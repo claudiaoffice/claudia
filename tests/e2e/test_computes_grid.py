@@ -90,7 +90,7 @@ def test_the_grid_is_on_the_screen_and_alternatives_and_following_work(port: int
             ]
             assert page.locator(".cell.dim").count() == 1  # the 5 in A4 takes no part
             page.keyboard.press("Escape")
-            page.wait_for_function("document.querySelectorAll('.cell.dim').length === 0")
+            page.wait_for_function("() => document.querySelectorAll('.cell.dim').length === 0")
 
             # The Random generator writes one formula into the cell: `=RANDOM(...)`, not `==RANDOM(...)`.
             grid.click(position={"x": 120, "y": 143})  # A5
