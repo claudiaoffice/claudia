@@ -132,10 +132,12 @@ rewritten test gets this check.
 
 ## 6. What was run, and what could not be
 
-Run: the full gate (`scripts/check_debt.py`, see the patch notes for its result); the changed test files three times
-under load; `npx vitest run` for `clients/neutralino/tests/core-process.test.ts` and `web/tests/session.test.ts`.
-Not run here: the GTK tests that need a display, the Windows and macOS jobs (the Windows sandbox test and PROC-63 are
-Windows-only: their first CI run is the check), Firefox, the browser end-to-end suites.
+Run here: the full gate (`scripts/check_debt.py`): clean, except the e2e greeting it skips without a built web app;
+the changed test files three times under load; `./run-e2e.sh core` against the real server and web app in Chromium
+(`CLAUDIA_CHROMIUM` set to the workspace's Chromium): 143 passed, 0 failed, 23 xfailed, 79 skipped (not automated yet,
+or checked by a unit test). On CI (run 45685996787, started by hand on `test-quality`): every job green, Windows and
+both browsers included; PROC-63's test passed on Windows.
+Not run: the macOS job (not part of that run), the GTK tests on a display here, a screen reader.
 
 ## Assumptions
 
