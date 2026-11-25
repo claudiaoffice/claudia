@@ -13,6 +13,7 @@ import { FROM_CORE, isRequest, TO_CORE } from './core-protocol.js'
 import { describeAuthInput, ExtensionLink, parseAuth } from './extension.js'
 import { appFromPath, getIdentity } from './identity.js'
 import { configDir, stateDir } from './paths.js'
+import { watchParent } from './parent-watch.js'
 import { parseAddress } from './servers.js'
 import { Settings } from './settings.js'
 import { appendFileSync, fstatSync, mkdirSync } from 'node:fs'
@@ -57,7 +58,7 @@ function main(): void {
   // Until the app is known the log is the suite's; then it is the app's own.
   let log: Log = logTo(join(configDir(), 'shell.log'))
   const args = parseCoreArgs(process.argv.slice(2))
-  log(`started: node ${process.version}, ${process.execPath}; arguments ${JSON.stringify(process.argv.slice(2))}; stdin is ${describeStdin()}`)
+  log(`started: node ${process.version}, ${process.execPath}; arguments ${JSON.stringify(process.argv.slice(2))}; parent process ${process.ppid}; stdin is ${describeStdin()}`)
   const fatal = (what: string) => (problem: unknown) => {
     log(`${what}: ${(problem as Error)?.stack ?? problem}`)
     process.exit(1)
@@ -76,6 +77,18 @@ function main(): void {
   appLog(`app ${identity.name}, server ${server ?? '(its own)'}, NODE_OPTIONS ${process.env.NODE_OPTIONS ?? '(none)'}`)
   const given = server ? parseAddress(server) : null
 
+  // The window is gone when the link to Neutralino breaks, or when the process that started this one is: Neutralino does
+  // not end its extension, and on Windows the link has stayed up after Neutralino was killed (CODE-97, D753).
+  let core: Core | null = null
+  let ending = false
+  const end = (reason: string): void => {
+    if (ending) return
+    ending = true
+    log(`${reason}; ending`)
+    void (core?.stop() ?? Promise.resolve()).finally(() => process.exit(0))
+  }
+  watchParent({ pid: process.ppid, onGone: end })
+
   let raw = ''
   let started = false
   process.stdin.setEncoding('utf8')
@@ -91,7 +104,7 @@ function main(): void {
     started = true
     appLog(`got the tokens from Neutralino (port ${auth.nlPort}, extension ${auth.nlExtensionId}); connecting`)
     let link: ExtensionLink | null = null
-    const core = new Core({
+    core = new Core({
       identity,
       settings: new Settings(undefined, appLog),
       given,
@@ -106,14 +119,11 @@ function main(): void {
         if (event !== TO_CORE) return
         if (isRequest(data)) {
           appLog(`<- page: ${data.kind}`)
-          core.handle(data)
+          core?.handle(data)
         } else appLog('ignored a request of the shell page that is not one')
       },
       onOpen: () => appLog('connected to Neutralino'),
-      onClosed: () => {
-        appLog('the link to Neutralino is closed; ending')
-        void core.stop().finally(() => process.exit(0))
-      },
+      onClosed: () => end('the link to Neutralino is closed'),
       log: appLog,
     })
   })

@@ -447,11 +447,18 @@ jobs:
             while ((Get-Date) -lt $until) { if (& $Condition) { return $true }; Start-Sleep -Milliseconds 500 }
             return $false
           }
+          function Show-Tree([string]$When) {
+            Write-Host "--- processes $When"
+            Get-CimInstance Win32_Process | Where-Object { $_.Name -match '^(node|neutralino-win_x64|claudia-start|claudia-server)\.exe$' } |
+              Select-Object ProcessId, ParentProcessId, Name, @{ n = 'Command'; e = { "$($_.CommandLine)".Substring(0, [Math]::Min(110, "$($_.CommandLine)".Length)) } } |
+              Format-Table -AutoSize | Out-String -Width 250 | Write-Host
+          }
           $linked = { (Test-Path $log) -and ((Get-Content $log -ErrorAction SilentlyContinue | Where-Object { $_ -match 'connected to Neutralino' }).Count -gt $script:linkedBefore) }
           $failures = @()
           try {
             foreach ($how in 'killed', 'closed') {
-              Get-Process neutralino-win_x64, claudia-server -ErrorAction SilentlyContinue | Stop-Process -Force
+              Get-Cores | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
+              Get-Process neutralino-win_x64, claudia-server, claudia-start -ErrorAction SilentlyContinue | Stop-Process -Force
               $script:linkedBefore = if (Test-Path $log) { (Get-Content $log | Where-Object { $_ -match 'connected to Neutralino' }).Count } else { 0 }
               $started = Start-Process $launcher -ArgumentList 'composes' -PassThru
               if (-not (Wait-For $linked 90)) {
@@ -461,9 +468,11 @@ jobs:
                 Get-Content "$env:LOCALAPPDATA\Claudia\composes\state\launcher.log" -ErrorAction SilentlyContinue
                 Write-Host '--- processes'
                 Get-Process neutralino-win_x64, node, claudia-server, claudia-start, msedgewebview2 -ErrorAction SilentlyContinue | Format-Table Id, Name, StartTime -AutoSize | Out-String | Write-Host
+                if ($failures) { throw ($failures -join "`n") }
                 return
               }
               $cores = Get-Cores
+              Show-Tree "before the window is $how"
               $window = Get-Process neutralino-win_x64 -ErrorAction SilentlyContinue
               Write-Host "[$how] window $($window.Id), cores $(($cores | ForEach-Object ProcessId) -join ', '), launcher $($started.Id)"
               if ($how -eq 'closed') { if (-not $window.CloseMainWindow()) { Write-Host 'CloseMainWindow found no window to close' } }
@@ -473,6 +482,7 @@ jobs:
               if (-not $ended) {
                 $failures += "[$how] a core of the window was still running 30 seconds after the window ($(( $cores | ForEach-Object ProcessId) -join ', '))"
               }
+              Show-Tree "after the window is $how"
               Write-Host "[$how] launcher still running: $(-not $started.HasExited)"
               Get-Content $log -Tail 12 -ErrorAction SilentlyContinue
             }
