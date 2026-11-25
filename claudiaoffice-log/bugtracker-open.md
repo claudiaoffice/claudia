@@ -27,7 +27,7 @@ The index is the status of record; a section below keeps the status of the round
 re-checked. **Opened** and **Fixed** are filled from 2026-11-20 on: for older items only where the status already gave
 the date.
 
-### Open (71)
+### Open (63)
 
 By priority (P1, P2, P3, then items that wait for a decision without one), then by ID.
 
@@ -44,19 +44,14 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | UX-51 | P2 | UX / composes | The words go round the unturned frame of a turned object, not its bounding box (D1226 decides the box); turning is on screen in composes since D1232 | **new, open** (read) |  |  |
 | UX-68 | P2 | UX / computes | A sheet or a chart tab (after E6.31: a slide) cannot be deleted: nothing in the menus or the tab strip reaches `RemoveSheet` or `remove_chart` | **new, open** (read; size 2) | 2026-11-22 |  |
 | UX-69 | P2 | UX / all apps | A viewer is not told she can only look: greyed entries, hidden controls and object gestures are silent (only Delete on a sheet's object says so) | open (scenario `@pending:UX-69`) | 2026-11-22 |  |
-| UX-70 | P2 | UX / all apps | What an export could not keep is never shown: the losses come back with the file and no client says them | **fix on `batch-4`** (proposed: fixed) | 2026-11-22 |  |
 | UX-71 | P2 | UX / computes | Text on a workbook's slide is drawn in the workbook's Body text (13 px), tiny on a 1600-unit slide | **needs decision** (measured; size 2) | 2026-11-22 |  |
-| UX-90 | P2 | UX / a11y | About 25 other `role="status"` elements appear with their text already in them (`v-if`), so screen readers may not announce them (BITV 4.1.3), as the notice did (UX-88) | **fix on `batch-4`** (proposed: fixed) | 2026-11-25 |  |
 | UX-91 | P2 | UX / composes / Firefox | In Firefox the down arrow from the paragraph above a new table does not put the caret in its first box (Chromium does) | **new, open** (measured on CI) | 2026-11-25 |  |
 | UX-93 | P2 | UX / a11y | The font banner ("This document uses fonts this server does not have …") is dark text on a dark ground, about 1.1:1 (BITV 1.4.3 asks 4.5:1) | **new, open** (measured) | 2026-11-25 |  |
-| CODE-25 | P2 | Code / Export | A renamed object loses its name in pptx and odp without the export saying so (D450) | **fix on `batch-4`** (proposed: fixed) |  |  |
 | CODE-31 | P2 | Code / i18n | The history speaks English to everybody: command labels and summaries are not translated | **new, open** |  |  |
-| CODE-45 | P2 | Code / Import | pptx placeholders (titles, body text) are not imported at all | **fix on `batch-4`** (proposed: fixed) |  |  |
 | CODE-99 | P2 | Code / desktop clients | A person's apps use any Claudia server on port 8765 of the computer as their own, also another person's or a service's: with two people logged in, the second one's documents are saved in the first one's home folder | **new, open** (read); fix on the macOS installer branch (E8.5) | 2026-11-25 |  |
 | CODE-100 | P2 | Code / desktop clients | Next to a service of another version, the apps refuse to start and say it stops after ten minutes, which a service never does | **new, open** (read); fix on the macOS installer branch (E8.5) | 2026-11-25 |  |
 | PROC-15 | P2 | Process | The tracker and the backlog lag the code: fixed items still "open", 64 stories at a placeholder 50 % | partly fixed 2026-11-25 (batch 1: the index guard); the backlog's placeholder 50 % stays open |  |  |
 | PROC-30 | P2 | Process / desktop clients | The Neutralino (Windows, macOS) tests and the GTK client were not run for `object-interaction`: the generated menus were rebuilt and the manifest unit tests pass, nothing more | **new, open** |  |  |
-| PROC-37 | P2 | Process / scope | D1272 says an export's history and chat come back in with their authors as text; slice B imports the content only (`import_state` returns the state, the `history.jsonl` and `chat.jsonl` of an export are written but never read back) | **fix on `batch-4`** (proposed: fixed) |  |  |
 | UX-64 | P2 | UX / all apps | Dark mode: a part of the sidebar (History & Chat / Help) is not readable or has too little contrast; the exact symptom was not written down when it was seen (see entry) | **needs decision** (symptom to be re-stated; size 2) | 2026-11-22 |  |
 | SEC-09 | P3 | Security | User names can be confusable (homoglyphs) | open (unverified) |  |  |
 | SEC-16 | P3 | Security | The LaTeX program setting accepts any executable on the server | partly fixed 2026-11-25 (batch 1, D2002): showing the accepted program's answer on the settings page stays open |  |  |
@@ -93,11 +88,8 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | CODE-53 | P3 | Code / web | The failure text of a rendered container is clipped in a small frame and cannot be read in full | open |  |  |
 | CODE-62 | P3 | Code / Linux client | A window that revives the shared server while the old one still holds the port starts it on a random port, not the remembered one | **new, open** |  |  |
 | CODE-63 | P3 | Code / composes | The Format ▸ Styles menu lists composes' built-in `contents-title` and `contents-1` to `contents-9` as "custom" styles | **new, open** (read) |  |  |
-| CODE-66 | P3 | computes I/O | A picture added to an imported XLSX or ODS is not written into it: the patch of a kept file does not add pictures (reported as `object`) | **fix on `batch-4`** (proposed: fixed) |  |  |
 | CODE-68 | P3 | computes | Computes cannot make a text box or a shape, though a model can hold one (a file from another app) and an export reports it as `object` | **new, open** |  |  |
-| CODE-70 | P3 | computes I/O | The patch of a kept XLSX or ODS does not add pivot tables either (reported), as it does not add pictures (CODE-66) | **fix on `batch-4`** (proposed: fixed) |  |  |
 | CODE-74 | P3 | Code | `export_content` still answers `{format: "claudia-export 1", ...}`, a JSON that is neither the zip of D1270 nor documented anywhere; it is recorded as an export and the panel says "exported as claudia-export 1"; no window calls it | **new, open** (size 3; remove it or make it the zip) |  |  |
-| PROC-62 | P3 | Process / CI | A test of the Neutralino client failed once on Windows CI and passed when the job was run again: "opens a PDF to print in the computer's viewer…" (`clients/neutralino/tests/files.test.ts`) | **fix on `batch-4`** (proposed: fixed) | 2026-11-25 |  |
 | UX-92 | P3 | UX / i18n | History & Chat says "undo" and "redo" in English before a step, and the "History of the original" copies it | **new, open** (read) | 2026-11-25 |  |
 | CODE-101 | P3 | Code / Import | A pptx placeholder's inherited size and alignment (a title's 44 pt, centred) are neither read nor reported | **new, open** (read) | 2026-11-25 |  |
 | CODE-102 | P3 | Code / Import | A pptx box with several bulleted paragraphs comes in with one bullet (one paragraph per box), and no loss says so | **new, open** (measured) | 2026-11-25 |  |
@@ -249,18 +241,6 @@ history (one undo brings the box back next to the container) and the container g
 box shows it as gone. **Fix:** one server request that replaces the box in one `Batch`, giving the container the box's
 name.
 
-### CODE-25 · Object names are lost in pptx and odp without a word · P2 · fix on `batch-4`
-**Evidence (measured):** renaming a slide and exporting reports `not-written: names`; renaming an object reports
-nothing, because the `objects` facet counts as written. **Fix:** write the names (`p:cNvPr/@name`, `draw:name`; and the
-slide names: `p:cSld/@name`, the page's `draw:name`), read them on import (suffixing duplicates), then drop `names` from
-the unwritten facets. Until then every presentation's export lists `names` as not written.
-**Measured** again on `main` at `a2e9cf1f`: since slide names moved into the slides' records (D1470), not even
-`not-written: names` was reported any more; a round trip lost every name without a word. **Fix** on `batch-4`: the names
-are written (`p:cNvPr/@name`, `p:cSld/@name`; `draw:name` of an object and of a page) and read back, duplicates told
-apart as `Name (2)` (`distinct_name`); a page called `page<n>` has no name; an unnamed slide's page gets the first free
-`page<n>`. **Tests:** `test_pptx.py` and `test_odp.py`, "the names of slides and objects go out and come back", the
-kept-file patch, duplicates, a picture's name.
-
 ## Code review of 2026-11-15 at `7994b00`
 
 ### CODE-28 · An app's server wiring is spread over five tables · P3 · new, open
@@ -337,20 +317,6 @@ means editing the region; `WorkbookModel` imports its own commands (`model.py` 4
 to rename a sheet as commands.
 **Recommendation:** let a command say how it moves a region (a method, or a table keyed by command kind) and move
 command construction out of the model; then turn PLC0415 on per package with named exceptions.
-
-### CODE-45 · pptx placeholders (titles, body text) are not imported at all · P2 · fix on `batch-4`
-**Measured** (found while fixing CODE-44, reported to the owner as bug A, size 1): `pptx._classify` takes text boxes,
-auto shapes and pictures only, so a placeholder — the title and the body text of nearly every slide made from a
-layout — is left out of the model, and with it its words and its font. Most decks from PowerPoint come in nearly empty.
-The stand-in-fonts sample uses a text box for its title for that reason. **Acceptance:** a deck made from the default
-"Title and Content" layout imports with its title and body as objects (in their placeholder's place and size, the
-title's words in the theme's heading font), round-trips through `apply_edits_to_pptx` keeping the placeholder, and
-`pptx_import_losses` reports nothing for them. Touches the object ids, the losses and the export; its own patch.
-**Fix** on `batch-4`: a title, subtitle or body placeholder with words is read as a text box in its layout's place and
-size (the title in the heading font, a body's first paragraph with its master's bullet, read through the layout's and
-the master's list styles); an empty one shows nothing and is no loss; footers, dates and slide numbers stay `object`.
-The patch keeps the placeholder and writes `buNone` for a bullet taken away. Left out (new bug, see the batch-4 note):
-the size and alignment a placeholder inherits (a title's 44 pt, centred) are neither read nor reported.
 
 ### CODE-47 · Words of a docx with a font of their own are a `formatting` loss · P3 · new, open
 **Measured** (reported as bug C, size 3): a run with its own `w:rFonts` (not through a style) keeps the paragraph
@@ -434,24 +400,6 @@ from the manifest instead of a typed string.
 Delete is in the generated key table, and selecting an object and pressing it removes the object in one history entry
 (`objects.cjs`, step "delete"). Found while auditing rotation and key coverage 2026-11-19.
 
-### CODE-66 · A picture added to an imported workbook is not written into it · P3 · fix on `batch-4`
-`apply_edits_to_xlsx` / `apply_edits_to_ods` change only the cells, looks, names, widths and charts of the original file's XML;
-a picture added in computes after an import is reported (`object`) and not in the file (a fresh export has it, D1233).
-**Fix.** The patch adds an `xdr:pic` and its media part to the sheet's drawing (`Drawings.add_picture` is there for it) and a
-`draw:frame` and its `Pictures/` part to the sheet's `table:shapes`; moving, turning or describing a picture changes its frame
-or anchor; removing one takes it and its part out. **Acceptance.** Import a workbook, add, move, turn and remove a picture,
-export: the file has what the model has and `xlsx_unwritten_changes` is empty (`test_pictures.py`, a patch case for each).
-Found while building D1233.
-**Fix** on `batch-4`: `xlsx_picture_patch` and `ods_picture_patch` patch the pictures as the chart patches patch the
-charts, with the same `Drawings` (xlsx) and `SheetShapes` (ods, taken out of the chart patch) and the fresh export's
-`picture_anchor` / `picture_frame` for an added one; a moved, resized or turned picture keeps the rest of what the file
-gives it (its anchor is pinned again, its `rot` or `draw:transform` set, an ods frame in a cell taken onto the sheet),
-a removed one takes its bytes with it unless another picture shows them; pictures are no longer fresh-only in
-`_unwritten`. **Test:** "api: a picture added to an imported xlsx/ods is in the export" (`test_pictures.py`: added,
-moved and resized, turned, renamed and described, removed, removed with its bytes still shown, in an ods cell, made
-decorative beside the file's own extensions, an SVG; both formats); LibreOffice 24 reads each patched file as it reads
-the fresh export of the same model.
-
 ### UX-48 · The object clipboard copies pictures only · P3 · new, open
 D1229 gives the three apps one object clipboard (`web/app/lib/object-clipboard.ts`) for pictures. A box or a shape has
 paragraph content the server cannot copy yet, and a picture from another program cannot be pasted (no import from the
@@ -497,19 +445,6 @@ there is no Insert entry and no host support for writing in it from the sheet. *
 computes manifest (the same entries as creates and composes), Edit text through D1232, XLSX `xdr:sp` and ODS `draw:custom-shape` export.
 **Acceptance.** Insert a box and a shape in computes, write in them, export to XLSX and ODS and reimport: the same words; the loss report no longer says `object` for them.
 
-### CODE-70 · The patch of a kept file does not add pivot tables · P3 · fix on `batch-4`
-Same cause and same shape as CODE-66: `apply_edits_to_xlsx` / `_ods` change what the file already has. A pivot table
-defined in computes after an import is reported and not written. **Acceptance.** Import a workbook, define a pivot, export:
-the file has it, or `xlsx_unwritten_changes` names it and the test says so.
-**Fix** on `batch-4`: the patches write the pivots defined since the import with the fresh export's own writers:
-`put_pivots` (taken out of `add_pivots`; the caches are numbered on from those the file has, in its one `pivotCaches`)
-and `data_pilot_tables` (into the file's `table:data-pilot-tables`, made where it has none); `written_pivots` takes the
-names to write, so what a file holds as values only is said for those alone (`pivot-table` with `room`, `source`,
-`empty`). A pivot of the file that was changed or removed is still not written and still reported. **Test:** "api: a
-pivot defined in an imported file is in the export" (`test_xlsx_pivots.py`, `test_ods_pivots.py`: into a file without
-pivots, beside one the file has, and in xlsx one with no room for its filter); LibreOffice 24 reads the pivots of each
-patched file.
-
 ### PROC-30 · The desktop clients were not run for this branch · P2 · new, open
 Definition of done: all desktop clients work with the latest server and do not diverge from the web. For `object-interaction`
 the Neutralino menus (`menu.composes.json`, `menu.computes.json`) were regenerated and the Linux manifest tests
@@ -526,26 +461,6 @@ viewer's "show who wrote what" should have no data behind it. **Options.** (a) M
 file (a viewer's snapshot would be written without them: a second snapshot); (b) accept the authorship as content and say
 so in D1261. **Proposal:** (b) until the owner says otherwise, because masking in the snapshot means the content is stored
 twice. Not built either way.
-
-### PROC-37 · The history and chat of an export are not read back · P2 · fix on `batch-4`
-**Evidence (read, measured by the tests).** `write_export` puts `history.jsonl` and `chat.jsonl` in the zip for an owner and
-`read_export` returns them, but `import_state` takes only `state`; the new document starts with one `core.Import` step. D1272
-says the history comes in with its authors as plain text ("former people"). **Not built** because the history of an export
-is the commands of another document, with revisions that mean nothing in the new one; what a person would want is the list of
-who did what, not commands that can be undone. **Options.** (a) a read-only "History of the original" kept as one note in the
-new document's history, text only, with the names as text; (b) the commands replayed with their authors as former people;
-(c) log it and leave the import as content only. **Proposal:** (a) in slice C. The mock-up's sentence "The people named in its
-history are not given access; their names stay in the history as former people" is **not** on the import dialog until this
-is built; the dialog says "Nobody else is given access." and nothing about names.
-
-**Fix** on `batch-4` (D2005, the owner chose (a)): the import of an owner's export carries the history and the chat of
-the original as one read-only note of its `core.Import` step (`Import.original`): a line per step (who, when, what the
-original's history said of it) and per chat message for everybody (private messages stay out); the names are text. It is
-nobody's undo step, as the import is not; redacting the whole import takes it away. History & Chat shows it folded under
-the import's step ("History of the original"); the import dialog now says the mock-up's sentence about names when the
-export brings a history (`with_history` in the upload answer), and "Nobody else is given access." otherwise. **Test:**
-"importing an owner's export adds one note with who did what" (`test_server_export_import.py`), and "the upload says
-whether the export brings a history".
 
 ### CODE-74 · `export_content` is a third kind of export nobody asked for · P3 · new, open
 `export_content` (a JSON object with `format: "claudia-export 1"`) predates D1270 and is not called by any window. It is
@@ -604,24 +519,6 @@ holds everywhere. **Fix.** Tell her once when she tries: a greyed entry, a gestu
 
 ## Round of 2026-11-22 (E6.31 step 2: slides in computes, branch `e6-31-slides-in-computes`)
 
-### UX-70 · What an export could not keep is never shown · P2 · size 2 · fix on `batch-4`
-**Found** while writing the slide's loss (`slide_plan.py`): `export_office` answers with `losses` (`{kind, detail,
-count}`) for xlsx and ods, and composes and creates have their own, but no client reads them (`ExportedFile.losses` in
-`web/app/lib/base-session.ts` is never shown). The person is not told that a chart tab became a sheet, that a formula
-was written as its value, or (since E6.31) that a slide was written as a sheet. Evidence: **read**. **Acceptance:** after
-an export that lost something, the person is told what, in words, once per kind (the scenario "Downloading as xlsx or
-ods says that a slide became a sheet" of `specs/computes/slides.feature` is one of them).
-**Fix** on `batch-4`, to the design the owner agreed on 2026-11-25 (`notes/mockups/export-dialog-tracked-changes.svg`,
-panel B): after Export the dialog says "The file does not hold:", one line per kind (with how many when more than one)
-and a sentence why or what to do, then "Everything else is in the file."; a format that reported nothing lost says
-"Everything is in the file."; a format that does not report says nothing more. The words of every code are in
-`web/app/lib/export-losses.ts`; a code nobody has put into words is still said, with its code. The result is in a
-`role=status` region that is always in the dialog (BITV 4.1.3). **Test:** `web/tests/export-losses.test.ts`; used in
-the browser once (odt of a typed text: "Who typed which words"). The export of a kept file reports three more kinds,
-which have words too: `not-patched` (written anew), `removed-…` (what went with a deleted part, by the kind of thing)
-and `stale-reference`. **Guard:** `tests/test_loss_words.py` reads the codes the Python sources report and finds words
-for every one an export can report (the import-only ones are named there).
-
 ### UX-71 · Text on a workbook's slide is tiny · P2 · size 2 · needs decision
 **Found** in the screenshots of `web/e2e/computes-slides.cjs`: a text box on a slide in computes is drawn in the
 workbook's Body text, 13 px for the cells of a sheet, which on a slide of 1600 × 900 units is a fortieth of its height
@@ -650,20 +547,6 @@ person's apps start her own server and open.
 
 ## Found in batch 3 of the bug eater (2026-11-25; branch `batch-3`)
 
-### UX-90 · Other status messages may not be announced either · P2 · size 3 · fix on `batch-4`
-**Read** (helper, UX-88): about 25 elements with `role="status"` are made with `v-if` together with their text, among
-them `AdminFonts.vue`, `AdminLogin.vue`, `OpenDialog.vue`, `PrintPreview.vue`, `RecoveryKeyDialog.vue`,
-`StylesDialog.vue`, `FontReportBanner.vue` and the redaction banner in `DocumentFrame.vue`. A live region that appears
-with its content may not be read out (BITV 4.1.3). UX-88 fixed the notice only.
-**Fix** on `batch-4`: 28 such regions in 23 components (one with a bound role: `ContainerFace.vue`, status or alert). The
-`role="status"` is now on a wrapper that is always on the page,
-and the condition is on what it says inside it; an empty one takes no room (`[role="status"]:empty` is placed
-absolutely in `app.css`, not hidden, so it stays in the accessibility tree). **Test:** `web/tests/live-regions.test.ts`
-reads every template with Vue's own parser and finds no `role="status"` or `aria-live="polite"` element made or shown by
-a condition, written out or bound. `role="alert"` is left as it is: an alert is announced when it appears. A region
-that comes with a whole new view (a dialog that opens, the part of the Import dialog for a chosen file) is read with that
-view and is not changed. Not heard with a screen reader.
-
 ### UX-91 · In Firefox the down arrow does not go into a new table · P2 · size 2 · open
 **Measured** by the first Firefox job that ran (CI on `batch-3`, twice): `test_objects_in_composes.py::
 test_i_can_work_in_a_new_kind_straight_away[table]` fails at "Ctrl+Home, End, ↓": no box has the caret
@@ -675,17 +558,6 @@ tried on CI and was wrong. **Until it is fixed** (the owner, 2026-11-25) the sce
 straight away" of `invariants/objects-in-composes.feature` carries no `@firefox` tag; put it back with the fix.
 
 ## Found after batch 3 of the bug eater (2026-11-25)
-
-### PROC-62 · A test of the Neutralino client fails now and then on Windows · P3 · size 3 · fix on `batch-4`
-**Measured:** CI of `main` at `ebeed301`, job "Neutralino client on Windows": `tests/files.test.ts` › Files › "opens a
-PDF to print in the computer's viewer, from a folder of its own, without asking where (D502)" failed with
-`expected [] to deeply equal [ Array(1) ]` (432 ms). The push did not touch `clients/`, the same test passed at
-`30e69f2b`, and the job passed when it was run again. Not read further. **Acceptance:** the test waits for what it
-expects instead of for a time, and passes on Windows repeatedly.
-**Cause** (reproduced on Linux by giving the tests no time to settle: four tests fail, this one with the same
-`expected [] to deeply equal [ Array(1) ]`): the tests waited 10 ms for real files to be written, which a slow disk
-does not always manage. **Fix** on `batch-4`: each test waits (up to 5 s) until the core has answered its requests, and no
-longer for a time. Run ten times in a row here; Windows is CI's.
 
 ## Found in batch 4 of the bug eater (2026-11-25)
 
