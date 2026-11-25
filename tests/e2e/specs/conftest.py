@@ -393,13 +393,18 @@ def suite_world(browser, suite, request) -> Iterator[World]:
 
 def shot_name(test: str) -> str:
     """The file name (without the person and extension) of a test's screenshots: the test's name, and for a long one
-    its start, its end (where an outline's example is named) and a short digest of the whole, so that no two tests share
-    a file (PROC-56)."""
-    slug = re.sub(r"\W+", "-", test, flags=re.ASCII).strip("-")  # ASCII: any file system takes it
-    if len(slug) <= 80:
-        return slug
+    the start of the test's name, its example (``[...]``, which says the app) and a short digest of the whole, so that
+    no two tests share a file (PROC-56). Plain ASCII, so any file system takes it."""
+
+    def slug(text: str) -> str:
+        return re.sub(r"\W+", "-", text, flags=re.ASCII).strip("-")
+
+    if len(slug(test)) <= 80:
+        return slug(test)
+    name, _, example = test.partition("[")
+    example = slug(example)[:50]
     digest = hashlib.sha256(test.encode()).hexdigest()[:8]
-    return f"{slug[:40]}-{slug[-30:]}-{digest}"
+    return "-".join(part for part in (slug(name)[: 70 - len(example)], example, digest) if part)
 
 
 def looked_after(made: World, request) -> Iterator[World]:

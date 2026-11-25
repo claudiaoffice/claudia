@@ -28,3 +28,7 @@ def test_a_short_name_is_kept_as_it_was():
 
 def test_a_screenshot_name_is_plain_ascii():
     assert shot_name("test_größe_ändert_sich[Übersicht]").isascii()
+
+
+def test_a_long_example_keeps_the_app_it_is_for():
+    assert "workbook-change-a-colour-of-the-palette" in shot_name(f"{OUTLINE}[workbook-change a colour of the palette]")
