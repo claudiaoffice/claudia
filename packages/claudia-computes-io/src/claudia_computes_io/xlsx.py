@@ -73,7 +73,7 @@ from .xlsx_names import XlsxNamesPatch, header_losses, write_names
 from .xlsx_patch import PackagePatch, SheetNotes, SheetPatch, UnsupportedEdit, written
 from .xlsx_picture_patch import PicturePatch
 from .xlsx_pictures import held_picture
-from .xlsx_pivots import add_pivots, ask_refresh, read_pivots, written_pivots_of
+from .xlsx_pivots import add_pivots, ask_refresh, put_pivots, read_pivots, written_pivots_of
 from .xlsx_read import (
     Package,
     SheetRead,
@@ -432,7 +432,9 @@ def apply_edits_to_xlsx(
     :func:`xlsx_export_losses`; D463). Pictures: one that was added is written as a new file writes it, one that was
     removed is taken out with the bytes nothing else shows, one that was moved, made another size, turned, renamed or
     described has its anchor changed (``losses`` gets what cannot be written of an added one: ``rendering-pending``,
-    ``svg-fallback``; CODE-66).
+    ``svg-fallback``; CODE-66). A pivot defined since the import is written as a new file writes it, with a cache of its
+    own (``losses`` gets ``pivot-table`` with why for one a file holds as its values only); a pivot of the file that was
+    changed or removed is not (CODE-70).
 
     Raises :class:`UnsupportedEdit` if a sheet was added, removed, renamed or reordered since
     ``baseline``, the workbook has a slide (a file has none, it would be a tab more, D1477), or a cell inside an array
@@ -470,7 +472,9 @@ def apply_edits_to_xlsx(
     if refresh:
         ask_refresh(patch, package)
     changed |= names.run()
-    changed |= _patch_drawings(patch, package, (baseline, current), losses or LossLog())
+    lost = losses if losses is not None else LossLog()
+    changed |= _add_pivots(patch, package, (baseline, current), lost)
+    changed |= _patch_drawings(patch, package, (baseline, current), lost)
     if not changed:
         return original_bytes
     styles.finish()
@@ -478,6 +482,22 @@ def apply_edits_to_xlsx(
         patch.drop_calculation_chain()
     patch.ask_for_calculation()
     return write_parts(patch.finish())
+
+
+def _add_pivots(
+    patch: PackagePatch, package: Package, models: tuple[WorkbookModel, WorkbookModel], losses: LossLog
+) -> bool:
+    """The pivots defined since the file was read, put into it as a new file has them, or said (``pivot-table``, with
+    why) where a file holds one as its values only (CODE-70); whether there were any to put in. A pivot of the file
+    that was changed or removed is not written (:func:`xlsx_unwritten_changes` says so)."""
+    baseline, current = models
+    added = [entry.name for entry in current.pivots.sorted() if baseline.pivots.get(entry.name) is None]
+    written = written_pivots_of(current, added)
+    for loss in written.losses:
+        losses.add(loss.kind, loss.detail, loss.count)
+    if written.pivots:
+        put_pivots(patch, package, current, written.pivots)
+    return bool(written.pivots)
 
 
 def _patch_drawings(

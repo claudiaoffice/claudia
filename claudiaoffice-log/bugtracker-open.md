@@ -488,6 +488,14 @@ computes manifest (the same entries as creates and composes), Edit text through 
 Same cause and same shape as CODE-66: `apply_edits_to_xlsx` / `_ods` change what the file already has. A pivot table
 defined in computes after an import is reported and not written. **Acceptance.** Import a workbook, define a pivot, export:
 the file has it, or `xlsx_unwritten_changes` names it and the test says so.
+**Fix** on `batch-4`: the patches write the pivots defined since the import with the fresh export's own writers:
+`put_pivots` (taken out of `add_pivots`; the caches are numbered on from those the file has, in its one `pivotCaches`)
+and `data_pilot_tables` (into the file's `table:data-pilot-tables`, made where it has none); `written_pivots` takes the
+names to write, so what a file holds as values only is said for those alone (`pivot-table` with `room`, `source`,
+`empty`). A pivot of the file that was changed or removed is still not written and still reported. **Test:** "api: a
+pivot defined in an imported file is in the export" (`test_xlsx_pivots.py`, `test_ods_pivots.py`: into a file without
+pivots, beside one the file has, and in xlsx one with no room for its filter); LibreOffice 24 reads the pivots of each
+patched file.
 
 ### PROC-30 · The desktop clients were not run for this branch · P2 · new, open
 Definition of done: all desktop clients work with the latest server and do not diverge from the web. For `object-interaction`
