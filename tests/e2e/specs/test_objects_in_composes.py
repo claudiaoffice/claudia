@@ -660,10 +660,9 @@ def _describe(world, scene):
 @then(parsers.re(rf"a screen reader reads the {KIND} by its name and its description$"))
 def _read_aloud(world, scene, kind):
     whole = world.ann.page.locator(kind_of(kind).SELECTOR).get_by_role("table")
-    expect(whole).to_have_accessible_name(re.compile("^" + re.escape(scene.name)))
-    name_read = whole.aria_snapshot().splitlines()[0]  # '- table "<accessible name>":'
-    if scene.description not in name_read:  # else it must be read as the description
-        expect(whole).to_have_accessible_description(re.compile(re.escape(scene.description)))
+    # its name and nothing else (not the Options… button beside it, UX-89), and its description as its description
+    expect(whole).to_have_accessible_name(scene.name)
+    expect(whole).to_have_accessible_description(scene.description)
 
 
 # ================================================================================================= files

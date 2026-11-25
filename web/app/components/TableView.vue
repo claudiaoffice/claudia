@@ -12,7 +12,7 @@
 // always on, so that it is clear where it starts and ends. Its name tab selects it; dragging the tab moves it, to after
 // the paragraph a line shows; the right button on the tab, the frame or a box selects it and opens its menu (D1225) and
 // never the paragraph menu of the words; Esc, in a box or on the tab, leaves it for the text.
-import { computed, nextTick, reactive, ref, watch } from 'vue'
+import { computed, nextTick, reactive, ref, useId, watch } from 'vue'
 import { paragraphCss } from '~/lib/style-css'
 import { columnName, gridOf, leaveSide, stepBox, type Box, type Step, type TableInfo } from '~/lib/tables'
 import { nearestGap } from '~/lib/text-object-host'
@@ -173,6 +173,9 @@ const DRAG_START = 3 // screen pixels the pointer must travel before a press on 
 const dragging = ref<{ x: number; y: number; moved: boolean; after: string | null; line: { left: number; top: number; width: number } | null } | null>(null)
 
 const select = () => props.session.selectObject(props.object.id)
+/** The table is read by its name, on its tab, and its description; not by the Options… button beside them (UX-89). */
+const nameId = useId()
+const descriptionId = useId()
 /** The colleagues who have this table selected (D1223), drawn inside its frame, their names at its top right. */
 const others = computed(() => props.session.selectedByOthers().filter((o) => o.id === props.object.id))
 const OTHER_INSIDE = { inset: '0', '--tag-top': '2px', '--tag-left': 'auto', '--tag-right': '2px' }
@@ -283,9 +286,10 @@ defineExpose({ focusBox, enter })
   >
     <!-- what colleagues have selected: their colour and name (D1223), inside the frame, which scrolls -->
     <OtherOnObject v-for="other in others" :key="other.user" :other="other" :color="colorOf(state, other.user)" :style="OTHER_INSIDE" />
-    <table :class="`look-${table.look}`" :style="tableCss">
+    <table :class="`look-${table.look}`" :style="tableCss" :aria-labelledby="nameId" :aria-describedby="description ? descriptionId : undefined">
       <caption>
         <button
+          :id="nameId"
           ref="tab"
           type="button"
           class="tab"
@@ -297,7 +301,7 @@ defineExpose({ focusBox, enter })
           @pointercancel="onTabUp"
           @keydown="onTabKey"
         >{{ title }}</button>
-        <span v-if="description" class="sr-only"> — {{ description }}</span>
+        <span v-if="description" :id="descriptionId" class="sr-only">{{ description }}</span>
         <button type="button" class="chip" data-testid="table-options" @click="emit('options', table.id)">{{ t('Options…') }}</button>
       </caption>
       <colgroup>
