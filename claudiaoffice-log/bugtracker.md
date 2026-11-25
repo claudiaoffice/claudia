@@ -35,7 +35,7 @@ The index is the status of record; a section below keeps the status of the round
 re-checked. **Opened** and **Fixed** are filled from 2026-11-20 on: for older items only where the status already gave
 the date.
 
-### Open (61)
+### Open (62)
 
 By priority (P1, P2, P3, then items that wait for a decision without one), then by ID.
 
@@ -102,6 +102,7 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | CODE-68 | P3 | computes | Computes cannot make a text box or a shape, though a model can hold one (a file from another app) and an export reports it as `object` | **new, open** |  |  |
 | CODE-70 | P3 | computes I/O | The patch of a kept XLSX or ODS does not add pivot tables either (reported), as it does not add pictures (CODE-66) | **new, open** (D1233) |  |  |
 | CODE-74 | P3 | Code | `export_content` still answers `{format: "claudia-export 1", ...}`, a JSON that is neither the zip of D1270 nor documented anywhere; it is recorded as an export and the panel says "exported as claudia-export 1"; no window calls it | **new, open** (size 3; remove it or make it the zip) |  |  |
+| PROC-62 | P3 | Process / CI | A test of the Neutralino client failed once on Windows CI and passed when the job was run again: "opens a PDF to print in the computer's viewer…" (`clients/neutralino/tests/files.test.ts`) | **new, open** (measured) | 2026-11-25 |  |
 
 ### Fixed (220)
 
@@ -3192,3 +3193,12 @@ test that was seen to fail first; the details are in `implementation-notes/bug-e
 
 Still open from these batches: UX-90 (other status messages, BITV 4.1.3) and UX-91 (Firefox, the down arrow into a new
 table). Released with them on 2026-11-25: claudia-core 0.38.0, -computes 0.13.0, -composes 0.19.0, -creates 0.21.0.
+
+## Found after batch 3 of the bug eater (2026-11-25)
+
+### PROC-62 · A test of the Neutralino client fails now and then on Windows · P3 · size 3 · open
+**Measured:** CI of `main` at `ebeed301`, job "Neutralino client on Windows": `tests/files.test.ts` › Files › "opens a
+PDF to print in the computer's viewer, from a folder of its own, without asking where (D502)" failed with
+`expected [] to deeply equal [ Array(1) ]` (432 ms). The push did not touch `clients/`, the same test passed at
+`30e69f2b`, and the job passed when it was run again. Not read further. **Acceptance:** the test waits for what it
+expects instead of for a time, and passes on Windows repeatedly.
