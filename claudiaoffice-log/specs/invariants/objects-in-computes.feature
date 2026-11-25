@@ -164,7 +164,7 @@ Feature: Every object on a computes sheet behaves like an object
   @extended
   Scenario Outline: A <kind> survives saving as <format> and opening that file as a new workbook
     Given I have inserted a <kind>, moved it to D7 and given it the name "Mine"
-    When I download the workbook as <format> and open that file as a new workbook
+    When I export the workbook as <format> and open that file as a new workbook
     Then the new workbook has the <kind> once, on "Sheet1", at D7, called "Mine"
 
     Examples:
@@ -177,7 +177,7 @@ Feature: Every object on a computes sheet behaves like an object
   @extended
   Scenario Outline: A <kind> added to an opened <format> file is in that file when it is saved again
     Given I opened a <format> file with numbers in A1:A3 and kept the file
-    When I insert a <kind> at B5 and download the workbook as <format>
+    When I insert a <kind> at B5 and export the workbook as <format>
     Then the file has the <kind> once, on its first sheet, at B5
     And the Export dialog does not say that the <kind> is not in the file
 

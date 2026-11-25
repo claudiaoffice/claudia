@@ -176,7 +176,7 @@ Feature: Every object on a creates slide behaves like an object
   @extended
   Scenario Outline: A <kind> survives saving as <format> and opening that file as a new presentation
     Given I have inserted a <kind>, moved it and given it the name "Mine"
-    When I download the presentation as <format> and open that file as a new presentation
+    When I export the presentation as <format> and open that file as a new presentation
     Then the new presentation has the <kind> once, on its first slide, where I left it, called "Mine"
 
     Examples:
