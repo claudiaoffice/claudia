@@ -79,9 +79,30 @@ until there is help (E13).
   menu definition has to allow that; today the manifest gives an entry one shortcut on every platform.
 - **The audit (`scripts/menu_audit.py`) learns the "Fits when" column**, and its comparison becomes the test of D1605.
 
+## Mock-ups (for review, 2026-11-25)
+
+In `notes/mockups/`, each as SVG with a PNG render. The entries, shortcuts and conditions are those of the workbook.
+
+| File | Shows |
+|---|---|
+| `menus-fit-1-hide-or-grey.svg` | Insert for an owner, for a viewer at hide (one line saying why) and at grey; Edit of a fresh text at hide and at grey |
+| `menus-fit-2-context-menus.svg` | An object for the owner and for a viewer; a paragraph for the owner and for a viewer; a slide; a pivot table |
+| `menus-fit-3-shortcut-notices.svg` | The notice for each kind of reason: role, selection, server, ai, document |
+| `menus-fit-4-shortcuts-dialog.svg` | Preferences ▸ Shortcuts with every action and when it fits, for a viewer |
+
+Open in the mock-ups, for the owner to decide:
+- **Which reason the notice names when several fail.** Proposed: the first in the order role, server, client, ai,
+  document, selection.
+- **The Shortcuts dialog's switch** ("What Fits Now" / "Everything") **and the tags** ("not for you", "not now", "not
+  here").
+- **Contrast (BITV).** The "why" line and the muted rows of the Shortcuts dialog carry information, so they are drawn in
+  the muted ink (about 5:1 on white), not in the paler grey of a greyed entry, which BITV allows only for controls
+  that cannot be used.
+
 ## Next steps
 
-1. Fill in "Fits when" for every row of the workbook. Review it with the owner together with the Diagnosis sheet
-   (phase 2).
-2. Mock-ups: an emptied menu, an emptied context menu, the shortcut notice, Preferences ▸ Shortcuts with "fits when".
+1. ~~Fill in "Fits when" for every row of the workbook. Review it with the owner together with the Diagnosis sheet
+   (phase 2).~~ Done.
+2. ~~Mock-ups: an emptied menu, an emptied context menu, the shortcut notice, Preferences ▸ Shortcuts with "fits
+   when".~~ Done, for review.
 3. Architecture with a class diagram, then Gherkin scenarios. Both go to the owner for review before any code.

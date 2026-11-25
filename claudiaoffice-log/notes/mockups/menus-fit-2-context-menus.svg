@@ -1,0 +1,124 @@
+<svg viewBox="0 0 1500 1110" xmlns="http://www.w3.org/2000/svg" font-family="Inter, 'Segoe UI', system-ui, sans-serif">
+<rect x="0" y="0" width="1500" height="1110" fill="#f3f1ea"/>
+<text x="40" y="44" font-family="Fraunces, Georgia, serif" font-size="22" font-weight="600" fill="#1f1a33" text-anchor="start">claudia — menus that show what fits · 2 · Context menus (D1602, D1603, D1607, D1612, D1619)</text>
+<text x="40" y="66" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">Every thing has one: a right press gives the thing&#x27;s menu, its first entries name and style it. Actions that need one kind of selected thing live here. Nothing built yet.</text>
+<rect x="40" y="96" width="460" height="580" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="62" y="126" font-family="Fraunces, Georgia, serif" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start">A · An object, the owner</text>
+<rect x="62" y="144" width="16" height="16" rx="5" fill="#f2a057"/>
+<text x="86" y="156.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#b9651c" text-anchor="start">creates</text>
+<text x="147.2" y="156.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">· owner</text>
+<rect x="62" y="174" width="416" height="66" rx="8" fill="#fff" stroke="#e3dfee" stroke-width="1"/>
+<text x="270" y="212" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="middle" font-style="italic">a text box on the slide</text>
+<circle cx="150" cy="224" r="6" fill="#5b4bc4" opacity="0.8"/>
+<rect x="153" y="238" width="270" height="304" rx="10" fill="#1f1a33" opacity="0.06"/>
+<rect x="150" y="234" width="270" height="304" rx="10" fill="#fff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="166" y="262" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Name &amp; Describe…</text>
+<text x="406" y="262" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="end">Ctrl+Alt+D</text>
+<text x="166" y="292" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Reference in Chat</text>
+<text x="406" y="292" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="end">Ctrl+Alt+X</text>
+<text x="166" y="322" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Edit Text</text>
+<text x="406" y="322" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="end">Enter</text>
+<text x="166" y="352" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Style…</text>
+<text x="406" y="352" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="end">Ctrl+Alt+A</text>
+<text x="166" y="382" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Rotate By…</text>
+<text x="406" y="382" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="end">Ctrl+Shift+Alt+Z</text>
+<line x1="160" y1="396.5" x2="410" y2="396.5" stroke="#e3dfee" stroke-width="1"/>
+<text x="166" y="421" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Cut</text>
+<text x="406" y="421" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="end">Ctrl+X</text>
+<text x="166" y="451" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Copy</text>
+<text x="406" y="451" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="end">Ctrl+C</text>
+<line x1="160" y1="465.5" x2="410" y2="465.5" stroke="#e3dfee" stroke-width="1"/>
+<text x="166" y="490" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Release from Grid</text>
+<text x="166" y="520" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Delete</text>
+<text x="406" y="520" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="end">Del</text>
+<line x1="62" y1="562" x2="62" y2="596" stroke="#5b4bc4" stroke-width="3"/>
+<text x="72" y="574" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">Reference in Chat joins every thing&#x27;s menu (D1607). Cut and Copy,</text>
+<text x="72" y="589" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">today only for images, come to every object.</text>
+<rect x="520" y="96" width="460" height="580" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="542" y="126" font-family="Fraunces, Georgia, serif" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start">B · The same object, a viewer (role at hide)</text>
+<rect x="542" y="144" width="16" height="16" rx="5" fill="#f2a057"/>
+<text x="566" y="156.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#b9651c" text-anchor="start">creates</text>
+<text x="627.2" y="156.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">· viewer</text>
+<rect x="542" y="174" width="416" height="66" rx="8" fill="#fff" stroke="#e3dfee" stroke-width="1"/>
+<text x="750" y="212" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="middle" font-style="italic">a text box on the slide</text>
+<circle cx="630" cy="224" r="6" fill="#5b4bc4" opacity="0.8"/>
+<rect x="633" y="238" width="270" height="46" rx="10" fill="#1f1a33" opacity="0.06"/>
+<rect x="630" y="234" width="270" height="46" rx="10" fill="#fff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="646" y="262" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Copy</text>
+<text x="886" y="262" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="end">Ctrl+C</text>
+<line x1="542" y1="304" x2="542" y2="338" stroke="#5b4bc4" stroke-width="3"/>
+<text x="552" y="316" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">Only Copy fits a viewer, so the menu shrinks to it. At grey she</text>
+<text x="552" y="331" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">would see A, all greyed but Copy.</text>
+<rect x="1000" y="96" width="460" height="580" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="1022" y="126" font-family="Fraunces, Georgia, serif" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start">C · A paragraph, the owner (D1619)</text>
+<rect x="1022" y="144" width="16" height="16" rx="5" fill="#d6477a"/>
+<text x="1046" y="156.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#b8386a" text-anchor="start">composes</text>
+<text x="1114.8" y="156.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">· owner</text>
+<rect x="1022" y="174" width="416" height="66" rx="8" fill="#fff" stroke="#e3dfee" stroke-width="1"/>
+<text x="1230" y="212" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="middle" font-style="italic">a paragraph of the text</text>
+<circle cx="1110" cy="224" r="6" fill="#5b4bc4" opacity="0.8"/>
+<rect x="1113" y="238" width="270" height="106" rx="10" fill="#1f1a33" opacity="0.06"/>
+<rect x="1110" y="234" width="270" height="106" rx="10" fill="#fff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="1126" y="262" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Name &amp; Describe…</text>
+<text x="1366" y="262" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="end">Ctrl+Alt+D</text>
+<text x="1126" y="292" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Style…</text>
+<text x="1366" y="292" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="end">Ctrl+Alt+A</text>
+<text x="1126" y="322" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Reference in Chat</text>
+<text x="1366" y="322" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="end">Ctrl+Alt+X</text>
+<line x1="1022" y1="364" x2="1022" y2="398" stroke="#5b4bc4" stroke-width="3"/>
+<text x="1032" y="376" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">A right press used to open the style popover directly; now Style…</text>
+<text x="1032" y="391" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">opens that same popover.</text>
+<rect x="40" y="696" width="460" height="390" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="62" y="726" font-family="Fraunces, Georgia, serif" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start">D · A paragraph, a viewer</text>
+<rect x="62" y="744" width="16" height="16" rx="5" fill="#d6477a"/>
+<text x="86" y="756.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#b8386a" text-anchor="start">composes</text>
+<text x="154.8" y="756.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">· viewer</text>
+<rect x="62" y="774" width="416" height="66" rx="8" fill="#fff" stroke="#e3dfee" stroke-width="1"/>
+<text x="270" y="812" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="middle" font-style="italic">a paragraph of the text</text>
+<circle cx="150" cy="824" r="6" fill="#5b4bc4" opacity="0.8"/>
+<rect x="153" y="838" width="270" height="46" rx="10" fill="#1f1a33" opacity="0.06"/>
+<rect x="150" y="834" width="270" height="46" rx="10" fill="#fff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="166" y="862" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start" font-style="italic">You can only look at this document.</text>
+<line x1="62" y1="904" x2="62" y2="938" stroke="#5b4bc4" stroke-width="3"/>
+<text x="72" y="916" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">Nothing fits: one greyed line says why (D1603), so the press does</text>
+<text x="72" y="931" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">not look broken. Shift + right press still gives the browser&#x27;s own</text>
+<text x="72" y="946" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">menu.</text>
+<rect x="520" y="696" width="460" height="390" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="542" y="726" font-family="Fraunces, Georgia, serif" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start">E · A slide, the owner (D1619)</text>
+<rect x="542" y="744" width="16" height="16" rx="5" fill="#f2a057"/>
+<text x="566" y="756.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#b9651c" text-anchor="start">creates</text>
+<text x="627.2" y="756.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">· owner</text>
+<rect x="542" y="774" width="416" height="66" rx="8" fill="#fff" stroke="#e3dfee" stroke-width="1"/>
+<text x="750" y="812" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="middle" font-style="italic">the slide, away from any object</text>
+<circle cx="630" cy="824" r="6" fill="#5b4bc4" opacity="0.8"/>
+<rect x="633" y="838" width="270" height="76" rx="10" fill="#1f1a33" opacity="0.06"/>
+<rect x="630" y="834" width="270" height="76" rx="10" fill="#fff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="646" y="862" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Name &amp; Describe…</text>
+<text x="886" y="862" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="end">Ctrl+Alt+D</text>
+<text x="646" y="892" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Reference in Chat</text>
+<text x="886" y="892" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="end">Ctrl+Alt+X</text>
+<line x1="542" y1="934" x2="542" y2="968" stroke="#5b4bc4" stroke-width="3"/>
+<text x="552" y="946" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">The same menu as the slide&#x27;s tab. Before, a right press on the</text>
+<text x="552" y="961" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">slide opened nothing.</text>
+<rect x="1000" y="696" width="460" height="390" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="1022" y="726" font-family="Fraunces, Georgia, serif" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start">F · A pivot table, the owner (D1612)</text>
+<rect x="1022" y="744" width="16" height="16" rx="5" fill="#13917f"/>
+<text x="1046" y="756.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#0f7d6e" text-anchor="start">computes</text>
+<text x="1114.8" y="756.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">· owner</text>
+<rect x="1022" y="774" width="416" height="66" rx="8" fill="#fff" stroke="#e3dfee" stroke-width="1"/>
+<text x="1230" y="812" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="middle" font-style="italic">a pivot table</text>
+<circle cx="1110" cy="824" r="6" fill="#5b4bc4" opacity="0.8"/>
+<rect x="1089" y="838" width="340" height="136" rx="10" fill="#1f1a33" opacity="0.06"/>
+<rect x="1086" y="834" width="340" height="136" rx="10" fill="#fff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="1102" y="862" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Value Field Settings…</text>
+<text x="1412" y="862" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="end">Ctrl+Shift+Alt+U</text>
+<text x="1102" y="892" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Pivot Fields</text>
+<text x="1412" y="892" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="end">Ctrl+Shift+Alt+M</text>
+<text x="1102" y="922" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Show Pivot as SQL…</text>
+<text x="1412" y="922" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="end">Ctrl+Shift+Alt+Q</text>
+<text x="1102" y="952" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Delete Pivot Table…</text>
+<text x="1412" y="952" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="end">Ctrl+Shift+Alt+V</text>
+<line x1="1022" y1="994" x2="1022" y2="1028" stroke="#5b4bc4" stroke-width="3"/>
+<text x="1032" y="1006" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">Moved here from Tools ▸ Pivot ▸, which is now the single entry</text>
+<text x="1032" y="1021" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">Tools ▸ Pivot Table….</text>
+</svg>
