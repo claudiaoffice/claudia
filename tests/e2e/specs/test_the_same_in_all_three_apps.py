@@ -18,6 +18,7 @@ from dataclasses import dataclass, field
 
 import pytest
 from conftest import Person, World, eventually, steady
+from playwright.sync_api import expect
 from pytest_bdd import given, parsers, scenarios, then, when
 from things import OBJECTS, drag_by, insert, looks, objects, wait_for_objects
 
@@ -357,6 +358,7 @@ def _colleague_sees_my_selection(world):
     ann, ben = world.ann, world.people["Ben"]
     mark = _mark(ben, ann)
     mark.wait_for()
+    expect(mark.locator(".tag")).to_be_visible()  # her name shows, not under the column letters (UX-86)
     mine = ann.page.eval_on_selector("ul.people li", "e => getComputedStyle(e).backgroundColor")
     seen = mark.evaluate("e => [getComputedStyle(e).borderTopColor, e.textContent.trim()]")
     _same(seen, [mine, ann.name.lower()], "my colour round the picture and my name")
@@ -365,7 +367,7 @@ def _colleague_sees_my_selection(world):
 @when("my colleague tries to move it")
 def _colleague_tries_to_move_it(world, scene):
     ben = world.people["Ben"]
-    scene.told_before = len(ben.page.evaluate("window.__notices"))
+    scene.told_before = len(ben.notices())
     drag_by(ben, ben.page.locator(OBJECTS[ben.app]).first, 80, 40)
 
 
@@ -374,8 +376,8 @@ def _she_is_told(world, scene):
     ben, me = world.people["Ben"], world.ann.name.lower()
 
     def told() -> None:
-        notices = ben.page.evaluate("window.__notices")[scene.told_before :]
-        assert any(me in notice for notice in notices), f"she was told {notices}"
+        notices = ben.notices()[scene.told_before :]
+        assert any(me in notice and "working" in notice for notice in notices), f"she was told {notices}"
 
     eventually(told, page=ben.page)
 
@@ -383,7 +385,7 @@ def _she_is_told(world, scene):
 @then("it stays where it is for both of us")
 def _it_stays(world, scene):
     for person in (world.ann, world.people["Ben"]):
-        _same(steady(person, lambda person=person: objects(person)), scene.before[person.name], "the picture")
+        eventually(lambda person=person: _same(objects(person), scene.before[person.name], "the picture"))
 
 
 @when("I let go of it")
