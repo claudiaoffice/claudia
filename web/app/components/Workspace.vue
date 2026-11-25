@@ -285,7 +285,7 @@ const sheetName = (id: string) => state.sheets.find((s) => s.id === id)?.name ??
 const scopeName = (scope: string | null) => (scope === null ? t('Workbook') : sheetName(scope) || t('Sheet'))
 
 function openDefine(action: Extract<NameBoxAction, { kind: 'define' | 'redefine' }>) {
-  if (readonly.value) return session.notice(t('You can only look at this document.'), 'warning')
+  if (readonly.value) return session.tellLookOnly()
   const box = document.querySelector<HTMLInputElement>('input[aria-label="cell"]')?.getBoundingClientRect()
   const region: NameRegion = { sheet: state.activeSheet, row0: b.value.r0, col0: b.value.c0, row1: b.value.r1, col1: b.value.c1 }
   const rows = Math.min(2, b.value.r1 - b.value.r0 + 1)
@@ -342,7 +342,7 @@ watch(panelPivot, (now) => {
 })
 
 function openPivotNew() {
-  if (readonly.value) return session.notice(t('You can only look at this document.'), 'warning')
+  if (readonly.value) return session.tellLookOnly()
   dialog.value = 'pivot-new'
 }
 async function pivotCreated(name: string, sheet: string) {
@@ -393,7 +393,7 @@ const pivotItems = computed(() => {
 /** The cell the SQL editor writes to: the active cell, or the cell of the query that fills it when it is a part of a
  * result — with what is already in it. */
 function openSql(at?: { row: number; col: number }) {
-  if (readonly.value) return session.notice(t('You can only look at this document.'), 'warning')
+  if (readonly.value) return session.tellLookOnly()
   let row = at?.row ?? sel.value.row
   let col = at?.col ?? sel.value.col
   const here = session.cell(state.activeSheet, row, col)
@@ -475,7 +475,7 @@ async function noteCopyValues() {
 // ------------------------------------------------------------------------------ editing
 async function beginEdit(initial?: string) {
   if (edit.value) return
-  if (readonly.value) return session.notice(t('You can only look at this document.'), 'warning')
+  if (readonly.value) return session.tellLookOnly()
   const { row, col } = sel.value
   if (session.cell(state.activeSheet, row, col)?.spill) return noteFor(row, col) // (part of a query result: say so)
   original = inputOf(session.cell(state.activeSheet, row, col))
@@ -535,13 +535,13 @@ watch(currentFunctionName, async (name) => {
 const formulaExample = computed(() => formulaHelp.value?.help.split('\n\n')[1]?.split('\n')[0] ?? '')
 
 async function clearSelection() {
-  if (readonly.value) return session.notice(t('You can only look at this document.'), 'warning')
+  if (readonly.value) return session.tellLookOnly()
   const cells = session.filledIn(state.activeSheet, b.value.r0, b.value.c0, b.value.r1, b.value.c1)
   if (cells.length) await session.setCells(state.activeSheet, cells.map(([row, col]) => ({ row, col, input: '' })))
 }
 
 async function paste(rows: string[][]) {
-  if (readonly.value) return session.notice(t('You can only look at this document.'), 'warning')
+  if (readonly.value) return session.tellLookOnly()
   const cells = rows.flatMap((line, i) => line.map((input, j) => ({ row: b.value.r0 + i, col: b.value.c0 + j, input })))
   if (!cells.length) return
   if (cells.length > 10_000) return session.notice(t('That is too much to paste at once (at most 10,000 cells).'), 'warning')
@@ -618,7 +618,7 @@ async function addSheet(name: string) {
 }
 
 async function structure(axis: 'row' | 'col', insert: boolean, after = false) {
-  if (readonly.value) return session.notice(t('You can only look at this document.'), 'warning')
+  if (readonly.value) return session.tellLookOnly()
   const first = axis === 'row' ? b.value.r0 : b.value.c0
   const last = axis === 'row' ? b.value.r1 : b.value.c1
   const count = last - first + 1
@@ -787,7 +787,7 @@ onBeforeUnmount(() => clearTimeout(announceTimer))
  * described under its name, cells that have none are asked for one first. */
 const nameDialog = useNameAndDescribe(session, () => grid.value?.focus())
 function openDescribe() {
-  if (readonly.value) return session.notice(t('You can only look at this document.'), 'warning')
+  if (readonly.value) return session.tellLookOnly()
   const id = grid.value?.selectedObject()
   if (id && state.objects[id]) return void nameDialog.open(id)
   const { r0, c0, r1, c1 } = b.value
@@ -841,7 +841,7 @@ const activeContent = computed(() => {
 const hasOutcomes = computed(() => !!(activeContent.value?.alts || activeContent.value?.out))
 
 async function resample() {
-  if (readonly.value) return session.notice(t('You can only look at this document.'), 'warning')
+  if (readonly.value) return session.tellLookOnly()
   await session.resample()
 }
 function openRandom() {
@@ -961,7 +961,7 @@ async function headerDelete() {
 function headerResize() {
   if (readonly.value) {
     headerMenu.value = null
-    return session.notice(t('You can only look at this document.'), 'warning')
+    return session.tellLookOnly()
   }
   dialog.value = headerMenu.value!.axis === 'row' ? 'row-size' : 'col-size'
   headerMenu.value = null

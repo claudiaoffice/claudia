@@ -257,7 +257,7 @@ function select(id: string, event?: Event) {
 const WRITTEN_IN = ['container', 'text', 'shape']
 function beginEdit(id: string) {
   if (!WRITTEN_IN.includes(state.objects[id]?.kind ?? '')) return
-  if (readonly.value) return session.notice(t('You can only look at this document.'), 'warning')
+  if (readonly.value) return session.tellLookOnly()
   select(id)
   editing.value = id
 }

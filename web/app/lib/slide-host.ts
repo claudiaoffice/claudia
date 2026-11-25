@@ -53,7 +53,7 @@ export interface PictureImport {
 export interface SlideHost
   extends Pick<
     BaseSession<SlideHostState>,
-    | 'notice'
+    | 'tellLookOnly'
     | 'readOnly'
     | 'rotateObject'
     | 'removeObject'

@@ -107,7 +107,7 @@ function cancelRotate() {
 async function quarter(direction: 1 | -1, id: string | null = state.selectedObject) {
   const o = id ? objectOf(id) : null
   if (!o || !canTurn(o.kind)) return
-  if (readonly.value) return session.notice(t('You can only look at this document.'), 'warning')
+  if (readonly.value) return session.tellLookOnly()
   const rotation = quarterTurn(o.rotation, direction)
   if (await session.rotateObject(o.id, rotation)) session.notice(t('Turned to {degrees}', { degrees: degreesText(rotation) }), 'info')
 }
@@ -115,7 +115,7 @@ async function quarter(direction: 1 | -1, id: string | null = state.selectedObje
 function openRotateBy(id: string | null = state.selectedObject, at?: { x: number; y: number }) {
   const o = id ? objectOf(id) : null
   if (!o || !canTurn(o.kind)) return
-  if (readonly.value) return session.notice(t('You can only look at this document.'), 'warning')
+  if (readonly.value) return session.tellLookOnly()
   const el = document.querySelector(`[data-object="${CSS.escape(o.id)}"]`)
   const where = at ?? (el ? besideRect(el.getBoundingClientRect(), 264, window.innerWidth) : { x: 160, y: 180 })
   rotating.value = { id: o.id, from: o.rotation, ...where }

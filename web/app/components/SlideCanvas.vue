@@ -319,7 +319,7 @@ async function onTurnKey(event: KeyboardEvent) {
 async function quarter(direction: 1 | -1, id: string | null = state.selected) {
   const o = slideObject(id) ?? null
   if (!o || !canTurn(o.kind)) return
-  if (readonly.value) return session.notice(t('You can only look at this document.'), 'warning')
+  if (readonly.value) return session.tellLookOnly()
   if (await session.rotateObject(o.id, quarterTurn(o.rotation, direction))) turnSaid.value = t('Turned to {degrees}', { degrees: degreesText(slideObject(o.id)?.rotation ?? 0) })
 }
 
@@ -328,7 +328,7 @@ const rotating = ref<{ id: string; x: number; y: number } | null>(null)
 function openRotateBy(id: string | null = state.selected, at?: { x: number; y: number }) {
   const o = slideObject(id) ?? null
   if (!o || !canTurn(o.kind)) return
-  if (readonly.value) return session.notice(t('You can only look at this document.'), 'warning')
+  if (readonly.value) return session.tellLookOnly()
   const el = area.value?.querySelector(`[data-id="${CSS.escape(o.id)}"]`)
   const where = at ?? (el ? besideRect(el.getBoundingClientRect(), 264, window.innerWidth) : { x: 120, y: 160 })
   session.select(o.id)
@@ -459,7 +459,7 @@ const propertiesObject = computed(() => (slideObject(propertiesFor.value) ?? nul
 const nameDialog = useNameAndDescribe(session, () => area.value?.focus({ preventScroll: true }))
 function openDescribe(id: string | null = state.selected) {
   if (!id || !slideObject(id)) return
-  if (readonly.value) return session.notice(t('You can only look at this document.'), 'warning')
+  if (readonly.value) return session.tellLookOnly()
   void nameDialog.open(id)
 }
 
@@ -482,7 +482,7 @@ const setEditor = (el: unknown) => {
 async function beginEdit(id: string | null = state.selected) {
   const o = slideObject(id) ?? null
   if (!o || editing.value || containerEditing.value || o.kind === 'image' || o.kind === 'chart') return // a picture and a chart have no text to write
-  if (readonly.value) return session.notice(t('You can only look at this document.'), 'warning')
+  if (readonly.value) return session.tellLookOnly()
   await session.select(o.id)
   if (state.selected !== o.id) return // a colleague holds it
   if (o.kind === 'container') {

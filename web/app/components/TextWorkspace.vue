@@ -248,7 +248,7 @@ const openSearch = (replace = false) => search.openSearch(replace, session.selec
 /** Format ▸ Name & describe…, Ctrl+Alt+D (D1317): the object selected, else the paragraph the caret is in. */
 const nameDialog = useNameAndDescribe(session, () => editor.value?.focus())
 function openDescribe() {
-  if (readonly.value) return session.notice(t('You can only look at this document.'), 'warning')
+  if (readonly.value) return session.tellLookOnly()
   const id = state.selectedObject ?? state.selection?.focus.paragraph
   if (id) void nameDialog.open(id)
 }

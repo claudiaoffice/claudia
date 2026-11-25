@@ -483,7 +483,7 @@ const faceOf = (o: SheetObject) => containerView(state, o, imageDataUrl)
 const containerEditing = ref<string | null>(null)
 function beginContainerEdit(o: SheetObject | undefined) {
   if (!o || o.kind !== 'container' || containerEditing.value) return
-  if (state.me.role === 'viewer') return props.session.notice(t('You can only look at this document.'), 'warning')
+  if (state.me.role === 'viewer') return props.session.tellLookOnly()
   selectedObject.value = o.id
   containerEditing.value = o.id
 }
@@ -612,7 +612,7 @@ async function onPointerUp() {
 async function quarter(direction: 1 | -1, id: string | null = selectedObject.value) {
   const o = props.session.sheetObject(id) ?? null
   if (!o || !canTurn(o.kind)) return
-  if (readonlyHere()) return props.session.notice(t('You can only look at this document.'), 'warning')
+  if (readonlyHere()) return props.session.tellLookOnly()
   const to = quarterTurn(o.rotation, direction)
   if (await props.session.rotateObject(o.id, to)) turnSaid.value = t('Turned to {degrees}', { degrees: degreesText(props.session.sheetObject(o.id)?.rotation ?? to) })
 }
@@ -622,7 +622,7 @@ const rotating = ref<{ id: string; x: number; y: number } | null>(null)
 function openRotateBy(id: string | null = selectedObject.value, at?: { x: number; y: number }) {
   const o = props.session.sheetObject(id) ?? null
   if (!o || !canTurn(o.kind)) return
-  if (readonlyHere()) return props.session.notice(t('You can only look at this document.'), 'warning')
+  if (readonlyHere()) return props.session.tellLookOnly()
   const el = viewport.value?.querySelector(`[data-object="${CSS.escape(o.id)}"]`)
   const where = at ?? (el ? besideRect(el.getBoundingClientRect(), 264, window.innerWidth) : { x: 160, y: 180 })
   selectedObject.value = o.id

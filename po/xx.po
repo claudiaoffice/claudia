@@ -7981,7 +7981,7 @@ msgstr "[Yôû bécômé thé ôwnér ôf thé néw dôcûmént. Nôbôdy élsé
 msgid "You can change it anyway — this is a warning, not a refusal."
 msgstr "[Yôû càn chàngé ît ànywày — thîs îs à wàrnîng, nôt à réfûsàl.~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SheetGrid.vue web/app/components/SlideCanvas.vue web/app/components/TextObjectLayer.vue web/app/components/TextObjectMenu.vue web/app/components/TextWorkspace.vue web/app/components/Workspace.vue web/app/lib/base-session.ts
+#: web/app/lib/base-session.ts
 msgid "You can only look at this document."
 msgstr "[Yôû càn ônly lôôk àt thîs dôcûmént.~~~~~~~~~~~~~~]"
 

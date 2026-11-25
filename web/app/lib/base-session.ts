@@ -1243,10 +1243,15 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     return lookOnly(this.state)
   }
 
+  /** Tell someone who tried a change that she may only look at this document (CODE-98: said here only). */
+  tellLookOnly() {
+    this.notice(t('You can only look at this document.'), 'warning')
+  }
+
   /** Refuse a change for someone who may only look, and tell her so; `true` when refused. Nothing is sent. */
   protected refused(): boolean {
     if (!this.readOnly) return false
-    this.notice(t('You can only look at this document.'), 'warning')
+    this.tellLookOnly()
     return true
   }
 
@@ -1282,7 +1287,7 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
         this.notice(t('Your change was not applied: the document changed under you. It was reloaded.'), 'warning')
         return void this.track(this.reload())
       case 'forbidden':
-        return this.notice(t('You can only look at this document.'), 'warning')
+        return this.tellLookOnly()
       case 'closed':
         return this.notice(t('Not connected to the server.'), 'error')
       default:
