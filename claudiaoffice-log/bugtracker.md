@@ -107,7 +107,7 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | CODE-68 | P3 | computes | Computes cannot make a text box or a shape, though a model can hold one (a file from another app) and an export reports it as `object` | **new, open** |  |  |
 | CODE-70 | P3 | computes I/O | The patch of a kept XLSX or ODS does not add pivot tables either (reported), as it does not add pictures (CODE-66) | **new, open** (D1233) |  |  |
 | CODE-74 | P3 | Code | `export_content` still answers `{format: "claudia-export 1", ...}`, a JSON that is neither the zip of D1270 nor documented anywhere; it is recorded as an export and the panel says "exported as claudia-export 1"; no window calls it | **new, open** (size 3; remove it or make it the zip) |  |  |
-| CODE-96 | P3 | Code / web | About 25 components repeat the look-only notice instead of calling `session.tellLookOnly()` | **new, open** (read) | 2026-11-25 |  |
+| CODE-98 | P3 | Code / web | About 25 components repeat the look-only notice instead of calling `session.tellLookOnly()` | **new, open** (read) | 2026-11-25 |  |
 | PROC-22 | P3 | Process / CI | The LibreOffice job may still fail silently, though it has passed every round | **new, open** |  |  |
 | PROC-29 | P3 | Process / E2E | No scenario asserts that a second window sees a holder's outline and name tag (D1223), nor that a colleague's drag is not shown live | **new, open**; fix on `batch-2` (proposed) |  |  |
 | PROC-59 | P3 | Process / CI | The scenarios tagged @firefox were never run in Firefox by CI | **new, open**; fix on `batch-2` (proposed) | 2026-11-25 |  |
@@ -3068,7 +3068,8 @@ readers may not announce a live region that appears with its content already in 
 **Measured** (helper, PROC-40): the table is read as "Table 1 Options…", because the Options… button is inside its
 caption.
 
-### CODE-96 · The look-only notice is repeated in about 25 components · P3 · size 3 · open
+### CODE-98 · The look-only notice is repeated in about 25 components · P3 · size 3 · open
+(Called CODE-96 in the batch-2 commit that logged it; `win-installer-fix` reached `main` with another CODE-96 the same day.)
 **Read** (helper, UX-69): `session.notice(t('You can only look at this document.'), 'warning')` is written out about 25
 times; `session.tellLookOnly()` says it once.
 
