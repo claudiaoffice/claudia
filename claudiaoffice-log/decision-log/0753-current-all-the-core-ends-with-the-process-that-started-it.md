@@ -35,7 +35,7 @@ start Neutralino: the node launcher does); a heartbeat over the link (needs Neut
 ending the core when stdin closes (Neutralino may close it right after sending the tokens: not known).
 
 **Notes.** The cause of the link staying up is not known (a socket handle that the core or a child of Neutralino inherited is
-the first suspect); this does not depend on it. A reused pid could keep a core alive: not guarded against. An older page that does not send `windowPid` leaves the parent watch and the link as before. The server the
+the first suspect); this does not depend on it. A reused pid could keep a core alive: not guarded against. A window killed before its page has sent `start` (the first second or two) leaves a core that knows no window pid: seen once in CI, not guarded against (the CI step now waits for the page). An older page that does not send `windowPid` leaves the parent watch and the link as before. The server the
 core started is not ended with it: it is shared and ends by itself ten minutes after its last window (D434).
 `claudia-start.exe` stays, with its message box, when Neutralino was killed: its exit code is not 0, and that is what the
 box is for.

@@ -112,3 +112,4 @@ and the config is read while the launcher is alive, so a very fast failure could
   link to Neutralino stays up after the kill is still not known. The CI step *The core of a window ends when its window is
   closed or killed* is the proof; its last result is in the pull request.
 * An older page that does not send `windowPid` is not watched by pid (parent watch and link only).
+* A window killed in the first second or two, before its page has sent `start`, still leaves its core (seen once in CI): the core does not know the pid yet. Offered: end a core that gets no `start` within a minute or two.

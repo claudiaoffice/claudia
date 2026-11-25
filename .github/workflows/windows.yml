@@ -453,13 +453,17 @@ jobs:
               Select-Object ProcessId, ParentProcessId, Name, @{ n = 'Command'; e = { "$($_.CommandLine)".Substring(0, [Math]::Min(110, "$($_.CommandLine)".Length)) } } |
               Format-Table -AutoSize | Out-String -Width 250 | Write-Host
           }
-          $linked = { (Test-Path $log) -and ((Get-Content $log -ErrorAction SilentlyContinue | Where-Object { $_ -match 'connected to Neutralino' }).Count -gt $script:linkedBefore) }
+          function Count-Lines([string]$Pattern) { if (Test-Path $log) { @(Get-Content $log -ErrorAction SilentlyContinue | Where-Object { $_ -match $Pattern }).Count } else { 0 } }
+          $linked = { (Count-Lines 'connected to Neutralino') -gt $script:linkedBefore }
+          # the page has loaded and talks to the core: only then can a person close the window, and the core knows the window's process
+          $loaded = { (Count-Lines 'want_servers') -gt $script:loadedBefore }
           $failures = @()
           try {
             foreach ($how in 'killed', 'closed') {
               Get-Cores | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
               Get-Process neutralino-win_x64, claudia-server, claudia-start -ErrorAction SilentlyContinue | Stop-Process -Force
-              $script:linkedBefore = if (Test-Path $log) { (Get-Content $log | Where-Object { $_ -match 'connected to Neutralino' }).Count } else { 0 }
+              $script:linkedBefore = Count-Lines 'connected to Neutralino'
+              $script:loadedBefore = Count-Lines 'want_servers'
               $started = Start-Process $launcher -ArgumentList 'composes' -PassThru
               if (-not (Wait-For $linked 90)) {
                 Write-Host "No window of composes came up in 90 seconds ($how): this runner may have no desktop. Nothing to say about the core."
@@ -471,6 +475,7 @@ jobs:
                 if ($failures) { throw ($failures -join "`n") }
                 return
               }
+              if (-not (Wait-For $loaded 60)) { $failures += "[$how] the page did not reach the core in 60 seconds"; Get-Content $log -Tail 20; continue }
               $cores = Get-Cores
               Show-Tree "before the window is $how"
               $window = Get-Process neutralino-win_x64 -ErrorAction SilentlyContinue
