@@ -20,7 +20,7 @@ PROC-24 to PROC-27, CODE-58 to CODE-61, SEC-19, UX-44; SEC-15 fixed (see "Round 
 
 ## Index
 
-### Fixed (237)
+### Fixed (238)
 
 By ID. Items closed without a fix (superseded, wontfix) are here too.
 
@@ -2864,3 +2864,20 @@ three); `best_of` measures processor time in batches of 0.2 s where the cost may
 extent, letting formulas go); the kernel's counted guards are backed by the clock, as its log keeps its steps in lists
 (a copy in C counts as nothing: caught by the backstop). Every guard passed twice under the same load.
 
+## Fixed by the menu work (branch `menus`)
+
+### UX-94 · The web menus and the desktop menus disagree in six places · P3 · size 3 · fixed
+**Measured** by the menu audit (phase 1 of the menu work, branch `menus`; `scripts/menu_capture.py` and
+`scripts/menu_audit.py`, rows "Web and desktop differ" of the Diagnosis sheet in `notes/claudia-menus.xlsx`). The
+desktop clients take their menus from the manifest (then `clients/linux/src/claudia_shell_gtk/manifest.py`, now `clients/contract/src/claudia_menus/manifest.py`, D1643), the web client
+from `web/app/lib/document-menus.ts` and each workspace, and they differ:
+
+- Help ▸ About is "About claudia" on the web and "About Claudia Composes" / "… Computes" / "… Creates" on the desktop
+  (all three apps).
+- computes: Clear Cell Style is inside Format ▸ Apply Style ▸ on the web, directly in Format on the desktop.
+- composes: View has two entries, Flow and Page, on the web, one switch, Page, on the desktop.
+- computes: Tools has Value Field Settings… before Pivot Fields on the web, the other way round on the desktop.
+
+Not part of it, by design: Quit (desktop only), Apply Style (D301), and the shapes of the library in Edit (web only;
+the workbook makes them fixed entries, Insert ▸ Shape ▸ …). **Fixed** on `menus`, 2026-11-25 (slice 4): the web's menus are assembled from the one definition (D1644), as the
+desktop clients' are; the workbook test (`tests/test_menu_workbook.py`) and `web/tests/assemble.test.ts` keep them so.

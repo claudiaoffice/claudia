@@ -39,9 +39,10 @@ A rule that nothing enforces will erode, so every `Planned` item is a debt item,
 **Rule.** Tests are part of the definition of done and are written with the code, not after it.
 
 - **Specs first for user-visible behaviour.** Before coding, the behaviour is written as Gherkin scenarios in `claudiaoffice-log/specs`, in user language and without selectors, tagged `@core` or `@extended`, and reviewed by the owner. Tests are written against the approved scenarios.
-- Tests check behavior, not implementation details. They assert truths that stay true under safe refactoring. For every feature, there is at least one test that covers the key risk that the feature might not behave as intended. We mark this test as "must not break" (D1652):
-  - **Python:** the pytest marker `@pytest.mark.must_not_break`, registered in the project's `pyproject.toml`; `pytest -m must_not_break` runs them all.
-  - **TypeScript:** the test's name starts with `must not break:`; `vitest -t "must not break"` runs them.
+- Tests check behavior, not implementation details. They assert truths that stay true under safe refactoring. For every feature, there is at least one test that covers the key risk that the feature might not behave as intended. We mark this test as "must not break", naming its story (D1652, with the story of D1663):
+  - **Python:** the pytest marker `@pytest.mark.must_not_break("E7.11")`, registered in the project's `pyproject.toml`; `pytest -m must_not_break` runs them all.
+  - **Gherkin:** the tag `@must-not-break:E7.11` on the scenario.
+  - **TypeScript (vitest):** `[must not break: E7.11]` in the test's title; `vitest -t "must not break"` runs them.
   - The test's docstring or comment names the risk it covers, in a sentence ("The key risk of …: …").
 - **Every bug fix starts with a failing scenario or test.** The patch notes give a one-line reason it escaped: spec gap, missing test, or test passed but wrong. The reason feeds the invariants list.
 - **Shared invariants suite.** Every object type passes the same generic scenarios: rendered exactly once, can be clicked into and typed in, survives reload, visible to a second user, undo/redo and a history entry, export/import round trip, reachable by keyboard alone, no console errors.

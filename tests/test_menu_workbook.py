@@ -194,7 +194,7 @@ def rows() -> list[Row]:
     return workbook_rows(openpyxl.load_workbook(WORKBOOK, read_only=True)["Menus"])
 
 
-@pytest.mark.must_not_break
+@pytest.mark.must_not_break("E5.23")
 @pytest.mark.parametrize("app", APPS)
 def test_the_menus_are_what_the_workbook_says(app: str, rows: list[Row]) -> None:
     """The key risk of the menu rebuild (E5.23): a client whose menus are not what the owner decided in the workbook."""

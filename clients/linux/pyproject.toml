@@ -33,7 +33,7 @@ addopts = "-q"
 markers = [
     "gtk: needs GTK 4, libadwaita 1.5+, WebKitGTK 6.0 and a display (Xvfb is enough); skipped where they are missing",
     "e2e: starts the real server and the built web frontend; skipped when they are not there",
-    "must_not_break: the test that covers a feature's key risk (coding standards §2, D1652); `pytest -m must_not_break`",
+    "must_not_break(story): the test of the key risk of a story, that the feature does not do what it is for (coding standards §2, PROC-68)",
 ]
 
 [tool.ruff]
