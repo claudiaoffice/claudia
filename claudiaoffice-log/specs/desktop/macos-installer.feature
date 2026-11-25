@@ -1,4 +1,4 @@
-# The macOS package: install, open, update, uninstall (E8.5; D1605-D1609 proposed).
+# The macOS package: install, open, update, uninstall (E8.5; D1625-D1629 proposed).
 #
 # Draft for the owner's review (2026-11-25). An unsigned package for Apple Silicon, macOS 14 and newer, installed for
 # all people of the Mac. No Mac runner is connected, so these scenarios are run by packaging/macos/test-install.sh in a

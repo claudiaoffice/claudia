@@ -1,4 +1,4 @@
-# Shared on this computer: the claudia service is a place of its own (E8.5; D1602, D1604 proposed; supersedes D743's
+# Shared on this computer: the claudia service is a place of its own (E8.5; D1622, D1624 proposed; supersedes D743's
 # "the apps use the service's documents").
 #
 # Draft for the owner's review (2026-11-25). macOS and Windows: the service is an option of their installers, off by

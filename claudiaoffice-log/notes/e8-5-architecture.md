@@ -3,7 +3,7 @@
 Status: **agreed by the owner on 2026-11-25** (with the five answers at the end); the decisions are written when the
 range is reserved. It turns the grilling of 2026-11-25 (story
 `e8.5-macos-installer.md`) into code placement. Branch `mac-installer`; decisions in the range to be reserved
-(proposed D1600–D1619). Three parts, built in this order, because each one needs the one before:
+(D1620–D1639). Three parts, built in this order, because each one needs the one before:
 
 1. **Private on this computer**: a person's apps use only her own server (CODE-99, CODE-100). All three clients and
    the server.
@@ -315,20 +315,20 @@ packaging/
 
 ---
 
-## Decisions this would write (proposed D1600–D1619)
+## Decisions this would write (D1620–D1639)
 
 | # | Decision | Changes |
 |---|---|---|
-| D1600 | A person's apps use only her own server, proven by a key in her state folder | D445 (amends), CODE-99 |
-| D1601 | Her own server's port is derived from her account, 20000–29999, remembered | D504 (8765 stays for shared servers) |
-| D1602 | A service is a place of its own, found through a marker the installer writes | D743 (supersedes its "apps use the service's documents") |
-| D1603 | Place names are made by the page: Private / Shared on this computer | D243's "This computer" |
-| D1604 | The computer's administrators can read the service's setup code | D1371 (where the code is said) |
-| D1605 | The macOS package: an unsigned `.pkg`, apps + optional service, Apple Silicon, macOS 14 | E8.1's macOS line |
-| D1606 | The macOS app is a launcher script that execs the window inside its own bundle | the minimal `.app` of `macos-app-bundle.ts`, for an installation |
-| D1607 | The macOS service is a LaunchDaemon under its own account `_claudia` | mirrors D743 |
-| D1608 | Uninstalling on macOS is an applet that leaves documents and each person's settings | |
-| D1609 | The macOS package is built on the owner's Mac and tested in a VM; `macos.yml` waits switched off | D742 (testing by installing) |
+| D1620 | A person's apps use only her own server, proven by a key in her state folder | D445 (amends), CODE-99 |
+| D1621 | Her own server's port is derived from her account, 20000–29999, remembered | D504 (8765 stays for shared servers) |
+| D1622 | A service is a place of its own, found through a marker the installer writes | D743 (supersedes its "apps use the service's documents") |
+| D1623 | Place names are made by the page: Private / Shared on this computer | D243's "This computer" |
+| D1624 | The computer's administrators can read the service's setup code | D1371 (where the code is said) |
+| D1625 | The macOS package: an unsigned `.pkg`, apps + optional service, Apple Silicon, macOS 14 | E8.1's macOS line |
+| D1626 | The macOS app is a launcher script that execs the window inside its own bundle | the minimal `.app` of `macos-app-bundle.ts`, for an installation |
+| D1627 | The macOS service is a LaunchDaemon under its own account `_claudia` | mirrors D743 |
+| D1628 | Uninstalling on macOS is an applet that leaves documents and each person's settings | |
+| D1629 | The macOS package is built on the owner's Mac and tested in a VM; `macos.yml` waits switched off | D742 (testing by installing) |
 
 ## The owner's answers (2026-11-25)
 

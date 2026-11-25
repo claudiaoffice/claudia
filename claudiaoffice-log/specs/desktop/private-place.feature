@@ -1,4 +1,4 @@
-# Private on this computer: a person's apps use only her own server (E8.5, CODE-99, CODE-100; D1600-D1603 proposed).
+# Private on this computer: a person's apps use only her own server (E8.5, CODE-99, CODE-100; D1620-D1623 proposed).
 #
 # Draft for the owner's review (2026-11-25). The desktop clients of all three systems: the macOS and Windows app
 # (Neutralino) and the Linux app (GTK); the place names also in a plain browser tab. Two people on one computer are two
