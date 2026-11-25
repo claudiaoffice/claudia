@@ -12,7 +12,7 @@ due: ""
 progress: 48
 assignees: []
 tags: []
-subtaskIds: ["[[e8.1-desktop-installers|E8.1 Desktop installers]]", "[[e8.2-install-profiles|E8.2 Install profiles]]", "[[e8.3-server-images|E8.3 Server images]]", "[[e8.4-ci-on-three-oses|E8.4 CI on three OSes]]"]
+subtaskIds: ["[[e8.1-desktop-installers|E8.1 Desktop installers]]", "[[e8.2-install-profiles|E8.2 Install profiles]]", "[[e8.3-server-images|E8.3 Server images]]", "[[e8.4-ci-on-three-oses|E8.4 CI on three OSes]]", "[[e8.5-macos-installer|E8.5 macOS installer]]"]
 dependencies: []
 createdAt: "2026-11-04T19:54:07.601Z"
 updatedAt: "2026-11-17T18:00:00.000Z"
@@ -35,3 +35,4 @@ Project: [[claudia-office|claudia-office]]
 - [ ] [[e8.2-install-profiles|E8.2 Install profiles]]
 - [ ] [[e8.3-server-images|E8.3 Server images]]
 - [ ] [[e8.4-ci-on-three-oses|E8.4 CI on three OSes]]
+- [ ] [[e8.5-macos-installer|E8.5 macOS installer]]

@@ -93,7 +93,7 @@ _avoid_: reset, factory reset, password reset
 ### Finding documents
 
 **Place**
-A location where claudia documents are kept: a server, as a person knows it by name and address. "This computer" is the claudia server running on her own machine; a claudia file in a folder on a disk is not in a place.
+A location where claudia documents are kept: a server, as a person knows it by name and address. "This computer" is her own claudia server, running on her machine for her alone; another claudia server on the same machine, such as a service the computer starts for everyone, is a different place. A claudia file in a folder on a disk is not in a place.
 _avoid_: location, library, folder, storage
 
 **Mine**
