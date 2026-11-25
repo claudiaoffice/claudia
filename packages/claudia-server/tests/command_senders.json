@@ -10,7 +10,7 @@
  "composes.SplitParagraph": "person",
  "computes.AddSheet": "person",
  "computes.AddSlide": "person",
- "computes.ApplyCalculated": "person",
+ "computes.ApplyCalculated": "server",
  "computes.DefineName": "person",
  "computes.RemoveName": "person",
  "computes.RemoveSheet": "person",

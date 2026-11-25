@@ -18,6 +18,7 @@ from dataclasses import dataclass, replace
 from typing import ClassVar
 
 from claudia_core import N_, SLOTS, AddObject, Batch, Command, Context, PageSetup, Refusal, fits
+from claudia_core.commands import Sender
 from claudia_core.slides import Slide
 
 from .cellstyles import CELL_SLOTS, LAYERS, Area, Piece, check_area, layer_of
@@ -447,6 +448,7 @@ class ApplyCalculated(Command):
     ``claudia-server``'s job, not this command's."""
 
     kind: ClassVar[str] = "computes.ApplyCalculated"
+    sender: ClassVar[Sender] = "server"  # only the server's worker lands a result (D2007)
     undoable = False
     sheet: SheetId
     row: int
