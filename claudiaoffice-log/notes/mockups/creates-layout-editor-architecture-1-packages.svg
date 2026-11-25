@@ -1,0 +1,103 @@
+<svg viewBox="0 0 1700 760" xmlns="http://www.w3.org/2000/svg" font-family="Inter, 'Segoe UI', system-ui, sans-serif"><rect width="1700" height="760" fill="#f3f1ea"/><text x="40.0" y="44.0" font-family="Fraunces, Georgia, serif" font-size="22" font-weight="600" fill="#1f1a33" text-anchor="start">E10.27 Edit this layout… — where each piece goes</text>
+<text x="40.0" y="66.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">A layout is already a holder of ordinary objects, so the editor needs three things: a way to read a layout like a slide, a way to write to it like a slide, and a mode of the page that shows it.</text>
+<rect x="1180.0" y="36.0" width="14.0" height="14.0" rx="3" fill="#ece9f8" stroke="#5b4bc4" stroke-width="1.6"/>
+<text x="1200.0" y="47.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">new</text>
+<rect x="1330.0" y="36.0" width="14.0" height="14.0" rx="3" fill="#fdebd9" stroke="#f2a057" stroke-width="1.6"/>
+<text x="1350.0" y="47.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">changed</text>
+<rect x="1480.0" y="36.0" width="14.0" height="14.0" rx="3" fill="#ffffff" stroke="#c9c4d6" stroke-width="1.6"/>
+<text x="1500.0" y="47.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">exists, unchanged</text>
+<rect x="40.0" y="96.0" width="410.0" height="630.0" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="56.0" y="124.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="15" font-weight="600" fill="Fraunces, Georgia, serif" text-anchor="start">claudia-core · claudia-creates</text>
+<rect x="470.0" y="96.0" width="390.0" height="630.0" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="486.0" y="124.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="15" font-weight="600" fill="Fraunces, Georgia, serif" text-anchor="start">claudia-server</text>
+<rect x="880.0" y="96.0" width="480.0" height="630.0" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="896.0" y="124.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="15" font-weight="600" fill="Fraunces, Georgia, serif" text-anchor="start">web app</text>
+<rect x="1380.0" y="96.0" width="280.0" height="630.0" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="1396.0" y="124.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="15" font-weight="600" fill="Fraunces, Georgia, serif" text-anchor="start">shells (Linux, Neutralino)</text>
+<rect x="56.0" y="140.0" width="378.0" height="75.0" rx="8" fill="#ece9f8" stroke="#5b4bc4" stroke-width="1.5"/>
+<text x="66.0" y="159.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">layout_commands.py</text>
+<text x="66.0" y="176.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">SetPlaceholder(object, purpose): mark, rename or</text>
+<text x="66.0" y="191.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">unmark; the inverse puts the old purpose back</text>
+<text x="66.0" y="206.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">DescribeLayout(id, purpose): what a layout is for</text>
+<rect x="56.0" y="224.0" width="378.0" height="75.0" rx="8" fill="#ece9f8" stroke="#5b4bc4" stroke-width="1.5"/>
+<text x="66.0" y="243.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">layout_plans.py</text>
+<text x="66.0" y="260.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">copy_layout: DefineLayout + a copy of its objects</text>
+<text x="66.0" y="275.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">mark_placeholder / unmark_placeholder: the</text>
+<text x="66.0" y="290.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">Batch that also gives or frees the slides' boxes</text>
+<rect x="56.0" y="308.0" width="378.0" height="60.0" rx="8" fill="#fdebd9" stroke="#f2a057" stroke-width="1.5"/>
+<text x="66.0" y="327.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">model.py</text>
+<text x="66.0" y="344.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">is_empty: also a picture frame without a picture;</text>
+<text x="66.0" y="359.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">a built-in layout refuses changes to its objects</text>
+<rect x="56.0" y="377.0" width="378.0" height="45.0" rx="8" fill="#ffffff" stroke="#c9c4d6" stroke-width="1.5"/>
+<text x="66.0" y="396.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">layouts.py · Layout</text>
+<text x="66.0" y="413.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">unchanged: origin builtin / template / document</text>
+<rect x="56.0" y="431.0" width="378.0" height="45.0" rx="8" fill="#ffffff" stroke="#c9c4d6" stroke-width="1.5"/>
+<text x="66.0" y="450.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">slides.py · SlideAnchor</text>
+<text x="66.0" y="467.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">unchanged: purpose is the only placeholder field</text>
+<text x="56.0" y="499.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">Why here: a purpose is part of how a layout holds an</text>
+<text x="56.0" y="515.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">object, so the commands sit with the other layout</text>
+<text x="56.0" y="531.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">commands and are undone by the same history.</text>
+<rect x="486.0" y="140.0" width="358.0" height="75.0" rx="8" fill="#ece9f8" stroke="#5b4bc4" stroke-width="1.5"/>
+<text x="496.0" y="159.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">layout_methods.py</text>
+<text x="496.0" y="176.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">reads: layouts, layout {layout}</text>
+<text x="496.0" y="191.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">writes: new_layout, describe_layout,</text>
+<text x="496.0" y="206.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">mark_placeholder, unmark_placeholder</text>
+<rect x="486.0" y="224.0" width="358.0" height="60.0" rx="8" fill="#fdebd9" stroke="#f2a057" stroke-width="1.5"/>
+<text x="496.0" y="243.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">object_methods.py · creates.py</text>
+<text x="496.0" y="260.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">the object methods take a holder: a slide or</text>
+<text x="496.0" y="275.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">a layout id. Parameters keep their names</text>
+<rect x="486.0" y="293.0" width="358.0" height="60.0" rx="8" fill="#fdebd9" stroke="#f2a057" stroke-width="1.5"/>
+<text x="496.0" y="312.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">creates.py · slide read</text>
+<text x="496.0" y="329.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">gets `under`: the layout objects a slide shows,</text>
+<text x="496.0" y="344.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">so canvas, show and print draw one thing</text>
+<rect x="486.0" y="362.0" width="358.0" height="45.0" rx="8" fill="#ffffff" stroke="#c9c4d6" stroke-width="1.5"/>
+<text x="496.0" y="381.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">presence</text>
+<text x="496.0" y="398.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">exists: region = a layout id says who edits it</text>
+<rect x="486.0" y="416.0" width="358.0" height="45.0" rx="8" fill="#ffffff" stroke="#c9c4d6" stroke-width="1.5"/>
+<text x="496.0" y="435.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">pptx.py · odp.py</text>
+<text x="496.0" y="452.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">exist: already draw layout objects</text>
+<text x="486.0" y="484.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">Why here: every method ends in done(ctx, Command,</text>
+<text x="486.0" y="500.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">base) as today. Old clients ignore `under`.</text>
+<rect x="896.0" y="140.0" width="448.0" height="75.0" rx="8" fill="#ece9f8" stroke="#5b4bc4" stroke-width="1.5"/>
+<text x="906.0" y="159.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">lib/layout-editor.ts</text>
+<text x="906.0" y="176.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">pure rules, tested without a page: who may edit</text>
+<text x="906.0" y="191.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">(built-in refused), the band sentence, what</text>
+<text x="906.0" y="206.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">Make placeholder loses, the purpose problem</text>
+<rect x="896.0" y="224.0" width="448.0" height="75.0" rx="8" fill="#fdebd9" stroke="#f2a057" stroke-width="1.5"/>
+<text x="906.0" y="243.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">lib/slide-session.ts</text>
+<text x="906.0" y="260.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">layouts, editing, layout objects; enter / leave;</text>
+<text x="906.0" y="275.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">slideObjects(holder); consumes the layouts,</text>
+<text x="906.0" y="290.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">slide_layout and objects events</text>
+<rect x="896.0" y="308.0" width="448.0" height="45.0" rx="8" fill="#ece9f8" stroke="#5b4bc4" stroke-width="1.5"/>
+<text x="906.0" y="327.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">lib/layout-menu.ts</text>
+<text x="906.0" y="344.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">Format ▸ Layout entries, hints from keys.generated</text>
+<rect x="896.0" y="362.0" width="448.0" height="60.0" rx="8" fill="#ece9f8" stroke="#5b4bc4" stroke-width="1.5"/>
+<text x="906.0" y="381.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">LayoutBand.vue · LayoutPanel.vue</text>
+<text x="906.0" y="398.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">the band with Done and the panel with</text>
+<text x="906.0" y="413.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">purpose, two styles, hint, Add placeholder</text>
+<rect x="896.0" y="431.0" width="448.0" height="45.0" rx="8" fill="#ece9f8" stroke="#5b4bc4" stroke-width="1.5"/>
+<text x="906.0" y="450.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">LayoutStrip.vue</text>
+<text x="906.0" y="467.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">the left strip when the editor is open</text>
+<rect x="896.0" y="485.0" width="448.0" height="45.0" rx="8" fill="#ece9f8" stroke="#5b4bc4" stroke-width="1.5"/>
+<text x="906.0" y="504.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">NewLayoutDialog.vue · BuiltInDialog.vue</text>
+<text x="906.0" y="521.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">the two dialogs of mocks C and D</text>
+<rect x="896.0" y="539.0" width="448.0" height="60.0" rx="8" fill="#fdebd9" stroke="#f2a057" stroke-width="1.5"/>
+<text x="906.0" y="558.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">SlideCanvas · SlideView · PresentShow</text>
+<text x="906.0" y="575.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">draw `under` beneath the slide; placeholders dashed</text>
+<text x="906.0" y="590.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">with a chip only while a layout is open</text>
+<rect x="896.0" y="608.0" width="448.0" height="45.0" rx="8" fill="#fdebd9" stroke="#f2a057" stroke-width="1.5"/>
+<text x="906.0" y="627.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">print/source.ts</text>
+<text x="906.0" y="644.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">draws `under` on every page</text>
+<rect x="896.0" y="662.0" width="448.0" height="45.0" rx="8" fill="#fdebd9" stroke="#f2a057" stroke-width="1.5"/>
+<text x="906.0" y="681.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">SlideWorkspace.vue</text>
+<text x="906.0" y="698.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">puts the strip, the band and the panel in</text>
+<rect x="1396.0" y="140.0" width="248.0" height="60.0" rx="8" fill="#fdebd9" stroke="#f2a057" stroke-width="1.5"/>
+<text x="1406.0" y="159.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">manifest.py</text>
+<text x="1406.0" y="176.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">two ids: format.edit-layout,</text>
+<text x="1406.0" y="191.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">format.new-layout</text>
+<rect x="1396.0" y="209.0" width="248.0" height="60.0" rx="8" fill="#fdebd9" stroke="#f2a057" stroke-width="1.5"/>
+<text x="1406.0" y="228.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">generated files</text>
+<text x="1406.0" y="245.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">keys.generated.ts, menu.creates.json:</text>
+<text x="1406.0" y="260.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.8" font-weight="400" fill="#6e6880" text-anchor="start">regenerated, not edited</text>
+<text x="1396.0" y="288.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">The shells host the same page,</text>
+<text x="1396.0" y="304.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">so nothing else changes there.</text></svg>

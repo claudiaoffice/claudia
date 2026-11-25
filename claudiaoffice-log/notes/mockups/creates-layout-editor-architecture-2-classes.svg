@@ -1,0 +1,135 @@
+<svg viewBox="0 0 1700 760" xmlns="http://www.w3.org/2000/svg" font-family="Inter, 'Segoe UI', system-ui, sans-serif"><rect width="1700" height="760" fill="#f3f1ea"/><text x="40.0" y="44.0" font-family="Fraunces, Georgia, serif" font-size="22" font-weight="600" fill="#1f1a33" text-anchor="start">E10.27 — the model and the page: what is new on each side</text>
+<text x="40.0" y="66.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">A placeholder stays an ordinary object whose anchor has a purpose. Nothing in the document format changes: no new field, no new kind of object.</text>
+<rect x="1180.0" y="36.0" width="14.0" height="14.0" rx="3" fill="#ece9f8" stroke="#5b4bc4" stroke-width="1.6"/>
+<text x="1200.0" y="47.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">new</text>
+<rect x="1330.0" y="36.0" width="14.0" height="14.0" rx="3" fill="#fdebd9" stroke="#f2a057" stroke-width="1.6"/>
+<text x="1350.0" y="47.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">changed</text>
+<rect x="1480.0" y="36.0" width="14.0" height="14.0" rx="3" fill="#ffffff" stroke="#c9c4d6" stroke-width="1.6"/>
+<text x="1500.0" y="47.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">exists, unchanged</text>
+<rect x="40.0" y="100.0" width="360.0" height="112.0" rx="8" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.6"/>
+<rect x="40.0" y="100.0" width="360.0" height="40.0" rx="8" fill="#ece9f8" stroke="#5b4bc4" stroke-width="1.6"/>
+<text x="220.0" y="112.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="9.5" font-weight="400" fill="#6e6880" text-anchor="middle">«Command»</text>
+<text x="220.0" y="131.0" font-family="Fraunces, Georgia, serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="middle">SetPlaceholder</text>
+<line x1="40.0" y1="140.0" x2="400.0" y2="140.0" stroke="#5b4bc4" stroke-width="1"/>
+<text x="50.0" y="157.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">object: str</text>
+<text x="50.0" y="172.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">purpose: str   # '' unmarks</text>
+<text x="50.0" y="188.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">apply(model) -&gt; SetPlaceholder</text>
+<text x="50.0" y="203.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start"># inverse: the old purpose</text>
+<rect x="40.0" y="250.0" width="360.0" height="96.5" rx="8" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.6"/>
+<rect x="40.0" y="250.0" width="360.0" height="40.0" rx="8" fill="#ece9f8" stroke="#5b4bc4" stroke-width="1.6"/>
+<text x="220.0" y="262.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="9.5" font-weight="400" fill="#6e6880" text-anchor="middle">«Command»</text>
+<text x="220.0" y="281.0" font-family="Fraunces, Georgia, serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="middle">DescribeLayout</text>
+<line x1="40.0" y1="290.0" x2="400.0" y2="290.0" stroke="#5b4bc4" stroke-width="1"/>
+<text x="50.0" y="307.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">id: str</text>
+<text x="50.0" y="322.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">purpose: str</text>
+<text x="50.0" y="338.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">apply(model) -&gt; DescribeLayout</text>
+<rect x="460.0" y="100.0" width="400.0" height="112.0" rx="8" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.6"/>
+<rect x="460.0" y="100.0" width="400.0" height="40.0" rx="8" fill="#ece9f8" stroke="#5b4bc4" stroke-width="1.6"/>
+<text x="660.0" y="112.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="9.5" font-weight="400" fill="#6e6880" text-anchor="middle">«module»</text>
+<text x="660.0" y="131.0" font-family="Fraunces, Georgia, serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="middle">layout_plans</text>
+<line x1="460.0" y1="140.0" x2="860.0" y2="140.0" stroke="#5b4bc4" stroke-width="1"/>
+<text x="470.0" y="157.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">copy_layout(model, source, id, name, purpose)</text>
+<text x="470.0" y="172.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">mark_placeholder(model, obj, purpose)</text>
+<text x="470.0" y="188.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">unmark_placeholder(model, obj)</text>
+<text x="470.0" y="203.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start"># each returns a Batch; settle repairs copies</text>
+<rect x="460.0" y="270.0" width="400.0" height="115.5" rx="8" fill="#ffffff" stroke="#f2a057" stroke-width="1.6"/>
+<rect x="460.0" y="270.0" width="400.0" height="28.0" rx="8" fill="#fdebd9" stroke="#f2a057" stroke-width="1.6"/>
+<text x="660.0" y="289.0" font-family="Fraunces, Georgia, serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="middle">SlideModel</text>
+<line x1="460.0" y1="298.0" x2="860.0" y2="298.0" stroke="#f2a057" stroke-width="1"/>
+<text x="470.0" y="315.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">is_empty(obj): text without words, or</text>
+<text x="470.0" y="330.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">  an image without an asset</text>
+<text x="470.0" y="346.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">check_anchor(...)  # + built-in layout refused</text>
+<text x="470.0" y="361.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">layout_objects_of(slide)   # exists</text>
+<text x="470.0" y="377.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">objects_on(holder)   # exists</text>
+<rect x="920.0" y="100.0" width="340.0" height="100.0" rx="8" fill="#ffffff" stroke="#c9c4d6" stroke-width="1.6"/>
+<rect x="920.0" y="100.0" width="340.0" height="28.0" rx="8" fill="#ffffff" stroke="#c9c4d6" stroke-width="1.6"/>
+<text x="1090.0" y="119.0" font-family="Fraunces, Georgia, serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="middle">SlideAnchor</text>
+<line x1="920.0" y1="128.0" x2="1260.0" y2="128.0" stroke="#c9c4d6" stroke-width="1"/>
+<text x="930.0" y="145.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">slide / holder</text>
+<text x="930.0" y="160.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">x, y</text>
+<text x="930.0" y="176.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">purpose            # exists</text>
+<text x="930.0" y="191.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">bound_to_placeholder  # exists</text>
+<rect x="920.0" y="250.0" width="340.0" height="84.5" rx="8" fill="#ffffff" stroke="#c9c4d6" stroke-width="1.6"/>
+<rect x="920.0" y="250.0" width="340.0" height="28.0" rx="8" fill="#ffffff" stroke="#c9c4d6" stroke-width="1.6"/>
+<text x="1090.0" y="269.0" font-family="Fraunces, Georgia, serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="middle">Layout</text>
+<line x1="920.0" y1="278.0" x2="1260.0" y2="278.0" stroke="#c9c4d6" stroke-width="1"/>
+<text x="930.0" y="295.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">id, name, purpose</text>
+<text x="930.0" y="310.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">origin: builtin|template|document</text>
+<text x="930.0" y="326.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">hidden, to_name</text>
+<line x1="400.0" y1="140.0" x2="460.0" y2="140.0" stroke="#6e6880" stroke-width="1.3"/>
+<line x1="460.0" y1="140.0" x2="451.9" y2="136.1" stroke="#6e6880" stroke-width="1.3"/>
+<line x1="460.0" y1="140.0" x2="451.9" y2="143.9" stroke="#6e6880" stroke-width="1.3"/>
+<text x="430.0" y="135.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="middle" font-style="italic">calls</text>
+<line x1="860.0" y1="330.0" x2="920.0" y2="170.0" stroke="#6e6880" stroke-width="1.3" stroke-dasharray="4 3"/>
+<line x1="920.0" y1="170.0" x2="913.5" y2="176.2" stroke="#6e6880" stroke-width="1.3"/>
+<line x1="920.0" y1="170.0" x2="920.8" y2="179.0" stroke="#6e6880" stroke-width="1.3"/>
+<text x="890.0" y="245.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="middle" font-style="italic">holds</text>
+<rect x="1320.0" y="100.0" width="330.0" height="143.0" rx="8" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.6"/>
+<rect x="1320.0" y="100.0" width="330.0" height="40.0" rx="8" fill="#ece9f8" stroke="#5b4bc4" stroke-width="1.6"/>
+<text x="1485.0" y="112.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="9.5" font-weight="400" fill="#6e6880" text-anchor="middle">«wire»</text>
+<text x="1485.0" y="131.0" font-family="Fraunces, Georgia, serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="middle">layout_methods</text>
+<line x1="1320.0" y1="140.0" x2="1650.0" y2="140.0" stroke="#5b4bc4" stroke-width="1"/>
+<text x="1330.0" y="157.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">layouts() -&gt; [LayoutInfo]</text>
+<text x="1330.0" y="172.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">layout(layout) -&gt; {objects, ...}</text>
+<text x="1330.0" y="188.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">new_layout(name, purpose, source)</text>
+<text x="1330.0" y="203.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">describe_layout(layout, purpose)</text>
+<text x="1330.0" y="219.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">mark_placeholder(object, purpose)</text>
+<text x="1330.0" y="234.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">unmark_placeholder(object)</text>
+<rect x="1320.0" y="300.0" width="330.0" height="96.5" rx="8" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.6"/>
+<rect x="1320.0" y="300.0" width="330.0" height="40.0" rx="8" fill="#ece9f8" stroke="#5b4bc4" stroke-width="1.6"/>
+<text x="1485.0" y="312.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="9.5" font-weight="400" fill="#6e6880" text-anchor="middle">«read»</text>
+<text x="1485.0" y="331.0" font-family="Fraunces, Georgia, serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="middle">LayoutInfo</text>
+<line x1="1320.0" y1="340.0" x2="1650.0" y2="340.0" stroke="#5b4bc4" stroke-width="1"/>
+<text x="1330.0" y="357.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">id, name, purpose</text>
+<text x="1330.0" y="372.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">hidden, to_name, builtin</text>
+<text x="1330.0" y="388.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">follows: int</text>
+<line x1="1320.0" y1="190.0" x2="1260.0" y2="160.0" stroke="#6e6880" stroke-width="1.3"/>
+<line x1="1260.0" y1="160.0" x2="1265.5" y2="167.1" stroke="#6e6880" stroke-width="1.3"/>
+<line x1="1260.0" y1="160.0" x2="1269.0" y2="160.1" stroke="#6e6880" stroke-width="1.3"/>
+<rect x="40.0" y="440.0" width="380.0" height="112.0" rx="8" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.6"/>
+<rect x="40.0" y="440.0" width="380.0" height="40.0" rx="8" fill="#ece9f8" stroke="#5b4bc4" stroke-width="1.6"/>
+<text x="230.0" y="452.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="9.5" font-weight="400" fill="#6e6880" text-anchor="middle">«web»</text>
+<text x="230.0" y="471.0" font-family="Fraunces, Georgia, serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="middle">LayoutEditorState</text>
+<line x1="40.0" y1="480.0" x2="420.0" y2="480.0" stroke="#5b4bc4" stroke-width="1"/>
+<text x="50.0" y="497.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">layout: str | None</text>
+<text x="50.0" y="512.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">sourceSlide: str</text>
+<text x="50.0" y="528.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">selected: string[]</text>
+<text x="50.0" y="543.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start"># in SlideSession.state</text>
+<rect x="460.0" y="440.0" width="400.0" height="112.0" rx="8" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.6"/>
+<rect x="460.0" y="440.0" width="400.0" height="40.0" rx="8" fill="#ece9f8" stroke="#5b4bc4" stroke-width="1.6"/>
+<text x="660.0" y="452.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="9.5" font-weight="400" fill="#6e6880" text-anchor="middle">«pure functions»</text>
+<text x="660.0" y="471.0" font-family="Fraunces, Georgia, serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="middle">layout-editor.ts</text>
+<line x1="460.0" y1="480.0" x2="860.0" y2="480.0" stroke="#5b4bc4" stroke-width="1"/>
+<text x="470.0" y="497.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">canEdit(layout): Refusal | null</text>
+<text x="470.0" y="512.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">bandText(info, others): string</text>
+<text x="470.0" y="528.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">makeSentence(obj): string</text>
+<text x="470.0" y="543.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">purposeProblem(text, taken): string</text>
+<rect x="920.0" y="440.0" width="340.0" height="100.0" rx="8" fill="#ffffff" stroke="#f2a057" stroke-width="1.6"/>
+<rect x="920.0" y="440.0" width="340.0" height="28.0" rx="8" fill="#fdebd9" stroke="#f2a057" stroke-width="1.6"/>
+<text x="1090.0" y="459.0" font-family="Fraunces, Georgia, serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="middle">SlideSession</text>
+<line x1="920.0" y1="468.0" x2="1260.0" y2="468.0" stroke="#f2a057" stroke-width="1"/>
+<text x="930.0" y="485.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">layouts: LayoutInfo[]</text>
+<text x="930.0" y="500.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">enterLayout(id) / leaveLayout()</text>
+<text x="930.0" y="516.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">slideObjects(holder)</text>
+<text x="930.0" y="531.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">under(slide): SlideObject[]</text>
+<rect x="1320.0" y="440.0" width="330.0" height="84.5" rx="8" fill="#ffffff" stroke="#f2a057" stroke-width="1.6"/>
+<rect x="1320.0" y="440.0" width="330.0" height="28.0" rx="8" fill="#fdebd9" stroke="#f2a057" stroke-width="1.6"/>
+<text x="1485.0" y="459.0" font-family="Fraunces, Georgia, serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="middle">SlideCanvas</text>
+<line x1="1320.0" y1="468.0" x2="1650.0" y2="468.0" stroke="#f2a057" stroke-width="1"/>
+<text x="1330.0" y="485.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">draws `under` beneath</text>
+<text x="1330.0" y="500.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">dashed frame + chip for a</text>
+<text x="1330.0" y="516.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.2" font-weight="400" fill="#1f1a33" text-anchor="start">placeholder, only in the editor</text>
+<line x1="420.0" y1="500.0" x2="460.0" y2="500.0" stroke="#6e6880" stroke-width="1.3"/>
+<line x1="460.0" y1="500.0" x2="451.9" y2="496.1" stroke="#6e6880" stroke-width="1.3"/>
+<line x1="460.0" y1="500.0" x2="451.9" y2="503.9" stroke="#6e6880" stroke-width="1.3"/>
+<text x="440.0" y="495.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="middle" font-style="italic">uses</text>
+<line x1="860.0" y1="500.0" x2="920.0" y2="500.0" stroke="#6e6880" stroke-width="1.3"/>
+<line x1="920.0" y1="500.0" x2="911.9" y2="496.1" stroke="#6e6880" stroke-width="1.3"/>
+<line x1="920.0" y1="500.0" x2="911.9" y2="503.9" stroke="#6e6880" stroke-width="1.3"/>
+<line x1="1260.0" y1="500.0" x2="1320.0" y2="500.0" stroke="#6e6880" stroke-width="1.3"/>
+<line x1="1320.0" y1="500.0" x2="1311.9" y2="496.1" stroke="#6e6880" stroke-width="1.3"/>
+<line x1="1320.0" y1="500.0" x2="1311.9" y2="503.9" stroke="#6e6880" stroke-width="1.3"/>
+<rect x="40.0" y="640.0" width="1610.0" height="90.0" rx="10" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="60.0" y="668.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">Why no new field</text>
+<text x="60.0" y="688.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">A text placeholder's hint is its own words (the slide's copy starts empty, so only the layout shows it). A picture placeholder is an image object without an asset;</text>
+<text x="60.0" y="706.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">its hint is a fixed word by kind, so the panel has no hint field for it. This keeps the format as it is and makes Make placeholder on a text box change one thing: its purpose.</text></svg>
