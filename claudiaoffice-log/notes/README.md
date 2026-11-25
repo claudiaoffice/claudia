@@ -40,6 +40,7 @@ renumbering table), `bugtracker.md` (SEC/PERF/UX/CODE/PROC/DOC items) and `qa-re
 | `bug-eater.md` | The brief of the bug-eater chat: its four tracks (bugs, architecture, domain language, tests), the batch loop from branch to marking items fixed, helpers (two sub-agents, Fable as advisor); its queue is `bug-eater-queue.md` | 2026-11-24 |
 | `bug-eater-queue.md` | The triage of every open tracker item against `backlog` at the time it was written: still real or not, class, cluster, size, the failing test to write first, and the proposed batches | 2026-11-24 |
 | `menu-audit.md` | Menu audit, phase 1: the workbook `claudia-menus.xlsx` against the menus of all three apps on web and desktop; how `scripts/menu_capture.py` and `scripts/menu_audit.py` make the workbook's Diagnosis sheet, the picture, the bugs found, what could not be run | 2026-11-25 |
+| `menus-that-fit.md` | Menus that show only what fits (D1600–D1606): the words of "fits when" per reason, the trial of hiding against greying, what follows for the build, next steps | 2026-11-25 |
 
 ## Three documents were deliberately not copied
 
