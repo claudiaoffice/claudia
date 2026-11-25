@@ -134,6 +134,7 @@ def test_where_the_owners_did_not_allow_it_the_servers_own_provider_answers_and_
     served(test, claude_desk(anthropic, local=runner_of("the local model")))
 
 
+@pytest.mark.must_not_break("E7.11")  # nothing of a document reaches Anthropic without the owners' consent
 def test_the_stand_in_answers_where_claude_is_not_allowed_and_there_is_no_local_model(anthropic):
     async def test(hosted, ann, desk):
         _, via = await ask(hosted, ann)

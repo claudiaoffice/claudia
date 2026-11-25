@@ -47,8 +47,8 @@ A rule that nothing enforces will erode, so every `Planned` item is a debt item,
 - **Deterministic tests.** No real network, no wall clock, no unseeded randomness, no sleeps as synchronisation. A flaky test is a size-2 bug: fixed or deleted within one week, never ignored.
 - Before a patch is delivered, the author runs the "use it before delivery" journey against the real running server and web client, looks at the result, and states in the patch notes what was verified and what could not be run.
 
-**Enforced by.** pytest, pytest-bdd, Playwright, the coverage check script with its ratchet, review of the scenarios, `tests/test_no_sleeps_as_waits.py` (a test waits for the thing, not the clock: D1660).
-**Status.** Unit and BDD tests, coverage floors with ratchet: Enforced. Journey suite, invariants suite and console-error failure: Partial. Flaky-test policy: Partial (no sleeps as waits in Python tests is checked; the one-week rule is kept by hand). "Must not break" marks: Planned (no form yet).
+**Enforced by.** pytest, pytest-bdd, Playwright, the coverage check script with its ratchet, review of the scenarios, `tests/test_no_sleeps_as_waits.py` (a test waits for the thing, not the clock: D1660), `tests/test_must_not_break.py` (every story that is done has a marked test of its key risk: D1663).
+**Status.** Unit and BDD tests, coverage floors with ratchet: Enforced. Journey suite, invariants suite and console-error failure: Partial. Flaky-test policy: Partial (no sleeps as waits in Python tests is checked; the one-week rule is kept by hand). "Must not break" marks: Partial (the form and `tests/test_must_not_break.py`; the 46 stories done before the rule wait for the owner to name their test).
 
 ## 3. Modules, boundaries and layering
 
