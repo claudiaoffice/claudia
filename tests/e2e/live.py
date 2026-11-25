@@ -23,11 +23,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from hashing import lower_hashing_cost
 from websockets.sync.client import ClientConnection, connect
-
-from claudia_server.hub import DEFAULT_MAX_DOCUMENTS
-from claudia_server.kdf_policy import MIN_TARGET_SECONDS
-from claudia_server.server_settings import SETTINGS_FILE, SecuritySettings, ServerSettings, admin_dir, save_settings
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 START_SECONDS = 90.0
@@ -110,20 +107,12 @@ def _http(url: str, body: bytes | None = None, headers: dict[str, str] | None = 
         return status, raw.decode(errors="replace")
 
 
-def quick_hashing(state: Path) -> None:
-    """Let a test server under ``state`` hash passwords at the lowest cost the settings allow, unless the test saved
-    settings of its own: the tests make hundreds of documents and none tests that cost (PROC-55)."""
-    if not (admin_dir(state) / SETTINGS_FILE).exists():
-        quick = SecuritySettings(kdf_target_seconds=MIN_TARGET_SECONDS)
-        save_settings(state, ServerSettings(max_documents=DEFAULT_MAX_DOCUMENTS, security=quick))
-
-
 @contextmanager
 def server(folder: Path, *extra: str) -> Iterator[Live]:
     """A server of every app on a free port of this computer, with its documents sealed in ``folder/documents``, that
-    hashes passwords at the lowest cost (``quick_hashing``)."""
+    hashes passwords at the lowest cost (``hashing.lower_hashing_cost``)."""
     port = free_port()
-    quick_hashing(folder / "state")
+    lower_hashing_cost(folder / "state")
     documents = folder / "documents"
     command = [
         sys.executable,
