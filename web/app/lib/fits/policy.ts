@@ -1,15 +1,15 @@
 // The trial (D1606): whether what does not fit is hidden or greyed, one setting per reason, every reason at hide to
-// begin with, and an entry's own setting that beats its reason's. It travels in the page's address (D1647):
-// `?fits=role:grey,document:grey&fits-entry=edit.undo:show`; the desktop apps add it from their settings file.
+// begin with, and an entry's own setting, grey or hide (D1653), that beats its reason's. It travels in the page's
+// address (D1647): `?fits=role:grey,document:grey&fits-entry=edit.undo:grey`; the desktop apps add it from their
+// settings file.
 import { REASONS, type Reason } from './facts'
 
+/** What becomes of an entry that does not fit: left out, or kept in its menu and greyed. */
 export type Display = 'hide' | 'grey'
-/** "show" keeps an entry in its menu, greyed while it does not fit; "grey" does the same, "hide" takes it out. */
-export type EntryDisplay = 'show' | Display
 
 export interface FitPolicy {
   byReason: Readonly<Record<Reason, Display>>
-  byEntry: Readonly<Record<string, EntryDisplay>>
+  byEntry: Readonly<Record<string, Display>>
 }
 
 export const DEFAULT_POLICY: FitPolicy = {
@@ -31,9 +31,9 @@ export function policyFromAddress(search: string): FitPolicy {
   for (const [reason, display] of pairs(query.get('fits'))) {
     if ((REASONS as readonly string[]).includes(reason) && (display === 'hide' || display === 'grey')) byReason[reason as Reason] = display
   }
-  const byEntry: Record<string, EntryDisplay> = {}
+  const byEntry: Record<string, Display> = {}
   for (const [id, display] of pairs(query.get('fits-entry'))) {
-    if (display === 'show' || display === 'grey' || display === 'hide') byEntry[id] = display
+    if (display === 'hide' || display === 'grey') byEntry[id] = display
   }
   return { byReason, byEntry }
 }

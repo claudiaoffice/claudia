@@ -115,7 +115,7 @@
 <text x="940" y="426.5" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="12" font-weight="600" fill="#fff" text-anchor="start">FitPolicy  (the trial, D1606)</text>
 <text x="1242" y="426.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="9.5" font-weight="400" fill="#fff" text-anchor="end">fits/policy.ts</text>
 <text x="940" y="452" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="10.5" font-weight="400" fill="#1f1a33" text-anchor="start">byReason: Reason → hide | grey</text>
-<text x="940" y="468" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="10.5" font-weight="400" fill="#1f1a33" text-anchor="start">overrides: id → show | grey | hide</text>
+<text x="940" y="468" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="10.5" font-weight="400" fill="#1f1a33" text-anchor="start">overrides: id → grey | hide (D1653)</text>
 <text x="940" y="484" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="10.5" font-weight="400" fill="#1f1a33" text-anchor="start">static fromUrl(location)</text>
 <rect x="700" y="560" width="450" height="86" rx="8" fill="#fff" stroke="#5b4bc4" stroke-width="1.5"/>
 <rect x="700" y="560" width="450" height="24" rx="8" fill="#5b4bc4"/>

@@ -156,8 +156,8 @@ Both lists only shrink:
 - **German.** 19 new sentences are translated.
 
 **Assumptions:**
-- An entry set to "show" and one set to "grey" behave alike: an entry that does not fit cannot be used, so it is
-  greyed. "show" is kept because D1606 names it.
+- ~~An entry set to "show" and one set to "grey" behave alike~~: the owner dropped "show" (D1653); an entry's own
+  setting is `grey` or `hide`.
 - The sentences of the conditions are mine; the owner reviews them with the notices (slice 5).
 - The test reads the rules from the macOS and Windows menus' JSON (`clients/neutralino/src/generated/`), the
   definition as plain data, until slice 4 generates the definition for the web.

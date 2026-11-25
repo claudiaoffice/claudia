@@ -103,7 +103,8 @@ stale, as one does for the keys today.
     session.
   - The app part (undo, pivot tables, objects; what is selected) comes from each workspace.
   - Several selected things fit only when all fit (D1601); `selection.kinds` carries them.
-- **`FitPolicy`:** the trial (D1606), one setting per reason plus overrides per action, read from the page's URL.
+- **`FitPolicy`:** the trial (D1606), one setting per reason plus an override per action, `grey` or `hide` (D1653),
+  read from the page's URL.
   The desktop shells add the parameter from their settings file when they load the page. That keeps one place that
   reads it.
 - **`judge(rule, facts, policy, id) → Verdict { shown, enabled, why? }`:** a pure function, tested with plain data.

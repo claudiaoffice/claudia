@@ -55,7 +55,7 @@ until there is help (E13).
 
 ## The trial (D1606)
 
-- One setting per reason: `hide` or `grey`, plus an override per action id: `show`, `grey` or `hide`. An override
+- One setting per reason: `hide` or `grey`, plus an override per action id: `grey` or `hide` (D1653; D1606 also named `show`). An override
   beats its reason.
 - Where the setting lives:
   - desktop clients: a file beside their other settings

@@ -79,8 +79,8 @@ describe('judging an entry', () => {
     expect(verdict('selection: something', {}, policy)).toMatchObject({ shown: false, reason: 'selection' })
   })
 
-  it('lets an entry’s own setting beat its reason’s (D1606)', () => {
-    const keep = policyFromAddress('?fits-entry=edit.undo:show,edit.copy:hide&fits=document:hide,role:grey')
+  it('lets an entry’s own setting beat its reason’s (D1606, D1653)', () => {
+    const keep = policyFromAddress('?fits-entry=edit.undo:grey,edit.copy:hide&fits=document:hide,role:grey')
     expect(verdict('document: something to undo', {}, keep, 'edit.undo')).toMatchObject({ shown: true, enabled: false })
     expect(verdict('role: owner', { role: 'viewer' }, keep, 'edit.copy')).toMatchObject({ shown: false })
   })
@@ -127,6 +127,7 @@ describe('judging an entry', () => {
 describe('the trial’s setting in the page’s address (D1606, D1647)', () => {
   it('starts every reason at hide, and ignores what it does not know', () => {
     expect(policyFromAddress('')).toEqual(DEFAULT_POLICY)
+    expect(policyFromAddress('?fits-entry=edit.undo:show').byEntry).toEqual({}) // grey or hide only (D1653)
     expect(policyFromAddress('?fits=role:grey,nonsense:grey,ai:sideways')).toEqual({
       ...DEFAULT_POLICY,
       byReason: { ...DEFAULT_POLICY.byReason, role: 'grey' },
