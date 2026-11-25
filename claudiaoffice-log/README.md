@@ -7,7 +7,8 @@ claude.ai project context.
 |---|---|
 | `Projects/claudia-office/` | The backlog: one file per epic and per story, for the dotpm ("project-manager") plugin |
 | `decision-log/` | The decision log: one file per decision; its `README.md` has the rules, `ranges.md` the numbers |
-| `bugtracker.md` | Bugs and QA findings (UX-, SEC-, PERF-, PROC-, DOC-, CODE-, WEB- numbers), open first, then fixed |
+| `bugtracker-open.md` | Open bugs and QA findings (UX-, SEC-, PERF-, PROC-, DOC-, CODE-, WEB- numbers): the *Open* table, how to add a bug, and the section of each open item |
+| `bugtracker-fixed.md` | Fixed items: the *Fixed* table and the record of every round. Until 2026-11-25 both files were `bugtracker.md`, as older notes call it |
 | `implementation-notes/` | What was built and why it looks the way it does, per feature |
 | `notes/` | Design notes, spike results, mock-ups |
 

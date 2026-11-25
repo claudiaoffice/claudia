@@ -1,6 +1,6 @@
 # The bug eater
 
-A standing agent chat that works down `bugtracker.md`, the architectural problems behind it, and the places where the
+A standing agent chat that works down the bug tracker (`bugtracker-open.md`; `bugtracker.md` until 2026-11-25), the architectural problems behind it, and the places where the
 code does not yet speak the glossary's language. Agreed with the owner on 2026-11-24. This note is the brief: a new
 session starts by reading it, the project instructions, `CONTRIBUTING.md` and `coding-standards.md`, so the owner only
 has to say which batch.
@@ -9,7 +9,7 @@ has to say which batch.
 
 | Track | What | How it is decided |
 |---|---|---|
-| Bugs | The open items of `bugtracker.md` | In batches (below); the owner approves the queue |
+| Bugs | The open items of `bugtracker-open.md` | In batches (below); the owner approves the queue |
 | Architecture | Root causes that several items share (the execution model, the server's structure, one source for menus …) | Never inside a bugfix: a design pass with class diagrams, a second opinion from Fable, the owner agrees before code |
 | Domain language | Glossary words the code does not use yet (Proposal and the other words of "The ai at work") | A domain-modelling session, then one rename across protocol, server, web and clients; no compatibility layer while claudia is pre-release, unless the owner says otherwise |
 | Tests | Where the suite is weak: behaviour no test reaches, specs that run nowhere, clients not run | The bug eater points at the weak spot, the owner and the bug eater agree what to do |
