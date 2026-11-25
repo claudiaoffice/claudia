@@ -102,4 +102,3 @@ export function tableShortcuts(c: { t: Translate }, h: TableMenuHost): ShortcutD
     whileTyping: true,
   }))
 }
-

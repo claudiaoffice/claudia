@@ -157,11 +157,16 @@ def close_print_preview(person: Person) -> None:
     person.page.wait_for_selector("[data-testid=print-preview]", state="detached")
 
 
-def choose_view(person: Person, label: str) -> None:
-    """View ▸ Flow or View ▸ Page (entries that are ticked, so not plain menu items)."""
+def show_pages(person: Person, on: bool) -> None:
+    """View ▸ Page View, a ticked entry: ticks it (``on``) or unticks it (back to the flowing text)."""
     page = person.page
     page.click('.menus .title:text-is("View")')
-    page.locator(".menus .drop [role^=menuitem]", has=page.locator(".label", has_text=re.compile(f"^{label}$"))).click()
+    entry = page.locator(".menus .drop [role=menuitemcheckbox]", has=page.locator(".label", has_text="Page View"))
+    if (entry.get_attribute("aria-checked") == "true") != on:
+        entry.click()
+    else:
+        page.keyboard.press("Escape")
+    page.wait_for_selector(".scroller.page", state="attached" if on else "detached")
 
 
 def share_and_open(world: World, name: str, role: str) -> Person:
@@ -494,13 +499,13 @@ def _still_work(world, kind):
 # ================================================================================================= views
 @when("I switch to the page view")
 def _page_view(world):
-    choose_view(world.ann, "Page")
+    show_pages(world.ann, on=True)
 
 
 @when("I switch back to the flow view")
 def _flow_view(world):
     close_print_preview(world.ann)
-    choose_view(world.ann, "Flow")
+    show_pages(world.ann, on=False)
 
 
 @when("I open the print preview")

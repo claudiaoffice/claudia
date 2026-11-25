@@ -658,4 +658,3 @@ the page selects nothing (`getSelection()` is empty), so the Edit menu offers ne
 After the word is sent (a space), Shift+Home selects it. The words not yet sent sit in an overlay of their own
 (`caretInUnsent` in `TextEditor.vue`), which the key does not select across. **Acceptance:** a spec step types a word
 and selects it with Shift+Home at once, and the Edit menu offers Copy.
-
