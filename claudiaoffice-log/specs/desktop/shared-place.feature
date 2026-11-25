@@ -1,10 +1,10 @@
 # Shared on this computer: the claudia service is a place of its own (E8.5; D1622, D1624 proposed; supersedes D743's
 # "the apps use the service's documents").
 #
-# Draft for the owner's review (2026-11-25). macOS and Windows: the service is an option of their installers, off by
-# default. The Linux package has no service (E8.5, Q21). Open edge cases, each with a proposed default:
-# shared-place.review.md.
-@draft
+# Approved by the owner on 2026-11-25 (his answers are in the scenarios and in D1622, D1624). macOS and Windows: the service is an option of their installers, off by
+# default. The Linux package has no service (E8.5, Q21). As on any server, every person of the computer sees the titles of
+# the shared documents that are not unlisted, and opens one only with a role. A new document's place is chosen in the
+# Open/New dialog, as for any server.
 Feature: The people of a computer share documents through its claudia service
 
   @core
@@ -49,7 +49,16 @@ Feature: The people of a computer share documents through its claudia service
     And I am not an administrator of this computer
     When I open the settings of "Shared on this computer"
     Then I read "Only an administrator of this computer can name this server's first administrator. Ask one."
+    # German: "Nur ein Administrator dieses Computers kann den ersten Administrator dieses Servers bestimmen. Fragen Sie einen."
 
+  @extended
+  Scenario: The shared place keeps its name once it has an administrator
+    Given the claudia service's administrator is Anna
+    When Ben opens claudia composes
+    Then its second place is "Shared on this computer"
+
+  # With a shared document open while the service is removed, the window says the connection is lost and keeps trying,
+  # as when any server goes away.
   @extended
   Scenario: The shared place disappears with the service
     Given the claudia service was installed and has been removed

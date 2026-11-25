@@ -1,10 +1,9 @@
 # Private on this computer: a person's apps use only her own server (E8.5, CODE-99, CODE-100; D1620-D1623 proposed).
 #
-# Draft for the owner's review (2026-11-25). The desktop clients of all three systems: the macOS and Windows app
+# Approved by the owner on 2026-11-25 (his answers are in the scenarios and in D1620-D1623). The desktop clients of all three systems: the macOS and Windows app
 # (Neutralino) and the Linux app (GTK); the place names also in a plain browser tab. Two people on one computer are two
 # accounts, each with her own folders; the tests stand them in as two homes on one test machine, so that the rules are
-# checked without logging two people in. Open edge cases, each with a proposed default: private-place.review.md.
-@draft
+# checked without logging two people in.
 Feature: Each person of a computer keeps her own private place
 
   @core
@@ -51,12 +50,24 @@ Feature: Each person of a computer keeps her own private place
     When I open claudia composes
     Then its window opens on "Private on this computer"
     And my documents are there
+    And the next time I open an app, it tries my private place's usual address again
+
+  @extended
+  Scenario: My own server of an older version is still running after an update
+    Given my own claudia server of an older version still runs
+    When I open claudia composes
+    Then I am told that it stops by itself within ten minutes after its last window has closed
 
   @core
   Scenario: The place names in my language
     Given my app language is German
     When I open claudia composes
     Then the first place in its list is "Privat auf diesem Computer"
+
+  @extended
+  Scenario: My private place keeps the name the app gives it
+    When I look at "Private on this computer" in my list of places
+    Then I cannot rename it
 
   @core @firefox
   Scenario: A claudia server on this computer, opened in a browser tab

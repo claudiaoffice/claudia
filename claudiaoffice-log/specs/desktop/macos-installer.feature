@@ -1,11 +1,9 @@
 # The macOS package: install, open, update, uninstall (E8.5; D1625-D1629 proposed).
 #
-# Draft for the owner's review (2026-11-25). An unsigned package for Apple Silicon, macOS 14 and newer, installed for
+# Approved by the owner on 2026-11-25 (his answers are in the scenarios and in D1625-D1629). An unsigned package for Apple Silicon, macOS 14 and newer, installed for
 # all people of the Mac. No Mac runner is connected, so these scenarios are run by packaging/macos/test-install.sh in a
 # macOS virtual machine on the owner's Mac (UTM or Tart), and by unit tests of the package's parts on any system.
-# Opening an unsigned package ("Open Anyway") needs a person and is checked by hand. Open edge cases, each with a
-# proposed default: macos-installer.review.md.
-@draft
+# Opening an unsigned package ("Open Anyway") needs a person and is checked by hand.
 Feature: claudia installed on a Mac from one package
 
   @core
@@ -50,13 +48,14 @@ Feature: claudia installed on a Mac from one package
     Then the three apps, "uninstall claudia" and the claudia service are gone
     And no process of claudia runs
     And my documents and the shared documents are still on the Mac
-    And it told me in which folders they are
+    And each person's ~/Library/Caches/Claudia is gone, and her settings and logs are still there
+    And its last words were "claudia is removed. These folders are left: the shared documents in /Library/Application Support/Claudia/shared/documents, and each person's own documents and settings in ~/Library/Application Support/Claudia. Delete them if you no longer need them."
 
   @extended
   Scenario: Uninstalling while an app is open
     Given claudia computes is open
     When I uninstall claudia
-    Then I am told that its open apps will be closed, before anything is removed
+    Then I am told "claudia's apps that are open, also those of other people of this Mac, are closed." before anything is removed
     And after uninstalling, no process of claudia runs
 
   @extended
@@ -69,6 +68,11 @@ Feature: claudia installed on a Mac from one package
   Scenario: What an app prints when it starts is kept
     Given I opened claudia composes
     Then ~/Library/Logs/Claudia/composes.log holds what its start printed
+
+  @extended
+  Scenario: The installer says which version it installs
+    When I open the claudia package of version 0.5.0
+    Then the installer's title is "claudia 0.5.0"
 
   @extended
   Scenario: The installer speaks my language
