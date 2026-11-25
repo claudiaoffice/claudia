@@ -1,7 +1,7 @@
 # Menus architecture: one definition, judged in the page, drawn by every client
 
 Stories: [[e5.23-menus-rebuilt-to-the-workbook|E5.23]] and [[e5.24-menus-that-show-what-fits|E5.24]] · branch `menus` ·
-decisions D1640–D1659 · status: **proposal, for the owner to agree or change**. Nothing is built.
+decisions D1640–D1659 · status: **agreed by the owner 2026-11-25 (D1643–D1649)**. Nothing is built.
 
 Diagram: `mockups/menus-architecture-01-classes.svg` (iris: new, teal: changed, grey: kept).
 
@@ -53,11 +53,29 @@ disagree about what fits. That is the definition of done's "web app and desktop 
 
 ### 3.1 The one definition (diagram, column 1)
 
-`manifest.py` stays the one definition and grows by three things:
+**The definition moves to `clients/contract/` (D1643)**, beside the shell contract, as a small package of its own:
+`clients/contract/pyproject.toml` (project `claudia-menus`), `src/claudia_menus/`, `tests/`. It is pure data with no
+dependencies, and it runs on Python 3.12 like the Linux client.
+- **Moves:** the dataclasses, the per-app manifests, `for_start` and `on_start`, and `describe()`.
+- **Stays in the Linux client:** `menu_xml` and `menu_elements`, which turn the definition into GTK's menu XML.
+- **Changes:** `UnknownApp`, which the manifest takes from the client's `identity.py`, becomes the package's own
+  `KeyError`.
+
+The move is the first commit of the build, with no change of behaviour. Everything that reaches the old place follows:
+- the Linux client's `window.py`, `bridge.py` and its tests;
+- `clients/linux/pyproject.toml`, as a path dependency;
+- `start-linux-client.sh` (`PYTHONPATH`);
+- `packaging/debian/build-deb.sh`, which copies the package beside the client;
+- `clients/neutralino/tools/generate_menu.py` and its `pyproject.toml`;
+- `scripts/generate_keys.py`, `scripts/menu_audit.py` and `scripts/extract_i18n.py`;
+- the ruff and vulture paths in the root `pyproject.toml`;
+- the paths of `.github/workflows/deb.yml`.
+
+Then the definition grows by three things:
 - **`Action.fits`:** the workbook's "Fits when" words, verbatim. An example is `"role: editor or owner · selection:
-  something"`. Being verbatim is what makes the test of D1605 a plain string comparison.
+  something"`. Being verbatim is what makes the test of D1605 a plain string comparison (D1646).
 - **`Action.keys: Keys(default, macos)`** in place of `accelerators`. macOS has its own key where it collides with
-  macOS itself (D1616).
+  macOS itself (D1616). The web on a Mac uses it too (D1648).
 - **`Manifest.context_menus`:** one `ContextMenu` per context (object, cell, paragraph, table, pivot table, slide…), in
   the workbook's order. They are in the definition because the Shortcuts dialog (D1604) lists them, and the workbook
   test checks them.
@@ -65,10 +83,6 @@ disagree about what fits. That is the definition of done's "web app and desktop 
 `scripts/generate_keys.py` becomes `generate_menus.py`. It writes `web/app/lib/menus.generated.ts`, which holds the
 whole definition (`keys.generated.ts` merges into it), and the Neutralino JSON as today. A test fails when either is
 stale, as one does for the keys today.
-
-**Why it stays in the Linux client's package:** the generator and its tests are there already, and nothing else
-imports it. Moving it to `clients/contract/` would say better that it is shared, at the cost of moving a package and
-its tests (decision A1).
 
 ### 3.2 Judging (diagram, column 2, top half; `web/app/lib/fits/`, new)
 
@@ -158,32 +172,33 @@ app by app:
 
 ## 5. Order of work (vertical slices, each red then green)
 
-1. **The definition grows** (`fits`, `keys`, context menus), rebuilt to the workbook (E5.23's content), with
+1. **The definition moves** to `clients/contract/` with everything that reaches it (D1643); nothing else changes.
+2. **The definition grows** (`fits`, `keys`, context menus), rebuilt to the workbook (E5.23's content), with
    `generate_menus.py` and the workbook test.
-2. **Judging:** `fits/`, pure, with every rule of the definition parsing.
-3. **The web from the definition**, one workspace at a time, everything at "grey" first, so behaviour only changes
+3. **Judging:** `fits/`, pure, with every rule of the definition parsing.
+4. **The web from the definition**, one workspace at a time, everything at "grey" first, so behaviour only changes
    where the workbook moved entries. Then the trial's default, hide.
-4. **Keys and the Shortcuts dialog** (D1604, D1642).
-5. **The shells:** contract fields, Neutralino, GTK.
-6. **The copy guard and Paste As ▸ Plain text** (D1640, D1641).
-7. **I18N:** every new text (the notices, the "why" lines, the tags, `plain`) in `po/`; the German menus with
+5. **Keys and the Shortcuts dialog** (D1604, D1642).
+6. **The shells:** contract fields, Neutralino, GTK.
+7. **The copy guard and Paste As ▸ Plain text** (D1640, D1641).
+8. **I18N:** every new text (the notices, the "why" lines, the tags, `plain`) in `po/`; the German menus with
    "Formatvorlage" (D1618).
 
-## 6. Decisions for the owner
+## 6. Decided (2026-11-25)
 
-| | Proposal | Alternative |
+| | Decided | Decision |
 |---|---|---|
-| A1 | The definition stays in `manifest.py`. | Move it to `clients/contract/` as a package of its own. |
-| A2 | The web's menus are assembled from the definition plus a map of handlers per workspace. | Keep the hand-built menus and add a test that compares them with the definition. |
-| A3 | Only the page judges; the shells draw `visible` and `empty` from `action_state` (contract v1, additive). | Each shell judges for itself (three implementations of every condition). |
-| A4 | Rules are kept as the workbook's words and parsed against a registry of conditions. | Rules as code in each entry (`fits: [role.owner, selection.pivot]`), with the test translating the workbook's words. |
-| A5 | The trial setting travels as a URL parameter; the desktop shells add it from their settings file. | Each client reads its own setting. |
-| A6 | The web on a Mac uses the macOS keys too (D1616), since the collision is with macOS and not with the app. | The macOS keys only in the macOS desktop client. |
-| A7 | One branch at a time edits `claudia-menus.xlsx`: `menus` now; E7.12 adds its "Methods" columns after `menus` is merged. | E7.12 keeps its columns in a separate sheet or file. |
+| A1 | The definition moves to `clients/contract/` as a package of its own (the owner's choice over leaving it in the Linux client). | D1643 |
+| A2 | The web's menus are assembled from the definition plus a map of handlers per workspace. | D1644 |
+| A3 | Only the page judges; the shells draw `visible` and `empty` from `action_state` (contract v1, additive). | D1645 |
+| A4 | Rules are kept as the workbook's words and parsed against a registry of conditions. | D1646 |
+| A5 | The trial setting travels as a URL parameter; the desktop shells add it from their settings file. | D1647 |
+| A6 | The web on a Mac uses the macOS keys too. | D1648 |
+| A7 | One branch at a time edits `claudia-menus.xlsx`: `menus` now, E7.12 after `menus` is merged. | D1649 |
 
 ## 7. What is not decided here
 
-- The Gherkin scenarios (next step, for the owner's review).
+- The Gherkin scenarios: drafted in `specs/menus/menus-that-fit.feature`, for the owner's review.
 - Whether people get the hide/grey choice after the trial (D1606).
 
 ## 8. Not verified, and risks
@@ -193,9 +208,11 @@ app by app:
 - **WebKitGTK:** I assume Edit ▸ Copy, which runs as an editing command (`Kind.EDITING`), fires the page's `copy`
   event, so the copy guard sees it. Not tried. If it doesn't, the GTK shell must send Copy as a page action for a
   viewer.
-- **Size:** slice 3 touches the three workspaces (about 2,900 lines). The risk is behaviour that only the workspace
+- **Size:** slice 4 touches the three workspaces (about 2,900 lines). The risk is behaviour that only the workspace
   knew about, such as an entry greyed for a reason nobody wrote down. Every `disabled:` expression is listed before it
   is replaced, and one that matches no workbook condition is brought to the owner.
-- **The workbook as a binary file** (A7): two branches that both change it cannot be merged. One has to be redone by
+- **The move** (D1643) touches the Debian package and the CI paths. The Debian build and the Neutralino generator
+  are run after it, before anything else changes.
+- **The workbook as a binary file** (D1649): two branches that both change it cannot be merged. One has to be redone by
   hand.
 - **The copy guard is a barrier, not protection** (D1640).

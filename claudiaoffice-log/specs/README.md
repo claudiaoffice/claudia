@@ -16,6 +16,7 @@ is the contract. The owner reviews scenarios, not code.
 |---|---|
 | `specs/<app>/<feature>.feature` | Scenarios of one feature (`composes`, `computes`, `creates`), in the words of a person using it. |
 | `specs/objects/*.feature` | What all objects do alike in all three apps (turning, words in a box, …). |
+| `specs/menus/*.feature` | What the menus, context menus and keys of all three apps do alike, on the web and the desktop. |
 | `specs/invariants/*.feature` | Scenarios every object of a kind of thing must pass (a new kind of object adds one row to the `Examples`). |
 | `specs/<app>/<feature>.review.md` | The questions the draft raises, each with a proposed default; the owner answers by crossing out or changing. Deleted when the questions are answered and the answers are in the feature file or the decision log. |
 | `tests/e2e/specs/` | The step code (pytest-bdd, Python Playwright): `conftest.py` and one `test_<feature>.py` per feature file. |
