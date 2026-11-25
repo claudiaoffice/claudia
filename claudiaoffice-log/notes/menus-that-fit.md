@@ -18,7 +18,7 @@ is one switch per reason. This note holds the design behind the decisions and th
 | D1606 | For the trial the switches are a developer setting, every reason starts at hide, an entry can be overridden on its own. The menu rebuild carries the rules from its first build. The ai is unaffected. |
 | D1615 | More words for "fits when" (below, marked †), and what a viewer gets. |
 | D1640 | A viewer cannot copy, in the document and in History & chat: Copy and Cut are not offered, and the copy itself is refused with a notice. Download, Export and Print stay hers and are recorded (D1271). |
-| D1641 | Paste and Paste As depend on the role only; there is no "clipboard" reason. |
+| D1641 | Paste and Paste As depend on the role only; there is no "clipboard" reason. Paste As ▸ Plain text with no text on the clipboard says so when chosen. |
 | D1642 | A notice names the first failing reason in the order role, server, client, ai, document, selection. The Shortcuts dialog has the switch "What Fits Now" / "Everything" and the tags "not for you", "not now", "not here". Text that says why is drawn in the muted ink, not in the greyed-entry grey. |
 
 ## The words of "fits when" (D1601)
@@ -95,8 +95,8 @@ In `notes/mockups/`, each as SVG with a PNG render. The entries, shortcuts and c
 
 The owner's answers on them are D1640–D1642.
 
-Still open: **what Paste As ▸ Plain text does when the clipboard holds no text.** The owner agreed that it needs text,
-and also that there is no clipboard condition (D1641), so it cannot be hidden for that; to be asked.
+Paste As ▸ Plain text with no text on the clipboard stays shown and, when chosen, says "There is no text to paste."
+(D1641): a check when it is chosen, since there is no clipboard condition.
 
 ## Next steps
 
