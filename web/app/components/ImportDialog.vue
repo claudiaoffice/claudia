@@ -167,7 +167,8 @@ function submit() {
           <input v-model="keep" type="checkbox" name="keep-original" :disabled="working" >
           <span>{{ t('Keep the {format} file inside the document: Download then gives back this file with only your changes.', { format: formatName[file.format] ?? file.format }) }}</span>
         </label>
-        <p v-if="exported" class="hint">{{ t('You become the owner of the new document. Nobody else is given access.') }}</p>
+        <p v-if="exported && file.with_history" class="hint">{{ t('You become the owner of the new document. The people named in its history are not given access; their names stay in the history as former people.') }}</p>
+        <p v-else-if="exported" class="hint">{{ t('You become the owner of the new document. Nobody else is given access.') }}</p>
         <p v-else class="hint">{{ t('You are its owner. What the document does not show stays in the kept file and is listed after it opens.') }}</p>
       </template>
       <template v-else>

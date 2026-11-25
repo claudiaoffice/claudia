@@ -49,6 +49,10 @@ msgstr "(keine)"
 msgid "(redacted, length {n})"
 msgstr "(geschwärzt, Länge {n})"
 
+#: web/app/components/SidePanel.vue
+msgid "(words taken away)"
+msgstr "(Worte entfernt)"
+
 #: web/app/components/AdminAccessDocuments.vue
 msgid "+ Add administrator…"
 msgstr "+ Administrator hinzufügen…"
@@ -2700,6 +2704,10 @@ msgstr "Verlauf und Chat"
 #: web/app/components/SidePanel.vue
 msgid "History and chat are for the document's editors."
 msgstr "Verlauf und Chat sind den Bearbeitenden des Dokuments vorbehalten."
+
+#: web/app/components/SidePanel.vue
+msgid "History of the original"
+msgstr "Verlauf des Originals"
 
 #: web/app/components/TableOptionsDialog.vue
 msgid "Holds"
@@ -6653,6 +6661,10 @@ msgstr "Der Name „{name}“ gehört dem KI-Assistenten. Wählen Sie einen ande
 msgid "The named ranges and tables of this workbook"
 msgstr "Die benannten Bereiche und Tabellen dieser Arbeitsmappe"
 
+#: web/app/components/SidePanel.vue
+msgid "The names are people of the original document: they have no access to this one."
+msgstr "Die Namen sind Personen des ursprünglichen Dokuments: Sie haben keinen Zugriff auf dieses."
+
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "The natural logarithm of a positive number."
 msgstr "Der natürliche Logarithmus einer positiven Zahl."
@@ -8297,6 +8309,10 @@ msgstr "Sie sind jetzt Eigentümer von {doc}."
 msgid "You become the owner of the new document. Nobody else is given access."
 msgstr "Sie werden Eigentümer des neuen Dokuments. Niemand sonst erhält Zugriff."
 
+#: web/app/components/ImportDialog.vue
+msgid "You become the owner of the new document. The people named in its history are not given access; their names stay in the history as former people."
+msgstr "Sie werden Eigentümer des neuen Dokuments. Die in seinem Verlauf genannten Personen erhalten keinen Zugriff; ihre Namen bleiben im Verlauf als ehemalige Personen stehen."
+
 #: web/app/components/PaletteDialog.vue
 msgid "You can change it anyway — this is a warning, not a refusal."
 msgstr "Sie können es trotzdem ändern – das ist eine Warnung, keine Ablehnung."
@@ -9360,6 +9376,10 @@ msgstr "in der Seitenansicht, im Druck und im PDF"
 #: web/app/components/TextWorkspace.vue
 msgid "in a list, one level in or out"
 msgstr "in einer Liste eine Ebene hinein oder heraus"
+
+#: web/app/components/SidePanel.vue
+msgid "in the chat: {words}"
+msgstr "im Chat: {words}"
 
 #: web/app/components/TableMenu.vue
 msgid "in {name}"

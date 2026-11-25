@@ -5,7 +5,15 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+### Added
+- An owner's export that is imported brings the history and chat of the original as one read-only note of its
+  `core.Import` step (PROC-37, D2005): `log` gives that step `original`, `[{when, who, what, said}]` oldest first (each
+  step as the original's history said it, each chat message for everybody; private messages stay out). The upload
+  answer of an export says `with_history`, so the import dialog says that the names stay as text.
+
 ### Changed
+- `formats.import_state` answers an `Imported` (`state`, `losses`, and an export's `history` and `chat`) instead of a
+  pair; `formats.export_made` answers whether the export brings a history as a third value. Both are internal.
 - The refusals of the HTTP routes (the server settings and the uploads) are said in the first language of
   `Accept-Language` when they are the server's own messages; a refusal with more fields is a `Refused` (`retry_after`,
   `reason` as before); `message_of` keeps the message of a `ValueError(msg(...))` (CODE-92, D2003).

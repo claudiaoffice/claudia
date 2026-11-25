@@ -122,11 +122,16 @@ sentence naming the one that is here, D535), and a server that keeps documents i
 
 An **unencrypted Claudia export** (`.claudia-export.zip`, D1270, D1272; the layout is in [the format](document-file-format.md))
 is uploaded the same way. The answer has `format: "claudia-export"`, `kind: "Claudia export"`, `app`, `made_by` and
-`made_at` (who exported it and when, as the file says: the dialog shows it, nothing trusts it) and a `suggested_id` made
+`made_at` (who exported it and when, as the file says: the dialog shows it, nothing trusts it), `with_history` (whether
+it brings the history and chat of the original) and a `suggested_id` made
 from the file's name; `hosted` says whether this server has the app. The second step is the one of an Office file with
 `"create": true, "upload": "<token>"`: the document starts with one `core.Import` entry, the importer is its only owner,
 and the file is **not** kept inside (`keep_original` is ignored). The state must be of the shape the app of this server
-uses (`state_schema`); another version is refused with a sentence. Nobody named in the export is given access.
+uses (`state_schema`); another version is refused with a sentence. Nobody named in the export is given access. An
+owner's export brings the history and chat of the original as one read-only note of the import step (D2005): `log`
+gives that step an `original` list of `{when, who, what, said}`, oldest first, one per step (what its history panel said
+of it) and one per chat message for everybody (`said: true`, the words); a private message stays out. The names are
+text: no account, no key, no presence. The note is not an undo step, and redacting the whole import takes it away.
 
 ## What leaves the document is recorded (D1271)
 

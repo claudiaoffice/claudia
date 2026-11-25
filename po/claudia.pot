@@ -49,6 +49,10 @@ msgstr ""
 msgid "(redacted, length {n})"
 msgstr ""
 
+#: web/app/components/SidePanel.vue
+msgid "(words taken away)"
+msgstr ""
+
 #: web/app/components/AdminAccessDocuments.vue
 msgid "+ Add administrator…"
 msgstr ""
@@ -2699,6 +2703,10 @@ msgstr ""
 
 #: web/app/components/SidePanel.vue
 msgid "History and chat are for the document's editors."
+msgstr ""
+
+#: web/app/components/SidePanel.vue
+msgid "History of the original"
 msgstr ""
 
 #: web/app/components/TableOptionsDialog.vue
@@ -6653,6 +6661,10 @@ msgstr ""
 msgid "The named ranges and tables of this workbook"
 msgstr ""
 
+#: web/app/components/SidePanel.vue
+msgid "The names are people of the original document: they have no access to this one."
+msgstr ""
+
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "The natural logarithm of a positive number."
 msgstr ""
@@ -8297,6 +8309,10 @@ msgstr ""
 msgid "You become the owner of the new document. Nobody else is given access."
 msgstr ""
 
+#: web/app/components/ImportDialog.vue
+msgid "You become the owner of the new document. The people named in its history are not given access; their names stay in the history as former people."
+msgstr ""
+
 #: web/app/components/PaletteDialog.vue
 msgid "You can change it anyway — this is a warning, not a refusal."
 msgstr ""
@@ -9359,6 +9375,10 @@ msgstr ""
 
 #: web/app/components/TextWorkspace.vue
 msgid "in a list, one level in or out"
+msgstr ""
+
+#: web/app/components/SidePanel.vue
+msgid "in the chat: {words}"
 msgstr ""
 
 #: web/app/components/TableMenu.vue

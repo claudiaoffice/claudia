@@ -39,8 +39,8 @@ def test_every_format_is_recognised_by_its_bytes_and_imports_into_its_app(fmt):
     data = made(fmt)
     found = sniff(data)
     assert (found.fmt, found.app) == (fmt, FORMATS[fmt][0])
-    state, losses = import_state(fmt, data)
-    assert isinstance(state, dict) and isinstance(losses, list)
+    imported = import_state(fmt, data)
+    assert isinstance(imported.state, dict) and isinstance(imported.losses, list)
 
 
 def test_a_claudia_document_is_recognised_by_its_first_entry(tmp_path):
@@ -128,20 +128,20 @@ def _names(state: dict) -> dict[str, str]:
 
 
 def test_every_paragraph_of_an_imported_text_gets_a_generic_name_in_the_language_of_the_one_who_imports():
-    state, _ = import_state("docx", _word_file("one", "two", "three"), "de")
+    state = import_state("docx", _word_file("one", "two", "three"), "de").state
     assert list(_names(state).values()) == ["Absatz 1", "Absatz 2", "Absatz 3"]
 
 
 def test_a_bookmark_of_the_file_is_the_name_and_the_others_are_counted_around_it():
     data = _word_file("one", "two", "three", bookmarked={"two": "Budget_summary"})
-    names = _names(import_state("docx", data, "en")[0])
+    names = _names(import_state("docx", data, "en").state)
     assert names["b2"] == "Budget summary"
     assert {names["b1"], names["b3"]} == {"Paragraph 1", "Paragraph 2"}
 
 
 def test_a_name_in_the_file_that_is_a_generic_one_is_not_taken_twice():
     data = _word_file("one", "two", bookmarked={"one": "Paragraph_1"})
-    names = _names(import_state("docx", data, "en")[0])
+    names = _names(import_state("docx", data, "en").state)
     assert len(set(names.values())) == len(names)
 
 
@@ -150,7 +150,7 @@ def test_a_big_text_is_named_in_one_pass():
 
     data = _word_file(*[f"paragraph number {i}" for i in range(4000)])
     started = time.perf_counter()
-    state, _ = import_state("docx", data, "en")
+    state = import_state("docx", data, "en").state
     assert time.perf_counter() - started < 20
     assert len(set(_names(state).values())) == 4000
 
@@ -160,5 +160,5 @@ def test_an_imported_deck_names_its_slides():
 
     from claudia_creates import SlideModel
 
-    state, _ = import_state("pptx", slides_to_pptx(SlideModel.empty()), "en")
+    state = import_state("pptx", slides_to_pptx(SlideModel.empty()), "en").state
     assert [name for _kind, _thing, name in SlideModel.restore(state).named_things()] == ["Slide 1"]

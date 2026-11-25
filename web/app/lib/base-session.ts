@@ -68,6 +68,16 @@ export interface Step {
   kind?: string
   /** Its content was taken away (D720). */
   redacted?: boolean
+  /** The import of an owner's export: the history and chat of the original, oldest first, as text (D2005). */
+  original?: OriginalLine[]
+}
+/** One line of the history of the original (D2005): a step as its history said it, or a message for everybody
+ *  (`said`). `who` is a name as text, not a person of this document. */
+export interface OriginalLine {
+  when: string
+  who: string | null
+  what: string
+  said: boolean
 }
 export interface ChatMessage {
   number: number

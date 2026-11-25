@@ -53,7 +53,7 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | CODE-100 | P2 | Code / desktop clients | Next to a service of another version, the apps refuse to start and say it stops after ten minutes, which a service never does | **new, open** (read); fix on the macOS installer branch (E8.5) | 2026-11-25 |  |
 | PROC-15 | P2 | Process | The tracker and the backlog lag the code: fixed items still "open", 64 stories at a placeholder 50 % | partly fixed 2026-11-25 (batch 1: the index guard); the backlog's placeholder 50 % stays open |  |  |
 | PROC-30 | P2 | Process / desktop clients | The Neutralino (Windows, macOS) tests and the GTK client were not run for `object-interaction`: the generated menus were rebuilt and the manifest unit tests pass, nothing more | **new, open** |  |  |
-| PROC-37 | P2 | Process / scope | D1272 says an export's history and chat come back in with their authors as text; slice B imports the content only (`import_state` returns the state, the `history.jsonl` and `chat.jsonl` of an export are written but never read back) | **new, open** (size 2; needs the owner's decision: build it in slice C or log it) |  |  |
+| PROC-37 | P2 | Process / scope | D1272 says an export's history and chat come back in with their authors as text; slice B imports the content only (`import_state` returns the state, the `history.jsonl` and `chat.jsonl` of an export are written but never read back) | **in progress** (size 2; the owner chose (a), D2005; fix on `batch-4`, not yet on `main`) |  |  |
 | UX-64 | P2 | UX / all apps | Dark mode: a part of the sidebar (History & Chat / Help) is not readable or has too little contrast; the exact symptom was not written down when it was seen (see entry) | **needs decision** (symptom to be re-stated; size 2) | 2026-11-22 |  |
 | SEC-09 | P3 | Security | User names can be confusable (homoglyphs) | open (unverified) |  |  |
 | SEC-16 | P3 | Security | The LaTeX program setting accepts any executable on the server | partly fixed 2026-11-25 (batch 1, D2002): showing the accepted program's answer on the settings page stays open |  |  |
@@ -514,7 +514,7 @@ file (a viewer's snapshot would be written without them: a second snapshot); (b)
 so in D1261. **Proposal:** (b) until the owner says otherwise, because masking in the snapshot means the content is stored
 twice. Not built either way.
 
-### PROC-37 · The history and chat of an export are not read back · P2 · new, open (needs a decision)
+### PROC-37 · The history and chat of an export are not read back · P2 · in progress (fix on `batch-4`)
 **Evidence (read, measured by the tests).** `write_export` puts `history.jsonl` and `chat.jsonl` in the zip for an owner and
 `read_export` returns them, but `import_state` takes only `state`; the new document starts with one `core.Import` step. D1272
 says the history comes in with its authors as plain text ("former people"). **Not built** because the history of an export
@@ -524,6 +524,15 @@ new document's history, text only, with the names as text; (b) the commands repl
 (c) log it and leave the import as content only. **Proposal:** (a) in slice C. The mock-up's sentence "The people named in its
 history are not given access; their names stay in the history as former people" is **not** on the import dialog until this
 is built; the dialog says "Nobody else is given access." and nothing about names.
+
+**Fix** on `batch-4` (D2005, the owner chose (a)): the import of an owner's export carries the history and the chat of
+the original as one read-only note of its `core.Import` step (`Import.original`): a line per step (who, when, what the
+original's history said of it) and per chat message for everybody (private messages stay out); the names are text. It is
+nobody's undo step, as the import is not; redacting the whole import takes it away. History & Chat shows it folded under
+the import's step ("History of the original"); the import dialog now says the mock-up's sentence about names when the
+export brings a history (`with_history` in the upload answer), and "Nobody else is given access." otherwise. **Test:**
+"importing an owner's export adds one note with who did what" (`test_server_export_import.py`), and "the upload says
+whether the export brings a history".
 
 ### CODE-74 · `export_content` is a third kind of export nobody asked for · P3 · new, open
 `export_content` (a JSON object with `format: "claudia-export 1"`) predates D1270 and is not called by any window. It is

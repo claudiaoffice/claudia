@@ -49,6 +49,10 @@ msgstr "[(nôné)~~]"
 msgid "(redacted, length {n})"
 msgstr "[(rédàctéd, léngth {n})~~~~~~~~~]"
 
+#: web/app/components/SidePanel.vue
+msgid "(words taken away)"
+msgstr "[(wôrds tàkén àwày)~~~~~~~]"
+
 #: web/app/components/AdminAccessDocuments.vue
 msgid "+ Add administrator…"
 msgstr "[+ Àdd àdmînîstràtôr…~~~~~~~~]"
@@ -2700,6 +2704,10 @@ msgstr "[Hîstôry ànd Chàt~~~~~~]"
 #: web/app/components/SidePanel.vue
 msgid "History and chat are for the document's editors."
 msgstr "[Hîstôry ànd chàt àré fôr thé dôcûmént's édîtôrs.~~~~~~~~~~~~~~~~~~~]"
+
+#: web/app/components/SidePanel.vue
+msgid "History of the original"
+msgstr "[Hîstôry ôf thé ôrîgînàl~~~~~~~~~]"
 
 #: web/app/components/TableOptionsDialog.vue
 msgid "Holds"
@@ -6653,6 +6661,10 @@ msgstr "[Thé nàmé “{name}” bélôngs tô thé ÀÎ àssîstànt. Chôôs�
 msgid "The named ranges and tables of this workbook"
 msgstr "[Thé nàméd ràngés ànd tàblés ôf thîs wôrkbôôk~~~~~~~~~~~~~~~~~~]"
 
+#: web/app/components/SidePanel.vue
+msgid "The names are people of the original document: they have no access to this one."
+msgstr "[Thé nàmés àré péôplé ôf thé ôrîgînàl dôcûmént: théy hàvé nô àccéss tô thîs ôné.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "The natural logarithm of a positive number."
 msgstr "[Thé nàtûràl lôgàrîthm ôf à pôsîtîvé nûmbér.~~~~~~~~~~~~~~~~~]"
@@ -8297,6 +8309,10 @@ msgstr "[Yôû àré nôw thé ôwnér ôf {doc}.~~~~~~~~~~~~]"
 msgid "You become the owner of the new document. Nobody else is given access."
 msgstr "[Yôû bécômé thé ôwnér ôf thé néw dôcûmént. Nôbôdy élsé îs gîvén àccéss.~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
+#: web/app/components/ImportDialog.vue
+msgid "You become the owner of the new document. The people named in its history are not given access; their names stay in the history as former people."
+msgstr "[Yôû bécômé thé ôwnér ôf thé néw dôcûmént. Thé péôplé nàméd în îts hîstôry àré nôt gîvén àccéss; théîr nàmés stày în thé hîstôry às fôrmér péôplé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+
 #: web/app/components/PaletteDialog.vue
 msgid "You can change it anyway — this is a warning, not a refusal."
 msgstr "[Yôû càn chàngé ît ànywày — thîs îs à wàrnîng, nôt à réfûsàl.~~~~~~~~~~~~~~~~~~~~~~~~]"
@@ -9360,6 +9376,10 @@ msgstr "[în Pàgé vîéw, prînt ànd PDF~~~~~~~~~~~]"
 #: web/app/components/TextWorkspace.vue
 msgid "in a list, one level in or out"
 msgstr "[în à lîst, ôné lévél în ôr ôût~~~~~~~~~~~~]"
+
+#: web/app/components/SidePanel.vue
+msgid "in the chat: {words}"
+msgstr "[în thé chàt: {words}~~~~~~~~]"
 
 #: web/app/components/TableMenu.vue
 msgid "in {name}"

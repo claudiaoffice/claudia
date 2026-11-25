@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import ChatInput from './ChatInput.vue'
-import { clock, colorOf, inkOn } from '~/lib/people'
+import { clock, colorOf, dayAndClock, inkOn } from '~/lib/people'
 import { useI18n } from '~/lib/i18n'
 import type { BaseSession, ChatMessage, Step } from '~/lib/base-session'
 import type { AiMode } from '~/lib/ai-mode'
@@ -581,6 +581,17 @@ const isAi = (user: string) => user.toLowerCase() === 'ai'
               </span>
               <time>{{ clock(row.entry.time) }}</time>
             </component>
+            <details v-if="row.entry.original?.length && !row.entry.redacted" class="original" data-testid="original-history">
+              <summary>{{ t('History of the original') }}</summary>
+              <p class="originalHint">{{ t('The names are people of the original document: they have no access to this one.') }}</p>
+              <ol :aria-label="t('History of the original')">
+                <li v-for="(line, j) in row.entry.original" :key="j">
+                  <time>{{ dayAndClock(line.when) }}</time>
+                  <span class="who">{{ line.who ?? '?' }}</span>
+                  <span class="what">{{ line.said ? t('in the chat: {words}', { words: line.what || t('(words taken away)') }) : line.what }}</span>
+                </li>
+              </ol>
+            </details>
           </li>
           <li v-else-if="row.kind === 'left'" class="left" data-testid="audit-row">
             <span class="who">{{ row.row.who }}</span>
@@ -815,6 +826,31 @@ ol {
 .entry {
   padding: 3px 0;
 }
+/* The history of the original (D2005): text in the import's step, folded away until asked for. */
+.original {
+  margin: 4px 0 2px 17px;
+}
+.original summary {
+  cursor: pointer;
+}
+.originalHint {
+  margin: 4px 0;
+  opacity: 0.75;
+}
+.original ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 240px;
+  overflow: auto;
+}
+.original li {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  align-items: baseline;
+  gap: 8px;
+  padding: 1px 0;
+}
 .entryRow {
   display: grid;
   grid-template-columns: 9px auto 1fr auto;
@@ -836,6 +872,7 @@ button.entryRow:hover .what {
   text-decoration: underline;
 }
 button.entryRow:focus-visible,
+.original summary:focus-visible,
 .visit:focus-visible,
 .replayBtn:focus-visible {
   outline: 2px solid #fff;
