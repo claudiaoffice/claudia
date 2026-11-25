@@ -8,6 +8,7 @@ import gc
 import time
 
 from claudia_computes import AddSheet, InsertRows, SetCells, Structure, WorkbookModel, parse_input
+from claudia_computes.calc import Waiting
 from claudia_computes.formula import parse_formula
 from claudia_core import Document, MemoryStore
 
@@ -80,6 +81,38 @@ def test_calculating_a_long_chain_is_linear():
     if ratio >= 25:  # a shared CI runner can stall one of the two runs: a real slope shows again, noise does not
         ratio = min(ratio, chain(10_000) / chain(1_000))
     assert ratio < 25, f"a chain 10x as long took {ratio:.0f}x as long to calculate (linear is about 10)"
+
+
+def test_letting_formulas_go_one_by_one_in_order_is_linear():
+    """PERF-13: a chain is calculated from its top, and each formula done was deleted from the front of its column's
+    sorted list, which shifts all the rest: quadratic, in C. On CI's runner a chain 10x as long took 44x as long.
+    Measured with a clock, on lists long enough that a shift per formula costs far more than the bound lets through
+    (about 100x against 10x)."""
+
+    def let_go(n):
+        keys = [(S1, row, 1) for row in range(n)]
+
+        def run():
+            waiting = Waiting(keys)
+            for key in keys:
+                waiting.done(key)
+
+        return best_of(3, run)
+
+    ratio = let_go(50_000) / let_go(5_000)
+    assert ratio < 25, f"letting go of 10x as many formulas took {ratio:.0f}x as long (linear is about 10)"
+
+
+def test_the_formulas_still_waiting_are_found_after_others_were_let_go():
+    keys = [(S1, row, col) for col in (1, 2) for row in range(10)]
+    waiting = Waiting(keys)
+    for row in (0, 1, 2, 5, 9):
+        waiting.done((S1, row, 1))
+    assert waiting.inside((S1, 0, 1, 9, 1)) == [(S1, row, 1) for row in (3, 4, 6, 7, 8)]
+    for row in (3, 4, 6, 7, 8):
+        waiting.done((S1, row, 1))
+    assert waiting.inside((S1, 0, 0, 9, 2)) == [(S1, row, 2) for row in range(10)]
+    assert waiting.keys == {(S1, row, 2) for row in range(10)}
 
 
 def test_opening_from_a_snapshot_is_linear_in_the_formulas():

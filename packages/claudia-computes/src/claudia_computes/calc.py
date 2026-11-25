@@ -210,11 +210,16 @@ class ColumnReaders:
 
 
 class Waiting:
-    """The formulas still to be calculated, found by place: a sorted list of rows for every column with some."""
+    """The formulas still to be calculated, found by place: a sorted list of rows for every column with some.
+
+    A formula done stays in its column's list until half of the list is done, and ``keys`` says which are still
+    waiting: a chain is calculated from its top, and deleting each one from the front of the list shifted all the rest,
+    which made a long chain quadratic (PERF-13)."""
 
     def __init__(self, keys: Iterable[Key]):
         self.keys: set[Key] = set(keys)
         self._rows: dict[tuple[SheetId, int], list[int]] = defaultdict(list)
+        self._done: dict[tuple[SheetId, int], int] = defaultdict(int)  # how many of a column's rows are done
         self._columns: dict[SheetId, list[int]] = defaultdict(list)
         by_column: dict[tuple[SheetId, int], list[int]] = defaultdict(list)
         for sheet, row, col in self.keys:
@@ -227,12 +232,19 @@ class Waiting:
             columns.sort()
 
     def done(self, key: Key) -> None:
+        if key not in self.keys:
+            return
         sheet, row, col = key
         self.keys.discard(key)
-        rows = self._rows[(sheet, col)]
-        del rows[bisect_left(rows, row)]
+        column = (sheet, col)
+        rows = self._rows[column]
+        self._done[column] += 1
+        if 2 * self._done[column] < len(rows):
+            return
+        rows[:] = [r for r in rows if (sheet, r, col) in self.keys]
+        self._done[column] = 0
         if not rows:
-            del self._rows[(sheet, col)]
+            del self._rows[column], self._done[column]
             columns = self._columns[sheet]
             del columns[bisect_left(columns, col)]
 
@@ -249,7 +261,8 @@ class Waiting:
             rows = self._rows[(sheet, col)]
             low = bisect_left(rows, row0)
             while low < len(rows) and rows[low] <= row1:
-                found.append((sheet, rows[low], col))
+                if (sheet, rows[low], col) in self.keys:
+                    found.append((sheet, rows[low], col))
                 low += 1
             at += 1
         return found

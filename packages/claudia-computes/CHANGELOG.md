@@ -5,6 +5,10 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+### Fixed
+- Calculating a chain of formulas is linear again: a formula done no longer shifts the rest of its column's list of
+  waiting formulas (PERF-13).
+
 ## [0.12.0] - 2026-11-24
 
 Heavy functions in worker processes (E4.4, D37, D1314).
