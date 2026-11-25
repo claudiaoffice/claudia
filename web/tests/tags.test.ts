@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { encodeTag, hashAt, insertTag, matches, plainChat, splitTags, tagIds, withCurrentNames, withTag, type Thing } from '~/lib/tags'
+import { encodeTag, freeSheetName, hashAt, insertTag, matches, plainChat, splitTags, tagIds, withCurrentNames, withTag, type Thing } from '~/lib/tags'
 
 const thing = (id: string, name: string, kind: Thing['kind'] = 'text'): Thing => ({ id, name, kind })
 
@@ -111,5 +111,20 @@ describe('the names a message is sent with', () => {
   it('are the names the things have now, and the written ones for what is not known', () => {
     const text = `${encodeTag('a', 'Old')} and ${encodeTag('b', 'Kept')}`
     expect(withCurrentNames(text, (id) => (id === 'a' ? 'New' : undefined))).toBe(`${encodeTag('a', 'New')} and ${encodeTag('b', 'Kept')}`)
+  })
+})
+
+describe('the name a new sheet is offered (UX-76, D550)', () => {
+  it('is the word for a sheet with the first free number, written as the first sheet is ("Sheet1")', () => {
+    expect(freeSheetName('Sheet', ['Sheet1'])).toBe('Sheet2')
+  })
+  it('is free among every name of the document, whatever the capitals and spaces', () => {
+    expect(freeSheetName('Sheet', ['Sheet1', 'sheet2', ' SHEET3 ', 'Chart 1'])).toBe('Sheet4')
+  })
+  it('takes a number that is free again', () => {
+    expect(freeSheetName('Sheet', ['Budget', 'Sheet2'])).toBe('Sheet1')
+  })
+  it('is in the language the word is given in', () => {
+    expect(freeSheetName('Blatt', ['Sheet1', 'Blatt1'])).toBe('Blatt2')
   })
 })

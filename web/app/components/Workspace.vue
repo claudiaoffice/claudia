@@ -1327,7 +1327,7 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
       <OutcomePopover v-if="outcomes" :session="session" :sheet="state.activeSheet" :row="outcomes.row" :col="outcomes.col" :x="outcomes.x" :y="outcomes.y" @close="outcomes = null" />
       <ContextMenu v-if="cellMenu" :x="cellMenu.x" :y="cellMenu.y" :items="cellMenuItems" :width="290" :label="t('Cell menu')" @close="cellMenu = null" />
       <PromptDialog v-if="dialog === 'rename' && renaming" :title="t('Rename sheet')" :label="t('Name')" :ok="t('Rename')" required :initial="renaming.name" @ok="rename" @close="dialog = null" />
-      <PromptDialog v-if="dialog === 'sheet'" :title="t('New sheet')" :label="t('Name')" :ok="t('Add Sheet')" required :placeholder="t('Forecast')" @ok="addSheet" @close="dialog = null" />
+      <PromptDialog v-if="dialog === 'sheet'" :title="t('New sheet')" :label="t('Name')" :ok="t('Add Sheet')" required :initial="session.freeSheetName()" :placeholder="t('Forecast')" @ok="addSheet" @close="dialog = null" />
       <NameAndDescribeDialog v-if="nameDialog.details.value" :details="nameDialog.details.value" @save="nameDialog.save" @close="nameDialog.close" />
       <ImageImportDialog v-if="dialog === 'image'" :add="addPicture" @close="dialog = null" @inserted="imageInserted" />
       <SheetChartInsertDialog

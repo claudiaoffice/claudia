@@ -4,7 +4,7 @@ import { BaseSession, type BaseState, type SessionOptions } from './base-session
 import { translate as t } from './i18n'
 import { ProtocolError, type LinkLike, type Region, type WireData } from './protocol'
 import { holderOf, firstFocus } from './replay'
-import type { Thing } from './tags'
+import { freeSheetName, type Thing } from './tags'
 import { MAX_COLS, MAX_ROWS, type Content } from './cells'
 import type { CellRange } from './cell-styles'
 import type { NumberFormatDef } from './number-format'
@@ -775,6 +775,12 @@ export class Session extends BaseSession<State> implements SlideHost {
   async setCells(sheet: string, cells: { row: number; col: number; input: string }[]): Promise<boolean> {
     const done = await this.write('set_cells', { sheet, cells })
     return done !== false
+  }
+
+  /** The name the New sheet dialog offers: the next free "Sheet<n>" in the language of this window, among the names of
+   * every sheet, slide, object and named range of the workbook (UX-76, D550). */
+  freeSheetName(): string {
+    return freeSheetName(t('Sheet'), this.things().map((thing) => thing.name))
   }
 
   async addSheet(name: string): Promise<boolean> {

@@ -12,7 +12,11 @@ const emit = defineEmits<{ ok: [value: string]; close: [] }>()
 
 const value = ref(props.initial)
 const field = ref<HTMLInputElement | null>(null)
-onMounted(() => field.value?.focus())
+// what the field starts with is selected, so that Enter takes it and typing replaces it (UX-76)
+onMounted(() => {
+  field.value?.focus()
+  field.value?.select()
+})
 
 function submit() {
   const text = value.value.trim()

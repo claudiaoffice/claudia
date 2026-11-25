@@ -36,6 +36,16 @@ const MAX_LIST = 8
 /** What two names are compared by: tidied and in lower case, so that "Figure  1" and "figure 1" are one name. */
 export const nameKey = (name: string): string => name.split(/\s+/).filter(Boolean).join(' ').toLowerCase().replace(/ß/g, 'ss')
 
+/** The name a new sheet is offered: `label` ("Sheet" in the person's language) with the first number from 1 that no
+ * name in `taken` has. Written without a space, as the first sheet of a workbook is ("Sheet1", as in Excel); every
+ * name of the document counts, since sheets, slides, objects and named ranges share one namespace (D550, D552). */
+export function freeSheetName(label: string, taken: string[]): string {
+  const used = new Set(taken.map(nameKey))
+  let number = 1
+  while (used.has(nameKey(`${label}${number}`))) number++
+  return `${label}${number}`
+}
+
 /** A tag, as it is written into a message. `[`, `]` and `\` in the name are escaped. */
 export function encodeTag(id: string, name: string): string {
   return `[#${name.replace(/[\\[\]]/g, '\\$&')}](thing:${id})`

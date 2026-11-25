@@ -1375,6 +1375,23 @@ describe('renaming a sheet (E6.24, D550)', () => {
   })
 })
 
+describe('the name a new sheet is offered (UX-76, D550)', () => {
+  it('is the next free "Sheet<n>", past the name of every sheet, slide, object and named range', async () => {
+    const link = new FakeLink()
+    server(link)
+    link.handlers.tabs = () => [
+      { kind: 'sheet', id: 's1', name: 'Sheet1' },
+      { kind: 'slide', id: 'p1', name: 'Sheet3' },
+    ]
+    link.handlers.objects = (p: any) => ({ revision: 'main:3', sheet: p.sheet, objects: [image('o1', { name: 'Sheet2' })] })
+    link.handlers.slide = () => ({ revision: 'main:3', objects: [] })
+    link.handlers.names = () => ({ revision: 'main:3', names: [{ id: 'r1', name: 'Sheet4', scope: null, kind: 'range', sheet: 's1', region: null }] })
+    const session = new Session(() => link, { retryDelays: [0], storage: memoryStorage() })
+    await session.open()
+    expect(session.freeSheetName()).toBe('Sheet5')
+  })
+})
+
 describe('names, tables and queries (E6.5)', () => {
   const SALES = {
     id: 'r1sales',
