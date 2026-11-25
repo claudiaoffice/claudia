@@ -10,7 +10,7 @@ import { createServer, type Server } from 'node:http'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { WebSocket, WebSocketServer } from 'ws'
 // @ts-expect-error the build tool is plain JavaScript
 import { buildApp } from '../tools/build-shell.mjs'
@@ -94,6 +94,12 @@ class FakeNeutralino {
     this.socket?.close()
     return new Promise((resolve) => this.server.close(() => resolve()))
   }
+}
+
+/** Waits until the log at ``path`` passes ``check`` (PROC-66: a test slept 600 ms and read the log once, and a busy
+ * machine had not written it by then). Gives up after ten seconds with what ``check`` said last. */
+function untilTheLog(path: string, check: (log: string) => void): Promise<void> {
+  return vi.waitFor(() => check(existsSync(path) ? readFileSync(path, 'utf8') : ''), { timeout: 10_000, interval: 50 })
 }
 
 function claudia(app: string): Promise<{ server: Server; port: number }> {
@@ -296,11 +302,12 @@ describe('without being told anything (what a window that was not started by the
       neutralino.dispatch('claudia.core', { kind: 'start' })
       await neutralino.until(() => neutralino.broadcasts.length > 0)
       expect(neutralino.broadcasts[0]!.data.kind).toBe('status') // "Starting Claudia Creates…" -- it is there and answers
-      const log = readFileSync(join(suiteDir(), 'creates', 'state', 'shell.log'), 'utf8')
-      expect(log).toContain('app creates')
-      expect(log).toContain('connected to Neutralino')
-      expect(log).toContain('<- page: start')
-      expect(log).toContain('-> page: status')
+      await untilTheLog(join(suiteDir(), 'creates', 'state', 'shell.log'), (log) => {
+        expect(log).toContain('app creates')
+        expect(log).toContain('connected to Neutralino')
+        expect(log).toContain('<- page: start')
+        expect(log).toContain('-> page: status')
+      })
     })
 
     it('takes app and server from its command line, and logs how stdin looks', async () => {
@@ -313,11 +320,12 @@ describe('without being told anything (what a window that was not started by the
       neutralino.dispatch('claudia.core', { kind: 'start' })
       await neutralino.until(() => neutralino.broadcasts.some((b) => b.data.kind === 'show'))
       expect(neutralino.broadcasts.at(-1)!.data).toEqual({ kind: 'show', origin })
-      const log = readFileSync(join(suiteDir(), 'creates', 'state', 'shell.log'), 'utf8')
-      expect(log).toContain(`server ${origin}`)
-      const first = readFileSync(join(suiteDir(), 'shell.log'), 'utf8') // what the core wrote before it knew its app
-      expect(first).toMatch(/stdin is a (pipe|socket)/)
-      expect(first).toContain('--app=creates')
+      await untilTheLog(join(suiteDir(), 'creates', 'state', 'shell.log'), (log) => expect(log).toContain(`server ${origin}`))
+      await untilTheLog(join(suiteDir(), 'shell.log'), (first) => {
+        // what the core wrote before it knew its app
+        expect(first).toMatch(/stdin is a (pipe|socket)/)
+        expect(first).toContain('--app=creates')
+      })
     })
 
     it('connects when Neutralino sends the port as a string and adds fields of its own', async () => {
@@ -330,19 +338,18 @@ describe('without being told anything (what a window that was not started by the
     it('says what it got on stdin, as keys and types, when that is not what it expected', async () => {
       child = spawn(process.execPath, [CORE, '--app=creates'], { env: coreEnvironment(home), stdio: ['pipe', 'ignore', 'ignore'] })
       child.stdin!.end(JSON.stringify({ port: 4711, nlToken: 'SECRET-TOKEN' }))
-      await new Promise((resolve) => setTimeout(resolve, 600))
-      const log = readFileSync(join(suiteDir(), 'creates', 'state', 'shell.log'), 'utf8')
-      expect(log).toContain('port: number')
-      expect(log).toContain('nlToken: string')
-      expect(log).not.toContain('SECRET-TOKEN')
-      expect(log).toContain('stdin ended before the tokens arrived')
+      await untilTheLog(join(suiteDir(), 'creates', 'state', 'shell.log'), (log) => {
+        expect(log).toContain('port: number')
+        expect(log).toContain('nlToken: string')
+        expect(log).not.toContain('SECRET-TOKEN')
+        expect(log).toContain('stdin ended before the tokens arrived')
+      })
     })
 
     it('logs when stdin ends without the tokens (the way the failed wrapper script showed it)', async () => {
       child = spawn(process.execPath, [CORE, '--app=creates'], { env: coreEnvironment(home), stdio: ['pipe', 'ignore', 'ignore'] })
       child.stdin!.end()
-      await new Promise((resolve) => setTimeout(resolve, 600))
-      expect(readFileSync(join(suiteDir(), 'creates', 'state', 'shell.log'), 'utf8')).toContain('stdin ended before the tokens arrived')
+      await untilTheLog(join(suiteDir(), 'creates', 'state', 'shell.log'), (log) => expect(log).toContain('stdin ended before the tokens arrived'))
     })
 
     it('says in the log why it cannot run, instead of dying without a word', async () => {

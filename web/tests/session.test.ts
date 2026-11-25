@@ -1793,8 +1793,7 @@ describe('random numbers, alternatives and following a computation (E6.21–E6.2
       throw new ProtocolError('command_error', 'there is no such sheet')
     }
     link.push('sheets', {})
-    await new Promise((resolve) => setTimeout(resolve, 5))
-    expect(session.state.trace).toBeNull()
+    await vi.waitFor(() => expect(session.state.trace).toBeNull())
   })
 })
 

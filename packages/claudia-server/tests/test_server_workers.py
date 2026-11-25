@@ -30,7 +30,7 @@ def _die():
 def _nap(seconds):
     import time
 
-    time.sleep(seconds)
+    time.sleep(seconds)  # work: what the worker is busy with
     return "done"
 
 
@@ -103,7 +103,7 @@ def test_max_waiting_refuses_a_submission_once_that_many_are_already_in_flight()
         pool = WorkerPool(max_workers=2, max_waiting=1)
         try:
             holding = asyncio.ensure_future(pool.submit(_nap, 0.2))
-            await asyncio.sleep(0.05)  # let the first submission actually claim its slot
+            await asyncio.sleep(0)  # a yield, not a wait: the first submission claims its slot before its first await
             with pytest.raises(PoolBusy):
                 await pool.submit(_add, 1, 1)
             assert await holding == "done"

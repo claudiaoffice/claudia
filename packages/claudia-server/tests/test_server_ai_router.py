@@ -97,8 +97,8 @@ def anthropic():
         yield fake
 
 
-def claude_runner(fake, timeout=5):
-    return ModelRunner(ClaudeModel(KEY, "claude-sonnet-5-5", base_url=fake.url), timeout=timeout)
+def claude_runner(fake, timeout=5, **model_options):
+    return ModelRunner(ClaudeModel(KEY, "claude-sonnet-5-5", base_url=fake.url, **model_options), timeout=timeout)
 
 
 def claude_desk(fake, *, local=None):
@@ -218,7 +218,8 @@ def test_a_stalled_anthropic_ends_the_question_in_time_and_is_its_own_cause(anth
         assert desk.health.last.reason.value == "timed_out"
 
     desk = ProviderDesk()
-    desk.install(provider=CLAUDE, claude=claude_runner(anthropic, timeout=0.5), approved=True)
+    # read_timeout: the stalled read is let go after a second, not after the default 30 s it would hold the test's end
+    desk.install(provider=CLAUDE, claude=claude_runner(anthropic, timeout=0.5, read_timeout=1), approved=True)
     served(test, desk)
 
 
@@ -255,10 +256,12 @@ def test_when_the_owners_withdraw_consent_a_running_question_stops_at_its_next_s
 def test_when_the_administrator_switches_provider_a_running_question_stops_the_same_way(anthropic):
     async def test(hosted, ann, desk):
         ann.request("set_ai_consent", {"allowed": True})
-        anthropic.delay = 0.5
+        anthropic.hold()
         question = asyncio.create_task(ask(hosted, ann))
-        await asyncio.sleep(0.2)  # Claude is working
-        for runner in desk.install(provider="local", local=runner_of("the local model")):
+        await anthropic.begun()  # Claude is working
+        replaced = desk.install(provider="local", local=runner_of("the local model"))
+        anthropic.let_go()  # Claude's step ends after the switch: the question stops there
+        for runner in replaced:
             await asyncio.to_thread(runner.close)
         text, via = await question
         assert text.endswith(STOPPED) and via == STOPPED_VIA

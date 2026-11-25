@@ -204,12 +204,14 @@ def test_the_event_loop_serves_others_while_the_model_thinks():
     async def test(hosts, model, runner):
         (hosted,) = hosts
         ann, ben = Person(hosted, ANN), Person(hosted, BEN)
+        model.hold()
         ann.request("chat", {"text": "@ai think about it"})
         working = asyncio.create_task(hosted.assistant.idle())
-        await asyncio.sleep(0.05)
+        await model.begun()
         assert ben.request("ping")["ok"] and ann.said() == []
         typing = [e["data"]["on"] for e in ann.events("ephemeral") if e["kind"] == "typing"]
         assert typing == [True], "people see that it is working"
+        model.let_go()
         await working
         assert ann.said() == ["ok"]
 
@@ -232,14 +234,16 @@ def test_a_busy_document_refuses_more_questions_than_may_wait():
     async def test(hosts, model, runner):
         (hosted,) = hosts
         ann = Person(hosted, ANN)
+        model.hold()
         ann.request("chat", {"text": "@ai q0"})
-        await asyncio.sleep(0.02)  # the model is working on q0
+        await model.begun()  # the model is working on q0
         for n in (1, 2, 3):
             ann.request("chat", {"text": f"@ai q{n}"})  # q1 waits, q2 and q3 would wait too long
+        model.let_go()
         await hosted.assistant.idle()
         assert sum("busy" in s for s in ann.said()) == 2 and len(model.calls) == 2
 
-    scenario(test, FakeModel(delay=0.05), max_waiting=1)
+    scenario(test, max_waiting=1)
 
 
 def test_only_documents_the_assistant_knows_get_one():

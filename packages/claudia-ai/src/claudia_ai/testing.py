@@ -1,7 +1,13 @@
-"""A language model that needs no model, for tests: answers from a function, and can be slow."""
+"""A language model that needs no model, for tests: answers from a function, and can be slow or held.
+
+Slow (``delay``) stands for a model that takes its time. Held (``hold`` until ``let_go``) is for a test that must do
+something *while* the model works: it waits for ``started`` and is sure the model is still at it, on any machine. A
+nap in the test instead ("the model is working by now") fails whenever the machine is slower than the nap (PROC-66).
+"""
 
 from __future__ import annotations
 
+import asyncio
 import json
 import threading
 import time
@@ -11,18 +17,83 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from .model import Message
 
+HOLD_PATIENCE = 30.0
+"""Seconds a held fake waits to be let go before it fails the test that forgot to (instead of hanging it)."""
 
-class FakeModel:
-    """Answers with ``answer(messages)`` (an ``Exception`` it returns is raised) after ``delay`` seconds.
 
-    It gives up early when asked to stop, and records what it was asked."""
+class Hold:
+    """Work that waits until the test lets it go: ``started`` is set when the work begins."""
+
+    def __init__(self) -> None:
+        self.started = threading.Event()
+        self._free = threading.Event()
+        self._free.set()
+
+    def hold(self) -> None:
+        """From now on, work waits at its start until :meth:`let_go`."""
+        self.started.clear()
+        self._free.clear()
+
+    def let_go(self) -> None:
+        """Let the waiting work go on, and all work after it."""
+        self._free.set()
+
+    async def begun(self) -> None:
+        """Return once the work has begun. Waits in a thread, so the event loop goes on serving meanwhile: code after
+        ``await begun()`` that runs while the work is held proves the work did not stop the loop."""
+        if not await asyncio.to_thread(self.started.wait, HOLD_PATIENCE):
+            raise AssertionError("the work never began")
+
+    @property
+    def held(self) -> bool:
+        """Is work told to wait?"""
+        return not self._free.is_set()
+
+    def wait_until_free(self, stop: Callable[[], bool] = lambda: False) -> bool:
+        """Begin: say so, then wait until let go (``True``) or until ``stop()`` says to give up (``False``)."""
+        self.started.set()
+        deadline = time.monotonic() + HOLD_PATIENCE
+        while not self._free.wait(0.01):
+            if stop():
+                return False
+            if time.monotonic() > deadline:
+                raise AssertionError("held work was never let go")
+        return True
+
+
+class FakeTime:
+    """A clock that stands still until a fake advances it: what a model "takes" passes on it without anybody waiting."""
+
+    def __init__(self) -> None:
+        self.now = 0.0
+
+    def __call__(self) -> float:
+        return self.now
+
+    def advance(self, seconds: float) -> None:
+        self.now += seconds
+
+
+class FakeModel(Hold):
+    """Answers with ``answer(messages)`` (an ``Exception`` it returns is raised) after ``delay`` seconds, and after
+    being let go if it is held.
+
+    It gives up early when asked to stop, and records what it was asked. With a ``clock`` (a :class:`FakeTime`) the
+    ``delay`` passes on that clock, in steps of a hundredth, and takes no real time."""
 
     name = "fake model"
     remote = False
 
-    def __init__(self, answer: Callable[[list[Message]], str | Exception] | None = None, delay: float = 0.0):
+    def __init__(
+        self,
+        answer: Callable[[list[Message]], str | Exception] | None = None,
+        delay: float = 0.0,
+        clock: FakeTime | None = None,
+    ):
+        super().__init__()
         self.answer = answer or (lambda messages: "ok")
         self.delay = delay
+        self.clock = clock
         self.calls: list[list[Message]] = []
         self.max_new_tokens: list[int] = []
         self.threads: set[threading.Thread] = set()
@@ -40,12 +111,12 @@ class FakeModel:
             self._running += 1
             self.most_at_once = max(self.most_at_once, self._running)
         try:
-            end = time.monotonic() + self.delay
-            while time.monotonic() < end:
-                if stop():
-                    self.stopped_early = True
-                    return "partial"
-                time.sleep(0.01)
+            if not self.wait_until_free(stop):
+                self.stopped_early = True
+                return "partial"
+            if not self._take(self.delay, stop):
+                self.stopped_early = True
+                return "partial"
             result = self.answer(messages)
             if isinstance(result, Exception):
                 raise result
@@ -53,6 +124,21 @@ class FakeModel:
         finally:
             with self._lock:
                 self._running -= 1
+
+    def _take(self, seconds: float, stop: Callable[[], bool]) -> bool:
+        """Spend ``seconds`` working, a hundredth at a time; ``False`` if ``stop()`` said to give up first."""
+        if self.clock is None:
+            end = time.monotonic() + seconds
+            while time.monotonic() < end:
+                if stop():
+                    return False
+                time.sleep(0.01)
+            return True
+        for _ in range(round(seconds * 100)):
+            if stop():
+                return False
+            self.clock.advance(0.01)
+        return True
 
 
 @dataclass(frozen=True)
@@ -75,15 +161,17 @@ _FAILURES = {
 }
 
 
-class FakeAnthropic:
+class FakeAnthropic(Hold):
     """A small server on this computer that speaks Anthropic's Messages API (the stream included), for tests and for
     the end-to-end scenarios: no scenario reaches the real Anthropic.
 
     It accepts the ``key`` (more can be added to ``keys``), answers with ``answer(messages)`` and records every request
     in ``requests``. ``fail`` makes it refuse as Anthropic does, ``go_quiet`` makes it stop answering, ``delay`` and
-    ``pause_between_chunks`` make it slow. Use it as a context manager; ``url`` is where it listens."""
+    ``pause_between_chunks`` make it slow, ``hold`` keeps an answer back until ``let_go``. Use it as a context manager;
+    ``url`` is where it listens."""
 
     def __init__(self, key: str = "sk-ant-test-key", answer: Callable[[list[Message]], str] | None = None):
+        super().__init__()
         self.keys = {key}
         self.answer = answer or (lambda messages: "ok")
         self.requests: list[SentRequest] = []
@@ -104,7 +192,8 @@ class FakeAnthropic:
         self._server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
         self._server.daemon_threads = True
         self.url = f"http://127.0.0.1:{self._server.server_address[1]}"
-        self._thread = threading.Thread(target=self._server.serve_forever, daemon=True)
+        # it looks for shutdown every 20 ms, not every half second: each test that used it waited that long at its end
+        self._thread = threading.Thread(target=self._server.serve_forever, args=(0.02,), daemon=True)
 
     def __enter__(self) -> FakeAnthropic:
         self._thread.start()
@@ -160,6 +249,7 @@ class FakeAnthropic:
         request.wfile.write(payload)
 
     def _stream(self, request: BaseHTTPRequestHandler, messages: list[Message]) -> None:
+        self.wait_until_free(self._closing.is_set)
         time.sleep(self.delay)
         failing = self._failure
         text = (failing[1] or "") if failing else self.answer(messages)

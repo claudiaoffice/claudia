@@ -346,6 +346,7 @@
    "pick_color": "(self) -> 'str'",
    "render_outcomes": "(self) -> 'dict[str, dict]'",
    "render_unfinished": "(self) -> 'None'",
+   "rendered": "(self) -> 'None'",
    "role_of": "(self, user: 'str') -> 'str | None'",
    "stop_rendering": "(self) -> 'None'",
    "sweep": "(self) -> 'None'",

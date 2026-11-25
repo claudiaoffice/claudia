@@ -16,6 +16,7 @@ from claudia_computes.search import (
 from claudia_core import Document, MemoryStore
 from claudia_core.commands import encode
 from claudia_search import MAX_LISTED, Query, Scan, SearchError
+from claudia_search.testing import STOPPED_IN_TIME
 
 
 def typed(doc, cells, sheet=S1):
@@ -239,7 +240,7 @@ def test_a_search_that_runs_out_of_time_says_so(doc):
     slow = Query.from_data({"mode": "pattern", "find": "(?:a|aa)+!"}).compile()
     started = time.monotonic()
     result = scan_workbook(doc.model, slow, kinds=("text",), deadline=started + 0.2)
-    assert result.timed_out and time.monotonic() - started < 0.6
+    assert result.timed_out and time.monotonic() - started < STOPPED_IN_TIME
     assert [m.at for m in result.matches] == [cell_at(S1, 0, 0)]
 
 

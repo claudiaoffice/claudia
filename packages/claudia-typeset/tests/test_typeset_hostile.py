@@ -121,13 +121,18 @@ def test_nothing_of_a_stopped_job_stays_behind(tmp_path, tex_catalogue):
 def test_no_engine_process_survives_a_stopped_job(tmp_path, tex_catalogue):
     typesetter = Typesetter(tex_catalogue, tmp_path / "work", limits=Limits(seconds=1))
     attempt(typesetter, r"\def\a{\a}\a")
-    time.sleep(0.3)
-    running = [
-        entry
-        for entry in os.listdir("/proc")
-        if entry.isdigit() and _cmdline(entry).startswith("xelatex") and str(tmp_path) in _cmdline(entry, full=True)
-    ]
-    assert running == []
+
+    def running():
+        return [
+            entry
+            for entry in os.listdir("/proc")
+            if entry.isdigit() and _cmdline(entry).startswith("xelatex") and str(tmp_path) in _cmdline(entry, full=True)
+        ]
+
+    deadline = time.monotonic() + 10  # polls: a killed process is reaped at once, on a busy machine a little later
+    while running() and time.monotonic() < deadline:
+        time.sleep(0.05)
+    assert running() == []
 
 
 def _cmdline(pid: str, *, full: bool = False) -> str:
