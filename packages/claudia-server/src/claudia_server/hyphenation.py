@@ -184,8 +184,8 @@ def fetch(
     return fetch_pinned(files, target, download=download or _download, report=report, label="hyphenation patterns")
 
 
-def main(argv: list[str] | None = None) -> int:
-    """``python -m claudia_server.hyphenation fetch DIR``; the exit status."""
+def main(argv: list[str] | None = None, *, download: Callable[[str], bytes] | None = None) -> int:
+    """``python -m claudia_server.hyphenation fetch DIR``; the exit status. ``download`` as for :func:`fetch`."""
     parser = argparse.ArgumentParser(
         prog="python -m claudia_server.hyphenation", description="The hyphenation patterns of a Claudia server."
     )
@@ -194,7 +194,7 @@ def main(argv: list[str] | None = None) -> int:
     get.add_argument("folder", help="where the files go; give it to the server with --hyphenation")
     args = parser.parse_args(argv)
     try:
-        files = fetch(args.folder, report=lambda line: print(line, flush=True))
+        files = fetch(args.folder, download=download, report=lambda line: print(line, flush=True))
     except FetchError as error:
         print(f"error: {error}", file=sys.stderr)
         return 1

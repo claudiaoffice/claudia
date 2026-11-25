@@ -45,7 +45,7 @@ def a_model(*names: NamedRange, sheet_name: str = "Data") -> WorkbookModel:
         data.cells[position] = content
     for named in names:
         model.names.put(named)
-    model._calculate_loaded()
+    model.calculate_loaded()
     return model
 
 
@@ -99,7 +99,7 @@ def test_a_formula_that_uses_a_name_or_a_table_column_still_calculates_after_the
     model = a_model(RATE, TABLE)
     model.sheets[DATA].cells[(1, 3)] = {"t": "formula", "v": "=Rate*10"}
     model.sheets[DATA].cells[(0, 3)] = {"t": "formula", "v": "=SUM(Sales[Amount])"}
-    model._calculate_loaded()
+    model.calculate_loaded()
     back = xlsx_to_workbook(workbook_to_xlsx(model))
     assert back.sheets[DATA].cells[(1, 3)] == {"t": "formula", "v": "=Rate*10"}
     assert back.sheets[DATA].grid[(1, 3)] == 40
@@ -120,7 +120,7 @@ def test_what_a_file_cannot_hold_of_a_name_is_a_loss():
 def test_a_table_whose_header_is_not_text_is_written_as_a_range_and_the_loss_says_so():
     model = a_model(TABLE)
     model.sheets[DATA].cells[(0, 1)] = {"t": "int", "v": 2026}
-    model._calculate_loaded()
+    model.calculate_loaded()
     assert kinds(xlsx_export_losses(model)) == {"name:table-header": 1}
     assert names_of(xlsx_to_workbook(workbook_to_xlsx(model))) == [NamedRange("Sales", None, TABLE.range)]
 
@@ -128,7 +128,7 @@ def test_a_table_whose_header_is_not_text_is_written_as_a_range_and_the_loss_say
 def test_a_table_whose_columns_have_one_name_twice_is_written_as_a_range_too():
     model = a_model(TABLE)
     model.sheets[DATA].cells[(0, 1)] = {"t": "text", "v": "ITEM"}
-    model._calculate_loaded()
+    model.calculate_loaded()
     assert kinds(xlsx_export_losses(model)) == {"name:table-header": 1}
 
 

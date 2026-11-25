@@ -424,7 +424,7 @@ def test_a_chart_whose_definition_changed_is_drawn_again_the_way_it_was_before()
 def test_a_chart_whose_numbers_changed_carries_the_new_ones():
     original, baseline, current = a_kept_file()
     current.store(current.sheets[S1], 1, 1, {"t": "int", "v": 777})
-    current._calculate_loaded()  # noqa: SLF001
+    current.calculate_loaded()
     patched = apply_edits_to_xlsx(original, baseline, current)
     first = next(chart_part(patched).iterfind(".//c:ser", NS))
     assert [v.text for v in first.iterfind("c:val//c:v", NS)][0] == "777"
@@ -497,7 +497,7 @@ def test_a_chart_libreoffice_saved_whose_numbers_changed_keeps_its_own_drawing()
     original = LIBRARY.read_bytes()
     baseline, current = xlsx_to_workbook(original), xlsx_to_workbook(original)
     current.store(current.sheets[S1], 1, 1, {"t": "int", "v": 5})
-    current._calculate_loaded()  # noqa: SLF001
+    current.calculate_loaded()
     patched = apply_edits_to_xlsx(original, baseline, current)
     before, after = read_parts(original), read_parts(patched)
     assert [after[n] for n in after if n.startswith("xl/charts/")] == [

@@ -165,10 +165,9 @@ def test_closing_the_document_stops_what_is_still_waiting():
 
 
 def _reopen(hub, hosted):
-    """The document is closed (nobody is here, the server restarts) and opened again from what was kept."""
+    """The server restarts: the document is let go, and a new hub opens it from what was kept."""
     hosted.stop_rendering()
-    hub._documents.clear()
-    return hub.open("deck")
+    return Hub(hub.provider, methods=creates_methods, renderings=hosted.renderings).open("deck")
 
 
 def reopening_scenario(body):

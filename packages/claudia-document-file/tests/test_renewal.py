@@ -368,7 +368,7 @@ def test_a_crash_while_the_file_is_written_changes_nothing(path, owner, writer, 
     def crash(*args, **kwargs):
         raise OSError("disk full")
 
-    monkeypatch.setattr("claudia_document_file.renewal._write_zip", crash)
+    monkeypatch.setattr(zipfile.ZipFile, "writestr", crash)  # the disk fails while the new file is written
     with pytest.raises(OSError):
         remove_person(path, owner.keys, writer, BERT[0])
     assert path.read_bytes() == before

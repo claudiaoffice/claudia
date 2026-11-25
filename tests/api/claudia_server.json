@@ -793,7 +793,7 @@
   "class": [
    "object"
   ],
-  "init": "(*, max_workers: 'int' = 4, max_waiting: 'int | None' = None)",
+  "init": "(*, max_workers: 'int' = 4, max_waiting: 'int | None' = None, make_executor: 'Callable[[int], Executor]' = <function WorkerPool.<lambda>>)",
   "methods": {
    "stop": "(self) -> 'None'",
    "submit": "(self, fn: 'Callable[P, R]', /, *args: 'P.args', **kwargs: 'P.kwargs') -> 'R'"

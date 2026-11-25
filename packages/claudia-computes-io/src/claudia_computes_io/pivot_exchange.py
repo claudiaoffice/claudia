@@ -276,7 +276,7 @@ def adopt_pivots(model: WorkbookModel, found: Sequence[FilePivot]) -> Adoption:
     for plan in plans:
         plan.apply(model)
     if plans:
-        model._calculate_loaded()  # noqa: SLF001 (the restore()-mirroring construction idiom, as the importers do)
+        model.calculate_loaded()
     return Adoption(len(plans), losses.result())
 
 

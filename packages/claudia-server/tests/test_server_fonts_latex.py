@@ -107,9 +107,8 @@ def test_a_formula_that_could_not_be_drawn_is_drawn_when_the_document_is_opened_
             added="2026-11-17",
         )
         fonts.reload()
-        first.stop_rendering()
-        hub._documents.clear()
-        again = await hub.open("deck")
+        first.stop_rendering()  # the server restarts: a new hub opens the document from what was kept
+        again = await Hub(hub.provider, methods=creates_methods, renderings=first.renderings).open("deck")
         await again.rendered()  # real TeX takes a moment
         assert again.document.model.containers[container].image is not None
         json.dumps(Client(again, ann).request("containers")["result"])

@@ -5,6 +5,10 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+### Fixed
+- A question stopped while Anthropic is silent ends at once: the stop cuts the read, which waited for the read timeout
+  (30 s) before, so a server's shutdown or a switch of provider waited that long (PROC-67).
+
 ### Added
 - `ModelRunner(clock=)`: the clock the time limit of an answer is read on (default `time.monotonic`), so a test needs
   no stopwatch (D1662, PROC-66).
