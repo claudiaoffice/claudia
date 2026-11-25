@@ -79,11 +79,14 @@ service, says `"app": null, "apps": [...]` -- "That does not look like a Claudia
 service was never connected to before; a demo server of all three apps has the same fate); reported with part 2, not
 fixed yet. The run went on with the check stood in.
 
-## What could not be run here
+## What could not be run here, and where it ran instead
 
-* The Windows installer and its CI install test (no Windows here): `claudia.iss` and `windows.yml` are checked by
-  `tests/test_windows_packaging.py` and a YAML parse only. Inno Setup's order of `[Run]` and `ssPostInstall` does not
-  matter for the marker (the apps read it at start).
-* The "may not" case of `shared-service.test.ts` (this machine runs the tests as root, who reads everything); it runs in
-  CI's Ubuntu job of the Neutralino client, as a normal user (it is skipped on Windows, which has no `chmod 000`).
-* Two real accounts on one Mac or PC: the browser scenarios stand a loopback server in for the service.
+* The Windows installer (no Windows here): CI's `windows.yml` (run 45697355101, both jobs) installed it with the
+  service, found the service file and the state folder closed to `Users`, uninstalled it (the file gone) and installed it
+  without the service (no file).
+* The "may not" case of `shared-service.test.ts` is skipped for root, who reads everything: it ran in CI's Ubuntu job of
+  the Neutralino client as an ordinary user (it is skipped on Windows, which has no `chmod 000`), and in the use-it run
+  above with a second account.
+* Firefox (cannot be installed here): CI's "End to end (Firefox)" job (run 45697350344).
+* Two real accounts on one Mac or PC, and an administrator with User Account Control on: the browser scenarios stand a
+  loopback server in for the service; the use-it run used two Linux accounts.
