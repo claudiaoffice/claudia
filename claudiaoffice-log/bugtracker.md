@@ -53,8 +53,9 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | UX-70 | P2 | UX / all apps | What an export could not keep is never shown: the losses come back with the file and no client says them | **new, open** (read; size 2) | 2026-11-22 |  |
 | UX-71 | P2 | UX / computes | Text on a workbook's slide is drawn in the workbook's Body text (13 px), tiny on a 1600-unit slide | **needs decision** (measured; size 2) | 2026-11-22 |  |
 | UX-84 | P2 | UX / collaboration | Selecting an object in computes or composes neither locked it nor showed it to colleagues, though D1223 says it does in all three apps | **new, open**; fix on `batch-2` (proposed) | 2026-11-25 |  |
-| UX-85 | P2 | UX / composes | Name & describe… on a table does not keep its description: the server refuses it with a developer sentence, in English only | **new, open** | 2026-11-25 |  |
-| UX-88 | P2 | UX / a11y | A notice (toast) is a `role=status` element made together with its text, which screen readers may not announce (BITV 4.1.3) | **new, open** (read) | 2026-11-25 |  |
+| UX-85 | P2 | UX / composes | Name & describe… on a table does not keep its description: the server refuses it with a developer sentence, in English only | **new, open**; fix on `batch-3` (proposed) | 2026-11-25 |  |
+| UX-88 | P2 | UX / a11y | A notice (toast) is a `role=status` element made together with its text, which screen readers may not announce (BITV 4.1.3) | **new, open**; fix on `batch-3` (proposed) | 2026-11-25 |  |
+| UX-90 | P2 | UX / a11y | About 25 other `role="status"` elements appear with their text already in them (`v-if`), so screen readers may not announce them (BITV 4.1.3), as the notice did (UX-88) | **new, open** (read) | 2026-11-25 |  |
 | CODE-25 | P2 | Code / Export | A renamed object loses its name in pptx and odp without the export saying so (D450) | **new, open** |  |  |
 | CODE-31 | P2 | Code / i18n | The history speaks English to everybody: command labels and summaries are not translated | **new, open** |  |  |
 | CODE-45 | P2 | Code / Import | pptx placeholders (titles, body text) are not imported at all | **new, open** |  |  |
@@ -64,7 +65,7 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | PROC-30 | P2 | Process / desktop clients | The Neutralino (Windows, macOS) tests and the GTK client were not run for `object-interaction`: the generated menus were rebuilt and the manifest unit tests pass, nothing more | **new, open** |  |  |
 | PROC-37 | P2 | Process / scope | D1272 says an export's history and chat come back in with their authors as text; slice B imports the content only (`import_state` returns the state, the `history.jsonl` and `chat.jsonl` of an export are written but never read back) | **new, open** (size 2; needs the owner's decision: build it in slice C or log it) |  |  |
 | PROC-40 | P2 | Process / E2E | Four spec files (51 scenarios) run nowhere: no step code binds them and no scenario names a unit or e2e test (`names`, `requirements`, `objects-in-composes`, `pictures-in-files`) | **new, open** (measured; size 2) | 2026-11-20 |  |
-| PROC-60 | P2 | Process / E2E | `wait_for_function` given an expression string breaks on the page's Content-Security-Policy once it has to poll; `Person.wait_until_open` uses it | **new, open** | 2026-11-25 |  |
+| PROC-60 | P2 | Process / E2E | `wait_for_function` given an expression string breaks on the page's Content-Security-Policy once it has to poll; `Person.wait_until_open` uses it | **new, open**; fix on `batch-3` (proposed) | 2026-11-25 |  |
 | UX-64 | P2 | UX / all apps | Dark mode: a part of the sidebar (History & Chat / Help) is not readable or has too little contrast; the exact symptom was not written down when it was seen (see entry) | **needs decision** (symptom to be re-stated; size 2) | 2026-11-22 |  |
 | UX-76 | P3 | UX / computes | The New sheet dialog proposes no name: the field is empty (placeholder "Forecast") and Add Sheet stays off until one is typed, though a new sheet is to get a name like "Sheet2" (E1.13) | open (scenario `@pending:UX-76`) | 2026-11-22 |  |
 | SEC-09 | P3 | Security | User names can be confusable (homoglyphs) | open (unverified) |  |  |
@@ -72,6 +73,7 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | PERF-06 | P3 | Performance | Threshold packing blocks the event loop (rewriting the whole zip is accepted up to ~50 MB, D1269) | verified open; narrowed 2026-11-22: the rewrite itself is accepted (D1269) |  |  |
 | PERF-07 | P3 | Performance | Structure edits recalculate the whole workbook (~12 s at 100k formulas) | verified open |  |  |
 | PERF-08 | P3 | Performance | The first chart downloads all of Plotly (4.6 MB) for a bar chart | **new, open** |  |  |
+| PERF-13 | P3 | Performance / computes | Calculating a chain of formulas is quadratic: `Waiting.done` deletes from the front of a sorted list once per formula | **new, open** (measured) | 2026-11-25 |  |
 | UX-08 | P3 | UX | Open and Create sit side by side; a typo cannot be told from a wrong password | open |  |  |
 | UX-23 | P3 | UX | Panel layout and undo placement differ between the three apps | partly fixed 2026-11-12 (the suggestion list is gone from above the tabs) |  |  |
 | UX-34 | P3 | UX / AI | In computes and creates the AI refuses every change by default (suggest is the default, proposals do not exist) | deferred (owner, 2026-11-13: the AI is not fully built yet) |  |  |
@@ -86,9 +88,9 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | UX-53 | P3 | UX / computes | An object keeps its pixel size when rows or columns are inserted or resized, so it no longer covers the cells it covered (E6.17, D1230) | **new, open** |  |  |
 | UX-60 | P3 | UX / composes | Dragging an object to another paragraph is "Moved an object" in the history; the mock names the object and the paragraph | **new, open** (divergence from the mock of D1352; size 3) | 2026-11-20 |  |
 | UX-65 | P3 | UX / composes | Search & replace panel, find-only state: the results list overflows its container and the "text" badge of a result is clipped at the panel edge | **new, open** (`web/app/components/SearchPanel.vue`; **measured** in the running app; size 3) | 2026-11-22 |  |
-| UX-86 | P3 | UX / computes | A colleague's name tag on a cell or an object in row 1 is hidden under the column header | **new, open** | 2026-11-25 |  |
-| UX-87 | P3 | UX / i18n | A new workbook's first sheet is "Sheet1" in every language, beside an offered "Blatt2" | **fix on `batch-3-py`** (read) | 2026-11-25 |  |
-| UX-89 | P3 | UX / a11y | A table's accessible name is "Table 1 Options…": the Options… button is inside its caption | **new, open** | 2026-11-25 |  |
+| UX-86 | P3 | UX / computes | A colleague's name tag on a cell or an object in row 1 is hidden under the column header | **new, open**; fix on `batch-3` (proposed) | 2026-11-25 |  |
+| UX-87 | P3 | UX / i18n | A new workbook's first sheet is "Sheet1" in every language, beside an offered "Blatt2" | **new, open**; fix on `batch-3` (proposed) | 2026-11-25 |  |
+| UX-89 | P3 | UX / a11y | A table's accessible name is "Table 1 Options…": the Options… button is inside its caption | **new, open**; fix on `batch-3` (proposed) | 2026-11-25 |  |
 | CODE-03 | P3 | Code | README is out of date | open (not re-checked) |  |  |
 | CODE-04 | P3 | Code | Untyped functions escape the type check | verified open |  |  |
 | CODE-06 | P3 | Code | `--max-connections` is per document, not per server | open |  |  |
@@ -109,11 +111,11 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | CODE-68 | P3 | computes | Computes cannot make a text box or a shape, though a model can hold one (a file from another app) and an export reports it as `object` | **new, open** |  |  |
 | CODE-70 | P3 | computes I/O | The patch of a kept XLSX or ODS does not add pivot tables either (reported), as it does not add pictures (CODE-66) | **new, open** (D1233) |  |  |
 | CODE-74 | P3 | Code | `export_content` still answers `{format: "claudia-export 1", ...}`, a JSON that is neither the zip of D1270 nor documented anywhere; it is recorded as an export and the panel says "exported as claudia-export 1"; no window calls it | **new, open** (size 3; remove it or make it the zip) |  |  |
-| CODE-98 | P3 | Code / web | About 25 components repeat the look-only notice instead of calling `session.tellLookOnly()` | **new, open** (read) | 2026-11-25 |  |
+| CODE-98 | P3 | Code / web | About 25 components repeat the look-only notice instead of calling `session.tellLookOnly()` | **new, open**; fix on `batch-3` (proposed) | 2026-11-25 |  |
 | PROC-22 | P3 | Process / CI | The LibreOffice job may still fail silently, though it has passed every round | **new, open** |  |  |
 | PROC-29 | P3 | Process / E2E | No scenario asserts that a second window sees a holder's outline and name tag (D1223), nor that a colleague's drag is not shown live | **new, open**; fix on `batch-2` (proposed) |  |  |
-| PROC-59 | P3 | Process / CI | The scenarios tagged @firefox were never run in Firefox by CI | **new, open**; fix on `batch-2` (proposed) | 2026-11-25 |  |
-| PROC-61 | P3 | Process / CI | `test_calculating_a_long_chain_is_linear` failed on CI's Ubuntu runner (44x for a 10x chain, after its own second try) and passed on a rerun; here it measures 14x to 16x | **fix on `batch-3-py`** (measured) | 2026-11-25 |  |
+| PROC-59 | P3 | Process / CI | The scenarios tagged @firefox were never run in Firefox by CI | **new, open**; fix on `batch-2` (vacuous: its job skipped every scenario) and again on `batch-3` (proposed) | 2026-11-25 |  |
+| PROC-61 | P3 | Process / CI | `test_calculating_a_long_chain_is_linear` failed on CI's Ubuntu runner (44x for a 10x chain, after its own second try) and passed on a rerun; here it measures 14x to 16x | **new, open**; fix on `batch-3` (proposed) | 2026-11-25 |  |
 
 ### Fixed (205)
 
@@ -3046,39 +3048,39 @@ round the caret while an object is selected, since that would unlock it. **Tests
 `text-session-objects.test.ts` and `text-object-layer.test.ts` ("… locks it, as in creates (D1223)"), and step 1b of
 `web/e2e/objects.cjs` (PROC-29).
 
-### UX-85 · Name & describe… on a table does not keep its description · P2 · size 2 · open
+### UX-85 · Name & describe… on a table does not keep its description · P2 · size 2 · fix on `batch-3`
 **Measured** (by the helper binding `invariants/objects-in-composes.feature`, scenario "A table has a name nobody else
 has …"). The dialog opens with the name "Table 1", but Save keeps no description. The server refuses it with the
 developer sentence "an object is described with DescribeObject, which also says whether it is decoration", in English
 only. No history entry is made, and the table's accessible description stays empty. The scenario is tagged
-`@pending:UX-85`.
+`@pending:UX-85`. **Fix** on `batch-3`: `name_and_describe` describes every object with `DescribeObject`; a table gets words and never the tick. **Test:** `test_server_thing_names.py::test_a_table_is_named_and_described_and_one_undo_takes_both_back`; the composes invariant runs again (no longer `@pending`).
 
-### UX-86 · A colleague's name tag in row 1 of a sheet is hidden · P3 · size 3 · open
+### UX-86 · A colleague's name tag in row 1 of a sheet is hidden · P3 · size 3 · fix on `batch-3`
 **Seen** in the screenshots of PROC-29 (`objects-computes-image-watched.png`). The tag of a colleague's cell outline, and
 now of an object she selected, sits above the box. In row 1 that is under the column header, so the outline shows but
-her name does not.
+her name does not. **Fix** on `batch-3`: where a box's top is less than a tag's height below the top of the sheet area, the tag goes inside its top edge (`lib/name-tag.ts`, for cell outlines and objects). **Test:** `web/tests/name-tag.test.ts`.
 
-### UX-87 · A new workbook's first sheet is "Sheet1" in every language · P3 · size 3 · fix on `batch-3-py`
+### UX-87 · A new workbook's first sheet is "Sheet1" in every language · P3 · size 3 · fix on `batch-3`
 **Read** (helper, while fixing UX-76): `WorkbookModel.setup_commands` ignores `language`, so a German person gets
-"Sheet1" next to the offered "Blatt2". **Fix** on `batch-3-py`: `DocumentModel.setup_commands` takes `translate` (the
+"Sheet1" next to the offered "Blatt2". **Fix** on `batch-3`: `DocumentModel.setup_commands` takes `translate` (the
 packages carry no catalog; the server passes its own in, as for the function help, D323), and computes calls the first
 sheet by the catalog's "Sheet" (the web's word for the next one) with a 1: "Blatt1" in German, "Sheet1" otherwise.
 **Test** (red before: "Sheet1" != "Blatt1"): `test_server_setup.py::test_a_new_workbooks_first_sheet_is_named_in_its_makers_language`
 and the two `first_sheet` tests of `test_computes_thing_names.py`. **Escaped** because: spec gap, the setup tests only
 asked a text and a deck for the maker's language.
 
-### UX-88 · A notice may not be announced by a screen reader · P2 · size 3 · open
+### UX-88 · A notice may not be announced by a screen reader · P2 · size 3 · fix on `batch-3`
 **Read** (helper, while fixing UX-69): the toast is a `role=status` element created together with its text. Screen
-readers may not announce a live region that appears with its content already in it (BITV 4.1.3).
+readers may not announce a live region that appears with its content already in it (BITV 4.1.3). **Fix** on `batch-3`: a `role=status` region that is always on the page says the notice (`lib/notice-said.ts`: emptied, then filled, so the same words twice are said twice); the visible toast is `aria-hidden`. **Test:** `web/tests/notice-said.test.ts`. Not heard with a screen reader.
 
-### UX-89 · A table's accessible name includes "Options…" · P3 · size 3 · open
+### UX-89 · A table's accessible name includes "Options…" · P3 · size 3 · fix on `batch-3`
 **Measured** (helper, PROC-40): the table is read as "Table 1 Options…", because the Options… button is inside its
-caption.
+caption. **Fix** on `batch-3`: the table is labelled by its tab and described by its description. **Test:** the invariant's step asks for the exact name and the description (`test_objects_in_composes.py`).
 
-### CODE-98 · The look-only notice is repeated in about 25 components · P3 · size 3 · open
+### CODE-98 · The look-only notice is repeated in about 25 components · P3 · size 3 · fix on `batch-3`
 (Called CODE-96 in the batch-2 commit that logged it; `win-installer-fix` reached `main` with another CODE-96 the same day.)
 **Read** (helper, UX-69): `session.notice(t('You can only look at this document.'), 'warning')` is written out about 25
-times; `session.tellLookOnly()` says it once.
+times; `session.tellLookOnly()` says it once. **Fix** on `batch-3`: `BaseSession.tellLookOnly()`, used in 21 places; a guard test lets no other file say the sentence. **Test:** `web/tests/look-only.test.ts`.
 
 ### PROC-59 · The @firefox scenarios were never run in Firefox · P3 · size 2 · fix on `batch-2`
 **Read**: CI ran the specs in Chromium only, so the `@firefox` tag had no effect there. **Fix** on `batch-2`: the job
@@ -3086,13 +3088,13 @@ times; `session.tellLookOnly()` says it once.
 `tests/test_ci_workflow.py::test_ci_runs_the_firefox_specs_in_firefox`. Not run here (Firefox cannot be downloaded in
 this workspace); its first run on CI is the check.
 
-### PROC-60 · An expression given to `wait_for_function` breaks on the page's CSP once it polls · P2 · size 3 · open
+### PROC-60 · An expression given to `wait_for_function` breaks on the page's CSP once it polls · P2 · size 3 · fix on `batch-3`
 **Measured** (helper, PROC-40): Playwright evaluates a predicate given as a string with `eval`, which the page's
 Content-Security-Policy forbids. It only works when the condition already holds at the first check.
 `Person.wait_until_open` in `tests/e2e/specs/conftest.py` uses that form for `.health.open`. **Acceptance:** a test that
-opens the page with the health dot delayed.
+opens the page with the health dot delayed. **Fix** on `batch-3`: the eight such waits wait for a locator or give a function. **Test:** `tests/test_e2e_waits.py` reads the browser tests for the bare form; measured against a page served with `script-src 'self'`.
 
-### PROC-61 · The chain test of computes' performance fails now and then on CI · P3 · size 3 · fix on `batch-3-py`
+### PROC-61 · The chain test of computes' performance fails now and then on CI · P3 · size 3 · fix on `batch-3`
 **Measured:** CI of `main` at `e5bb76fa`, job "Python (ubuntu-latest)": "a chain 10x as long took 44x as long to
 calculate", after the test's own second try. The rerun of the job passed. On this workspace the ratio is 14x to 16x.
 Either a shared runner stalls both tries, or the slope really is steeper on a smaller machine (cache, garbage
@@ -3100,7 +3102,7 @@ collection). **Acceptance:** the ratio measured in operations counted, not in se
 recorded when it is needed.
 **Measured** (helper): the time per formula grows with the chain here too (3.4 µs at 1,000, 6.3 µs at 10,000, 11.4 µs
 at 30,000): part of it is a real quadratic step done in C (reported apart), the rest is the memory caches, so the ratio
-of two times depends on the machine. **Fix** on `batch-3-py`: the guard counts the work (`work_of`: the Python lines
+of two times depends on the machine. **Fix** on `batch-3`: the guard counts the work (`work_of`: the Python lines
 started and the turns of loops, through `sys.monitoring`), 9.96x for a 10x chain on every machine; the bound is 15.
 **Tests** (red before: "the guard read the clock"): `test_the_chain_guard_does_not_read_the_clock`, and
 `test_the_chain_guard_catches_a_calculation_that_is_quadratic_in_the_chain` (a stand-in that looks at every waiting
@@ -3129,3 +3131,24 @@ minutes after its last window has closed". A service never does. Windows: an ins
 all-users install with the service; macOS: `./start-mac-client.sh` next to an installed service. The apps cannot start
 until someone stops the service. **Acceptance:** a scenario with a service of another version on the computer, where the
 person's apps start her own server and open.
+
+## Found in batch 3 of the bug eater (2026-11-25; branch `batch-3`)
+
+### PROC-59, again · The first Firefox job ran nothing and was green
+**Measured** on CI of `main` at `3cbfaad3`: "End to end (Firefox)" took 1 minute and reported "71 skipped in 5.80s". The
+specs skipped unless Chromium started (`test_greeting.SKIP`), and that job installs only Firefox. **Fix** on `batch-3`:
+the specs ask only that the web app is built (`NOT_BUILT`); the browser fixture starts the browser the run asked for.
+On CI a pytest run in which nothing passed fails (`run_e2e.py`, D1452). **Tests:** `tests/test_run_e2e.py`
+("on CI a pytest run in which nothing passed fails", "on a computer a run that only skipped is not a failure").
+
+### UX-90 · Other status messages may not be announced either · P2 · size 3 · open
+**Read** (helper, UX-88): about 25 elements with `role="status"` are made with `v-if` together with their text, among
+them `AdminFonts.vue`, `AdminLogin.vue`, `OpenDialog.vue`, `PrintPreview.vue`, `RecoveryKeyDialog.vue`,
+`StylesDialog.vue`, `FontReportBanner.vue` and the redaction banner in `DocumentFrame.vue`. A live region that appears
+with its content may not be read out (BITV 4.1.3). UX-88 fixed the notice only.
+
+### PERF-13 · Calculating a chain of formulas is quadratic · P3 · size 3 · open
+**Measured** (helper, PROC-61): `Waiting.done` in `claudia_computes/calc.py` deletes from the front of a sorted list once
+per formula. Per formula a chain costs 3.4 µs at 1,000 formulas, 6.3 µs at 10,000 and 11.4 µs at 30,000; without that
+step 2.8 µs and 4.9 µs. It is 0.2 s of 0.83 s in a profile of a 30,000-formula chain. The counting guard of PROC-61
+does not see it (the deletion runs in C); the old timing guard saw it in part.
