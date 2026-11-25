@@ -200,22 +200,23 @@ class ClaudeModel:
             raise ProviderError(FailureReason.TIMED_OUT) from exc
         except OSError as exc:  # no route, refused, no DNS: whatever it is, it cannot be reached
             raise ProviderError(FailureReason.UNREACHABLE, type(exc).__name__) from exc
-        try:
-            if response.status != 200:
+        if response.status != 200:
+            try:
                 raise self._refusal(response)
+            finally:
+                response.close()
+        try:
             return self._answer(response, stop)
         except TimeoutError as exc:
             raise ProviderError(FailureReason.TIMED_OUT) from exc
         except OSError as exc:  # the connection broke in the middle
             raise ProviderError(FailureReason.UNREACHABLE, type(exc).__name__) from exc
-        finally:
-            response.close()
 
     def _answer(self, response: Response, stop: Callable[[], bool]) -> str:
         """The answer's text, read in a thread of its own while this one watches ``stop()``: once it turns true the
         question ends with what there is, at once, even if Anthropic has gone silent and the read would wait for the
-        read timeout (PROC-67). The read is cut as well (where the system can wake a waiting read, it ends now;
-        elsewhere at its timeout, in the background)."""
+        read timeout (PROC-67). The connection is given up in the background: closing it waits for the read, which
+        ends at once where the system can wake it, and elsewhere at its timeout. ``response`` is closed either way."""
         pieces: list[str] = []
         failed: list[BaseException] = []
         done = threading.Event()
@@ -231,8 +232,9 @@ class ClaudeModel:
         threading.Thread(target=read, name="claudia-claude-read", daemon=True).start()
         while not done.wait(0.05):  # the pace of the watch
             if stop():
-                response.close()
+                threading.Thread(target=response.close, name="claudia-claude-close", daemon=True).start()
                 return "".join(pieces)
+        response.close()
         if failed and not stop():
             raise failed[0]
         return "".join(pieces)
