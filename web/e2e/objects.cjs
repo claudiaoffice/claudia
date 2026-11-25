@@ -5,7 +5,8 @@
 // the document once on release (Esc drops it), the handles scale it (proportions kept where the kind has them), the turn
 // handle and Rotate by... turn it, a right press opens its own menu and no other, and the keyboard nudges, deselects and
 // deletes it. Composes also has its tables, which are in the flow and have a menu, a name tab and a drop line of their
-// own. A second person watches: what the first one does is what the second one has.
+// own. A second person watches: what the first one does is what the second one has, and what the first one has selected
+// the second sees in her colour, with her name, and cannot change (D1223).
 //
 //   server 1: uv run python -m claudia_server --no-tls --model claudia_computes.model:WorkbookModel --port 8765 --web web/.output/public --dir /tmp/o1
 //   server 2: ... --model claudia_composes:TextModel --port 8766 ...      server 3: ... --model claudia_creates:SlideModel --port 8767 ...
@@ -232,6 +233,27 @@ async function drag(page, from, to, { steps = 10, release = true } = {}) {
 const frames = (page) => page.locator('[data-handle=se]').count()
 const selectedCount = (page, app) => page.locator(`${APPS[app].objects}.selected`).count()
 const turnAngle = async (page) => Number(await page.locator('[data-handle=turn]').getAttribute('aria-valuenow'))
+
+// -- what a second window sees while ann has an object selected (D1223, D1231, PROC-29): ann's colour round it and her
+// name; its own change of the object is refused and nothing changes (`tryIt` is that change, made in ben's window); ann
+// lets go (`letGo`, in her window), and her name goes
+const ANN_MARK = '[data-testid=other-on-object][data-user=ann]'
+async function watched(where, ann, ben, { tryIt, unchanged, letGo }) {
+  await ben.waitForSelector(ANN_MARK, { timeout: 8000 })
+  const hers = await ann.$eval('ul.people li', (e) => getComputedStyle(e).backgroundColor)
+  const seen = await ben.$eval(ANN_MARK, (e) => [getComputedStyle(e).borderTopColor, e.textContent.trim()])
+  assert.deepEqual(seen, [hers, 'ann'], `${where}: ben sees ann's colour round what she selected, and her name`)
+  fs.mkdirSync(SHOTS, { recursive: true })
+  await ben.screenshot({ path: `${SHOTS}/objects-${where.replace(' ', '-')}-watched.png` })
+  const h = await entries(ann)
+  await tryIt()
+  await ben.waitForTimeout(600)
+  await unchanged()
+  assert.equal(await entries(ann), h, `${where}: what ben tried while ann has it is not in the history`)
+  await letGo()
+  await ben.waitForSelector(ANN_MARK, { state: 'detached', timeout: 8000 })
+  log(`${where}: ben sees ann's selection, cannot change it, and it goes`)
+}
 const menuLabels = (page, name = 'Object menu') =>
   page.$$eval(`[role=menu][aria-label="${name}"] > li > button > span:first-child`, (els) => els.map((e) => e.textContent.replace(/[✓▸]/g, '').trim()))
 // the right press leaves the one menu of the object, not the menu of a cell, a header or a paragraph beside it
@@ -257,6 +279,22 @@ async function battery(app, kind, ann, ben) {
   assert.equal(await a.below(ann), belowBefore, `${where}: what lies below did not take the press`)
   assert.deepEqual(await menusOpen(ann), [], `${where}: a left press opens no menu`)
   log(`${where}: press selects`)
+
+  // 1b. ben sees it, and his drag of it is refused (D1223)
+  if (ben) {
+    const was = await box(obj)
+    await watched(where, ann, ben, {
+      tryIt: async () => {
+        const at = centre(await box(ben.locator(a.objects)))
+        await drag(ben, at, { x: at.x + 80, y: at.y + 40 })
+      },
+      unchanged: async () => assert.ok(moved(was, await box(obj)) < 2, `${where}: ben's drag did not move what ann has selected`),
+      letGo: async () => {
+        await ann.keyboard.press('Escape')
+        await ann.waitForFunction(([sel]) => document.querySelectorAll(sel + '.selected').length === 0, [a.objects])
+      },
+    })
+  }
 
   // 2. a right press selects and opens the object's own menu, and only that one
   await obj.click({ button: 'right' })
@@ -478,6 +516,21 @@ async function tables(ann, ben) {
   await ann.keyboard.press('Escape')
   log(`${where}: tab selects, Options…`)
 
+  // ben sees it, and his Delete of it is refused (D1223)
+  if (ben)
+    await watched(where, ann, ben, {
+      tryIt: async () => {
+        await ben.locator('[data-testid=table-tab]').click()
+        await ben.keyboard.press('Delete')
+      },
+      unchanged: async () => assert.equal(await table.count(), 1, `${where}: ben's Delete did not take away what ann has selected`),
+      letGo: async () => {
+        await tab.click()
+        await ann.keyboard.press('Escape')
+        await ann.waitForFunction(() => document.querySelectorAll('[data-testid=table].selected').length === 0)
+      },
+    })
+
   // right press on the tab: the table's menu, and no other
   await tab.click({ button: 'right' })
   await ann.waitForSelector('[role=menu][aria-label="Table menu"]')
@@ -542,6 +595,9 @@ async function run(browser, app) {
         continue
       }
       await ann.waitForFunction(([sel]) => document.querySelectorAll(sel).length === 1, [APPS[app].objects], { timeout: 15000 })
+      // the object is drawn as soon as the server tells of it; the dialog that made it closes, and gives the focus
+      // back, once it is selected and locked as well (D1223): only then is what lies below where it stays
+      await ann.waitForFunction(() => !document.querySelector('.modal'), null, { timeout: 8000 })
       await battery(app, kind, ann, ben)
     }
     if (app === 'composes') await tables(ann, ben)
