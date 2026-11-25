@@ -13,14 +13,25 @@ Two tables, one rule:
 * A protocol method says what it reads (``reads=`` on ``MethodTable.method``, ``content`` unless stated), and a viewer
   is refused one that reads a part her role does not hold (``MethodTable.dispatch``).
 
+What one person may read beyond her role, a private chat message being for its sender and its recipient only, is
+``Reader``'s (D2008): every way out of the document that hands over chat or history to a person asks it (the chat log,
+the live push of a message, the export with history, the history an office export is dated from).
+
 The apps and the kernel know nothing of this; they raise their events and register their methods as before.
 """
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
+from claudia_core.log import CommandLog
 from claudia_document_file import ROLE_PARTS, Part, Role
+
+if TYPE_CHECKING:
+    from claudia_core import Document
+    from claudia_core.messages import ChatRecord
 
 CONTENT, HISTORY, CHAT = Part.CONTENT, Part.HISTORY, Part.CHAT
 
@@ -144,3 +155,31 @@ def shape_for(role: str, event: str, data: dict) -> dict | None:
     if rule.viewer_keeps is None:
         return None
     return {key: data[key] for key in rule.viewer_keeps if key in data}
+
+
+@dataclass(frozen=True)
+class Reader:
+    """One person as what she may read of a document (D2008): the parts her role holds the keys of, and of the chat the
+    messages for everybody and the private ones she sent or received. Every way out of the document that hands a person
+    chat or history takes it from here, so a new one cannot forget a rule (SEC-24: the export with history did)."""
+
+    user: str
+    role: str
+
+    def holds(self, part: Part) -> bool:
+        """Does her role hold the key of ``part``?"""
+        return may_read(self.role, part)
+
+    def reads(self, message: ChatRecord) -> bool:
+        """May she read ``message``: one for everybody, or a private one she sent or received?"""
+        me = self.user.casefold()
+        return not message.to or me in (message.author.casefold(), message.to.casefold())
+
+    def chat(self, messages: Iterable[ChatRecord]) -> list[ChatRecord]:
+        """The messages of ``messages`` she may read, in their order; none for a role without the chat key."""
+        return [message for message in messages if self.reads(message)] if self.holds(CHAT) else []
+
+    def log(self, document: Document) -> CommandLog:
+        """The history of ``document`` as she may know it: all of it, or an empty one for a role without the history
+        key (SEC-26: an office export dated from it would say who made and changed the document, and when)."""
+        return document.log if self.holds(HISTORY) else CommandLog()

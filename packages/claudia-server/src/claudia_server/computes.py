@@ -282,7 +282,7 @@ def _export_office(ctx, *, format):
     if format not in ("xlsx", "ods"):
         raise RequestError("bad_request", msg('export_office: format must be "xlsx" or "ods"'))
     book = _workbook(ctx)
-    info = document_info(ctx.document.log, ctx.document.branch)
+    info = document_info(ctx.reader.log(ctx.document), ctx.document.branch)  # none from a history she cannot read
     draw = None if ctx.renderings is None else ctx.renderings.rasteriser  # draws an SVG picture as a PNG (D464)
     if format == "xlsx":
         return export_with_original(

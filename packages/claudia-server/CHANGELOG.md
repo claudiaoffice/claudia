@@ -6,6 +6,10 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 ## [Unreleased]
 
 ### Security
+- What a person may read of the chat and the history is decided in one place, `audience.Reader` (D2008), which every
+  way out asks. An owner's export with history no longer carries the private messages between other people (SEC-24).
+  An office export (odt, docx, xlsx, ods, pptx, odp) made by somebody whose role does not hold the history says
+  neither who made or changed the document nor when; her open suggestions are dated with the export (SEC-26).
 - `apply` refuses with `forbidden` a change only the server makes (SEC-25, D2007), also inside a batch: an editor could
   replace the document with a raw `core.Import` and write checkpoint, redaction and restore records that skip their
   methods' checks. `tests/command_senders.json` lists who may send each kind of change, so a new kind is reviewed.

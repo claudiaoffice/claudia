@@ -280,6 +280,21 @@ def test_export_office_returns_an_ods_that_round_trips_with_its_values_and_says_
     assert answer["losses"] == []
 
 
+def test_a_viewers_xlsx_and_ods_say_nothing_the_history_holds(book):
+    """SEC-26 (D2008): a viewer cannot read the history, so her export says neither who made or changed the workbook
+    nor when."""
+    from claudia_odf_io import read_info
+    from claudia_opc_io import read_parts
+
+    call(book, "add_sheet", {"name": "Costs"})
+    typed(book, "s1", [(0, 0, "2")])
+    xlsx = read_parts(base64.b64decode(call(book, "export_office", {"format": "xlsx"}, VERA)["data"]))
+    assert b">ann<" not in xlsx["docProps/core.xml"] and b"<dcterms:created" not in xlsx["docProps/core.xml"]
+    ods = read_parts(base64.b64decode(call(book, "export_office", {"format": "ods"}, VERA)["data"]))
+    info = read_info(ods["meta.xml"])
+    assert (info.creator, info.created, info.modifier, info.modified) == (None, None, None, None)
+
+
 def test_export_office_to_xlsx_lists_what_excel_cannot_hold(book):
     call(book, "add_sheet", {"name": "Costs"})
     assert call(book, "export_office", {"format": "xlsx"})["losses"] == []

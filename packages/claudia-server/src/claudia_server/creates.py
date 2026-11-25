@@ -222,7 +222,7 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
             raise RequestError("bad_request", msg('export_office: format must be "pptx" or "odp"'))
         deck = _deck(ctx)
         draw = None if ctx.renderings is None else ctx.renderings.rasteriser
-        info = document_info(ctx.document.log, ctx.document.branch)
+        info = document_info(ctx.reader.log(ctx.document), ctx.document.branch)  # none from a history she cannot read
         if format == "pptx":
             return export_with_original(
                 ctx,

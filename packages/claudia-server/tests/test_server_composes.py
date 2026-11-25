@@ -628,6 +628,33 @@ def test_a_docx_says_when_it_was_made_and_last_changed_and_by_whom_and_not_what_
     assert "python-docx" not in core and "2013" not in core
 
 
+def test_a_viewer_receives_who_wrote_which_words_as_part_of_the_content(paper):
+    """SEC-22, decided (D1261, note of 2026-11-25): who wrote which stretch is content, as on paper where a viewer sees
+    the handwriting, so a viewer receives the runs; this guards the decision, it is not a leak."""
+    type_(paper, "Hello there")
+    paragraph = call(paper, "paragraphs", {}, VERA)["paragraphs"][0]
+    assert {run[1] for run in paragraph["runs"]} == {ANN.user}  # [length, author, …]
+
+
+def test_a_viewers_odt_and_docx_say_nothing_the_history_holds(dated_paper):
+    """SEC-26 (D2008): a viewer cannot read the history, so her export says neither who made or changed the text nor
+    when; her open suggestions keep who made them (who wrote what is content, SEC-22) but are dated with the export."""
+    from lxml import etree
+
+    from claudia_odf_io import NS, read_info
+
+    odt = base64.b64decode(call(dated_paper, "export_office", {"format": "odt", "tracked_changes": True}, VERA)["data"])
+    info = read_info(read_parts(odt)["meta.xml"])
+    assert (info.creator, info.created, info.modifier, info.modified) == (None, None, None, None)
+    content = etree.fromstring(read_parts(odt)["content.xml"])
+    dates = {d.text for d in content.iterfind(".//office:change-info/dc:date", NS)}
+    assert len(dates) == 1 and not dates & {"2026-01-02T03:04:05Z", "2026-03-04T05:06:07Z", "2026-11-11T17:13:05Z"}
+    assert {a.text for a in content.iterfind(".//office:change-info/dc:creator", NS)} == {AI.user}
+    core = read_parts(base64.b64decode(call(dated_paper, "export_office", {"format": "docx"}, VERA)["data"]))
+    core = core["docProps/core.xml"].decode()
+    assert ANN.user not in core and "2026-01-02" not in core and "2026-11-11" not in core
+
+
 def test_tracked_changes_in_an_odt_leave_no_suggestion_loss(dated_paper):
     losses = call(dated_paper, "export_office", {"format": "odt", "tracked_changes": True})["losses"]
     assert not [loss for loss in losses if loss["kind"] == "suggestion"]

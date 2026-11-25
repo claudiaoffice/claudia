@@ -582,6 +582,20 @@ def test_export_office_returns_an_odp_that_round_trips_and_says_who_made_it_when
     assert {"kind": "authorship", "detail": "", "count": 1} in answer["losses"]
 
 
+def test_a_viewers_pptx_and_odp_say_nothing_the_history_holds(deck):
+    """SEC-26 (D2008): a viewer cannot read the history, so her export says neither who made or changed the deck nor
+    when."""
+    from claudia_odf_io import read_info
+    from claudia_opc_io import read_parts
+
+    add_text(deck, text="Hello there")
+    pptx = read_parts(base64.b64decode(call(deck, "export_office", {"format": "pptx"}, VERA)["data"]))
+    assert b">ann<" not in pptx["docProps/core.xml"] and b"<dcterms:created" not in pptx["docProps/core.xml"]
+    odp = read_parts(base64.b64decode(call(deck, "export_office", {"format": "odp"}, VERA)["data"]))
+    info = read_info(odp["meta.xml"])
+    assert (info.creator, info.created, info.modifier, info.modified) == (None, None, None, None)
+
+
 def test_export_office_to_pptx_says_what_it_could_not_keep(deck):
     add_text(deck, text="Hello there")
     # who typed which words is not something a pptx keeps either

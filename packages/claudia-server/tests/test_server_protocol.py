@@ -4,6 +4,7 @@ Ported from the demo's protocol tests and rewritten for the kernel: one generic 
 edits carry the revision they were made against, and the errors of the kernel have their own codes.
 """
 
+import base64
 import json
 from pathlib import Path
 
@@ -15,6 +16,7 @@ from claudia_core import Document, MemoryStore, Revision
 from claudia_core.commands import Batch, Checkpoint, Import, Redacted, Redaction, Restore, Setup, Switch, encode
 from claudia_core.testing import Insert, Interval, Remove
 from claudia_creates import SlideModel
+from claudia_document_file import read_export
 from claudia_server.auth import Account
 from claudia_server.composes import composes_methods
 from claudia_server.computes import computes_methods
@@ -371,6 +373,24 @@ def test_a_lock_is_taken_held_and_released(doc, ann, ben):
 
 
 # --------------------------------------------------------------------------------------------- chat
+def test_an_owners_export_holds_the_chat_she_may_read_and_no_other_private_message(doc, ann):
+    """SEC-24 (D2008): an export with history holds the messages for everybody and the private ones its exporter sent
+    or received, not the private messages between other people, which she cannot read in the document either."""
+    people = ("ann", "ben", "cleo")
+    ben, cleo = Account("ben", "editor"), Account("cleo", "editor")
+    call(doc, ann, "chat", {"text": "for everybody"}, users=people)
+    call(doc, ann, "chat", {"text": "@ben from ann"}, users=people)
+    call(doc, ben, "chat", {"text": "@ann from ben"}, users=people)
+    call(doc, ben, "chat", {"text": "@cleo between ben and cleo"}, users=people)
+    call(doc, cleo, "chat", {"text": "@ben between cleo and ben"}, users=people)
+    data = base64.b64decode(call(doc, ann, "export_claudia", {"include_history": True})["data"])
+    exported = [
+        json.loads(line)["d"]["text"] for line in read_export(data).chat or [] if json.loads(line)["t"] == "chat"
+    ]
+    assert exported == ["for everybody", "from ann", "from ben"]
+    assert [m["text"] for m in call(doc, ann, "chat_log")] == exported  # what she reads in the document
+
+
 def test_chat_is_posted_with_the_connected_users_for_addressing(doc, ann):
     result = call(doc, ann, "chat", {"text": "@ben please check 3"}, users=("ann", "ben"))
     assert result["to"] == "ben" and result["text"] == "please check 3" and doc.chat[0].author == "ann"

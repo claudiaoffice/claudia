@@ -48,7 +48,7 @@ from claudia_document_file import Part
 from claudia_render import RenderFailed, ToolUnavailable
 
 from .ai_consent import ConsentBook
-from .audience import may_read, shape_for
+from .audience import Reader, may_read, shape_for
 from .auth import AI_COLOR, ROLES, Account, UserDirectory
 from .heavy_dispatch import HeavyDispatcher
 from .i18n import localized, message_of, msg
@@ -528,9 +528,8 @@ class HostedDocument:
         everyone = list(self.connections)
         if isinstance(event, HistoryChanged):  # your undo state is yours
             return [c for c in everyone if c.account.user == event.author]
-        if isinstance(event, ChatPosted) and event.record.to:  # a private message: sender and recipient
-            names = {event.record.author.casefold(), event.record.to.casefold()}
-            return [c for c in everyone if c.account.user.casefold() in names]
+        if isinstance(event, ChatPosted):  # a private message: its sender and its recipient (D2008)
+            return [c for c in everyone if Reader(c.account.user, c.account.role).reads(event.record)]
         if isinstance(event, EphemeralPublished):  # presence is not echoed to the one who sent it
             return [c for c in everyone if c.account.user != event.message.sender]
         return everyone
