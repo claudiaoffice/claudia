@@ -35,7 +35,7 @@ The index is the status of record; a section below keeps the status of the round
 re-checked. **Opened** and **Fixed** are filled from 2026-11-20 on: for older items only where the status already gave
 the date.
 
-### Open (73)
+### Open (74)
 
 By priority (P1, P2, P3, then items that wait for a decision without one), then by ID.
 
@@ -56,6 +56,7 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | UX-85 | P2 | UX / composes | Name & describe… on a table does not keep its description: the server refuses it with a developer sentence, in English only | **new, open**; fix on `batch-3` (proposed) | 2026-11-25 |  |
 | UX-88 | P2 | UX / a11y | A notice (toast) is a `role=status` element made together with its text, which screen readers may not announce (BITV 4.1.3) | **new, open**; fix on `batch-3` (proposed) | 2026-11-25 |  |
 | UX-90 | P2 | UX / a11y | About 25 other `role="status"` elements appear with their text already in them (`v-if`), so screen readers may not announce them (BITV 4.1.3), as the notice did (UX-88) | **new, open** (read) | 2026-11-25 |  |
+| UX-91 | P2 | UX / composes / Firefox | In Firefox the down arrow from the paragraph above a new table does not put the caret in its first box (Chromium does) | **new, open** (measured on CI) | 2026-11-25 |  |
 | CODE-25 | P2 | Code / Export | A renamed object loses its name in pptx and odp without the export saying so (D450) | **new, open** |  |  |
 | CODE-31 | P2 | Code / i18n | The history speaks English to everybody: command labels and summaries are not translated | **new, open** |  |  |
 | CODE-45 | P2 | Code / Import | pptx placeholders (titles, body text) are not imported at all | **new, open** |  |  |
@@ -3155,3 +3156,12 @@ does not see it (the deletion runs in C); the old timing guard saw it in part. *
 batch 2 was merged): a formula done stays in its column's list until half of the list is done (`Waiting.done`). The
 chain now measures 7x to 12x here, 15x before. **Tests:** `test_letting_formulas_go_one_by_one_in_order_is_linear`
 (73x before the fix; timed, since the work is in C) and `test_the_formulas_still_waiting_are_found_after_others_were_let_go`.
+
+### UX-91 · In Firefox the down arrow does not go into a new table · P2 · size 2 · open
+**Measured** by the first Firefox job that ran (CI on `batch-3`, twice): `test_objects_in_composes.py::
+test_i_can_work_in_a_new_kind_straight_away[table]` fails at "Ctrl+Home, End, ↓": no box has the caret
+("expected 'r1/c1', the page shows None"); 44 other scenarios pass in Firefox. Read, not run (Firefox cannot be
+installed in this workspace, and CI's screenshots cannot be downloaded from it): the editor decides that the caret is on
+the last line of the paragraph from the rectangle of the collapsed selection (`onEdgeLine` in `TextEditor.vue`), which
+Firefox reports differently at the end of a line. A first guess (the table not there yet when it was inserted) was
+tried on CI and was wrong.
