@@ -12,8 +12,8 @@ While the major version is 0, a minor version may break the API; every break is 
   composes answers them itself.
 
 ### Changed
-- **Breaking** — `DocumentModel.setup_commands(language, *, translate)` (UX-87): `translate` says a word of the
-  interface in the maker's language, so that what a new document starts with can be named in it. The packages carry
+- `DocumentModel.setup_commands(language, *, translate=None)` (UX-87): `translate` says a word of the
+  interface in the maker's language (English without it), so that what a new document starts with can be named in it. The packages carry
   no catalog; the server passes its own in.
 - **Breaking** — the chart names of E1.18 (D1476): the object kind `diagram` is `chart`, `DiagramDefinition` is
   `ChartDefinition`, the asset kind `DIAGRAM` is `CHART` (stored under `charts`, event `chart`), `ObjectModel.diagrams`

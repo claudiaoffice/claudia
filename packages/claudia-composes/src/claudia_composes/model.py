@@ -495,7 +495,9 @@ class TextModel(DocumentModel, ObjectModel[ParagraphAnchor]):
         return cls()
 
     @classmethod
-    def setup_commands(cls, language: str | None, *, translate: Callable[[str], str]) -> tuple[Command, ...]:
+    def setup_commands(
+        cls, language: str | None, *, translate: Callable[[str], str] | None = None
+    ) -> tuple[Command, ...]:
         """A new text starts in the language of its maker's interface (D915), set by the server when it creates
         the document rather than by her client as her own first step (UX-33)."""
         return () if language is None else (SetLanguage(language),)

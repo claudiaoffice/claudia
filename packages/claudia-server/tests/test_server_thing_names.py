@@ -438,7 +438,9 @@ def test_a_picture_needs_words_or_the_tick(deck):
 
 def test_a_table_is_named_and_described_and_one_undo_takes_both_back(text):
     """UX-85: a table is an object that is read, not looked at: it has words for a screen reader and no tick."""
-    table = on_text(text, "add_table", {"paragraph": "b2", "offset": 0, "cells": [["Crop", "Kilos"], ["Beans", "4"]]})["object"]
+    table = on_text(text, "add_table", {"paragraph": "b2", "offset": 0, "cells": [["Crop", "Kilos"], ["Beans", "4"]]})[
+        "object"
+    ]
     answer = on_text(text, "name_and_describe", {"id": table, "name": "Harvest", "description": "Kilos per crop"})
     assert answer["description"] == "Kilos per crop"
     assert text.model.thing_description(table) == "Kilos per crop" and name_of(text, table) == "Harvest"

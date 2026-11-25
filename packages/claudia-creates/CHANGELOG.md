@@ -6,7 +6,7 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 ## [Unreleased]
 
 ### Changed
-- **Breaking** — `SlideModel.setup_commands(language, *, translate)` takes the core's new `translate` (UX-87); a
+- `SlideModel.setup_commands(language, *, translate=None)` takes the core's new `translate` (UX-87); a
   new presentation needs no word of it.
 - The typing of an object's words (`insert_text`, `remove_text`, `text_regions`, `text_moved`) is the core's
   `ObjectModel`'s now (CODE-83); `SlideModel` answers the same.

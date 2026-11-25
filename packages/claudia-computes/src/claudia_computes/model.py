@@ -512,13 +512,17 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor | SlideAnchor]):
         return cls()
 
     @classmethod
-    def setup_commands(cls, language: str | None, *, translate: Callable[[str], str]) -> tuple[Command, ...]:
+    def setup_commands(
+        cls, language: str | None, *, translate: Callable[[str], str] | None = None
+    ) -> tuple[Command, ...]:
         """A new workbook starts with its first sheet, ``s1``, called "Sheet1" in its maker's language ("Blatt1",
         UX-87), written as the web names the next one (UX-33: before, the client added it as the person's own first
         step, which her first Ctrl+Z took away again)."""
         from .commands import AddSheet
 
-        return (AddSheet(SheetId("s1"), f"{translate(SHEET)}1"),)
+        # the word and its number, as the web client offers the next free one (`freeSheetName`, "Blatt2")
+        word = translate(SHEET) if translate else SHEET
+        return (AddSheet(SheetId("s1"), f"{word}1"),)
 
     def requirements(self) -> Requirements:
         """The fonts the styles ask for by name are what this document needs from the server (E1.9, D1306)."""
