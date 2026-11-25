@@ -3008,6 +3008,9 @@ UX-09, UX-27, UX-07, WEB-02, UX-54, UX-59.
 
 ## Found in batch 2 of the bug eater (2026-11-25; branch `batch-2`)
 
+The object lock was called UX-81 in chat (2026-11-25). `win-installer-fix` reached `main` the same day with UX-81 to UX-83,
+CODE-93 to CODE-95, PROC-57 and PROC-58, so this batch's items were renumbered before anything was pushed.
+
 ### UX-84 · An object selected in computes or composes was neither locked nor shown to colleagues · P2 · size 2 · fix on `batch-2`
 **Read** while writing PROC-29: D1223 says selecting an object holds it in all three apps, and others see the holder's
 coloured outline and name tag. Only creates (and a slide in computes) did. A sheet's selected object was local to the
