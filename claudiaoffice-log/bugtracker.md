@@ -73,7 +73,7 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | PERF-06 | P3 | Performance | Threshold packing blocks the event loop (rewriting the whole zip is accepted up to ~50 MB, D1269) | verified open; narrowed 2026-11-22: the rewrite itself is accepted (D1269) |  |  |
 | PERF-07 | P3 | Performance | Structure edits recalculate the whole workbook (~12 s at 100k formulas) | verified open |  |  |
 | PERF-08 | P3 | Performance | The first chart downloads all of Plotly (4.6 MB) for a bar chart | **new, open** |  |  |
-| PERF-13 | P3 | Performance / computes | Calculating a chain of formulas is quadratic: `Waiting.done` deletes from the front of a sorted list once per formula | **new, open** (measured) | 2026-11-25 |  |
+| PERF-13 | P3 | Performance / computes | Calculating a chain of formulas is quadratic: `Waiting.done` deletes from the front of a sorted list once per formula | **new, open**; fix on `batch-3` (proposed) | 2026-11-25 |  |
 | UX-08 | P3 | UX | Open and Create sit side by side; a typo cannot be told from a wrong password | open |  |  |
 | UX-23 | P3 | UX | Panel layout and undo placement differ between the three apps | partly fixed 2026-11-12 (the suggestion list is gone from above the tabs) |  |  |
 | UX-34 | P3 | UX / AI | In computes and creates the AI refuses every change by default (suggest is the default, proposals do not exist) | deferred (owner, 2026-11-13: the AI is not fully built yet) |  |  |
@@ -3147,8 +3147,11 @@ them `AdminFonts.vue`, `AdminLogin.vue`, `OpenDialog.vue`, `PrintPreview.vue`, `
 `StylesDialog.vue`, `FontReportBanner.vue` and the redaction banner in `DocumentFrame.vue`. A live region that appears
 with its content may not be read out (BITV 4.1.3). UX-88 fixed the notice only.
 
-### PERF-13 · Calculating a chain of formulas is quadratic · P3 · size 3 · open
+### PERF-13 · Calculating a chain of formulas is quadratic · P3 · size 3 · fix on `batch-3`
 **Measured** (helper, PROC-61): `Waiting.done` in `claudia_computes/calc.py` deletes from the front of a sorted list once
 per formula. Per formula a chain costs 3.4 µs at 1,000 formulas, 6.3 µs at 10,000 and 11.4 µs at 30,000; without that
 step 2.8 µs and 4.9 µs. It is 0.2 s of 0.83 s in a profile of a 30,000-formula chain. The counting guard of PROC-61
-does not see it (the deletion runs in C); the old timing guard saw it in part.
+does not see it (the deletion runs in C); the old timing guard saw it in part. **Fix** on `batch-3` (it made `main`'s CI red: 44x and 45x, after
+batch 2 was merged): a formula done stays in its column's list until half of the list is done (`Waiting.done`). The
+chain now measures 7x to 12x here, 15x before. **Tests:** `test_letting_formulas_go_one_by_one_in_order_is_linear`
+(73x before the fix; timed, since the work is in C) and `test_the_formulas_still_waiting_are_found_after_others_were_let_go`.

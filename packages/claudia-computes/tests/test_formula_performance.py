@@ -121,33 +121,11 @@ def test_calculating_a_long_chain_is_linear():
     assert growth < CHAIN_BOUND, f"a chain 10x as long took {growth:.1f}x the work to calculate (linear is about 10)"
 
 
-def quadratic_precedents(self, key):
-    """A stand-in for ``Round._precedents`` that looks at every waiting formula to find the ones this one names."""
-    named = set(self.calc.formulas[key].cells)
-    return [other for other in self.waiting.keys if other in named]
-
-
-def test_the_chain_guard_catches_a_calculation_that_is_quadratic_in_the_chain(monkeypatch):
-    monkeypatch.setattr(Round, "_precedents", quadratic_precedents)
-    assert chain_growth(200, 2_000) >= CHAIN_BOUND
-
-
-def test_the_chain_guard_does_not_read_the_clock(monkeypatch):
-    """PROC-61: on CI's runner a chain 10x as long took 44x as long, twice, and the rerun passed; here it takes 14x
-    to 16x. A stopwatch measures the machine as well as the calculation. Counted work is the same on every machine."""
-
-    def stopwatch():
-        raise AssertionError("the guard read the clock")
-
-    monkeypatch.setattr(time, "perf_counter", stopwatch)
-    assert chain_growth(100, 1_000) < CHAIN_BOUND
-
-
 def test_letting_formulas_go_one_by_one_in_order_is_linear():
     """PERF-13: a chain is calculated from its top, and each formula done was deleted from the front of its column's
-    sorted list, which shifts all the rest: quadratic, in C. On CI's runner a chain 10x as long took 44x as long.
-    Measured with a clock, on lists long enough that a shift per formula costs far more than the bound lets through
-    (about 100x against 10x)."""
+    sorted list, which shifts all the rest: quadratic, in C, where counting does not see it. On CI's runner a chain 10x
+    as long took 44x as long (PROC-61). Measured with a clock, on lists long enough that a shift per formula costs far
+    more than the bound lets through (about 100x against 10x)."""
 
     def let_go(n):
         keys = [(S1, row, 1) for row in range(n)]
@@ -173,6 +151,28 @@ def test_the_formulas_still_waiting_are_found_after_others_were_let_go():
         waiting.done((S1, row, 1))
     assert waiting.inside((S1, 0, 0, 9, 2)) == [(S1, row, 2) for row in range(10)]
     assert waiting.keys == {(S1, row, 2) for row in range(10)}
+
+
+def quadratic_precedents(self, key):
+    """A stand-in for ``Round._precedents`` that looks at every waiting formula to find the ones this one names."""
+    named = set(self.calc.formulas[key].cells)
+    return [other for other in self.waiting.keys if other in named]
+
+
+def test_the_chain_guard_catches_a_calculation_that_is_quadratic_in_the_chain(monkeypatch):
+    monkeypatch.setattr(Round, "_precedents", quadratic_precedents)
+    assert chain_growth(200, 2_000) >= CHAIN_BOUND
+
+
+def test_the_chain_guard_does_not_read_the_clock(monkeypatch):
+    """PROC-61: on CI's runner a chain 10x as long took 44x as long, twice, and the rerun passed; here it takes 14x
+    to 16x. A stopwatch measures the machine as well as the calculation. Counted work is the same on every machine."""
+
+    def stopwatch():
+        raise AssertionError("the guard read the clock")
+
+    monkeypatch.setattr(time, "perf_counter", stopwatch)
+    assert chain_growth(100, 1_000) < CHAIN_BOUND
 
 
 def test_opening_from_a_snapshot_is_linear_in_the_formulas():
