@@ -250,7 +250,7 @@ def _name_and_describe(
     drawn = _is_drawn(model, id)
     if decorative and not drawn:
         raise RequestError("command_error", msg("only something that is drawn can be marked as decoration"))
-    if drawn:
+    if id in model.objects:  # a table too: it is read, not looked at, so it has words but never the tick (UX-85)
         body = model.get_object(id).body
         words = picture_words(description, bool(decorative)) if body.kind == "image" else description
         if decorative:

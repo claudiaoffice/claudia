@@ -436,6 +436,20 @@ def test_a_picture_needs_words_or_the_tick(deck):
         call(deck, "name_and_describe", {"id": picture, "name": "Logo", "description": "", "decorative": False})
 
 
+def test_a_table_is_named_and_described_and_one_undo_takes_both_back(text):
+    """UX-85: a table is an object that is read, not looked at: it has words for a screen reader and no tick."""
+    table = on_text(text, "add_table", {"paragraph": "b2", "offset": 0, "cells": [["Crop", "Kilos"], ["Beans", "4"]]})["object"]
+    answer = on_text(text, "name_and_describe", {"id": table, "name": "Harvest", "description": "Kilos per crop"})
+    assert answer["description"] == "Kilos per crop"
+    assert text.model.thing_description(table) == "Kilos per crop" and name_of(text, table) == "Harvest"
+    details = on_text(text, "thing_details", {"id": table})
+    assert (details["description"], details["drawn"], details["decorative"]) == ("Kilos per crop", False, False)
+    text.undo("ann")
+    assert text.model.thing_description(table) == "" and name_of(text, table) != "Harvest"
+    with pytest.raises(RequestError, match="decorat"):
+        on_text(text, "name_and_describe", {"id": table, "name": "Harvest", "description": "", "decorative": True})
+
+
 def test_the_tick_is_refused_for_something_that_is_not_drawn(text):
     with pytest.raises(RequestError, match="decorat"):
         on_text(text, "name_and_describe", {"id": "b2", "name": "Fox", "description": "", "decorative": True})

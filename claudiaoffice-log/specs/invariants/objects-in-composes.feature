@@ -138,7 +138,7 @@ Feature: Every object in a composes text behaves like an object
 
   # ---------------------------------------------------------------- names and description
 
-  @extended @pending:UX-85
+  @extended
   Scenario Outline: A <kind> has a name nobody else has, and a description for people who cannot see it
     When I insert a <kind>
     Then the <kind> has a name
