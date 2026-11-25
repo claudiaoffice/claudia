@@ -51,6 +51,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import os
+import re
 import shutil
 import socket
 import subprocess
@@ -415,7 +416,7 @@ class Runner:
             lines = [line for line in log.read_text(errors="replace").splitlines() if line.strip()]
             summary = lines[-1].strip(" =") if lines and "pytest" in command[-3:] + command[:3] else ""
             note = f": {summary}" if summary else ""
-            if os.environ.get("CI") and "skipped" in summary and "passed" not in summary:
+            if os.environ.get("CI") and "skipped" in summary and not re.search(r"\b\d+ passed\b", summary):
                 # a run that ran nothing is a broken setup on CI, not a green job (D1452, PROC-59)
                 self.results[-1].ok = False
                 self.say(f"   FAILED ({seconds:.0f} s): nothing passed{note}")
