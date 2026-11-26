@@ -71,9 +71,14 @@ Feature: claudia installed on a Mac from one package
     Then ~/Library/Logs/Claudia/composes.log holds what its start printed
 
   @extended
-  Scenario: The installer says which version it installs
-    When I open the claudia package of version 0.5.0
-    Then the installer's title is "claudia 0.5.0"
+  Scenario Outline: The installer says which version it installs
+    When I open the claudia package of version <version>
+    Then the installer's title is "claudia <version>"
+
+    Examples:
+      | version |
+      | 0.5.0   |
+      | 1.12.3  |
 
   @extended
   Scenario: The installer speaks my language
@@ -89,7 +94,13 @@ Feature: claudia installed on a Mac from one package
     And nothing is installed
 
   @core
-  Scenario: Every release offers the package to download
-    When the version 0.5.0 is tagged
-    Then its GitHub release offers "claudia-office-0.5.0-macos-arm64.pkg" for download, next to the Windows installer and the Debian package
+  Scenario Outline: Every release offers the package to download
+    When the version <version> is tagged as "v<version>"
+    Then its GitHub release offers "claudia-office-<version>-macos-arm64.pkg" for download, next to the Windows installer and the Debian package
     And the package was built and checked by CI, without a Mac
+
+    Examples:
+      | version |
+      | 0.5.0   |
+      | 1.12.3  |
+      | 2.0.0   |
