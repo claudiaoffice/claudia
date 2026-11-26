@@ -274,8 +274,8 @@ def test_a_submenu_renders_as_a_nested_gmenu_submenu_with_its_own_section(comput
 def test_a_menu_with_nothing_left_holds_the_greyed_line_that_says_why(composes: manifest.Manifest) -> None:
     """D1603, slice 6 (D1645): the title stays, and the one item is the page's sentence, on an action that is never
     enabled (``win.menu-why``), so that GTK draws it greyed."""
-    insert = {a.id for a in composes.menu("Insert").all_actions()}
-    shown = manifest.visible_only(composes, lambda action_id: action_id not in insert)
+    left_out = {a.id for a in composes.menu("Insert").all_actions()}
+    shown = manifest.visible_only(composes, lambda action_id: action_id not in left_out)
     why = "Nothing to insert: you can only look at this document."
     root = ET.fromstring(menu_xml(shown, empty={"insert": why}))
     insert = root.find("menu[@id='menu-insert']")
@@ -284,7 +284,9 @@ def test_a_menu_with_nothing_left_holds_the_greyed_line_that_says_why(composes: 
     assert [(i.findtext("attribute[@name='label']"), i.findtext("attribute[@name='action']")) for i in items] == [
         (why, "win.menu-why")
     ]
-    assert items[0].find("attribute[@name='label']").get("translatable") is None  # the page's words, translated
+    label = items[0].find("attribute[@name='label']")
+    assert label is not None
+    assert label.get("translatable") is None  # the page's words, already translated
 
 
 def test_sections_become_gmenu_sections_so_that_separators_are_drawn(app: manifest.Manifest) -> None:

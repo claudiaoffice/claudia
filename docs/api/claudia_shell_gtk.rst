@@ -13,10 +13,16 @@ Shell contract
 .. automodule:: claudia_shell_gtk.contract
    :members:
 
-Manifest
---------
+Menus
+-----
 
-.. automodule:: claudia_shell_gtk.manifest
+The menu definition is shared by all clients and lives in ``clients/contract`` (D1643); the Linux client turns it into
+GTK menus.
+
+.. automodule:: claudia_menus.manifest
+   :members:
+
+.. automodule:: claudia_shell_gtk.menu_xml
    :members:
 
 Bridge

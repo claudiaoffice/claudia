@@ -11,6 +11,7 @@ ROOT = Path(__file__).resolve().parent.parent
 for src in sorted(ROOT.glob("packages/*/src")):
     sys.path.insert(0, str(src))
 sys.path.insert(0, str(ROOT / "clients" / "linux" / "src"))  # the GTK-free modules of the Linux client
+sys.path.insert(0, str(ROOT / "clients" / "contract" / "src"))  # the menu definition all clients share (D1643)
 
 from claudia_core import __version__  # noqa: E402
 

@@ -42,7 +42,7 @@ def _submenu_element(parent: ET.Element, submenu: Submenu, translate: Translate)
         _item_element(section, action, translate)
 
 
-#: The window action of the line that says why a menu has nothing left (D1603): never enabled, so GTK greys the line.
+#: The window's action for the line that says why a menu has nothing left, never enabled, so GTK greys the line (D1603).
 WHY_ACTION = "menu-why"
 
 
