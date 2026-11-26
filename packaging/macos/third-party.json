@@ -1,0 +1,21 @@
+{
+  "_comment": "What the macOS package's build downloads, pinned (D742): the file is refused if its SHA-256 differs, and the refusal prints the SHA-256 it found. To update: change the version and url, let CI download it once, compare the SHA-256 it prints with the publisher's own list (python-build-standalone's SHA256SUMS, Node's SHASUMS256.txt), and put it here.",
+  "python": {
+    "version": "3.14.6+20260718",
+    "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20260718/cpython-3.14.6%2B20260718-aarch64-apple-darwin-install_only_stripped.tar.gz",
+    "sha256": "",
+    "license": "PSF-2.0 (CPython), MPL-2.0 (python-build-standalone), https://github.com/astral-sh/python-build-standalone"
+  },
+  "node": {
+    "version": "22.22.0",
+    "url": "https://nodejs.org/dist/v22.22.0/node-v22.22.0-darwin-arm64.tar.gz",
+    "sha256": "",
+    "license": "MIT, https://github.com/nodejs/node/blob/main/LICENSE"
+  },
+  "bomutils": {
+    "version": "0.2",
+    "url": "https://github.com/hogliux/bomutils/archive/refs/tags/0.2.tar.gz",
+    "sha256": "",
+    "license": "GPL-2.0, https://github.com/hogliux/bomutils; only run while building, not put into the package"
+  }
+}
