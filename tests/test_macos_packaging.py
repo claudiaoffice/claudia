@@ -372,15 +372,35 @@ def test_every_release_has_a_package_named_after_its_version(tag, name):
 
 
 def test_the_server_is_installed_for_macos_on_apple_silicon_from_the_lock_file(tmp_path):
-    commands = build.server_install_commands(tmp_path / "python", tmp_path / "requirements.txt")
-    export, install = commands
-    assert export[:2] == ["uv", "export"] and "--package" in export and "claudia-server" in export
-    assert "--no-dev" in export and "--frozen" in export
+    export = build.export_command(tmp_path / "requirements.txt")
+    assert export[:2] == ["uv", "export"] and export[export.index("--package") + 1] == "claudia-server"
+    assert "--no-dev" in export and "--frozen" in export and "--no-editable" in export
+
+
+def test_the_suites_own_packages_are_built_as_wheels_and_everything_is_installed_from_wheels(tmp_path):
+    """Wheels only, so nothing is compiled for Linux and put into a Mac's package; the suite's own packages are pure
+    Python and built into wheels first (a source folder is refused by --only-binary)."""
+    exported = (
+        "# a comment\n./packages/claudia-core\nanyio==4.16.0\n    # via fastapi\n"
+        "./packages/claudia-server\nfastapi==0.162.0\n"
+    )
+    local, others = build.split_requirements(exported)
+    assert local == ["./packages/claudia-core", "./packages/claudia-server"]
+    assert others.splitlines() == ["anyio==4.16.0", "fastapi==0.162.0"]
+    wheels = tmp_path / "wheels"
+    assert build.wheel_commands(local, wheels) == [
+        ["uv", "build", "--wheel", "--out-dir", str(wheels), "./packages/claudia-core"],
+        ["uv", "build", "--wheel", "--out-dir", str(wheels), "./packages/claudia-server"],
+    ]
+    wheel = wheels / "claudia_core-1-py3-none-any.whl"
+    install = build.install_command(tmp_path / "python", tmp_path / "rest.txt", [wheel])
     assert install[:3] == ["uv", "pip", "install"]
     assert install[install.index("--python-platform") + 1] == "aarch64-apple-darwin"
     assert install[install.index("--python-version") + 1] == "3.14"
+    assert install[install.index("--only-binary") + 1] == ":all:"
     assert install[install.index("--target") + 1] == str(tmp_path / "python" / "lib" / "python3.14" / "site-packages")
-    assert "--only-binary" in install
+    assert install[install.index("--requirement") + 1] == str(tmp_path / "rest.txt")
+    assert install[-1] == str(wheel)
 
 
 # ------------------------------------------------------------------------------------------------------ the package

@@ -109,44 +109,50 @@ def site_packages(python: Path) -> Path:
     return python / "lib" / f"python{PYTHON}" / "site-packages"
 
 
-def server_install_commands(python: Path, requirements: Path) -> list[list[str]]:
-    """The server and what it needs, for macOS on Apple Silicon, into the runtime's Python, from the lock file: every
-    dependency has a wheel for it, so nothing is compiled, and this runs on Linux (D1625)."""
+def export_command(requirements: Path) -> list[str]:
+    """What the server needs, from the lock file, the suite's own packages as their folders."""
     return [
-        [
-            "uv",
-            "export",
-            "--frozen",
-            "--package",
-            "claudia-server",
-            "--no-dev",
-            "--no-hashes",
-            "--no-editable",
-            "--output-file",
-            str(requirements),
-        ],
-        [
-            "uv",
-            "pip",
-            "install",
-            "--python-platform",
-            "aarch64-apple-darwin",
-            "--python-version",
-            PYTHON,
-            "--only-binary",
-            ":all:",
-            "--target",
-            str(site_packages(python)),
-            "--requirement",
-            str(requirements),
-        ],
-    ]
+        "uv", "export", "--frozen", "--package", "claudia-server", "--no-dev", "--no-hashes", "--no-editable",
+        "--output-file", str(requirements),
+    ]  # fmt: skip
+
+
+def split_requirements(exported: str) -> tuple[list[str], str]:
+    """The suite's own packages (``./packages/...``) and the rest of an exported list, without its comments."""
+    lines = [line.strip() for line in exported.splitlines() if line.strip() and not line.strip().startswith("#")]
+    return [line for line in lines if line.startswith("./")], "".join(
+        f"{line}\n" for line in lines if not line.startswith("./")
+    )
+
+
+def wheel_commands(local: list[str], wheels: Path) -> list[list[str]]:
+    """The suite's own packages as wheels (pure Python, so the same on a Mac)."""
+    return [["uv", "build", "--wheel", "--out-dir", str(wheels), path] for path in local]
+
+
+def install_command(python: Path, requirements: Path, wheels: list[Path]) -> list[str]:
+    """Everything, from wheels only, for macOS on Apple Silicon, into the runtime's Python: every dependency has a wheel
+    for it, so nothing is compiled -- above all nothing for Linux -- and this runs on Linux (D1625)."""
+    return [
+        "uv", "pip", "install", "--python-platform", "aarch64-apple-darwin", "--python-version", PYTHON,
+        "--only-binary", ":all:", "--target", str(site_packages(python)), "--requirement", str(requirements),
+        *map(str, wheels),
+    ]  # fmt: skip
 
 
 def install_server(python: Path, work: Path) -> Path:
-    work.mkdir(parents=True, exist_ok=True)
-    for command in server_install_commands(python, work / "requirements.txt"):
+    if work.exists():
+        shutil.rmtree(work)
+    work.mkdir(parents=True)
+    subprocess.run(export_command(work / "exported.txt"), cwd=ROOT, check=True)
+    local, others = split_requirements((work / "exported.txt").read_text(encoding="utf-8"))
+    (work / "others.txt").write_text(others, encoding="utf-8")
+    for command in wheel_commands(local, work / "wheels"):
         subprocess.run(command, cwd=ROOT, check=True)
+    wheels = sorted((work / "wheels").glob("*.whl"))
+    if len(wheels) != len(local):
+        raise BuildError(f"{len(local)} of the suite's packages were to become wheels, but {len(wheels)} did")
+    subprocess.run(install_command(python, work / "others.txt", wheels), cwd=ROOT, check=True)
     return site_packages(python)
 
 
