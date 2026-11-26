@@ -1,0 +1,14 @@
+{
+  "about": "How a menu is drawn once the entries that do not fit are left out (D1600, menus-architecture.md 3.4). One table for the three places that draw a menu: the page (web/app/lib/menus/assemble.ts), the Windows and macOS shell (clients/neutralino/src/menu-actions.ts) and the Linux shell (manifest.visible_only). A menu is its sections; an entry is its label, '~' before it when it is left out, or a submenu. Drawn, '-' is a separator. A menu with nothing left is drawn empty here: each place then adds its one greyed line that says why (D1603).",
+  "cases": [
+    { "name": "nothing left out", "sections": [["a", "b"], ["c"]], "drawn": ["a", "b", "-", "c"] },
+    { "name": "an entry left out in a section", "sections": [["a", "~b"], ["c"]], "drawn": ["a", "-", "c"] },
+    { "name": "a first section left out: no separator first", "sections": [["~a"], ["b"]], "drawn": ["b"] },
+    { "name": "a last section left out: no separator last", "sections": [["a"], ["~b", "~c"]], "drawn": ["a"] },
+    { "name": "a middle section left out: no two separators", "sections": [["a"], ["~b"], ["c"]], "drawn": ["a", "-", "c"] },
+    { "name": "two sections left out next to each other", "sections": [["a"], ["~b"], ["~c"], ["d"]], "drawn": ["a", "-", "d"] },
+    { "name": "a submenu keeps what is left in it", "sections": [["a", { "submenu": "S", "items": ["x", "~y"] }]], "drawn": ["a", { "submenu": "S", "items": ["x"] }] },
+    { "name": "a submenu with nothing left goes, and its section with it", "sections": [["a"], [{ "submenu": "S", "items": ["~x", "~y"] }]], "drawn": ["a"] },
+    { "name": "nothing left at all", "sections": [["~a"], ["~b"]], "drawn": [] }
+  ]
+}

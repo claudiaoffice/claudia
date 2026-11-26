@@ -16,8 +16,8 @@ import { CORE_ID, FROM_CORE, TO_CORE, isCoreMessage } from './core-protocol.js'
 import { CONNECT_FAILED_CODES, type ConnectFailedCode } from './contract.js'
 import type { CoreMessage, CoreRequest, Setup } from './core.js'
 import type { App } from './identity.js'
-import type { WindowMenuItem } from './menu.js'
-import { applyActionStates, routeMenuClick, type ActionState, type KnownAction } from './menu-actions.js'
+import type { ShellMenuItem, WindowMenuItem } from './menu.js'
+import { applyActionStates, drawMenu, routeMenuClick, type ActionState, type KnownAction } from './menu-actions.js'
 import { pagePlatform, type PagePlatform } from './platform/page.js'
 
 export interface NeutralinoLike {
@@ -54,9 +54,9 @@ export interface PageEnv {
   /** The process of the window (`NL_PID` on the page): the core ends with it (CODE-97, D753). */
   windowPid?: number
   /** The native menu, as `menu.ts` built it for this app. */
-  menu: readonly WindowMenuItem[]
+  menu: readonly ShellMenuItem[]
   /** The short menu of the front page (sheet 11); without it the whole menu is always shown. */
-  startMenu?: readonly WindowMenuItem[]
+  startMenu?: readonly ShellMenuItem[]
   neutralino: NeutralinoLike
   frame: FrameLike
   status: StatusView
@@ -99,7 +99,9 @@ const WATCH_SECONDS = 20
 const HELLO_WAIT_MS = 5000
 
 export class ShellPage {
-  private menu: WindowMenuItem[]
+  private menu: ShellMenuItem[]
+  /** The menus of the bar with nothing left, by their word, and the line that says why (D1645, D1603). */
+  private empty: Record<string, string> = {}
   /** Which menu is shown: the front page's short one (first, before any page) or a document's whole one. */
   private view: 'start' | 'document' = 'start'
   private readonly known: KnownAction[]
@@ -126,7 +128,7 @@ export class ShellPage {
         if (this.frameOrigin !== null) this.env.frame.contentWindow?.postMessage(raw, this.frameOrigin)
       },
       ...(env.locale !== undefined ? { locale: env.locale } : {}),
-      onStates: (states) => this.applyStates(states),
+      onStates: (states, empty) => this.applyStates(states, empty),
       onReady: () => {
         this.showView(this.bridge.view)
         this.env.status.hide()
@@ -187,7 +189,7 @@ export class ShellPage {
 
   private async setMenu(): Promise<void> {
     try {
-      await this.env.neutralino.window.setMainMenu(this.menu)
+      await this.env.neutralino.window.setMainMenu(drawMenu(this.menu, this.empty))
     } catch (problem) {
       this.log(`the native menu could not be set: ${(problem as Error).message}`)
     }
@@ -349,14 +351,15 @@ export class ShellPage {
     if (view === this.view || this.env.startMenu === undefined) return
     this.view = view
     this.menu = (view === 'start' ? this.env.startMenu : this.env.menu).map((item) => structuredClone(item))
-    this.applyStates({})
+    this.applyStates({}, {})
   }
 
-  private applyStates(states: Record<string, ActionState>): void {
+  private applyStates(states: Record<string, ActionState>, empty?: Record<string, string>): void {
     for (const [id, state] of Object.entries(states)) {
       if (state.checked !== undefined) this.checked[id] = state.checked
     }
     this.menu = applyActionStates(this.menu, states)
+    if (empty !== undefined) this.empty = empty
     if (this.menuPending) return
     this.menuPending = true
     // Neutralino has no per-item update, only the whole menu again: one call for a burst of states.

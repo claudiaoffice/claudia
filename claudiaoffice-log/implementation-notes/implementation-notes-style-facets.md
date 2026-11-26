@@ -70,7 +70,7 @@ Two rules that decide most questions you will have:
   `components/{StyleMenu,StyleSpec,StylesDialog,StyleBar}.vue`, and the three Format menus in
   `TextWorkspace.vue` (composes: `styleItem`, `customStyleItems`, `OBJECT_STYLE_IDS` — filtering **by id**),
   `Workspace.vue` (`styleItems()`, computes) and `SlideWorkspace.vue` (creates).
-* Shells: `clients/linux/src/claudia_shell_gtk/manifest.py` (three Format menus: `format.look` "Edit This Style…",
+* Shells: `clients/contract/src/claudia_menus/manifest.py` (three Format menus: `format.look` "Edit This Style…",
   `format.all-styles`, `format.colours`, all `_page(...)` actions), `clients/windows/src/generated/menu.<app>.json`
   generated from it (`npm run generate-menu`, `npm run check-menu` fails on drift).
 

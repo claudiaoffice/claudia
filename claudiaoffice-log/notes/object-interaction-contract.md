@@ -218,7 +218,7 @@ Each patch assumes the earlier ones are applied; the last step of each is a merg
 1. **This patch:** the note and the two mock-ups.
 2. **Shared module — built:** `web/app/lib/object-gestures.ts` (the state machine), `web/app/lib/object-interaction.ts`
    (`ObjectHost` and the composable), an explicit `Bounds` in `web/app/lib/geometry.ts` and `web/app/lib/turning.ts`, the
-   object menu of D1225 in `web/app/lib/object-menu.ts` (with submenus and ticks in `web/app/components/ContextMenu.vue`),
+   object menu of D1225 in `lib/object-menu.ts` (since 2026-11 the definition's object menu, D1644) (with submenus and ticks in `web/app/components/ContextMenu.vue`),
    all with vitest, and creates (`web/app/components/SlideCanvas.vue`) moved onto it with its behaviour unchanged except
    that Esc now drops a drag in progress (D1227). `ObjectFrame.vue` (outline and handles drawn once) is **not** in this
    patch: it moves out of creates when composes is its second user (patch 3 below), where its markup can be checked
@@ -230,7 +230,7 @@ Each patch assumes the earlier ones are applied; the last step of each is a merg
    its dialogs are in `web/app/components/TextObjectMenu.vue`, and `web/app/components/ObjectFrame.vue` is the handles for
    creates and composes. **Not built:** the table's width handle (a table's width is set in its options); the
    bounding-box wrap of a turned object (D1226); (Edit text for a text box or shape in a text is built, D1232: `set_text`/`write_words` live in `shape_methods`, the editor is `ParagraphEditor.vue` in `TextObjectLayer.vue`.)
-   Follow-up of 2026-11-19 (D1229): the size cap, the table commands in Tools (`clients/linux/src/claudia_shell_gtk/manifest.py`),
+   Follow-up of 2026-11-19 (D1229): the size cap, the table commands in Tools (`clients/contract/src/claudia_menus/manifest.py`),
    the workbook's wording, Delete on a selected table, and the object clipboard for pictures in all three apps
    (`web/app/lib/object-clipboard.ts`).
 4. **computes — built (D1230):** the host (`web/app/lib/sheet-object-host.ts`: nearest cell on release, one cell per arrow), handles,

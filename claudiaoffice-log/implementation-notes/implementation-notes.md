@@ -53,7 +53,7 @@ uniform row height or column width — `x`/`y`, `box`, `range`, `cellAt`, `revea
 gridlines, which used to be one repeating CSS background and are now per-visible-line `<div>`s since a repeating
 tile cannot draw uneven spacing — now goes through `line-sizes.ts`; plus the header-border hit-testing, the drag
 gesture with its own live merged-in size while dragging, the live px/percentage tag, and the `headerMenu` event a
-right-click on a header emits). `web/app/components/HeaderMenu.vue` (new — the right-click menu: insert/delete, text
+right-click on a header emits). `components/HeaderMenu.vue` (replaced by the definition's header menus in 2026-11, D1644; new — the right-click menu: insert/delete, text
 only per the owner's feedback, and the row/column size item). `web/app/components/LineSizeDialog.vue` (new — the
 dialog: the field, the live "+50%" tag, "Reset to default" as a link that only fills the field rather than
 submitting, and the proportional-example footer for a multi-line selection). `web/app/components/Workspace.vue`

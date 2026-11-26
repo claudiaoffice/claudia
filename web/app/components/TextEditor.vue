@@ -346,7 +346,7 @@ function placeSelection() {
   if (document.activeElement?.closest('[data-table]')) return // the caret is in a box of a table, not in the words
   if (document.activeElement !== container && !(sel.anchorNode && container.contains(sel.anchorNode))) return
   const same = mine.anchor.paragraph === mine.focus.paragraph && mine.anchor.offset === mine.focus.offset
-  const a = domPoint(mine.anchor, false)
+  const a = domPoint(mine.anchor, same) // a caret goes behind the words not sent yet, at both ends (UX-100)
   const f = domPoint(mine.focus, same)
   if (!a || !f) return
   const there = sel.anchorNode === a[0] && sel.anchorOffset === a[1] && sel.focusNode === f[0] && sel.focusOffset === f[1]
@@ -375,22 +375,43 @@ const key = (a: Pos, f: Pos): string => `${a.paragraph}:${a.offset}-${f.paragrap
 
 /** Take the selection of the page as the person's. `always`: a click or key was seen; otherwise only if the page
  *  shows something other than what we put there (the model is ahead of the page for a moment after each change). */
-/** How far into the words that are typed but not sent yet the caret is, if it is in them and not behind them (Home
- *  right after typing, D1350); `null` otherwise. Only the page knows this place: the paragraph has no such words yet. */
-function caretInUnsent(): number | null {
+/** A point of the page's selection as a place in its paragraph once the words typed but not sent yet are in it
+ *  (they are drawn over the paragraph, which does not have them yet), and whether it is in those words and whether
+ *  behind them; `null` if the point is not in the text. Only the page knows these places (D1350, UX-100). */
+function placeOnceSent(node: Node, offset: number): { pos: Pos; inUnsent: boolean; behind: boolean } | null {
+  const pos = posFromDom(node, offset)
+  const el = pos && paragraphEl(pos.paragraph)
+  if (!pos || !el) return null
+  const point = document.createRange()
+  point.setStart(node, offset)
+  let extra = 0
+  let inUnsent = false
+  let behind = false
+  for (const overlay of el.querySelectorAll<HTMLElement>('[data-overlay]')) {
+    const length = overlay.textContent?.length ?? 0
+    if (overlay.contains(node)) {
+      const index = node.nodeType === Node.TEXT_NODE ? offset : 0
+      ;[extra, inUnsent, behind] = [extra + index, true, index >= length]
+    } else if (point.comparePoint(overlay.parentNode!, [...overlay.parentNode!.childNodes].indexOf(overlay) + 1) <= 0) {
+      extra += length // the words are before the point
+    }
+  }
+  return { pos: { paragraph: pos.paragraph, offset: pos.offset + extra }, inUnsent, behind }
+}
+
+/** A caret or selection of the page that reaches into the words not sent yet goes to the session, which selects it
+ *  once they are sent. A caret behind them is where the session puts it anyway. */
+function selectOnceSent() {
   const sel = document.getSelection()
-  if (!sel?.isCollapsed || !sel.focusNode) return null
-  const node = sel.focusNode.nodeType === Node.TEXT_NODE ? sel.focusNode.parentElement : (sel.focusNode as HTMLElement)
-  const overlay = node?.closest<HTMLElement>('[data-overlay]')
-  if (!overlay || !root.value?.contains(overlay)) return null
-  const length = overlay.textContent?.length ?? 0
-  const index = sel.focusNode.nodeType === Node.TEXT_NODE ? sel.focusOffset : 0
-  return index < length ? index : null
+  if (!props.session.state.pending || !sel?.anchorNode || !sel.focusNode) return
+  const anchor = placeOnceSent(sel.anchorNode, sel.anchorOffset)
+  const focus = placeOnceSent(sel.focusNode, sel.focusOffset)
+  if (!anchor || !focus || !(anchor.inUnsent || focus.inUnsent) || (sel.isCollapsed && focus.behind)) return
+  props.session.selectOnceSent(anchor.pos, focus.pos)
 }
 
 function adoptSelection(always = false) {
-  const inUnsent = caretInUnsent()
-  if (inUnsent !== null) props.session.caretInUnsent(inUnsent)
+  selectOnceSent()
   const now = domSelection()
   if (!now || (!always && key(...now) === placed)) return
   placed = key(...now)

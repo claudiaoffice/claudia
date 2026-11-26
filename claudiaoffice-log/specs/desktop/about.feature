@@ -12,7 +12,7 @@ Feature: Help > About opens on every page of the desktop client
     When I choose Help > About
     Then the About dialog of the app opens, with its name and its links
 
-  @core @unit:web/tests/document-menus.test.ts
+  @core @unit:web/tests/window-handlers.test.ts
   Scenario: About in an open document
     Given I have a document open in an app of the Windows client
     When I choose Help > About

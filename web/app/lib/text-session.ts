@@ -149,8 +149,9 @@ export class TextSession extends BaseSession<TextState> {
   private moved = 0
   /** How often the caret had been moved by the person when the pending words were begun (see `sendPending`). */
   private typedAt = 0
-  /** Where in the words not sent yet the caret was put (Home right after typing, D1350): there it stays once they are. */
-  private unsentCaret: { at: Pos; index: number } | null = null
+  /** What the page selected in the words not sent yet (Home or Shift+Home right after typing, D1350, UX-100): selected
+   *  once they are sent. */
+  private unsentSelection: { at: Pos; anchor: Pos; focus: Pos } | null = null
   private ready = false
   private flushQueued = false
 
@@ -665,19 +666,20 @@ export class TextSession extends BaseSession<TextState> {
     // the words went out (they wait for the word end, or for an earlier request) is where the person wants to be.
     await this.replaceText(unwritten.at, unwritten.at, unwritten.text, this.typedAt)
     s.sending = null
-    const put = this.unsentCaret
-    this.unsentCaret = null
-    if (put && same(put.at, unwritten.at)) s.selection = collapsed({ paragraph: put.at.paragraph, offset: put.at.offset + put.index })
+    const put = this.unsentSelection
+    this.unsentSelection = null
+    if (put && same(put.at, unwritten.at)) s.selection = { anchor: put.anchor, focus: put.focus }
   }
 
-  /** The caret was put `index` (UTF-16 units, as the page counts) into the words typed but not sent yet (Home right after typing):
-   *  they go out now, and the caret stays where it was put instead of going behind them (D1350). While they are not
+  /** The page's caret or selection reaches into the words typed but not sent yet (Home or Shift+Home right after
+   *  typing): they go out now, and then `anchor` and `focus` are selected, places in the paragraph as it will be with
+   *  them (UTF-16 units, as the page counts), instead of the caret going behind them (D1350, UX-100). While they are not
    *  sent the paragraph does not have them, so before and after them are one place in it, and only the page knows. */
-  caretInUnsent(index: number): void {
+  selectOnceSent(anchor: Pos, focus: Pos): void {
     const unwritten = this.state.pending
-    if (!unwritten || index >= unwritten.text.length) return
+    if (!unwritten) return
     this.moved++ // the caret was moved since they were typed: the answer does not put it behind them
-    this.unsentCaret = { at: { ...unwritten.at }, index }
+    this.unsentSelection = { at: { ...unwritten.at }, anchor: { ...anchor }, focus: { ...focus } }
     void this.flushNow()
   }
 

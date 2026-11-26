@@ -28,7 +28,7 @@ const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR
     await page.waitForSelector('[data-testid=slide]')
     await page.waitForFunction(() => document.querySelector('.health.open'))
 
-    await page.getByRole('menuitem', { name: 'Edit' }).click()
+    await page.getByRole('menuitem', { name: 'Insert' }).click()
     await page.getByRole('menuitem', { name: 'Image…' }).click()
     await page.setInputFiles('.modal input[type=file]', { name: 'dot.png', mimeType: 'image/png', buffer: PNG })
     await page.waitForSelector('.modal .preview img')

@@ -134,14 +134,14 @@ def _second_sheet(world: World, name: str) -> None:
     ann.page.wait_for_selector("[role=grid]")
 
 
-# ------------------------------------------------------------------------------------------------ Edit ▸ Chart…
+# ------------------------------------------------------------------------------------------------ Insert ▸ Chart…
 def open_chart_dialog(person: Person, cells: str) -> None:
     go_to(person, cells)
-    person.menu("Edit", "Chart…")
+    person.menu("Insert", "Chart…")
     person.page.wait_for_selector(".modal >> text=Show as")
 
 
-@when("I select A1:B4 and choose Edit ▸ Chart…")
+@when("I select A1:B4 and choose Insert ▸ Chart…")
 def _choose_chart(world: World) -> None:
     open_chart_dialog(world.ann, "A1:B4")
 
@@ -263,7 +263,7 @@ def _slide_shown(world: World, name: str) -> None:
 def _called(world: World, name: str) -> None:
     ann = world.ann
     object_menu(ann, CHART_ON_SLIDE)
-    ann.page.locator(f"{OBJECT_MENU} [role=menuitem]", has_text="Name & describe…").click()
+    ann.page.locator(f"{OBJECT_MENU} [role=menuitem]", has_text="Name & Describe…").click()
     field = ann.page.locator(".modal").get_by_label("Name (what a tag in the chat points at)")
     assert field.input_value() == name
     ann.page.keyboard.press("Escape")

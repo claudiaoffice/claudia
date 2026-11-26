@@ -31,7 +31,7 @@ const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR
     await page.waitForFunction(() => document.querySelector('.health.open'))
 
     // -- insert a picture: it cannot be inserted without words, unless it is marked as decoration
-    await page.getByRole('menuitem', { name: 'Edit' }).click()
+    await page.getByRole('menuitem', { name: 'Insert' }).click()
     await page.getByRole('menuitem', { name: 'Image…' }).click()
     await page.setInputFiles('.modal input[type=file]', { name: 'dot.png', mimeType: 'image/png', buffer: PNG })
     await page.waitForSelector('.modal .preview img')
@@ -67,9 +67,9 @@ const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR
     assert.equal(await picture().getAttribute('role'), 'presentation')
     assert.equal(await page.locator('[data-object]').getAttribute('aria-label'), null)
 
-    // -- the same through the Format menu, and what a colleague or a later session finds: it is in the document
-    await page.getByRole('menuitem', { name: 'Format' }).click()
-    await page.getByRole('menuitem', { name: 'Name & describe…' }).click() // was Describe Object… (D1317)
+    // -- the same through the Edit menu, and what a colleague or a later session finds: it is in the document
+    await page.getByRole('menuitem', { name: 'Edit', exact: true }).click()
+    await page.getByRole('menuitem', { name: 'Name & Describe…' }).click() // was Describe Object… (D1317)
     await page.waitForSelector('dialog[open] textarea')
     assert.equal(await page.locator('dialog input[type=checkbox]').isChecked(), true)
     await page.keyboard.press('Escape')

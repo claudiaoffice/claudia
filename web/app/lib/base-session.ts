@@ -10,6 +10,7 @@ import type { PreviewAnswer, ReplaceAnswer, SearchAnswer, SearchLeave, SearchQue
 import { outcomesOf, toOutcome, type ContainerDef, type RenderOutcome, type RenderType } from './containers'
 import { closeMessage, ProtocolError, type BranchInfo, type LinkLike, type Region, type RestoreProposal, type RestoreResolution, type Welcome, type WireData } from './protocol'
 
+import { lookOnlyWords } from './fits/conditions'
 import { languageNow, onLanguageChange, translate as t } from './i18n'
 import { roleName } from './people'
 import type { Thing } from './tags'
@@ -1255,7 +1256,7 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
 
   /** Tell someone who tried a change that she may only look at this document (CODE-98: said here only). */
   tellLookOnly() {
-    this.notice(t('You can only look at this document.'), 'warning')
+    this.notice(lookOnlyWords(t), 'warning')
   }
 
   /** Refuse a change for someone who may only look, and tell her so; `true` when refused. Nothing is sent. */
@@ -1525,14 +1526,6 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
   async acceptOwner(password: string): Promise<boolean> {
     const done = await this.attempt('accept_owner', { password })
     if (done !== false) await this.reconnectNow()
-    return done !== false
-  }
-
-  /** Remove this document from the server for good, confirming it with your own current password. There is no
-   * way back from this. */
-  async deleteDocument(password: string): Promise<boolean> {
-    const done = await this.attempt('delete_document', { password })
-    if (done !== false) this.close()
     return done !== false
   }
 

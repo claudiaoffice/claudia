@@ -189,8 +189,9 @@ _counter = itertools.count(1)
 class Person:
     """One person with one page in one document: what the steps drive."""
 
-    def __init__(self, browser, url: str, document: str, name: str, app: str = "composes"):
+    def __init__(self, browser, url: str, document: str, name: str, app: str = "composes", query: str = ""):
         self.name = name
+        self.query = query  # the page's address after its path: the menus' trial setting (D1647), say
         self.app = app
         self.password = PASSWORDS.get(name, PASSWORD)
         self.document = document
@@ -230,7 +231,7 @@ class Person:
     def create(self) -> None:
         page = self.page
         with page.expect_response(lambda answer: answer.url.endswith("/api/docs")) as listing:
-            page.goto(self.url + "/", wait_until="domcontentloaded")
+            page.goto(self.url + "/" + self.query, wait_until="domcontentloaded")
         page.fill("input[name=document]", self.document)
         page.fill("input[name=user]", self.name.lower())
         page.fill("input[name=password]", self.password)
@@ -248,7 +249,7 @@ class Person:
     def type_login(self, password: str | None = None) -> None:
         """The Open dialog of this person's document, filled in and not yet sent."""
         page = self.page
-        page.goto(self.url + "/", wait_until="domcontentloaded")
+        page.goto(self.url + "/" + self.query, wait_until="domcontentloaded")
         page.fill("input[name=document]", self.document)
         page.fill("input[name=user]", self.name.lower())
         page.fill("input[name=password]", self.password if password is None else password)
@@ -361,6 +362,7 @@ class World:
         self.people: dict[str, Person] = {}
         self.me: Person | None = None
         self.last_error: str | None = None
+        self.query = ""  # what every page of the scenario adds to its address (the menus' trial setting, D1647)
 
     def join(self, name: str, app: str | None = None) -> Person:
         """A person with a page of their own; the second person and later share the first one's document (and app)."""
@@ -368,7 +370,7 @@ class World:
             assert app in (None, self.me.app), f"{name} joins a {self.me.app} document, not a {app} one"
         document = self.me.document if self.me is not None else f"spec-{next(_counter)}-{os.getpid()}"
         app = self.me.app if self.me is not None else (app or "composes")
-        person = Person(self.browser, self.url, document, name, app)
+        person = Person(self.browser, self.url, document, name, app, self.query)
         self.people[name] = person
         self.me = self.me or person
         return person

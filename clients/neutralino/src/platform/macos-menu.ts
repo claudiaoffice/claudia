@@ -10,7 +10,7 @@
 //    Neutralino shortcut string for Cmd+Shift+Z does not exist (gtkAccelToMacShortcut's own doc comment), and the
 //    spike that first found this bug left it unbound for the same reason rather than guess.
 
-import { buildMenus, findAction, type ManifestAction, type ManifestListing, type WindowMenuItem } from '../menu.js'
+import { buildMenus, findAction, type ManifestAction, type ManifestListing, type ShellMenuItem, type WindowMenuItem } from '../menu.js'
 
 /** Cmd+<letter> for the four roles a key equivalent is confirmed to need on a real Mac. Not derived from the
  * manifest's own `accelerators` (those are empty for these five actions on purpose -- the page already handles
@@ -55,7 +55,7 @@ function buildItem(action: ManifestAction): WindowMenuItem {
  * each rebuilt with `file.quit` and `help.about` removed (they moved to the front) and the rest turned into
  * `WindowMenuItem`s. `appTitle` is `identity.ts`'s `AppIdentity.title`, e.g. `"Claudia Creates"`.
  */
-export function buildMacMenu(listing: ManifestListing, appTitle: string): WindowMenuItem[] {
+export function buildMacMenu(listing: ManifestListing, appTitle: string): ShellMenuItem[] {
   const about = findAction(listing, 'help.about')
   const quit = findAction(listing, 'file.quit')
   const relocated = new Set<string>([about?.id, quit?.id].filter((id): id is string => id !== undefined))

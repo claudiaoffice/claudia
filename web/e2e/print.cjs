@@ -142,15 +142,6 @@ async function download(page) {
     await ann.waitForSelector('[data-testid=text]')
     assert.equal(await ann.locator('[data-testid=print-preview]').count(), 0)
 
-    // ---- Ctrl+- types a soft hyphen: where a word may be broken (D912)
-    await ann.click('[data-testid=text] [data-paragraph]:last-child')
-    await ann.keyboard.press('End')
-    await ann.keyboard.type(' Donau')
-    await ann.keyboard.press('Control+Minus')
-    await ann.keyboard.type('dampf')
-    await ann.waitForFunction(() => document.querySelector('[data-testid=text] [data-paragraph]:last-child')?.textContent.includes('Donau\u00addampf'))
-    log('Ctrl+- typed a soft hyphen')
-
     // ---- a viewer sees the pages but cannot change the paper
     await menu(ann, 'File', 'Manage', 'Share')
     await ann.fill('.modal input >> nth=0', VERA[0])

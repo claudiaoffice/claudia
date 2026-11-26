@@ -11,8 +11,16 @@ two systems had a package each, `clients/macos` and `clients/windows`; their his
   program execs it, so the window is the process macOS launched (`launch.ts`: `windowScript`, `environmentChanges`,
   `shellQuote`).
 - `HostPlatform.runFolder` (macOS: `~/Library/Caches/Claudia/run/<app>`), `runFolderWithSpace`, `linkNodeIntoRun` (the
-  core is started through a link to the bundled node, whose path has a space), and `windowBinary(…, packaged)`: an
-  installed app's binary is taken as it is.
+  core is started through a link to the bundled node, whose path has a space). An installed app's window binary is
+  taken as it is (on a Mac it is inside the app); `windowBinary` makes the bundle of a checkout only.
+
+### Changed (E5.23, E5.24, D1643–D1656): the menus are the workbook's, and they show what fits
+- The generated menus follow the owner's workbook (`claudiaoffice-log/notes/claudia-menus.xlsx`): File ▸ Save and the
+  three role entries left, File ▸ Manage ▸ My Role… (Ctrl+Shift+Alt+L) came, and Delete From Server… is on the front
+  page's list (D1608, D1656). Each menu in the listing has its `word` (`insert`).
+- The shell takes `visible` and `empty` from the page's `action_state` (D1645): `drawMenu` leaves out what the page
+  leaves out, collapses the separators by the table in `clients/contract/fixtures/menu-collapse.json`, and puts the
+  greyed line that says why into a menu with nothing left.
 
 ### Added (SEC-27): where a picked file is
 - The core's `file_result` `picked` carries `path`, the chosen file's full path, and the shell page hands it to the

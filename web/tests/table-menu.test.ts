@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { insertTableItems, possible, tableItems, tableShortcuts, TABLE_ACTION_IDS, type TableAction, type TableMenuHost } from '~/lib/table-menu'
+import { possible, tableShortcuts, TABLE_ACTION_IDS, type TableAction, type TableMenuHost } from '~/lib/table-menu'
 import type { TableInfo } from '~/lib/tables'
-import { KEYS } from '~/lib/keys.generated'
+import { KEYS } from '~/lib/menus.generated'
 import { dispatch } from '~/lib/shortcuts'
 
 const t = (msgid: string) => msgid
@@ -30,18 +30,17 @@ function host(over: Partial<TableMenuHost> = {}): TableMenuHost & { done: TableA
   const done: TableAction[] = []
   return { table: table(3, 3), box: { row: 'r1', col: 'c1' }, readonly: false, run: (a) => done.push(a), ...over, done }
 }
-const flat = (items: ReturnType<typeof tableItems>) => items.flatMap((i) => (i.items ? [i, ...i.items] : [i]))
+const ALL = Object.keys(TABLE_ACTION_IDS) as TableAction[]
 
-describe('the table entries of Edit', () => {
-  it('are all on in a box of an ordinary table, and every one has a key from the manifest', () => {
-    const items = flat(tableItems({ t }, host()))
-    expect(items.filter((i) => i.id && !i.disabled).length).toBeGreaterThanOrEqual(10)
-    for (const action of Object.keys(TABLE_ACTION_IDS) as TableAction[]) expect(KEYS[TABLE_ACTION_IDS[action]]).toBeDefined()
+describe('what can be done to a table in a text', () => {
+  it('is all of it in a box of an ordinary table but Split Cell, and every action has a key from the definition', () => {
+    expect(ALL.filter((action) => possible(host(), action))).toEqual(ALL.filter((action) => action !== 'split-cell'))
+    for (const action of ALL) expect(KEYS[TABLE_ACTION_IDS[action]]).toBeDefined()
   })
 
-  it('are all off outside a table, and for somebody who may only read', () => {
+  it('is nothing outside a table, and nothing for somebody who may only read', () => {
     for (const h of [host({ box: null }), host({ table: null }), host({ readonly: true })]) {
-      expect(flat(tableItems({ t }, h)).every((i) => i.disabled)).toBe(true)
+      expect(ALL.some((action) => possible(h, action))).toBe(false)
     }
   })
 
@@ -60,14 +59,6 @@ describe('the table entries of Edit', () => {
     expect(possible(host({ table: joined }), 'merge-cells')).toBe(false)
     expect(possible(host({ table: joined }), 'split-cell')).toBe(true)
     expect(possible(host({ table: table(1, 1) }), 'merge-cells')).toBe(false)
-  })
-
-  it('run the action they are for', () => {
-    const h = host()
-    const items = flat(tableItems({ t }, h))
-    items.find((i) => i.id === 'tools.sort-descending')?.action?.()
-    items.find((i) => i.id === 'tools.table-options')?.action?.()
-    expect(h.done).toEqual(['sort-descending', 'options'])
   })
 })
 
@@ -88,16 +79,5 @@ describe('the keys of the table entries', () => {
     const h = host({ box: null })
     expect(press(tableShortcuts({ t }, h), 'tools.sort-ascending', false)).toBeNull()
     expect(h.done).toEqual([])
-  })
-})
-
-describe('Insert ▸ Table…', () => {
-  it('is off for a viewer and where the caret cannot take a table, and adds a table otherwise', () => {
-    let added = 0
-    const on = insertTableItems({ t, role: 'editor' }, { add: () => added++, possible: true })[0]!
-    on.action?.()
-    expect([on.id, on.disabled, added]).toEqual(['insert.table', false, 1])
-    expect(insertTableItems({ t, role: 'viewer' }, { add: () => {}, possible: true })[0]!.disabled).toBe(true)
-    expect(insertTableItems({ t, role: 'editor' }, { add: () => {}, possible: false })[0]!.disabled).toBe(true)
   })
 })

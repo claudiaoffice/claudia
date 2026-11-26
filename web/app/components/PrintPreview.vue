@@ -269,7 +269,7 @@ async function print() {
   document.body.appendChild(frame)
 }
 
-// Ctrl+P is the window's shortcut (the workspaces' `PRINT`): it opens this preview and, once open, prints.
+// Ctrl+P is File ▸ Print…'s key (the definition's): it opens this preview and, once open, prints.
 function onKey(event: KeyboardEvent) {
   if (event.key === 'Escape' && !customOpen.value) {
     event.preventDefault()

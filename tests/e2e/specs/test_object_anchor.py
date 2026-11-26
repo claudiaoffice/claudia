@@ -98,7 +98,7 @@ def _text_box(world):
     page = world.ann.page
     first = settled_box(page, page.locator(PARAGRAPHS).first)
     page.mouse.click(first["x"] + first["width"] * 0.3, first["y"] + 8)
-    world.ann.menu("Edit", "Text Box")
+    world.ann.menu("Insert", "Text Box")
     page.wait_for_selector(OBJECT)
     page.wait_for_timeout(500)
     page.keyboard.press("Escape")  # a new text box is being written in

@@ -49,6 +49,7 @@ export UV_PYTHON_INSTALL_DIR="$prefix/python" UV_PROJECT_ENVIRONMENT="$prefix/ve
 cp -r "$root/web/.output/public" "$prefix/web"
 mkdir -p "$prefix/shell"
 cp -r "$root/clients/linux/src/claudia_shell_gtk" "$prefix/shell/"
+cp -r "$root/clients/contract/src/claudia_menus" "$prefix/shell/"  # the menu definition (D1643)
 find "$prefix/shell" -name __pycache__ -prune -exec rm -rf {} +
 
 echo "==> package tree"

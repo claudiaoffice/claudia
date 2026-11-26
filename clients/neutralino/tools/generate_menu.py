@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Write the shared menu manifest (``clients/linux/src/claudia_shell_gtk/manifest.py``) as JSON for the macOS and
+"""Write the shared menu manifest (``clients/contract/src/claudia_menus/manifest.py``) as JSON for the macOS and
 Windows client to read (E5.11, D159, D660).
 
 Why this exists at all: the manifest already is plain data with no GTK import (see that module's own docstring), on
@@ -30,7 +30,7 @@ from typing import Any
 
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parents[2]
-LINUX_SRC = REPO / "clients" / "linux" / "src"
+MENUS_SRC = REPO / "clients" / "contract" / "src"  # the menu definition, claudia_menus (D1643)
 OUT_DIR = HERE.parent / "src" / "generated"
 # manifest.py's own floor (clients/neutralino/pyproject.toml: requires-python = ">=3.12"); `@dataclass(slots=True)`
 # alone would run on 3.10+, but this script follows the project's actual floor, not the narrowest syntax that
@@ -41,19 +41,18 @@ __all__ = ["UnknownApp", "build", "flatten", "write", "main"]
 
 
 class UnknownApp(KeyError):
-    """The Linux client's manifest module has no builder for this app name."""
+    """The menu definition has no builder for this app name."""
 
     def __str__(self) -> str:  # KeyError's default repr wraps the message in quotes
         return str(self.args[0])
 
 
 def _manifest_module() -> Any:
-    """Import ``claudia_shell_gtk.manifest`` without installing the package: it has no GTK dependency (the module's
-    own docstring says so), so adding its source directory to ``sys.path`` is enough, and avoids making this
-    developer-only script depend on the Linux client being pip-installed."""
-    if str(LINUX_SRC) not in sys.path:
-        sys.path.insert(0, str(LINUX_SRC))
-    from claudia_shell_gtk import manifest  # import-after-path-tweak is the point (PLC0415 ignored repo-wide)
+    """Import ``claudia_menus.manifest`` without installing the package: it is pure data with no dependency (the
+    module's own docstring says so), so adding its source directory to ``sys.path`` is enough."""
+    if str(MENUS_SRC) not in sys.path:
+        sys.path.insert(0, str(MENUS_SRC))
+    from claudia_menus import manifest  # import-after-path-tweak is the point (PLC0415 ignored repo-wide)
 
     return manifest
 

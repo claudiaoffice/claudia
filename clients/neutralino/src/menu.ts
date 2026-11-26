@@ -1,5 +1,5 @@
 // Turns one app's generated manifest (tools/generate_menu.py's JSON, itself clients/linux's
-// claudia_shell_gtk.manifest.<app>().describe()) into Neutralino's own WindowMenuItem tree
+// claudia_menus.manifest.<app>().describe()) into Neutralino's own WindowMenuItem tree
 // (Neutralino.window.setMainMenu). No Neutralino import here -- same discipline as manifest.py's own "nothing here
 // imports GTK" -- so this is testable with plain fixture data (tests/menu.test.ts).
 //
@@ -25,6 +25,8 @@ export interface ManifestSubmenu {
 export type ManifestEntry = ManifestAction | ManifestSubmenu
 
 export interface ManifestMenu {
+  /** The menu's word in lower case (`insert`), by which the page names a menu with nothing left (D1645). */
+  word: string
   label: string
   sections: ManifestEntry[][]
 }
@@ -47,6 +49,15 @@ export interface WindowMenuItem {
   action?: string
 }
 
+/** An item as the shell keeps it, between the page's reports: a `WindowMenuItem` that may be left out for now
+ * (`isHidden`, D1645), and for a menu of the bar its word in the definition (`word`: "insert"), by which the page
+ * names a menu with nothing left. `drawMenu` (menu-actions.ts) turns it into what Neutralino is given. */
+export interface ShellMenuItem extends WindowMenuItem {
+  isHidden?: boolean
+  word?: string
+  menuItems?: ShellMenuItem[]
+}
+
 export function isSubmenu(entry: ManifestEntry): entry is ManifestSubmenu {
   return 'items' in entry
 }
@@ -59,7 +70,7 @@ export type ItemBuilder = (action: ManifestAction) => WindowMenuItem
 /** The manifest's own menus, in their order, as `WindowMenuItem`s: one separator between two sections, the actions
  * in `omit` left out (moved elsewhere by the platform), and a section or a menu that has nothing left left out, not
  * shown empty. */
-export function buildMenus(listing: ManifestListing, buildItem: ItemBuilder, omit: ReadonlySet<string> = new Set()): WindowMenuItem[] {
+export function buildMenus(listing: ManifestListing, buildItem: ItemBuilder, omit: ReadonlySet<string> = new Set()): ShellMenuItem[] {
   const entry = (item: ManifestEntry): WindowMenuItem =>
     isSubmenu(item) ? { text: item.label, menuItems: item.items.map(buildItem) } : buildItem(item)
   return listing.menus
@@ -72,7 +83,7 @@ export function buildMenus(listing: ManifestListing, buildItem: ItemBuilder, omi
           if (index > 0) items.push(SEPARATOR)
           items.push(...section.map(entry))
         })
-      return { text: menu.label, menuItems: items }
+      return { text: menu.label, word: menu.word, menuItems: items }
     })
     .filter((menu) => menu.menuItems.length > 0)
 }

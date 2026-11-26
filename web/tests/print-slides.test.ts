@@ -376,8 +376,7 @@ describe('what every window that prints has (D906, D918)', () => {
     vi.useFakeTimers()
     const focus = vi.fn()
     const p = usePrint(focus)
-    expect(p.shortcut).toMatchObject({ id: 'file.print', chord: { key: 'p', ctrl: true } })
-    p.shortcut.run()
+    p.open()
     expect(p.printing.value).toBe(true)
     const print = vi.fn(async () => {})
     p.preview.value = { print }

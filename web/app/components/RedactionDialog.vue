@@ -495,7 +495,7 @@ time {
   color: var(--muted);
   font-size: 12px;
 }
-/* A document-level act that cannot be undone: the same red as deleting a document (DeleteDocumentDialog.vue). */
+/* A document-level act that cannot be undone: the same red as deleting a document (DeleteFromListDialog.vue). */
 .btn.redact {
   background: var(--rose);
   border-color: var(--rose);

@@ -53,8 +53,8 @@ describe('buildWindowsMenu', () => {
       app: 'composes',
       header_toggles: [],
       menus: [
-        { label: 'File', sections: [[action('file.new'), action('file.quit')]] },
-        { label: 'Help', sections: [[action('help.about')]] },
+        { word: 'file', label: 'File', sections: [[action('file.new'), action('file.quit')]] },
+        { word: 'help', label: 'Help', sections: [[action('help.about')]] },
       ],
     }
     const menu = buildWindowsMenu(listing)
@@ -69,7 +69,7 @@ describe('buildWindowsMenu', () => {
     const listing: ManifestListing = {
       app: 'composes',
       header_toggles: [],
-      menus: [{ label: 'Edit', sections: [[action('edit.undo')], [action('edit.copy')]] }],
+      menus: [{ word: 'edit', label: 'Edit', sections: [[action('edit.undo')], [action('edit.copy')]] }],
     }
     const menu = buildWindowsMenu(listing)
     expect(menu[0]?.menuItems?.map((i) => i.text)).toEqual(['edit.undo', '-', 'edit.copy'])
@@ -81,6 +81,7 @@ describe('buildWindowsMenu', () => {
       header_toggles: [],
       menus: [
         {
+          word: 'edit',
           label: 'Edit',
           sections: [[{ label: 'Paste As', items: [action('edit.paste-as-plain')] }]],
         },
@@ -96,7 +97,7 @@ describe('buildWindowsMenu', () => {
     const listing: ManifestListing = {
       app: 'composes',
       header_toggles: [],
-      menus: [{ label: 'View', sections: [[action('view.dark-mode', { checkable: true })]] }],
+      menus: [{ word: 'view', label: 'View', sections: [[action('view.dark-mode', { checkable: true })]] }],
     }
     const menu = buildWindowsMenu(listing)
     expect(menu[0]?.menuItems?.[0]?.isChecked).toBe(false)
@@ -106,7 +107,7 @@ describe('buildWindowsMenu', () => {
     const listing: ManifestListing = {
       app: 'composes',
       header_toggles: [],
-      menus: [{ label: 'Edit', sections: [[action('edit.copy', { role: 'copy:', accelerators: [] })]] }],
+      menus: [{ word: 'edit', label: 'Edit', sections: [[action('edit.copy', { role: 'copy:', accelerators: [] })]] }],
     }
     const menu = buildWindowsMenu(listing)
     expect(menu[0]?.menuItems?.[0]).not.toHaveProperty('action')
@@ -116,7 +117,7 @@ describe('buildWindowsMenu', () => {
     const listing: ManifestListing = {
       app: 'composes',
       header_toggles: [],
-      menus: [{ label: 'File', sections: [[action('file.new', { accelerators: ['<Primary>n'] })]] }],
+      menus: [{ word: 'file', label: 'File', sections: [[action('file.new', { accelerators: ['<Primary>n'] })]] }],
     }
     const menu = buildWindowsMenu(listing)
     expect(menu[0]?.menuItems?.[0]?.shortcut).toBe('Ctrl+N')

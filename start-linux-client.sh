@@ -43,4 +43,4 @@ esac
 # which a checkout does not have installed (scripts/install-linux-desktop-entry.sh says more). Never a reason not to start.
 scripts/install-linux-desktop-entry.sh "$app" || echo "Could not install the desktop entry; the dock will show a generic icon." >&2
 
-PYTHONPATH="$PWD/clients/linux/src" exec /usr/bin/python3 -m claudia_shell_gtk "$app" "$@"
+PYTHONPATH="$PWD/clients/linux/src:$PWD/clients/contract/src" exec /usr/bin/python3 -m claudia_shell_gtk "$app" "$@"
