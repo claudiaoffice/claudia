@@ -2,9 +2,10 @@
 // follows the events that say what the server did. The numbering itself is the server's; here it only arrives.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { STYLE_MODEL } from './style-model.fixture'
-import { ProtocolError, type CloseHandler, type EventHandler, type LinkLike, type Welcome } from '~/lib/protocol'
+import type { Welcome } from '~/lib/protocol'
 import type { Paragraph } from '~/lib/paragraphs'
 import { TextSession } from '~/lib/text-session'
+import { FakeServer } from './support/fake-server'
 
 const WELCOME: Welcome = {
   user: 'ann',
@@ -24,32 +25,6 @@ const WELCOME: Welcome = {
   returned: null,
 }
 
-class FakeLink implements LinkLike {
-  calls: { method: string; params: any }[] = []
-  handlers: Record<string, (params: any) => any> = {}
-  events: EventHandler[] = []
-  async connect() {
-    return WELCOME
-  }
-  async request(method: string, params: any = {}) {
-    this.calls.push({ method, params })
-    const handler = this.handlers[method]
-    if (!handler) throw new ProtocolError('unknown_method', method)
-    return handler(params)
-  }
-  onEvent(h: EventHandler) {
-    this.events.push(h)
-  }
-  onClose(_h: CloseHandler) {}
-  close() {}
-  push(name: string, data: any) {
-    for (const h of this.events) h(name, data)
-  }
-  sent(method: string) {
-    return this.calls.filter((c) => c.method === method).map((c) => c.params)
-  }
-}
-
 const SCHEMES = [
   { id: 'bullets', name: 'Bullets', kind: 'bullet', indent: 1.6, gap: 0.25 },
   { id: 'numbers', name: 'Numbers', kind: 'number', indent: 1.6, gap: 0.25 },
@@ -62,7 +37,7 @@ const item = (id: string, text: string, level = 0, marker = '1.'): Paragraph => 
 })
 
 async function opened(paragraphs: Paragraph[]) {
-  const link = new FakeLink()
+  const link = new FakeServer('composes', { welcome: WELCOME })
   const answer = { revision: 'main:9' }
   link.handlers = {
     paragraphs: () => ({

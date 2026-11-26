@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { STYLE_MODEL } from './style-model.fixture'
-import { ProtocolError, type CloseHandler, type EventHandler, type LinkLike, type Welcome } from '~/lib/protocol'
+import type { Welcome } from '~/lib/protocol'
 import { TextSession } from '~/lib/text-session'
+import { FakeServer } from './support/fake-server'
 
 const WELCOME: Welcome = {
   user: 'ann',
@@ -21,32 +22,6 @@ const WELCOME: Welcome = {
   returned: null,
 }
 
-class FakeLink implements LinkLike {
-  calls: { method: string; params: any }[] = []
-  handlers: Record<string, (params: any) => any> = {}
-  events: EventHandler[] = []
-  async connect() {
-    return WELCOME
-  }
-  async request(method: string, params: any = {}) {
-    this.calls.push({ method, params })
-    const handler = this.handlers[method]
-    if (!handler) throw new ProtocolError('unknown_method', method)
-    return handler(params)
-  }
-  onEvent(h: EventHandler) {
-    this.events.push(h)
-  }
-  onClose(_h: CloseHandler) {}
-  close() {}
-  push(name: string, data: any) {
-    for (const h of this.events) h(name, data)
-  }
-  last(method: string) {
-    return this.calls.filter((c) => c.method === method).at(-1)?.params
-  }
-}
-
 const BODY = { id: 'body', name: 'Body text', purpose: '', based_on: null, css: {}, computed: {}, to_name: false }
 const CIRCLE = { format: 1, id: 'circle', name: 'Circle', path: 'M0 0Z', aspect: 1, text_area: { x: 0, y: 0, w: 100, h: 100 } }
 const STAR = { ...CIRCLE, id: 'star', name: 'Star', aspect: null }
@@ -57,7 +32,7 @@ const object = (id: string, paragraph = 'b1', offset = 0, extra: object = {}) =>
 })
 
 async function opened(objects: object[] = [], text = 'a😀b') {
-  const link = new FakeLink()
+  const link = new FakeServer('composes', { welcome: WELCOME })
   link.handlers = {
     paragraphs: () => ({ revision: 'main:2', styles: [BODY], paragraphs: [{ id: 'b1', style: 'body', text, runs: [] }, { id: 'b2', style: 'body', text: 'two', runs: [] }], lists: [], schemes: [] }),
     suggestions: () => [],
@@ -99,7 +74,7 @@ describe('the object layer of a text', () => {
     expect(state.containerTypes.map((t) => t.type)).toEqual(['latex'])
   })
   it('opens as before with a server that has no objects', async () => {
-    const link = new FakeLink()
+    const link = new FakeServer('composes', { welcome: WELCOME })
     const { link: full } = await opened()
     link.handlers = { ...full.handlers }
     delete link.handlers.objects
@@ -181,7 +156,7 @@ describe('the object layer of a text', () => {
   })
   it('still opens with a server whose `shapes` is only the list of the outlines the document uses', async () => {
     const { link: full } = await opened()
-    const link = new FakeLink()
+    const link = new FakeServer('composes', { welcome: WELCOME })
     link.handlers = { ...full.handlers, shapes: () => [CIRCLE] }
     const session = new TextSession(() => link, { retryDelays: [0] })
     await session.open()

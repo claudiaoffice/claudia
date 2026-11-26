@@ -102,6 +102,8 @@ export interface SlidePort {
   write(method: string, params: Record<string, unknown>): Promise<WireData | false>
   /** lock the object selected, or unlock (`null`); false when a colleague has it locked (`BaseSession.lockObject`) */
   lockObject(id: string | null, holder?: string): Promise<boolean>
+  /** `write`, for a change whose answer nobody needs: did it happen? */
+  changed(method: string, params: Record<string, unknown>): Promise<boolean>
 }
 
 /** What creates and computes do the same way on a slide (D1473): show one, select an object on it (shown to the others
@@ -133,11 +135,11 @@ export class SlideActions {
   }
 
   async move(id: string, x: number, y: number): Promise<boolean> {
-    return (await this.port.write('move_object', { id, x, y })) !== false
+    return this.port.changed('move_object', { id, x, y })
   }
 
   async resize(id: string, frame: Frame): Promise<boolean> {
-    return (await this.port.write('resize_object', { id, ...frame })) !== false
+    return this.port.changed('resize_object', { id, ...frame })
   }
 
   /** Put a text box (`{kind: 'text'}`) or a shape (`{kind: 'shape', shape}`) on the slide shown, in `frame`, and select

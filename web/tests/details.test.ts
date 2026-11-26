@@ -11,7 +11,8 @@ import {
   tagsFromText,
   type Listed,
 } from '~/lib/open'
-import { ProtocolError, type LinkLike } from '~/lib/protocol'
+import { ProtocolError } from '~/lib/protocol'
+import { FakeServer } from './support/fake-server'
 
 const listed = (id: string, description = '', tags: string[] = [], app = 'computes'): Listed => ({
   id,
@@ -106,34 +107,16 @@ describe('the one line a list shows of a description', () => {
   })
 })
 
-class FakeLink implements LinkLike {
-  requests: [string, unknown][] = []
-  closed = false
-  constructor(private answer: () => unknown) {}
-  async connect() {
-    return {} as never
-  }
-  async request(method: string, params: unknown = {}) {
-    this.requests.push([method, params])
-    return this.answer() as never
-  }
-  onEvent() {}
-  onClose() {}
-  close() {
-    this.closed = true
-  }
-}
-
 describe('saving the details of a document from the front page', () => {
   it('asks the server with the owner’s password and closes the connection', async () => {
-    const link = new FakeLink(() => ({ description: 'x', tags: ['a'] }))
+    const link = new FakeServer('computes').on('set_details', () => ({ description: 'x', tags: ['a'] }))
     const saved = await saveDetails(() => link, 'secret', 'x', ['a'])
     expect(saved).toEqual({ description: 'x', tags: ['a'] })
-    expect(link.requests).toEqual([['set_details', { password: 'secret', description: 'x', tags: ['a'] }]])
+    expect(link.calls).toEqual([{ method: 'set_details', params: { password: 'secret', description: 'x', tags: ['a'] } }])
     expect(link.closed).toBe(true)
   })
   it('gives back a sentence for a refusal, and still closes', async () => {
-    const link = new FakeLink(() => {
+    const link = new FakeServer('computes').on('set_details', () => {
       throw new ProtocolError('unauthorized', 'that is not your current password')
     })
     expect(await saveDetails(() => link, 'nope', '', [])).toEqual({ error: 'that is not your current password' })
@@ -144,13 +127,13 @@ describe('saving the details of a document from the front page', () => {
 // UX-98, D1608: deleting left the document's menus for the front page, where no document is open
 describe('deleting a document from the front page', () => {
   it('asks the server with the owner’s password and closes the connection', async () => {
-    const link = new FakeLink(() => ({ deleted: true }))
+    const link = new FakeServer('computes').on('delete_document', () => ({ deleted: true }))
     expect(await deleteFromServer(() => link, 'secret')).toEqual({ deleted: true })
-    expect(link.requests).toEqual([['delete_document', { password: 'secret' }]])
+    expect(link.calls).toEqual([{ method: 'delete_document', params: { password: 'secret' } }])
     expect(link.closed).toBe(true)
   })
   it('gives back the server’s sentence when somebody who is not an owner tries', async () => {
-    const link = new FakeLink(() => {
+    const link = new FakeServer('computes').on('delete_document', () => {
       throw new ProtocolError('forbidden', 'only an owner of a document may delete it')
     })
     expect(await deleteFromServer(() => link, 'secret')).toEqual({ error: 'only an owner of a document may delete it' })

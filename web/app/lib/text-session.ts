@@ -32,7 +32,6 @@ import type { LinkLike, Region, WireData } from './protocol'
 import type { ListInfo, SchemeInfo } from './numbering'
 import { FIELD_CHAR, fieldIndex, plain, type ReferenceTarget, type RefField, type Show, type Shown } from './references'
 import { MAX_NAME, type Thing, type ThingKind } from './tags'
-import type { Deleted, DeleteHow } from './style-deletion'
 import { headingLevel, styleUses, type CssEdit, type StyleView } from './style-css'
 import { isBoxId, oneLine, type TableEntry, type TableEvent, type TableInfo, withEvent } from './tables'
 import { translate as t } from './i18n'
@@ -266,7 +265,7 @@ export class TextSession extends BaseSession<TextState> {
 
   /** How the text flows round an object (D1061); `gap` is how far it keeps from it (left out: the object's own). */
   async setWrap(id: string, wrap: Wrap, gap?: number): Promise<boolean> {
-    return (await this.write('set_wrap', { id, ...wrapParams(wrap, gap) })) !== false
+    return this.changed('set_wrap', { id, ...wrapParams(wrap, gap) })
   }
 
   /** What the key of Format ▸ Wrap Text does (D1064): the object `id` goes on to the next mode; the mode it has now, or
@@ -282,14 +281,14 @@ export class TextSession extends BaseSession<TextState> {
    * the object keeps the offset it has. */
   async moveObject(id: string, place: { paragraph: string; offset: number }, away?: { dx: number; dy: number }): Promise<boolean> {
     const from = this.state.objects[id]?.anchor.holder
-    if ((await this.write('move_object', { id, ...this.placeOnWire(place), ...(away ?? {}) })) === false) return false
+    if (!(await this.changed('move_object', { id, ...this.placeOnWire(place), ...(away ?? {}) }))) return false
     // the lock names the paragraph the object hangs from: a selected object moved to another one is locked there (D1223)
     if (this.state.selectedObject === id && place.paragraph !== from) await this.lockObject(id, place.paragraph)
     return true
   }
 
   async resizeObject(id: string, w: number, h: number): Promise<boolean> {
-    return (await this.write('resize_object', { id, w, h })) !== false
+    return this.changed('resize_object', { id, w, h })
   }
 
   // -- the style of an object: the one style API every app has (`apply_style`, `deviate`, D304); a paragraph's own
@@ -297,12 +296,12 @@ export class TextSession extends BaseSession<TextState> {
   // and `checkCss`.
   /** Put a style into one slot of these targets (`apply_style`). */
   async applyObjectStyle(targets: StyleTarget[], style: string, slot: string): Promise<boolean> {
-    return (await this.write('apply_style', { targets, style, slot })) !== false
+    return this.changed('apply_style', { targets, style, slot })
   }
 
   /** Change these targets only, in one slot: a new style from `parent`, named later (`deviate`, D75, D309). */
   async deviateObjectStyle(parent: string, targets: StyleTarget[], slot: string, edit: CssEdit): Promise<boolean> {
-    return (await this.write('deviate', { parent, targets, slot, ...edit })) !== false
+    return this.changed('deviate', { parent, targets, slot, ...edit })
   }
 
   // ------------------------------------------------------------------------------ tables (E9.32)
@@ -1046,7 +1045,7 @@ export class TextSession extends BaseSession<TextState> {
   }
 
   private async removeContentsNow(paragraph: string): Promise<boolean> {
-    return (await this.attempt('remove_contents', { paragraph, base: this.state.revision })) !== false
+    return this.asked('remove_contents', { paragraph, base: this.state.revision })
   }
 
   /** The scheme (`bullets`, `numbers`) of the list the caret's item belongs to, or `null`. */
@@ -1082,7 +1081,7 @@ export class TextSession extends BaseSession<TextState> {
     return this.run(async () => {
       const paragraphs = this.selectedParagraphs().map((b) => b.id)
       if (!paragraphs.length) return false
-      return (await this.attempt('make_list', { paragraphs, scheme, base: this.state.revision })) !== false
+      return this.asked('make_list', { paragraphs, scheme, base: this.state.revision })
     })
   }
 
@@ -1092,7 +1091,7 @@ export class TextSession extends BaseSession<TextState> {
     return this.run(async () => {
       const paragraphs = this.selectedParagraphs().filter((b) => b.item).map((b) => b.id)
       if (!paragraphs.length) return false
-      return (await this.attempt('indent_item', { paragraphs, by, base: this.state.revision })) !== false
+      return this.asked('indent_item', { paragraphs, by, base: this.state.revision })
     })
   }
 
@@ -1124,7 +1123,7 @@ export class TextSession extends BaseSession<TextState> {
   }
 
   private async attemptOk(method: string, params: Record<string, unknown>): Promise<boolean> {
-    return (await this.attempt(method, { ...params, base: this.state.revision })) !== false
+    return this.asked(method, { ...params, base: this.state.revision })
   }
 
   /** The style of the paragraph the caret is in. */
@@ -1162,12 +1161,6 @@ export class TextSession extends BaseSession<TextState> {
       }
       return true
     })
-  }
-
-  /** A deletion or a hiding goes after whatever was typed before it, like every change that is not typing. */
-  override deleteStyle(style: string, how: DeleteHow, target: string | null): Promise<Deleted | false> {
-    if (this.refused()) return Promise.resolve(false)
-    return this.run(() => super.deleteStyle(style, how, target))
   }
 
   /** Make a style give its paragraphs a heading level (E9.22): a level, `'body'` for none, `null` as its parent. */

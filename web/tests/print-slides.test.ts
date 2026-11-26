@@ -3,7 +3,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { reactive } from 'vue'
 import type { PrintSetupData } from '@claudia/layout'
-import { ProtocolError, type CloseHandler, type EventHandler, type LinkLike, type Welcome } from '~/lib/protocol'
+import type { Welcome } from '~/lib/protocol'
 import { SlideSession } from '~/lib/slide-session'
 import type { TextSession } from '~/lib/text-session'
 import {
@@ -22,6 +22,7 @@ import {
 import { pdfOfPages, slideDocument, slideSource, textSource, type PrintPages } from '~/lib/print/source'
 import { usePrint } from '~/lib/print/use-print'
 import type { PrintAssets } from '~/lib/print/assets'
+import { FakeServer } from './support/fake-server'
 
 const layoutCalls = vi.hoisted(() => ({ slides: [] as unknown[], text: [] as unknown[], pdf: [] as unknown[] }))
 vi.mock('@claudia/layout', async (original) => {
@@ -55,42 +56,13 @@ const WELCOME: Welcome = {
   returned: null,
 }
 
-class FakeLink implements LinkLike {
-  calls: { method: string; params: any }[] = []
-  handlers: Record<string, (params: any) => any> = {}
-  events: EventHandler[] = []
-  closers: CloseHandler[] = []
-  async connect() {
-    return WELCOME
-  }
-  async request(method: string, params: any = {}) {
-    this.calls.push({ method, params })
-    const handler = this.handlers[method]
-    if (!handler) throw new ProtocolError('unknown_method', method)
-    return handler(params)
-  }
-  onEvent(h: EventHandler) {
-    this.events.push(h)
-  }
-  onClose(h: CloseHandler) {
-    this.closers.push(h)
-  }
-  close() {}
-  push(name: string, data: any) {
-    for (const h of this.events) h(name, data)
-  }
-  sent(method: string) {
-    return this.calls.filter((c) => c.method === method).map((c) => c.params)
-  }
-}
-
 const STYLE = { id: 'body-text', name: 'Body text', purpose: '', based_on: null, to_name: false, kind: 'paragraph', css: {}, computed: {}, resolved: { color: '#1f1a33' } }
 const SVG = { id: 'v'.repeat(64), format: 'svg', width: 10, height: 10, animated: false, data: btoa('<svg/>'), first_frame: null }
 const PNG = { id: 'p'.repeat(64), format: 'png', width: 10, height: 10, animated: false, data: 'iVBO', first_frame: null }
 const box = (id: string, slide: string) => ({ id, kind: 'text', w: 400, h: 100, style: 'plain-box', paragraph: { style: 'body-text', text: id, runs: [] }, ref: null, imported: null, rotation: 0, snap: true, anchor: { kind: 'slide', holder: slide, x: 0, y: 0 } })
 const HANDOUTS: PrintSetupData = { layout: 'handouts-6', page: { ...DEFAULT_PAGE, margins: [36000, 36000, 36000, 36000] } }
 
-function server(link: FakeLink, extra: Record<string, (params: any) => any> = {}) {
+function server(link: FakeServer, extra: Record<string, (params: any) => any> = {}) {
   link.handlers = {
     slides: () => [
       { id: 's1', objects: 1 },
@@ -114,7 +86,7 @@ function server(link: FakeLink, extra: Record<string, (params: any) => any> = {}
 }
 
 async function opened(extra: Record<string, (params: any) => any> = {}) {
-  const link = new FakeLink()
+  const link = new FakeServer('creates', { welcome: WELCOME })
   server(link, extra)
   const session = new SlideSession(() => link, { retryDelays: [1] })
   await session.open()

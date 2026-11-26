@@ -3,8 +3,9 @@
 // the server to name it (`name_thing`) first, so that the tag carries the name the document uses.
 import { describe, expect, it } from 'vitest'
 import { STYLE_MODEL } from './style-model.fixture'
-import { ProtocolError, type CloseHandler, type EventHandler, type LinkLike, type Welcome } from '~/lib/protocol'
+import type { Welcome } from '~/lib/protocol'
 import { TextSession } from '~/lib/text-session'
+import { FakeServer } from './support/fake-server'
 
 const WELCOME: Welcome = {
   user: 'ann',
@@ -24,36 +25,13 @@ const WELCOME: Welcome = {
   returned: null,
 }
 
-class FakeLink implements LinkLike {
-  calls: { method: string; params: any }[] = []
-  handlers: Record<string, (params: any) => any> = {}
-  events: EventHandler[] = []
-  async connect() {
-    return WELCOME
-  }
-  async request(method: string, params: any = {}) {
-    this.calls.push({ method, params })
-    const handler = this.handlers[method]
-    if (!handler) throw new ProtocolError('unknown_method', method)
-    return handler(params)
-  }
-  onEvent(h: EventHandler) {
-    this.events.push(h)
-  }
-  onClose(_h: CloseHandler) {}
-  close() {}
-  push(name: string, data: any) {
-    for (const h of this.events) h(name, data)
-  }
-}
-
 // `heading` is the level the server worked out for each style (E9.22): the client never walks the parents itself.
 const view = (id: string, based_on: string | null = null, heading: number | null = null) => ({ id, name: id, purpose: '', based_on, css: {}, computed: {}, to_name: false, heading })
 const STYLES = [view('body'), view('heading-1', 'body', 1), view('chapter', 'heading-1', 1), view('aside', 'body', 3)]
 const paragraph = (id: string, style: string, text: string, extra: object = {}) => ({ id, style, text, runs: [[[...text].length, 'ann', null]], ...extra })
 
 async function opened() {
-  const link = new FakeLink()
+  const link = new FakeServer('composes', { welcome: WELCOME })
   link.handlers = {
     paragraphs: () => ({
       revision: 'main:2',

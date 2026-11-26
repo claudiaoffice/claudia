@@ -2,10 +2,11 @@
 // follows the events that say what the server did, and how typing, Backspace and Delete treat a table: never as text.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { STYLE_MODEL } from './style-model.fixture'
-import { ProtocolError, type CloseHandler, type EventHandler, type LinkLike, type Welcome } from '~/lib/protocol'
+import type { Welcome } from '~/lib/protocol'
 import type { Paragraph } from '~/lib/paragraphs'
 import type { ContentsEntry, Toc } from '~/lib/contents'
 import { TextSession } from '~/lib/text-session'
+import { FakeServer } from './support/fake-server'
 
 const WELCOME: Welcome = {
   user: 'ann',
@@ -25,39 +26,13 @@ const WELCOME: Welcome = {
   returned: null,
 }
 
-class FakeLink implements LinkLike {
-  calls: { method: string; params: any }[] = []
-  handlers: Record<string, (params: any) => any> = {}
-  events: EventHandler[] = []
-  async connect() {
-    return WELCOME
-  }
-  async request(method: string, params: any = {}) {
-    this.calls.push({ method, params })
-    const handler = this.handlers[method]
-    if (!handler) throw new ProtocolError('unknown_method', method)
-    return handler(params)
-  }
-  onEvent(h: EventHandler) {
-    this.events.push(h)
-  }
-  onClose(_h: CloseHandler) {}
-  close() {}
-  push(name: string, data: any) {
-    for (const h of this.events) h(name, data)
-  }
-  sent(method: string) {
-    return this.calls.filter((c) => c.method === method).map((c) => c.params)
-  }
-}
-
 const DEFAULT_TOC: Toc = { kind: 'toc', first: 1, last: 3, numbers: true, places: true, leader: 'dots' }
 const plain = (id: string, text: string): Paragraph => ({ id, style: 'body', text, runs: text ? [[text.length, 'ann', null]] : [] })
 const entry = (target: string, text: string, number: string | null = null): ContentsEntry => ({ target, level: 1, number, text, style: 'contents-1', place: null })
 const table = (id: string, entries: ContentsEntry[] = []): Paragraph => ({ ...plain(id, ''), generated: { ...DEFAULT_TOC }, entries })
 
 async function opened(paragraphs: Paragraph[]) {
-  const link = new FakeLink()
+  const link = new FakeServer('composes', { welcome: WELCOME })
   const answer = { revision: 'main:9' }
   link.handlers = {
     paragraphs: () => ({

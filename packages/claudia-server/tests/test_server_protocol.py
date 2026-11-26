@@ -69,6 +69,17 @@ def test_every_method_is_documented_and_described():
     json.dumps(description)  # it is served as JSON
 
 
+def test_the_description_names_every_event_the_server_can_send():
+    """A client (the web tests' fake server, E11.7) checks an event against it: the state events of the apps are in it,
+    each with a word on what it is, and the ones that are documented keep their own."""
+    from claudia_server.audience import EVENT_RULES
+    from claudia_server.protocol import EVENTS, STATE_EVENT
+
+    events = core_methods.describe(Limits())["events"]
+    assert events.keys() == set(EVENT_RULES) | set(EVENTS)
+    assert events["cells"] == STATE_EVENT and events["command"] == EVENTS["command"]
+
+
 def test_restoring_and_switching_are_not_on_the_wire_yet():
     """Who may restore a checkpoint or switch the line in a live session is not decided (E3.1 notes)."""
     assert "restore" not in core_methods.names() and "switch" not in core_methods.names()

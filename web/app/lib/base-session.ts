@@ -187,6 +187,10 @@ export interface ObjectLayerState {
   language: string | null | undefined
 }
 
+/** What a change says of a failure it has its own words for (`BaseSession.write`): the answer in its place, or `undefined`
+ *  when the failure is nothing special and is told to the person as any other. */
+type Told = (error: unknown) => WireData | undefined
+
 export interface BaseState extends ObjectLayerState {
   /** Which app the document belongs to (`computes`, `composes`): the server says so when it welcomes us. */
   app: string
@@ -831,7 +835,7 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
   async proposeRestoreStep(): Promise<boolean> {
     const r = this.state.replay
     if (!r) return false
-    return (await this.attempt('propose_restore_step', { revision: r.revision })) !== false
+    return this.asked('propose_restore_step', { revision: r.revision })
   }
 
   /** Back to the present. */
@@ -950,7 +954,7 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
   /** Write the words of an object (a text box or a shape on a slide or in a text) as a person typed them (step G): the
    * server changes only what differs, so the words that stay keep who wrote them. One step in the history (D1232). */
   async writeWords(id: string, text: string): Promise<boolean> {
-    return (await this.write('write_words', { id, text })) !== false
+    return this.changed('write_words', { id, text })
   }
 
   /** Is this thing known to be gone from the document as shown (a tag to it then says so)? */
@@ -961,7 +965,7 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
   /** Give a thing (a sheet, a slide, an object) another name, as one step of the history. The server refuses a name
    * somebody else has, a named range included, with a sentence that is shown here. */
   async renameThing(id: string, name: string): Promise<boolean> {
-    return (await this.write('rename_thing', { id, name })) !== false
+    return this.changed('rename_thing', { id, name })
   }
 
   /** The next free generic name for a thing of `kind` (an object kind or `slide`), in the language of this window:
@@ -1004,7 +1008,7 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
   /** The one dialog of Name & describe… (D1317): name and description together, one step in the history, so one Undo
    * takes both back. The server refuses a name somebody else has with a sentence that is shown here. */
   async nameAndDescribe(params: { id: string; name: string; description: string; decorative: boolean }): Promise<boolean> {
-    return (await this.write('name_and_describe', { ...params })) !== false
+    return this.changed('name_and_describe', { ...params })
   }
 
   /** Name everything that has no name (a document from before names) in one step of the history; how many were named. */
@@ -1202,36 +1206,36 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
   /** Turn an object to `rotation` whole degrees clockwise about its centre (D1021): one step in the history. The server
    *  keeps it where it must be (on its slide or page, D1022) and refuses a turn that cannot fit, or a chart's. */
   async rotateObject(id: string, rotation: number): Promise<boolean> {
-    return (await this.write('rotate_object', { id, rotation })) !== false
+    return this.changed('rotate_object', { id, rotation })
   }
 
   /** Say what an object is to someone who cannot see it, or that it is only decoration (BITV 1.1.1); its own step in the
    *  history. A picture needs one or the other, which the server insists on. */
   async describeObject(id: string, description: string, decorative: boolean): Promise<boolean> {
-    return (await this.write('describe_object', { id, ...describeParams(description, decorative) })) !== false
+    return this.changed('describe_object', { id, ...describeParams(description, decorative) })
   }
 
   async removeObject(id: string): Promise<boolean> {
-    return (await this.write('remove_object', { id })) !== false
+    return this.changed('remove_object', { id })
   }
 
   /** Change a style for everything that has it — and for the styles based on it, where they say nothing (D73). */
   async changeStyle(style: string, edit: CssEdit): Promise<boolean> {
-    return (await this.write('change_style', { style, ...edit })) !== false
+    return this.changed('change_style', { style, ...edit })
   }
 
   async renameStyle(style: string, name: string): Promise<boolean> {
-    return (await this.write('rename_style', { style, name })) !== false
+    return this.changed('rename_style', { style, name })
   }
 
   /** Give a colour role another colour: every style that meant it follows, and so does every object (D200). */
   async setRole(role: string, colour: string): Promise<boolean> {
-    return (await this.write('set_role', { role, colour })) !== false
+    return this.changed('set_role', { role, colour })
   }
 
   /** Put a whole palette in place of this document's — what "the colours it started with" does (D200). */
   async replacePalette(roles: ColourRole[]): Promise<boolean> {
-    return (await this.write('replace_palette', { roles })) !== false
+    return this.changed('replace_palette', { roles })
   }
 
   /** What the server makes of this CSS text, line by line. A read: viewers may ask it too. */
@@ -1245,7 +1249,7 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
 
   /** Say which language the document is written in (D915), or `null` for not known: one step, for everybody. */
   async setLanguage(language: string | null): Promise<boolean> {
-    return (await this.write('set_language', { language })) !== false
+    return this.changed('set_language', { language })
   }
 
   // ------------------------------------------------------------------------------ changing the document (D1432)
@@ -1271,21 +1275,47 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     return job()
   }
 
-  /** The one door every change of the document goes through (D1432): refused before anything is sent for someone who
-   *  may only look (CODE-75); otherwise sent through `run`, based on the revision she sees when it leaves. */
-  protected async write(method: string, params: Record<string, unknown> = {}): Promise<WireData | false> {
-    if (this.refused()) return false
-    return this.run(() => this.attempt(method, { ...params, base: this.state.revision }))
+  /** The one path of every request a session makes for the person (E11.7), and the one place its policy lives:
+   *  - a *change* of the document is refused, before anything is sent, for someone who may only look (CODE-75); it
+   *    waits its turn in `run` (composes: behind the words still being typed); and it is based on the revision she
+   *    sees when it leaves (D1432);
+   *  - anything else she asks for (undo, a lock, the chat, a proposal to restore) is sent as it is;
+   *  - a request that fails is told to her, once, here, and the answer is `false`.
+   *  Reads that a session makes for itself (`link.request`) carry no policy and say nothing when they fail. */
+  private async call(method: string, params: Record<string, unknown>, change: boolean, told?: Told): Promise<WireData | false> {
+    if (change && this.refused()) return false
+    const send = async (): Promise<WireData | false> => {
+      try {
+        return await this.need().request(method, change ? { ...params, base: this.state.revision } : params)
+      } catch (error) {
+        const answer = told?.(error)
+        if (answer !== undefined) return answer // the one failure the caller says in its own words
+        this.explain(error)
+        return false
+      }
+    }
+    return change ? this.run(send) : send()
   }
 
-  /** Run a request; `false` after telling the person why it did not work. */
-  protected async attempt(method: string, params: Record<string, unknown> = {}): Promise<WireData | false> {
-    try {
-      return await this.need().request(method, params)
-    } catch (error) {
-      this.explain(error)
-      return false
-    }
+  /** Change the document; the answer, or `false` after telling the person why it was not changed. A change that fails
+   *  in a way the caller has its own words for says so in `told`: what it returns (not `undefined`) is the answer. */
+  protected write(method: string, params: Record<string, unknown> = {}, told?: Told): Promise<WireData | false> {
+    return this.call(method, params, true, told)
+  }
+
+  /** Ask for something that is not a change of the document (no `base`, no waiting); `false` after telling why not. */
+  protected attempt(method: string, params: Record<string, unknown> = {}): Promise<WireData | false> {
+    return this.call(method, params, false)
+  }
+
+  /** `write`, for a change whose answer nobody needs: did it happen? */
+  protected async changed(method: string, params: Record<string, unknown> = {}): Promise<boolean> {
+    return (await this.write(method, params)) !== false
+  }
+
+  /** `attempt`, for a request whose answer nobody needs: did it work? */
+  protected async asked(method: string, params: Record<string, unknown> = {}): Promise<boolean> {
+    return (await this.attempt(method, params)) !== false
   }
 
   protected explain(error: unknown) {
@@ -1347,7 +1377,7 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
   /** Changes the text of a container; a text that is the same as it is is not sent. `false` after saying why not. */
   async setContainerSource(id: string, source: string, params: Record<string, unknown> | null = null): Promise<boolean> {
     if (this.state.containers[id]?.source === source && !params) return true
-    return (await this.write('set_container_source', { id, source, params })) !== false
+    return this.changed('set_container_source', { id, source, params })
   }
 
   // ------------------------------------------------------------------------------ numbering (E9.21, E9.22)
@@ -1355,7 +1385,7 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
   // come back as `labels` events, the lists as `lists` and the schemes as `schemes`.
   /** Number every heading style (in creates: every slide title), or no longer. */
   async numberHeadings(on: boolean): Promise<boolean> {
-    return (await this.write('number_headings', { on })) !== false
+    return this.changed('number_headings', { on })
   }
 
   /** A new scheme drawn as `like` is, named `name`; its id, or `null` after saying why not. */
@@ -1366,28 +1396,28 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
 
   /** Give a scheme another definition (as the server sends it). */
   async changeScheme(scheme: SchemeInfo): Promise<boolean> {
-    return (await this.write('change_scheme', { scheme })) !== false
+    return this.changed('change_scheme', { scheme })
   }
 
   /** Draw a built-in scheme as it was built in again. */
   async resetScheme(scheme: string): Promise<boolean> {
-    return (await this.write('reset_scheme', { scheme })) !== false
+    return this.changed('reset_scheme', { scheme })
   }
 
   /** Take a scheme no list uses out of the document. */
   async removeScheme(scheme: string): Promise<boolean> {
-    return (await this.write('remove_scheme', { scheme })) !== false
+    return this.changed('remove_scheme', { scheme })
   }
 
   /** Number a heading style in a list (`"none"`: not numbered; `null`: as its parent). */
   async setStyleNumbering(style: string, numbering: string | null): Promise<boolean> {
-    return (await this.write('set_style_numbering', { style, numbering })) !== false
+    return this.changed('set_style_numbering', { style, numbering })
   }
 
   // ------------------------------------------------------------------------------ tables of contents (E9.31)
   /** Give a table of contents (in creates: an agenda) other options; the entries come back as a `generated` event. */
   async setContents(paragraph: string, options: Toc): Promise<boolean> {
-    return (await this.write('set_contents', { paragraph, options })) !== false
+    return this.changed('set_contents', { paragraph, options })
   }
 
   // ------------------------------------------------------------------------------ deleting and hiding styles (E1.10)
@@ -1405,22 +1435,18 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
    *  nothing has). A refusal that is about this very deletion comes back as its sentence; anything else is told as a
    *  notice, and is `false`. */
   async deleteStyle(style: string, how: DeleteHow, target: string | null): Promise<Deleted | false> {
-    if (this.refused()) return false
-    const params: Record<string, unknown> = { style, how, base: this.state.revision }
+    const params: Record<string, unknown> = { style, how }
     if (target) params.target = target
-    try {
-      const done = await this.need().request<{ stand_in: string | null }>('delete_style', params)
-      return { standIn: done.stand_in ?? null }
-    } catch (error) {
-      if (error instanceof ProtocolError && error.code === 'command_error') return { refused: error.message }
-      this.explain(error)
-      return false
-    }
+    const done = await this.write('delete_style', params, (error) =>
+      error instanceof ProtocolError && error.code === 'command_error' ? { refused: error.message } : undefined,
+    )
+    if (done === false) return false
+    return 'refused' in done ? { refused: done.refused } : { standIn: done.stand_in ?? null }
   }
 
   /** Hide a style from the menus a style is picked from, or show it again (D780). */
   async hideStyle(style: string, hidden: boolean): Promise<boolean> {
-    return (await this.write('hide_style', { style, hidden })) !== false
+    return this.changed('hide_style', { style, hidden })
   }
 
   async undo(): Promise<boolean> {
@@ -1447,7 +1473,7 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
   /** Says `text` in the chat, with how the person wants the AI to treat it if it is for the AI (D262). Always sent:
    *  a message without a mode means a client without the switch, which the server answers as *act* (UNSAID_MODE). */
   async say(text: string): Promise<boolean> {
-    return (await this.attempt('chat', { text, ai_mode: this.state.aiMode })) !== false
+    return this.asked('chat', { text, ai_mode: this.state.aiMode })
   }
 
   /** Owners: allow Claude to be sent this document's content when somebody asks `@ai` (`true`), or withdraw it. What the
@@ -1471,7 +1497,7 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
   }
 
   async addUser(name: string, password: string, role: 'editor' | 'viewer'): Promise<boolean> {
-    return (await this.attempt('add_user', { name, password, role })) !== false
+    return this.asked('add_user', { name, password, role })
   }
 
   /** Owners: give `name` the role `editor` or `viewer`. Lowering an editor renews the document's history and chat keys
@@ -1482,7 +1508,7 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
 
   /** Owners: take `name` out of the document and renew the keys she held. `false` after telling the person why not. */
   async removePerson(name: string): Promise<boolean> {
-    return (await this.attempt('remove_person', { name })) !== false
+    return this.asked('remove_person', { name })
   }
 
   /** Reopen the connection with the same name and password, so a role the server just changed takes effect. */
@@ -1512,13 +1538,13 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
   }
 
   async leave(password: string): Promise<boolean> {
-    return (await this.attempt('leave', { password })) !== false
+    return this.asked('leave', { password })
   }
 
   /** Owners: ask `name` (who must already be an editor) to become the owner instead, confirming it with your own
    * current password. They accept with `acceptOwner`. */
   async proposeOwner(name: string, password: string): Promise<boolean> {
-    return (await this.attempt('propose_owner', { name, password })) !== false
+    return this.asked('propose_owner', { name, password })
   }
 
   /** Accept an ownership proposed to you, confirming it with your own current password. Reconnects on success, so
@@ -1605,22 +1631,22 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
    * declines, which ends it right away.
    */
   async proposeRestore(checkpoint: number): Promise<boolean> {
-    return (await this.attempt('propose_restore', { checkpoint })) !== false
+    return this.asked('propose_restore', { checkpoint })
   }
 
   /** Suggest making another line active again (the way back after a restore). Same consent as `proposeRestore`. */
   async proposeSwitch(branch: string): Promise<boolean> {
-    return (await this.attempt('propose_switch', { branch })) !== false
+    return this.asked('propose_switch', { branch })
   }
 
   /** Agree or decline the open suggestion (`state.proposal`). */
   async answerRestore(agree: boolean): Promise<boolean> {
-    return (await this.attempt('answer_restore', { agree })) !== false
+    return this.asked('answer_restore', { agree })
   }
 
   /** Take back the open suggestion: only the person who made it, or an owner. */
   async withdrawRestore(): Promise<boolean> {
-    return (await this.attempt('withdraw_restore')) !== false
+    return this.asked('withdraw_restore')
   }
 
   /** Owners only: permanently forget every hidden line (everything a restore ever left behind). */

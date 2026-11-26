@@ -66,6 +66,7 @@ export class SlideSession extends BaseSession<SlideState> implements SlideHost {
     state: this.state,
     write: (method, params) => this.write(method, params),
     lockObject: (id, holder) => this.lockObject(id, holder),
+    changed: (method, params) => this.changed(method, params),
   })
 
   constructor(makeLink: () => LinkLike, options: SessionOptions = {}) {
@@ -292,7 +293,7 @@ export class SlideSession extends BaseSession<SlideState> implements SlideHost {
 
   /** Print the presentation another way (D917): layout and page, one step for everybody. */
   async setPrintSetup(setup: PrintSetupData): Promise<boolean> {
-    return (await this.write('set_print_setup', { setup })) !== false
+    return this.changed('set_print_setup', { setup })
   }
 
   // -- what a talk is prepared with: speaker notes and planned times (D342, D343)
@@ -356,7 +357,7 @@ export class SlideSession extends BaseSession<SlideState> implements SlideHost {
   }
 
   private async listRequest(method: string, params: Record<string, unknown>): Promise<boolean> {
-    return (await this.write(method, { ...params })) !== false
+    return this.changed(method, { ...params })
   }
 
   /** Bullets or numbers for the selected box, or (`null`) none; asking for what it is takes it out of its list. */
@@ -424,7 +425,7 @@ export class SlideSession extends BaseSession<SlideState> implements SlideHost {
   async insertReference(id: string, offset: number, target: string, show: Show): Promise<boolean> {
     const words = this.state.objects[id]?.paragraph?.text ?? ''
     const params = { paragraph: id, offset: pointOf(words, Math.min(offset, words.length)), target, show }
-    return (await this.write('insert_reference', params)) !== false
+    return this.changed('insert_reference', params)
   }
 
   /** The first reference in the words of an object, as `{field, shown}`, or `null`. */
@@ -435,12 +436,12 @@ export class SlideSession extends BaseSession<SlideState> implements SlideHost {
 
   /** Write the notes of a slide (D342): one step in the history, for everybody. `""` clears them. */
   async setNotes(slide: string, notes: string): Promise<boolean> {
-    return (await this.write('set_slide_notes', { slide, notes })) !== false
+    return this.changed('set_slide_notes', { slide, notes })
   }
 
   /** Plan a time for a slide (D343), whole seconds; `null` takes the plan away. */
   async setTime(slide: string, seconds: number | null): Promise<boolean> {
-    return (await this.write('set_slide_time', { slide, seconds })) !== false
+    return this.changed('set_slide_time', { slide, seconds })
   }
 
   /** What the tab of slide `id` (the `index`th, from 0) says: its name, or its place while it has none. */
@@ -465,19 +466,19 @@ export class SlideSession extends BaseSession<SlideState> implements SlideHost {
 
   /** Hold an object to the grid (`snap` true) or release it (false); its own step in the history (E10.15). */
   async setSnap(id: string, snap: boolean): Promise<boolean> {
-    return (await this.write('set_snap', { id, snap })) !== false
+    return this.changed('set_snap', { id, snap })
   }
 
   // -- styles and the palette (E9.7, D200, D203). The same eight methods computes' session has, because the style
   // menu is one component talking to one `StyleHost` and neither knows which app it is in.
   /** Put a style into one slot of these targets — the one style API every app has (`apply_style`, D304). */
   async applyStyle(targets: StyleTarget[], style: string, slot: string): Promise<boolean> {
-    return (await this.write('apply_style', { targets, style, slot })) !== false
+    return this.changed('apply_style', { targets, style, slot })
   }
 
   /** Change these targets only, in one slot: a new style from `parent`, named later (`deviate`, D75, D309). */
   async deviateStyle(parent: string, targets: StyleTarget[], slot: string, edit: CssEdit): Promise<boolean> {
-    return (await this.write('deviate', { parent, targets, slot, ...edit })) !== false
+    return this.changed('deviate', { parent, targets, slot, ...edit })
   }
 
   showSlide(slide: string): Promise<void> {

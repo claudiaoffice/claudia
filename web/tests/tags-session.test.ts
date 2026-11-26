@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { BaseSession, type BaseState, type Step } from '~/lib/base-session'
-import { ProtocolError, type CloseHandler, type EventHandler, type LinkLike, type Welcome, type WireData } from '~/lib/protocol'
+import type { LinkLike, Welcome } from '~/lib/protocol'
 import type { Thing } from '~/lib/tags'
+import { FakeServer } from './support/fake-server'
 
 const WELCOME: Welcome = {
   user: 'ann',
@@ -21,49 +22,6 @@ const WELCOME: Welcome = {
   returned: null,
 }
 const entry = (n: number): Step => ({ revision: `main:${n}`, author: 'ann', origin: 'do', time: '', label: `step ${n}`, summary: '' })
-
-class FakeLink implements LinkLike {
-  calls: { method: string; params: any }[] = []
-  events: EventHandler[] = []
-  seen: any = { present: false, revision: 'main:2' }
-  async connect() {
-    return WELCOME
-  }
-  async request(method: string, params: any = {}): Promise<any> {
-    this.calls.push({ method, params })
-    switch (method) {
-      case 'log':
-        return [entry(1), entry(2), entry(3)]
-      case 'chat_log':
-      case 'checkpoints':
-        return []
-      case 'history':
-        return { can_undo: false, can_redo: false, undo_label: '', redo_label: '' }
-      case 'branches':
-        return [{ name: 'main', head: 'main:3', active: true, forked_from: null }]
-      case 'restore_policy':
-        return { policy: 'consensus' }
-      case 'peek_revision':
-        return { revision: params.revision, entry: entry(1), focus: [], app: 'creates' }
-      case 'as_of':
-        return []
-      case 'thing_last_seen':
-        return this.seen
-      case 'name_unnamed':
-        return { named: 2, revision: 'main:4' }
-      default:
-        throw new ProtocolError('unknown_method', method)
-    }
-  }
-  onEvent(h: EventHandler) {
-    this.events.push(h)
-  }
-  onClose(_h: CloseHandler) {}
-  close() {}
-  push(name: string, data: WireData) {
-    for (const h of this.events) h(name, data)
-  }
-}
 
 /** A document of two slides, `s1` with a figure on it and `s2` with a table, in which the person is looking at `s1`. */
 class TestSession extends BaseSession<BaseState & { here: string }> {
@@ -99,7 +57,12 @@ class TestSession extends BaseSession<BaseState & { here: string }> {
 }
 
 async function opened() {
-  const link = new FakeLink()
+  const link = new FakeServer('creates', { welcome: WELCOME })
+    .on('log', () => [entry(1), entry(2), entry(3)])
+    .on('peek_revision', ({ revision }: any) => ({ revision, entry: entry(1), focus: [], app: 'creates' }))
+    .on('as_of', [])
+    .on('thing_last_seen', { present: false, revision: 'main:2' })
+    .on('name_unnamed', { named: 2, revision: 'main:4' })
   const session = new TestSession(link)
   await session.open()
   return { link, session, state: session.state }
@@ -152,7 +115,7 @@ describe('going to what a tag points at', () => {
   })
   it('says so when the thing never was here', async () => {
     const { link, session, state } = await opened()
-    link.seen = { present: false, revision: null }
+    link.on('thing_last_seen', { present: false, revision: null })
     await session.goToThing('nope')
     expect(state.replay).toBeNull()
     expect(state.notice!.kind).toBe('warning')
@@ -160,7 +123,7 @@ describe('going to what a tag points at', () => {
   it('leaves a replay for the present when the thing is there now but not in the past being shown', async () => {
     const { link, session, state } = await opened()
     await session.startReplay()
-    link.seen = { present: true, revision: 'main:3' }
+    link.on('thing_last_seen', { present: true, revision: 'main:3' })
     session.deck = session.deck.filter((t) => t.id !== 'o2')
     await session.goToThing('o2')
     expect(state.replay).toBeNull()

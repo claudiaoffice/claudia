@@ -153,6 +153,9 @@ Skills and persona per app (E7.2, D1560–D1563), and what came with it.
 - A server behind a proxy counts as exposed whatever its `--host` (D1374, `hosts.is_exposed`).
 
 ### Added
+- `describe()` (served at `/api/<app>/protocol`) names every event the server can send under `events`: the state events
+  of the apps (`cells`, `objects`, `tabs`, ...) too, each with a word on what it is (`protocol.STATE_EVENT`), from
+  `audience.EVENT_RULES`. The web tests' fake server (E11.7) checks the events it pushes against it.
 - A workbook's slides on the wire (E6.31 step 2, D1473): `tabs` (`{kind, id, name}` in their one order) and the event
   `tabs`, which replaces `sheets`; `slide` (the objects of a slide); `add_object` (a text box or a shape, on a slide only)
   and `shapes`; `add_image`, `add_container`, `move_object` and `resize_object` take a slide's `slide`, `x` and `y`

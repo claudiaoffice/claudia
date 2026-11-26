@@ -2,77 +2,43 @@
 // may only look is told so before anything is sent (CODE-75). Each case runs against the sheet, the text and the slide
 // session alike.
 import { describe, expect, it } from 'vitest'
-import { STYLE_MODEL } from './style-model.fixture'
 import type { BaseSession, BaseState} from '~/lib/base-session';
-import { ProtocolError, type CloseHandler, type EventHandler, type LinkLike, type Welcome } from '~/lib/protocol'
+import type { LinkLike, Welcome } from '~/lib/protocol'
 import { Session } from '~/lib/session'
 import { SlideSession } from '~/lib/slide-session'
 import { TextSession } from '~/lib/text-session'
+import { FakeServer, type AppName } from './support/fake-server'
 
 const STYLE = { id: 'plain', name: 'Plain', purpose: 'Anything', based_on: null, to_name: false, kind: 'box', css: {}, computed: {}, resolved: {} }
 const NOTE = { ...STYLE, id: 'note', name: 'Note' }
 const PALETTE = { type: 'palette', roles: [], readings: [] }
 
-/** What each app's server answers when a session opens: enough of a document to work in, and nothing in it. */
-const SERVERS: Record<string, Record<string, (params: any) => unknown>> = {
+/** What each app's server answers when a session opens, over what the fake server answers of an empty document: here the
+ *  document has a style, and a text has a paragraph. */
+const SERVERS: Record<AppName, Record<string, (params: any) => unknown>> = {
   computes: {
     sheets: () => [{ id: 's1', name: 'Sheet1' }],
-    objects: () => ({ objects: [] }),
-    charts: () => [],
-    charts: () => [],
-    names: () => ({ names: [] }),
     styles: () => [STYLE],
     style_uses: () => ({ uses: {} }),
   },
   composes: {
     paragraphs: () => ({ styles: [STYLE], paragraphs: [{ id: 'b1', style: 'plain', text: '', runs: [] }], lists: [], schemes: [] }),
-    suggestions: () => [],
-    objects: () => ({ objects: [] }),
   },
   creates: {
-    slides: () => [{ id: 's1', objects: 0 }],
-    slide: ({ slide }) => ({ revision: 'main:0', slide, objects: [] }),
-    shapes: () => ({ library: [], document: [] }),
     styles: () => [STYLE],
   },
 }
-const EVERY_APP = { images: () => [], palette: () => PALETTE, style_model: () => STYLE_MODEL, log: () => [], chat_log: () => [], checkpoints: () => [], branches: () => [], history: () => ({ can_undo: false, can_redo: false, undo_label: '', redo_label: '' }), restore_policy: () => ({ policy: 'consensus' }), ping: () => ({ revision: 'main:0' }) }
-
-class FakeLink implements LinkLike {
-  calls: { method: string; params: any }[] = []
-  events: EventHandler[] = []
-  constructor(
-    private readonly welcome: Welcome,
-    private readonly handlers: Record<string, (params: any) => unknown>,
-  ) {}
-  async connect() {
-    return this.welcome
-  }
-  async request(method: string, params: any = {}) {
-    this.calls.push({ method, params })
-    const handler = this.handlers[method]
-    if (!handler) throw new ProtocolError('unknown_method', method)
-    return handler(params) as any
-  }
-  onEvent(h: EventHandler) {
-    this.events.push(h)
-  }
-  onClose(_h: CloseHandler) {}
-  close() {}
-  push(name: string, data: any) {
-    for (const h of this.events) h(name, data)
-  }
-}
 
 const APPS = [
-  { app: 'computes', make: (l: () => LinkLike) => new Session(l, { retryDelays: [] }) },
-  { app: 'composes', make: (l: () => LinkLike) => new TextSession(l, { retryDelays: [] }) },
-  { app: 'creates', make: (l: () => LinkLike) => new SlideSession(l, { retryDelays: [] }) },
+  { app: 'computes' as const, make: (l: () => LinkLike) => new Session(l, { retryDelays: [] }) },
+  { app: 'composes' as const, make: (l: () => LinkLike) => new TextSession(l, { retryDelays: [] }) },
+  { app: 'creates' as const, make: (l: () => LinkLike) => new SlideSession(l, { retryDelays: [] }) },
 ]
 
-async function opened(app: string, make: (l: () => LinkLike) => BaseSession<BaseState>, role = 'editor') {
-  const welcome = { user: 'ann', role, doc: 'd', app, branch: 'main', revision: 'main:0', id: 1, color: '#e6194b', people: [], presence: [], checkpoints: [], limits: { max_text: 32767 }, branches: [], proposal: null, returned: null } as unknown as Welcome
-  const link = new FakeLink(welcome, { ...EVERY_APP, ...SERVERS[app], rename_style: () => ({ revision: 'main:1' }), set_role: () => ({ revision: 'main:1' }) })
+async function opened(app: AppName, make: (l: () => LinkLike) => BaseSession<BaseState>, role = 'editor') {
+  const link = new FakeServer(app, { welcome: { role: role as Welcome['role'], doc: 'd', revision: 'main:0', branches: [] }, handlers: SERVERS[app] })
+    .on('rename_style', () => ({ revision: 'main:1' }))
+    .on('set_role', () => ({ revision: 'main:1' }))
   const session = make(() => link)
   await session.open()
   await session.settled()

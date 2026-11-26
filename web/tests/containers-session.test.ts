@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { STYLE_MODEL } from './style-model.fixture'
-import { ProtocolError, type CloseHandler, type EventHandler, type LinkLike, type Welcome } from '~/lib/protocol'
+import { ProtocolError, type Welcome } from '~/lib/protocol'
 import { SlideSession } from '~/lib/slide-session'
+import { FakeServer } from './support/fake-server'
 
 const WELCOME: Welcome = {
   user: 'ann',
@@ -36,40 +37,7 @@ const PALETTE = {
   readings: [{ foreground: 'text', background: 'page', ratio: 15.14, floor: 4.5, ok: true, words: true }],
 }
 
-class FakeLink implements LinkLike {
-  calls: { method: string; params: any }[] = []
-  handlers: Record<string, (params: any) => any> = {}
-  events: EventHandler[] = []
-  closers: CloseHandler[] = []
-  welcome = WELCOME
-  async connect() {
-    return this.welcome
-  }
-  async request(method: string, params: any = {}) {
-    this.calls.push({ method, params })
-    const handler = this.handlers[method]
-    if (!handler) throw new ProtocolError('unknown_method', method)
-    return handler(params)
-  }
-  onEvent(h: EventHandler) {
-    this.events.push(h)
-  }
-  onClose(h: CloseHandler) {
-    this.closers.push(h)
-  }
-  close() {}
-  push(name: string, data: any) {
-    for (const h of this.events) h(name, data)
-  }
-  last(method: string) {
-    return this.calls.filter((c) => c.method === method).at(-1)?.params
-  }
-  count(method: string) {
-    return this.calls.filter((c) => c.method === method).length
-  }
-}
-
-function server(link: FakeLink, objects: any[] = []) {
+function server(link: FakeServer, objects: any[] = []) {
   link.handlers = {
     slides: () => [{ id: 's1', objects: objects.length }],
     slide: ({ slide }) => ({ revision: 'main:0', slide, objects: slide === 's1' ? objects : [] }),
@@ -100,7 +68,7 @@ function server(link: FakeLink, objects: any[] = []) {
 }
 
 async function opened(objects: any[] = []) {
-  const link = new FakeLink()
+  const link = new FakeServer('creates', { welcome: WELCOME })
   server(link, objects)
   const session = new SlideSession(() => link, { retryDelays: [1] })
   await session.open()
@@ -112,7 +80,7 @@ const TYPES = { types: [{ type: 'latex', title: 'LaTeX', example: 'x^2', params:
 const DEF = { format: 1, id: 'r1', type: 'latex', source: 'x^2', params: {}, image: null, renderer: '' }
 
 async function withContainers(defs: object[] = [DEF]) {
-  const link = new FakeLink()
+  const link = new FakeServer('creates', { welcome: WELCOME })
   server(link)
   link.handlers.container_types = () => TYPES
   link.handlers.containers = () => defs
