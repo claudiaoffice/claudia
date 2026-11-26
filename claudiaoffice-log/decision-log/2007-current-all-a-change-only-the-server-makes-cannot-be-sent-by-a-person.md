@@ -32,6 +32,6 @@ nothing is written to the history.
 **Review.** `packages/claudia-server/tests/command_senders.json` lists every kind of every app with who may send it; a
 new kind fails a test until somebody says which it is, the way `method_reads.json` does for what a method reads (D1261).
 
-**Notes.** `apply` stays: it is the protocol's general way to edit, documented in `/api/protocol`. The assistant may not
+**Notes.** `apply` stayed at first, as the protocol's general way to edit; D2010 (2026-11-26) took it away, and with it `for_persons()` and `ServerOnly`. `Command.sender` and the list stay. The assistant may not
 use it at all (SEC-10). Not decided here: whether a person's raw `core.DefineAsset` should pass the checks `add_image`
 makes (an SVG is sanitised there, not when an asset is read back).

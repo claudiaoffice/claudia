@@ -627,6 +627,8 @@ for the server's own use only.
 `registry.for_persons()`, which refuses `Import`, `Setup`, `Checkpoint`, `Redaction`, `Redacted`, `Restore`, `Switch`
 and computes' `ApplyCalculated` with `forbidden`, at any depth. `tests/command_senders.json` lists all 91 kinds. **Test:** an editor's `apply` of each
 of the seven, alone and inside a `Batch`, is refused and the history unchanged (red: all seven accepted).
+**Batch 6** (D2010, owner 2026-11-26): `apply` is gone; no method takes a raw change any more, so the way in is closed
+for every kind, not only the eight. **Test:** `test_no_method_takes_a_change_in_its_stored_form`.
 
 ### UX-93 · The font banner cannot be read · P2 · size 2 · open
 **Re-checked** (triage of 2026-11-25, computed from the CSS): 1.13:1. The same slip elsewhere: `--ink-soft` is used
@@ -766,6 +768,8 @@ but an export (odt, docx, pptx, odp, xlsx, ods) or a downloaded picture carries 
 may run it. **Acceptance:** an SVG with a script sent as a raw `DefineAsset` is refused or stored sanitised, the same as
 through `add_image`; the decision is whether the asset kinds become changes only the server makes (D2007) or whether
 `from_data` sanitises wherever an asset comes in (also a document file or an import).
+**Narrowed on `batch-6`** (D2010): the person's way in went with `apply`. What is left: an asset read from a document
+file or an import (`ImageAsset.from_data`) is still not sanitised.
 
 ### CODE-110 · The desktop shells cut a long path without a word · P3 · size 3 · open
 **Read** by the helper of batch 5 (SEC-27): the GTK shell's `file_result` and the Neutralino core's `fileResult` cut a
