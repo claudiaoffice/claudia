@@ -44,7 +44,8 @@ export function isCoreMessage(value: unknown): value is CoreMessage {
       return (
         typeof value.origin === 'string' &&
         value.origin.length > 0 &&
-        (value.setupCode === undefined || (typeof value.setupCode === 'string' && SETUP_CODE.test(value.setupCode)))
+        (value.setupCode === undefined || (typeof value.setupCode === 'string' && SETUP_CODE.test(value.setupCode))) &&
+        (value.askAdministrator === undefined || (value.askAdministrator === true && value.setupCode === undefined))
       )
     case 'status':
       return (

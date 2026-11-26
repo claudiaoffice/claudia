@@ -5,7 +5,7 @@
 //
 // There are two ways to start (the same two as on Linux):
 //  - **the local server** (the default): the window shows a "starting" status at once; the one local server of the
-//    three apps is found or started (desktop-server.ts, D445) and the shell page is told to show it when it answers.
+//    three apps is found or started (private-server.ts, D445, E8.5) and the shell page is told to show it when it answers.
 //    When the core ends, the server is only let go of: it is shared, and stops by itself when nothing is connected;
 //  - **a given server** (`--server URL`): no server is started. The core connects to it like it does when the
 //    person types the address into the page, with the same checks -- https, the right app, a certificate that this
@@ -16,6 +16,7 @@
 // killed -- and so, ten minutes later, the server (D445).
 
 import { homedir } from 'node:os'
+import { env } from 'node:process'
 import { join } from 'node:path'
 import { Connector, ServerBook } from './connector.js'
 import type { Outcome } from './connection.js'
@@ -26,6 +27,7 @@ import { prepareServer, SetupProblem } from './local-server.js'
 import { hostPlatform } from './platform/host.js'
 import type { Address, Entry } from './servers.js'
 import type { Settings } from './settings.js'
+import { findSharedService, type SharedService } from './shared-service.js'
 
 /** The shell page's requests to the core. */
 export type CoreRequest =
@@ -37,11 +39,15 @@ export type CoreRequest =
 
 /** What the core tells the shell page. */
 export type CoreMessage =
-  | { kind: 'show'; origin: string; setupCode?: string }
+  | ({ kind: 'show'; origin: string } & Setup)
   | { kind: 'status'; title: string; details?: string; error: boolean }
   | { kind: 'servers'; servers: Entry[] }
   | { kind: 'connect_failed'; code: string; message: string }
   | FileMessage
+
+/** What the page of the server shown may know about setting it up: her own server's setup code (D1373), the shared
+ * service's when she may read it, or that she has to ask an administrator of this computer (D1624). */
+export type Setup = { setupCode?: string; askAdministrator?: true }
 
 /** Do `a` and `b` name the same origin (scheme, host and port)? */
 function sameOrigin(a: string, b: string): boolean {
@@ -75,6 +81,8 @@ export interface CoreOptions {
   dialogs?: Dialogs
   /** Where a Save dialog starts the first time (the person's Documents folder by default). */
   documents?: string
+  /** The computer's shared service, `null` for none; found by its installer's service file by default (E8.5, D1622). */
+  sharedService?: SharedService | null
 }
 
 export class Core {
@@ -82,13 +90,16 @@ export class Core {
   private readonly connector: Connector
   private readonly files: Files
   private server: ServerLike | null = null
+  private readonly shared: SharedService | null
   private started = false
   private stopped = false
   /** What the shell page was told last, so a page that starts again (a reload) is brought up to date. */
   private current: CoreMessage | null = null
 
   constructor(private readonly options: CoreOptions) {
-    this.book = new ServerBook(options.identity.name, options.settings)
+    this.shared =
+      options.sharedService !== undefined ? options.sharedService : findSharedService(hostPlatform().sharedServiceFile(env), options.log)
+    this.book = new ServerBook(options.identity.name, options.settings, { sharedOrigin: this.shared?.origin ?? null })
     this.connector = new Connector(options.identity.name, {
       book: this.book,
       switchTo: (origin) => this.show(origin),
@@ -114,11 +125,23 @@ export class Core {
     this.emit(message)
   }
 
-  /** Show the server at `origin`; its own server with the setup code it has now, for its settings pages (D1373). */
+  /** Show the server at `origin`; her own server with the setup code it has now, for its settings pages (D1373), and
+   * the shared service with its code when she may read it, else with "ask an administrator of this computer" (D1624). */
   private show(origin: string): void {
-    const own = this.server !== null && this.book.localOrigin !== null && sameOrigin(origin, this.book.localOrigin)
-    const code = own ? this.server?.setupCode?.() : null
-    this.say({ kind: 'show', origin, ...(code ? { setupCode: code } : {}) })
+    this.say({ kind: 'show', origin, ...this.setupOf(origin) })
+  }
+
+  private setupOf(origin: string): Setup {
+    if (this.server !== null && this.book.localOrigin !== null && sameOrigin(origin, this.book.localOrigin)) {
+      const code = this.server.setupCode?.()
+      return code ? { setupCode: code } : {}
+    }
+    if (this.shared !== null && sameOrigin(origin, this.shared.origin)) {
+      const access = this.shared.setupCode()
+      if (access.kind === 'code') return { setupCode: access.code }
+      if (access.kind === 'may not') return { askAdministrator: true }
+    }
+    return {}
   }
 
   private status(title: string, details?: string, error = false): void {
@@ -168,7 +191,7 @@ export class Core {
       this.server = server
       const url = await server.start()
       if (this.stopped) return
-      this.book.localOrigin = url // "This computer" in the page's list, from now on
+      this.book.localOrigin = url // "Private on this computer" in the page's list, from now on
       this.show(url)
     } catch (problem) {
       if (this.stopped) return

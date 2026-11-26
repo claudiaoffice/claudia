@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { nextTick, reactive, watchEffect } from 'vue'
-import { forgetSetupCode, rememberedSetupCode } from '~/lib/setup-code'
+import { forgetSetupCode, mustAskAdministrator, rememberedSetupCode } from '~/lib/setup-code'
 import { FILE_CHUNK_BYTES, ShellBridge, acceptedExtensions, createShellBridge, currentShell, detectHandler, detectParentSink, isApp, isShellOrigin, tabTitle } from '~/lib/shell-bridge'
 
 function fakeSink() {
@@ -59,6 +59,15 @@ describe('ShellBridge', () => {
     bridge.receive(JSON.stringify({ type: 'welcome', contract: 1, shell, capabilities: [], setup_code: 'K7QM-4TXR-92HB' }))
     expect(rememberedSetupCode()).toEqual({ code: 'K7QM-4TXR-92HB', from: 'app' })
     forgetSetupCode()
+  })
+
+  it('keeps "ask an administrator of this computer" as each welcome says it (D1624)', () => {
+    const bridge = new ShellBridge('composes', fakeSink().sink)
+    const shell = { name: 'neutralino', platform: 'macos', version: '1' }
+    bridge.receive(JSON.stringify({ type: 'welcome', contract: 1, shell, capabilities: [], ask_administrator: true }))
+    expect(mustAskAdministrator()).toBe(true)
+    bridge.receive(JSON.stringify({ type: 'welcome', contract: 1, shell, capabilities: [], ask_administrator: 'yes' }))
+    expect(mustAskAdministrator()).toBe(false)
   })
 
   it('dispatches an action message to every registered handler, with its target', () => {
@@ -171,7 +180,7 @@ describe('ShellBridge server list', () => {
     const bridge = new ShellBridge('computes', sink)
     expect(bridge.servers).toBeNull()
     bridge.receive(JSON.stringify({ type: 'servers', servers: [LOCAL, DEMO, { origin: 3 }, 'x'] }))
-    expect(bridge.servers).toEqual([LOCAL, DEMO])
+    expect(bridge.servers).toEqual([{ ...LOCAL, label: 'Private on this computer' }, DEMO])
   })
   it('never sends a list before the shell has sent its own (an empty page must not wipe what the shell keeps)', () => {
     const { sink, posted } = fakeSink()

@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
+import os
 import stat
 from pathlib import Path
 
 import pytest
 
 from claudia_shell_gtk import identity, launch
-from claudia_shell_gtk.desktop_server import DesktopServer
+from claudia_shell_gtk.private_port import private_port
+from claudia_shell_gtk.private_server import PrivateServer
 
 
 @pytest.fixture
@@ -27,9 +29,9 @@ def checkout(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     return tmp_path / "repo"
 
 
-def test_the_shared_server_of_the_suite_is_prepared_not_asked_for_yet(checkout: Path, tmp_path: Path) -> None:
+def test_her_private_server_is_prepared_not_asked_for_yet(checkout: Path, tmp_path: Path) -> None:
     server = launch.prepare_server(identity.get("composes"), repo=checkout)
-    assert isinstance(server, DesktopServer)
+    assert isinstance(server, PrivateServer)
     assert server.url == ""  # not asked for yet
     assert server._python == str(checkout / ".venv" / "bin" / "python")  # noqa: SLF001 (what is run is the point)
     assert server._web == checkout / "web" / ".output" / "public"  # noqa: SLF001
@@ -75,13 +77,14 @@ def test_a_wrong_frontend_path_is_reported_not_replaced(checkout: Path, monkeypa
     assert "/nonexistent/frontend" in str(problem.value)
 
 
-def test_the_server_port_is_8765_or_the_one_of_claudia_server_port(
+def test_her_server_is_on_the_port_of_her_account_or_the_one_of_claudia_server_port(
     checkout: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """D504: the port of every Claudia server; CLAUDIA_SERVER_PORT for a person who needs 8765 for something else."""
+    """E8.5, D1621: the port of her account; CLAUDIA_SERVER_PORT for a person who needs it for something else."""
+    mine = private_port(os.getuid())
     monkeypatch.delenv("CLAUDIA_SERVER_PORT", raising=False)
-    assert launch.prepare_server(identity.get("composes"), repo=checkout)._port == 8765  # noqa: SLF001
+    assert launch.prepare_server(identity.get("composes"), repo=checkout)._usual == mine  # noqa: SLF001
     monkeypatch.setenv("CLAUDIA_SERVER_PORT", "18765")
-    assert launch.prepare_server(identity.get("composes"), repo=checkout)._port == 18765  # noqa: SLF001
+    assert launch.prepare_server(identity.get("composes"), repo=checkout)._usual == 18765  # noqa: SLF001
     monkeypatch.setenv("CLAUDIA_SERVER_PORT", "nonsense")
-    assert launch.prepare_server(identity.get("composes"), repo=checkout)._port == 8765  # noqa: SLF001
+    assert launch.prepare_server(identity.get("composes"), repo=checkout)._usual == mine  # noqa: SLF001

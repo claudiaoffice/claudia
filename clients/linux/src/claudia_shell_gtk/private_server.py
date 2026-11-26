@@ -1,25 +1,29 @@
-"""The one local server that the three desktop apps share (D445). No GTK in here.
+"""A person's private server, which her three desktop apps share ("Private on this computer"; E8.5, D1620, D1621;
+before E8.5: the desktop's one server, D445). No GTK in here.
 
-The twin of ``clients/neutralino/src/desktop-server.ts`` (macOS and Windows), in Python:
+The twin of ``clients/neutralino/src/private-server.ts`` (macOS and Windows), in Python:
 
-* **One server for the suite.** It serves all three apps (no ``--model``), keeps one folder of documents and one of
-  state, and stops by itself (``--exit-when-idle``, D434) ten minutes after nothing was connected. The first window
-  that needs it starts it; the others find it.
-* **Found by its port: 8765, the port of every Claudia server** (D504; ``./start.sh`` and a cloud server use it too),
-  so the address — and what the page keeps for that address — stays the same. Only when something that is not a
-  Claudia server holds 8765 does the suite go to another port, remembered in ``desktop-server.json`` in the state
-  folder. A running server is recognised by ``/api/health`` (its apps; its version, for a request from this computer):
-  nothing else is asked of it, so a Claudia server of this version on 8765 is this computer's server, whoever started
-  it.
+* **One server for her three apps.** It serves all three (no ``--model``), keeps her folder of documents and her folder
+  of state, and stops by itself (``--exit-when-idle``, D434) ten minutes after nothing was connected. Her first window
+  that needs it starts it; her others find it.
+* **On a port of her own** (``private_port.py``): from her account number, the same at every start, so the address --
+  and what the page keeps for it -- stays hers; never 8765, the port of every shared server (D1621).
+* **Hers, proven.** Her apps start it with a key from her state folder (``owner_key.py``) and use a server they find on
+  her port only when it answers a fresh challenge with that key: another person's server, a shared one, or a program on
+  her port is never taken for hers (CODE-99), and its version is no business of hers (CODE-100).
+* **Her port held by something else** (a program, or a Claudia server that is not hers): her server goes to the next
+  free port of her range (``walk_from``, the same order for every window of hers) for as long as that lasts, written
+  down as ``instead`` in ``desktop-server.json`` so that her other apps find it. A start uses her server where it is,
+  and starts one on her own port again (and forgets ``instead``) once her server is gone and her port is free.
 * **Two windows starting at once** both start a server on the same port; the one that loses (the port, or the server's
-  own lock on its folder, D435) exits at start-up, and its window then uses the one that won.
+  own lock on its folder, D435) exits at start-up, and its window then uses the one that won, when it is hers.
 * **A window never ends the server.** Closing it only lets go of the connection it keeps (``/api/presence``), so the
   server is never taken for idle while a window is open. A window that finds the server gone (it stopped, or somebody
-  ended it) starts it again on the same port, where the page reconnects.
+  ended it) starts it again, where the page reconnects.
 
 A window must never block (E0.2), and finding the server can take seconds (a version check, a start, a race with
-another window), so :meth:`DesktopServer.spawn` does it on a thread of its own and the application polls
-:meth:`DesktopServer.check_ready` from its main loop, as it did with a server of its own. The presence connection is a
+another window), so :meth:`PrivateServer.spawn` does it on a thread of its own and the application polls
+:meth:`PrivateServer.check_ready` from its main loop, as it did with a server of its own. The presence connection is a
 plain WebSocket held on another thread: it carries nothing, and answers the server's pings.
 """
 
@@ -34,7 +38,6 @@ import os
 import re
 import socket
 import subprocess
-import tempfile
 import threading
 import time
 import urllib.error
@@ -42,27 +45,28 @@ import urllib.request
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Protocol
+from typing import Literal, Protocol
 from urllib.parse import urlsplit
 
 from .i18n import translate as _
-from .server import LOOPBACK, LocalServer, ServerStartError, free_port, server_command
+from .owner_key import OwnerKey, is_owned_by, owner_key
+from .private_port import PRIVATE_PORTS, private_port, walk_from
+from .server import LOOPBACK, LocalServer, ServerStartError, server_command
 from .urls import is_internal
 
 __all__ = [
     "IDLE_SECONDS",
-    "SERVER_PORT",
     "STATE_FILE",
-    "DesktopServer",
     "Health",
     "PresenceSocket",
+    "PrivateServer",
     "is_port_free",
     "probe_health",
-    "read_port",
+    "read_instead",
     "read_setup_code",
     "server_version",
     "setup_code_for_page",
-    "write_port",
+    "write_instead",
 ]
 
 log = logging.getLogger(__name__)
@@ -70,7 +74,9 @@ log = logging.getLogger(__name__)
 IDLE_SECONDS = 600
 """``--exit-when-idle``: ten minutes (D445). The clock starts only when the last page has closed."""
 STATE_FILE = "desktop-server.json"
-"""The file in the server's state folder that says where the server runs, ``{"port": N}``."""
+"""The file in the server's state folder that holds ``{"instead": N}``, the port her server went to while her own port
+is held by something else; there is no file while it is not. (A file from before E8.5 says ``{"port": N}`` and is not
+read.)"""
 SETUP_CODE_FILE = Path("admin") / "setup-code"
 """Where the server writes its setup code while it has no administrator (D1371), readable by this user only."""
 _SETUP_CODE = re.compile(r"[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}")
@@ -93,9 +99,6 @@ def setup_code_for_page(shown: str | None, local: str | None, read: Callable[[],
         return None
     return read()
 
-
-SERVER_PORT = 8765
-"""The port of every Claudia server unless told otherwise (D504), the same for ./start.sh and the desktop's own."""
 
 _PRESENCE_PAUSE = 1.0
 _PRESENCE_PAUSE_MAX = 10.0
@@ -140,36 +143,25 @@ def probe_health(url: str, timeout: float = 1.0) -> Health:
     return Health("claudia", tuple(apps), version if isinstance(version, str) else None)
 
 
-def read_port(file: Path) -> int | None:
-    """The remembered port, or ``None`` for a missing, broken or nonsensical file."""
+def read_instead(file: Path) -> int | None:
+    """The port her server went to instead of her own, or ``None`` for a missing, broken, nonsensical or older file."""
     try:
-        port = json.loads(file.read_text(encoding="utf-8")).get("port")
+        port = json.loads(file.read_text(encoding="utf-8")).get("instead")
     except (OSError, ValueError, AttributeError):
         return None
     return port if isinstance(port, int) and not isinstance(port, bool) and 1 <= port <= 65535 else None
 
 
-def write_port(file: Path, port: int, *, exclusive: bool) -> bool:
-    """Remember ``port``. ``exclusive`` writes only when there is no file yet (``False`` when somebody was first);
-    otherwise the file is overwritten. The folder is made."""
+def write_instead(file: Path, port: int | None) -> None:
+    """Write down where her server went instead (written whole under another name first, so that her other windows
+    never read half a file), or, with ``None``, that it is on her own port again. The folder is made."""
+    if port is None:
+        file.unlink(missing_ok=True)
+        return
     file.parent.mkdir(parents=True, exist_ok=True)
-    text = json.dumps({"port": port}) + "\n"
-    if not exclusive:
-        file.write_text(text, encoding="utf-8")
-        return True
-    # Written whole under another name and then linked into place: a second window that loses never reads a file that
-    # is there but not written yet (two first starts at once are exactly when this is asked).
-    handle, name = tempfile.mkstemp(prefix=".desktop-server-", dir=file.parent)
-    try:
-        with os.fdopen(handle, "w", encoding="utf-8") as out:
-            out.write(text)
-        os.link(name, file)
-    except FileExistsError:
-        return False
-    finally:
-        with contextlib.suppress(OSError):
-            os.unlink(name)
-    return True
+    temporary = file.with_name(f"{file.name}.{os.getpid()}")
+    temporary.write_text(json.dumps({"instead": port}) + "\n", encoding="utf-8")
+    temporary.replace(file)
 
 
 def is_port_free(port: int, host: str = LOOPBACK) -> bool:
@@ -312,13 +304,25 @@ class ServerProcess(Protocol):
     def stop(self) -> None: ...
 
 
+def _url(port: int) -> str:
+    return f"http://{LOOPBACK}:{port}"
+
+
+def _port(url: str) -> int:
+    return urlsplit(url).port or 0
+
+
+_FOLDER_HELD = "another Claudia server uses "
+"""What a server says when another one holds its folder of documents (``claudia_server/folder_lock.py``, D435)."""
+
+
 def _make_server(command: list[str], url: str, log_path: Path) -> ServerProcess:
     return LocalServer(command, url=url, log=log_path, outlives_shell=True)
 
 
-class DesktopServer:
-    """The shared local server, as one window uses it: :meth:`spawn`, then :meth:`check_ready` until it answers;
-    :meth:`stop` lets go of it."""
+class PrivateServer:
+    """Her private server, as one window uses it: :meth:`spawn`, then :meth:`check_ready` until it answers; :meth:`stop`
+    lets go of it."""
 
     def __init__(
         self,
@@ -328,13 +332,14 @@ class DesktopServer:
         web: Path,
         documents: Path,
         state: Path,
+        uid: int | None = None,
+        port: int | None = None,
         idle_seconds: int = IDLE_SECONDS,
         race_wait: float = 30.0,
-        port: int = SERVER_PORT,
         # What the tests replace:
         probe: Callable[[str], Health] = probe_health,
+        is_mine: Callable[[str], bool] | None = None,
         make_server: Callable[[list[str], str, Path], ServerProcess] = _make_server,
-        pick_port: Callable[[], int] = free_port,
         port_free: Callable[[int], bool] = is_port_free,
         version: Callable[[], str | None] | None = None,
         connect: Callable[[str], PresenceSocket] = _connect,
@@ -347,10 +352,13 @@ class DesktopServer:
         self._state = state
         self._idle = idle_seconds
         self._race_wait = race_wait
-        self._port = port
+        # Her port: by her account number (``uid``, this process's by default), unless told otherwise (``port``,
+        # ``CLAUDIA_SERVER_PORT``).
+        self._usual = port if port is not None else private_port(os.getuid() if uid is None else uid)
         self._probe = probe
+        self._is_mine = is_mine or self._proves_hers
+        self._key: OwnerKey | None = None
         self._make_server = make_server
-        self._pick_port = pick_port
         self._port_free = port_free
         self._version = version or (lambda: server_version(python))
         self._connect = connect
@@ -423,50 +431,79 @@ class DesktopServer:
         except OSError as problem:
             self._result = ServerStartError(str(problem))
 
-    def _ensure(self) -> str:
-        preferred = self._port
-        remembered = read_port(self._state_file)
-        # A server that runs already: on the port of every Claudia server, or where an earlier start had to go instead.
-        preferred_taken = False
-        for port in [preferred] if remembered in (None, preferred) else [preferred, remembered]:
-            url = f"http://{LOOPBACK}:{port}"
-            found = self._probe(url)
-            if found.kind == "claudia":
-                self._check_is_ours(found, port)
-                self._remember(port)
-                return url
-            if port == preferred:
-                preferred_taken = found.kind == "other" or not self._port_free(port)
-        # None runs: start one, on the usual port unless something that is not a Claudia server holds it.
-        port = preferred
-        if preferred_taken:
-            usable = remembered is not None and remembered != preferred and self._port_free(remembered)
-            port = remembered if usable and remembered is not None else self._pick_port()
-            log.info(
-                "port %s is used by something that is not a Claudia server; the local server goes to port %s",
-                preferred,
-                port,
+    def _ensure(self, stay: int | None = None) -> str:
+        """Find her server or start it. ``stay``: the port the page is on, tried first when her server has gone
+        (:meth:`_keep_presence`), so that it comes back where the page reconnects."""
+        if stay is not None:
+            there = self._find_on(stay)
+            if there == "hers":
+                return _url(stay)
+            if there == "free":
+                return self._start_server(stay)
+        usual = self._usual
+        at_usual = self._find_on(usual)
+        if at_usual == "hers":
+            self._gone_back()
+            return _url(usual)
+        # Her server may still run where it went while her port was held, and it keeps her documents (D435): use it.
+        instead = read_instead(self._state_file)
+        if instead is not None and instead != usual and self._find_on(instead) == "hers":
+            return _url(instead)
+        if at_usual == "free":
+            self._gone_back()
+            return self._start_server(usual)
+        log.info(
+            "port %s, hers, is held by %s; her server uses another port of her range while that lasts",
+            usual,
+            "something that is not a Claudia server" if at_usual == "held" else "a Claudia server that is not hers",
+        )
+        for port in walk_from(usual):
+            there = self._find_on(port)
+            if there in ("hers", "free"):
+                self._write(port)
+                return _url(port) if there == "hers" else self._start_server(port)
+        raise ServerStartError(
+            _("No port from {first} to {last} is free for your Claudia server on this computer.").format(
+                first=PRIVATE_PORTS[0], last=PRIVATE_PORTS[1]
             )
-        self._remember(port)
-        return self._start_server(f"http://{LOOPBACK}:{port}", port)
+        )
 
-    def _remember(self, port: int) -> None:
-        """Write down where the server is, if that is not what the file says already."""
-        if read_port(self._state_file) == port:
-            return
+    def _find_on(self, port: int) -> Literal["hers", "free", "not hers", "held"]:
+        """What is on ``port``: ``hers`` (checked to serve this app at this version), ``free``, ``not hers`` (a Claudia
+        server that is not hers) or ``held`` (something else holds it)."""
+        found = self._probe(_url(port))
+        if found.kind == "claudia":
+            if not self._is_mine(_url(port)):
+                return "not hers"
+            self._check_is_ours(found, port)
+            return "hers"
+        return "free" if found.kind == "none" and self._port_free(port) else "held"
+
+    def _gone_back(self) -> None:
+        """Her server is on her own port: ``instead`` is no longer needed."""
+        if read_instead(self._state_file) is not None:
+            self._write(None)
+
+    def _write(self, instead: int | None) -> None:
         try:
-            write_port(self._state_file, port, exclusive=False)
+            write_instead(self._state_file, instead)
         except OSError as problem:
             log.warning("%s could not be written: %s", self._state_file, problem)
 
+    def _owner_key(self) -> OwnerKey:
+        if self._key is None:
+            self._key = owner_key(self._state)
+        return self._key
+
+    def _proves_hers(self, url: str) -> bool:
+        """Does the Claudia server at ``url`` prove to be hers (``owner_key.is_owned_by`` with her key)?"""
+        return is_owned_by(_port(url), self._owner_key().key)
+
     def _check_is_ours(self, found: Health, port: int) -> None:
-        hint = _(
-            "It stops by itself ten minutes after its last window has closed. Or end its python process "
-            "(System Monitor). Then start again."
-        )
+        hint = self._hint()
         if self._app not in found.apps:
             raise ServerStartError(
-                _("The Claudia server on this computer (port {port}) does not serve {app}; it serves {apps}.").format(
+                _("Your Claudia server on this computer (port {port}) does not serve {app}; it serves {apps}.").format(
                     port=port, app=self._app, apps=", ".join(found.apps) or _("no app")
                 )
                 + "\n"
@@ -478,14 +515,22 @@ class DesktopServer:
         if own is not None and own != found.version:
             raise ServerStartError(
                 _(
-                    "A Claudia server of another version ({running}, this app belongs to {own}) is running on this "
-                    "computer (port {port})."
+                    "Your Claudia server of another version ({running}, this app belongs to {own}) is still running "
+                    "on this computer (port {port})."
                 ).format(running=found.version, own=own, port=port)
                 + "\n"
                 + hint
             )
 
-    def _start_server(self, url: str, port: int) -> str:
+    @staticmethod
+    def _hint() -> str:
+        return _(
+            "It stops by itself ten minutes after its last window has closed. Or end its python process "
+            "(System Monitor). Then start again."
+        )
+
+    def _start_server(self, port: int) -> str:
+        url = _url(port)
         command = server_command(
             self._python,
             port=port,
@@ -493,16 +538,28 @@ class DesktopServer:
             web=self._web,
             state=self._state,
             idle_seconds=self._idle,
+            owner_key_file=self._owner_key().file,
         )
         server = self._make_server(command, url, self.log_path)
         try:
             return server.start()
         except ServerStartError as problem:
-            # Another window may have started it a moment before: its server holds the folder's lock (D435), and ours
-            # exited. Then that one is the server.
+            # Another of her windows may have started it a moment before: its server holds the folder's lock (D435), and
+            # ours exited. Then that one is the server -- when it proves to be hers.
             if problem.exited and self._winner_answers(url):
                 log.info("another start was first; using its server at %s", url)
                 return url
+            # Her documents are held by a server that is not on her port and cannot prove to be hers: her own from
+            # before E8.5 (on 8765, with no key), still running after an update.
+            if problem.exited and _FOLDER_HELD in str(problem):
+                raise ServerStartError(
+                    _(
+                        "Your documents are in use by another Claudia server on this computer: most likely your "
+                        "own, of an older version, which is still running."
+                    )
+                    + "\n"
+                    + self._hint()
+                ) from problem
             raise
 
     def _winner_answers(self, url: str) -> bool:
@@ -510,7 +567,7 @@ class DesktopServer:
         while True:
             found = self._probe(url)
             if found.kind == "claudia" and self._app in found.apps:
-                return True
+                return self._is_mine(url)
             if time.monotonic() >= until:
                 return False
             self._sleep(_RACE_POLL)
@@ -527,7 +584,8 @@ class DesktopServer:
                 pause = _PRESENCE_PAUSE
                 if self._let_go.is_set():
                     return
-                self._origin = self._ensure()  # gone? then up again; there, nothing happens
+                # gone? then up again, where the page is; there, nothing happens
+                self._origin = self._ensure(_port(self._origin) if self._origin else None)
             except (ServerStartError, OSError) as problem:
                 log.warning("the local server is not there and could not be started again: %s", problem)
                 pause = min(pause * 2, _PRESENCE_PAUSE_MAX)

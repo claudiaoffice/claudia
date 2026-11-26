@@ -113,7 +113,7 @@ Feature: Only whoever runs a server can make the first administrator, and the pa
     When its window shows a page of another server it was connected to
     Then the app's welcome carries no setup code
 
-  @extended @unit:clients/linux/tests/test_desktop_server.py @unit:clients/neutralino/tests/desktop-server.test.ts
+  @extended @unit:clients/linux/tests/test_private_server.py @unit:clients/neutralino/tests/private-server.test.ts
   Scenario: A desktop app reads the code again at every welcome
     Given a desktop app whose own server has no administrator
     When another window restarts the shared server

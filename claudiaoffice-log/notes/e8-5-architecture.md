@@ -190,7 +190,8 @@ classDiagram
   shown as "Shared on this computer" (see question 2). `po/` gets both names, German "Privat auf diesem Computer" /
   "Geteilt auf diesem Computer"; "This computer" goes.
 * **Windows installer**: `claudia.iss` writes and removes the marker with the service component, grants the
-  Administrators group read on `%ProgramData%\Claudia\state\service\admin` (icacls), and its component text becomes
+  Administrators group read on the service's state folder (built: `%ProgramData%\Claudia\state`, its `--state-dir`;
+  `state\service` is only its log folder) (icacls), and its component text becomes
   "for the people of this computer to share documents". D743's "the apps use the service's documents" is superseded.
 
 ---
@@ -263,8 +264,7 @@ exec /bin/sh "$HOME/Library/Caches/Claudia/run/composes/window.sh" >>"$L/compose
   and icon, and quitting the window ends the app. (With node as the launched process and the window its child, macOS would show a
   launched app that never opens a window next to the window's own icon.) A packaged run folder is a fresh copy at every
   start, so nothing has to be put back afterwards, which is what `run()` waits for today.
-  **This is the riskiest assumption of the design; the first thing built is a spike of exactly this on your Mac**
-  (one app, unsigned, ad-hoc signed binaries, installed from a `.pkg`).
+  The spike of 2026-11-25 showed it works (one Dock icon, name and icon right, unsigned, from a `.pkg`).
 * **`windowBinary`** on macOS: in a checkout it builds the small `.app` as today (`macos-app-bundle.ts`); packaged, it
   takes `CLAUDIA_NEUTRALINO_BIN` as it is, because the binary is inside the app already, and **never writes into an
   installation** (that would break the bundle's signature, and the folder is read-only for most people).
@@ -340,8 +340,10 @@ packaging/
 
 ## Risks and what is not known
 
-* One Dock icon with an `exec`'d window (spike (a)).
-* Whether `installer` puts quarantine on installed files (expected: no; the apps should open without "Open Anyway").
+* ~~One Dock icon with an `exec`'d window~~: **settled by the spike** on the owner's Mac (2026-11-25, macOS 27.2.1):
+  one app, its name and icon, unsigned from a `.pkg`; see `spikes/e8-5-mac-launcher/README.md`.
+* ~~Whether installed files carry quarantine~~: they do not (spike). Still open: whether a *downloaded* `.pkg` needs
+  "Open Anyway" (the spike's was built on the same Mac); the install test uses a downloaded copy.
 * Whether an inherited ACL on `shared/state/admin` survives the server's own `chmod 0700/0600` (expected: yes, macOS
   keeps ACL entries over a mode change); the install test checks that an administrator can read the code.
 * Windows: the profile-folder hash may collide between two accounts on one PC (handled as a taken port, and logged).

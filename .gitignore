@@ -50,3 +50,6 @@ claudiaoffice-log/.obsidian/workspace*.json
 ai-models/*
 
 Claude*
+
+# What the installers build in a checkout (packaging/macos, spikes/e8-5-mac-launcher; on CI also packaging/windows)
+/build/

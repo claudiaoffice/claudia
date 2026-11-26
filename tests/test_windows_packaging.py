@@ -327,6 +327,60 @@ def test_the_script_reads_only_setup_messages_that_inno_setup_defines():
     assert not unknown, f"not known to be in Default.isl: {unknown}"
 
 
+# ------------------------------------------------------------ the service, Shared on this computer (E8.5, D1622)
+def _service_option(name: str) -> str:
+    arguments = ET.parse(WINDOWS / "service" / "claudia-service.xml").getroot().findtext("arguments")
+    return re.search(rf'--{name} "?([^" ]+)"?', arguments).group(1)
+
+
+def test_the_service_is_for_the_people_of_this_computer_to_share_documents_and_not_chosen_unless_asked_for():
+    text = iss_text()
+    assert (
+        "en.ComponentService=Claudia server as a Windows service, for the people of this computer to share documents"
+        in text
+    )
+    assert (
+        "de.ComponentService=Claudia-Server als Windows-Dienst, damit die Personen dieses Computers Dokumente teilen"
+        in text
+    )
+    assert re.findall(r'^Name: "(\w+)"; Description: "\{(?:cm|code):\w+\}"', text, flags=re.M)[0] == "standard"
+    assert re.search(r'^Name: "service";.*; Types: full$', text, flags=re.M), "only the type with the service has it"
+
+
+def test_the_service_file_names_the_address_and_state_folder_the_service_is_started_with():
+    text = iss_text()
+    assert _service_option("host") == "127.0.0.1"
+    assert f'"origin": "http://127.0.0.1:{_service_option("port")}"' in text
+    state = _service_option("state-dir").replace("%ProgramData%", "{commonappdata}")
+    assert f"State := ExpandConstant('{state}');" in text
+    assert "SaveStringToFile(ExpandConstant('{commonappdata}\\Claudia\\service.json'), ServiceFile, False)" in text
+    assert re.search(r"if \(CurStep = ssPostInstall\) and WizardIsComponentSelected\('service'\) then", text)
+
+
+def test_the_service_file_goes_with_the_program():
+    assert 'Type: files; Name: "{commonappdata}\\Claudia\\service.json"' in iss_text()
+
+
+def test_only_the_computers_administrators_and_the_service_may_read_its_state_and_so_its_setup_code():
+    """D1624: the apps of the computer's administrators read the setup code; Users no longer inherit read access."""
+    state = _service_option("state-dir").replace("%ProgramData%", "{commonappdata}")
+    line = next(
+        line
+        for line in iss_text().splitlines()
+        if line.startswith('Filename: "{sys}\\icacls.exe"') and state in line and "inheritance" in line
+    )
+    for grant in (
+        "/inheritance:r",
+        "/grant:r",
+        "*S-1-5-18:(OI)(CI)F",
+        "*S-1-5-32-544:(OI)(CI)F",
+        "*S-1-5-19:(OI)(CI)M",
+    ):
+        assert grant in line
+    assert "S-1-5-32-545" not in line, "the Users group gets nothing"
+    assert line.endswith("Components: service")
+
+
 def test_the_languages_are_those_the_suite_has_catalogs_for():
     languages = set(re.findall(r'^Name: "(\w+)"; MessagesFile', iss_text(), flags=re.M))
     assert languages == {path.stem for path in (ROOT / "po").glob("*.po") if path.stem != "xx"} | {"en"}
@@ -403,12 +457,15 @@ def test_the_service_has_one_name_in_the_script_and_in_its_configuration():
     assert f'#define ServiceId "{service.findtext("id")}"' in iss_text()
 
 
-def test_the_service_takes_the_port_that_every_desktop_app_looks_at():
-    """The desktop apps use a Claudia server they find on this port (D504): the service must be where they look."""
+def test_the_service_takes_the_port_of_every_shared_server_which_no_private_server_uses():
+    """The service is a shared server, on 8765 like every one (D504); a person's private server is on a port of her
+    own, from a range without 8765 (E8.5, D1621), so the two are never taken for each other."""
     service = ET.parse(WINDOWS / "service" / "claudia-service.xml").getroot()
-    port = re.search(r"--port (\d+)", service.findtext("arguments")).group(1)
-    shell = (ROOT / "clients" / "neutralino" / "src" / "desktop-server.ts").read_text(encoding="utf-8")
-    assert f"SERVER_PORT = {port}" in shell
+    port = int(re.search(r"--port (\d+)", service.findtext("arguments")).group(1))
+    assert port == 8765
+    ports = (ROOT / "clients" / "neutralino" / "src" / "private-port.ts").read_text(encoding="utf-8")
+    first, last = map(int, re.search(r"PRIVATE_PORTS = \{ first: (\d+), last: (\d+) \}", ports).groups())
+    assert not first <= port <= last
 
 
 def test_the_service_listens_on_this_computer_only_and_does_not_stop_when_idle():

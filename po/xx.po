@@ -249,10 +249,6 @@ msgstr "[À Clàûdîà éxpôrt, màdé by {who}.~~~~~~~~~~~~~]"
 msgid "A Claudia export."
 msgstr "[À Clàûdîà éxpôrt.~~~~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/desktop_server.py
-msgid "A Claudia server of another version ({running}, this app belongs to {own}) is running on this computer (port {port})."
-msgstr "[À Clàûdîà sérvér ôf ànôthér vérsîôn ({running}, thîs àpp bélôngs tô {own}) îs rûnnîng ôn thîs cômpûtér (pôrt {port}).~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
-
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "A Roman numeral as a number (capitals or not; a leading minus sign is kept)."
 msgstr "[À Rômàn nûméràl às à nûmbér (càpîtàls ôr nôt; à léàdîng mînûs sîgn îs képt).~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
@@ -3045,7 +3041,7 @@ msgstr "[Ît îs nôt rûn, sô nôthîng îs fôûnd ôr réplàcéd.~~~~~~~~~~
 msgid "It shows {code}: {detail}"
 msgstr "[Ît shôws {code}: {detail}~~~~~~~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/desktop_server.py
+#: clients/linux/src/claudia_shell_gtk/private_server.py
 msgid "It stops by itself ten minutes after its last window has closed. Or end its python process (System Monitor). Then start again."
 msgstr "[Ît stôps by îtsélf tén mînûtés àftér îts làst wîndôw hàs clôséd. Ôr énd îts pythôn prôcéss (Systém Mônîtôr). Thén stàrt àgàîn.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -3757,6 +3753,10 @@ msgstr "[Nô nàmés yét. Séléct célls, typé à wôrd în thé bôx léft �
 msgid "No notes for this slide."
 msgstr "[Nô nôtés fôr thîs slîdé.~~~~~~~~~~]"
 
+#: clients/linux/src/claudia_shell_gtk/private_server.py
+msgid "No port from {first} to {last} is free for your Claudia server on this computer."
+msgstr "[Nô pôrt frôm {first} tô {last} îs fréé fôr yôûr Clàûdîà sérvér ôn thîs cômpûtér.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+
 #: web/app/components/AdminTypesetting.vue
 msgid "No shell access, no network, no files outside the job — always on, whichever installation you point to."
 msgstr "[Nô shéll àccéss, nô nétwôrk, nô fîlés ôûtsîdé thé jôb — àlwàys ôn, whîchévér înstàllàtîôn yôû pôînt tô.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
@@ -4053,10 +4053,6 @@ msgstr "[Ôn thîs shéét àt~~~~~~]"
 msgid "On this slide"
 msgstr "[Ôn thîs slîdé~~~~~]"
 
-#: web/app/components/OpenDialog.vue
-msgid "On {place} · {count}"
-msgstr "[Ôn {place} · {count}~~~~~~~~]"
-
 #: web/app/lib/search.ts
 msgid "One match"
 msgstr "[Ôné màtch~~~~]"
@@ -4072,6 +4068,10 @@ msgstr "[Ôné stép în thé hîstôry. Ûndô pûts évérythîng bàck.~~~~~~
 #: packages/claudia-computes/src/claudia_computes/chart_steps.py
 msgid "Only a chart on a sheet moves to a slide."
 msgstr "[Ônly à chàrt ôn à shéét môvés tô à slîdé.~~~~~~~~~~~~~~~~]"
+
+#: web/app/components/FirstAdminSetup.vue
+msgid "Only an administrator of this computer can name this server's first administrator. Ask one."
+msgstr "[Ônly àn àdmînîstràtôr ôf thîs cômpûtér càn nàmé thîs sérvér's fîrst àdmînîstràtôr. Àsk ôné.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
 #: web/app/components/DetailsDialog.vue
 msgid "Only an editor or an owner of the document can change this."
@@ -4616,6 +4616,10 @@ msgstr "[Prîntîng ànd sàvîng à PDF àré récôrdéd în thé dôcûmént'
 #: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/PrintPreview.vue web/app/lib/document-menus.ts web/app/lib/print/use-print.ts
 msgid "Print…"
 msgstr "[Prînt…~~]"
+
+#: clients/linux/src/claudia_shell_gtk/window.py web/app/lib/server-bookmarks.ts
+msgid "Private on this computer"
+msgstr "[Prîvàté ôn thîs cômpûtér~~~~~~~~~~]"
 
 #: web/app/components/AdminAi.vue
 msgid "Provider key"
@@ -5433,6 +5437,10 @@ msgstr "[Shàpés~~]"
 msgid "Share this document"
 msgstr "[Shàré thîs dôcûmént~~~~~~~~]"
 
+#: web/app/lib/server-bookmarks.ts
+msgid "Shared on this computer"
+msgstr "[Shàréd ôn thîs cômpûtér~~~~~~~~~]"
+
 #: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts
 msgid "Share…"
 msgstr "[Shàré…~~]"
@@ -6088,10 +6096,6 @@ msgstr "[Thàt sérvér rûns {other}. Thîs wîndôw îs {this} — ôpén ît 
 #: web/app/lib/base-session.ts
 msgid "That was deleted. This is the last moment it was there."
 msgstr "[Thàt wàs délétéd. Thîs îs thé làst mômént ît wàs théré.~~~~~~~~~~~~~~~~~~~~~~]"
-
-#: clients/linux/src/claudia_shell_gtk/desktop_server.py
-msgid "The Claudia server on this computer (port {port}) does not serve {app}; it serves {apps}."
-msgstr "[Thé Clàûdîà sérvér ôn thîs cômpûtér (pôrt {port}) dôés nôt sérvé {app}; ît sérvés {apps}.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "The ISO week number of a date: weeks start on Monday and week 1 is the one with the first Thursday."
@@ -7485,10 +7489,6 @@ msgstr "[Thîs chàrt ônly~~~~~~]"
 msgid "This colour is not in the palette, so a palette change will leave it behind."
 msgstr "[Thîs côlôûr îs nôt în thé pàlétté, sô à pàlétté chàngé wîll léàvé ît béhînd.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/window.py web/app/lib/server-bookmarks.ts
-msgid "This computer"
-msgstr "[Thîs cômpûtér~~~~~]"
-
 #: web/app/components/DocumentFrame.vue
 msgid "This document"
 msgstr "[Thîs dôcûmént~~~~~]"
@@ -8353,6 +8353,14 @@ msgstr "[Yôû càn try àgàîn nôw.~~~~~~~~~]"
 msgid "You will no longer be able to open {doc}, unless somebody adds you again. Confirm it is you with your own current password."
 msgstr "[Yôû wîll nô lôngér bé àblé tô ôpén {doc}, ûnléss sômébôdy àdds yôû àgàîn. Cônfîrm ît îs yôû wîth yôûr ôwn cûrrént pàsswôrd.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
+#: clients/linux/src/claudia_shell_gtk/private_server.py
+msgid "Your Claudia server of another version ({running}, this app belongs to {own}) is still running on this computer (port {port})."
+msgstr "[Yôûr Clàûdîà sérvér ôf ànôthér vérsîôn ({running}, thîs àpp bélôngs tô {own}) îs stîll rûnnîng ôn thîs cômpûtér (pôrt {port}).~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+
+#: clients/linux/src/claudia_shell_gtk/private_server.py
+msgid "Your Claudia server on this computer (port {port}) does not serve {app}; it serves {apps}."
+msgstr "[Yôûr Clàûdîà sérvér ôn thîs cômpûtér (pôrt {port}) dôés nôt sérvé {app}; ît sérvés {apps}.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+
 #: web/app/components/RecoveryKeyDialog.vue
 msgid "Your browser would not copy it: select the key and copy it yourself."
 msgstr "[Yôûr brôwsér wôûld nôt côpy ît: séléct thé kéy ànd côpy ît yôûrsélf.~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
@@ -8364,6 +8372,10 @@ msgstr "[Yôûr chàngé wàs nôt àpplîéd: thé dôcûmént chàngéd ûndé
 #: web/app/components/SearchPanel.vue
 msgid "Your changes to the pattern are dropped."
 msgstr "[Yôûr chàngés tô thé pàttérn àré drôppéd.~~~~~~~~~~~~~~~~]"
+
+#: clients/linux/src/claudia_shell_gtk/private_server.py
+msgid "Your documents are in use by another Claudia server on this computer: most likely your own, of an older version, which is still running."
+msgstr "[Yôûr dôcûménts àré în ûsé by ànôthér Clàûdîà sérvér ôn thîs cômpûtér: môst lîkély yôûr ôwn, ôf àn ôldér vérsîôn, whîch îs stîll rûnnîng.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
 #: web/app/components/AdminLogin.vue web/app/components/DetailsDialog.vue web/app/components/FirstAdminSetup.vue web/app/components/ImportDialog.vue web/app/components/OpenDialog.vue
 msgid "Your name"
@@ -9657,7 +9669,7 @@ msgstr "[néw slîdé~~~~]"
 msgid "no answer was made"
 msgstr "[nô ànswér wàs màdé~~~~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/desktop_server.py
+#: clients/linux/src/claudia_shell_gtk/private_server.py
 msgid "no app"
 msgstr "[nô àpp~~]"
 
@@ -11896,6 +11908,10 @@ msgstr "[{place} àlréàdy hôlds à dôcûmént càlléd {id}. À nàmé cànn
 #: web/app/components/ImportDialog.vue
 msgid "{place} already holds this document, as {id}. It cannot be added a second time: open the one that is here."
 msgstr "[{place} àlréàdy hôlds thîs dôcûmént, às {id}. Ît cànnôt bé àddéd à sécônd tîmé: ôpén thé ôné thàt îs héré.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+
+#: web/app/components/OpenDialog.vue
+msgid "{place} · {count}"
+msgstr "[{place} · {count}~~~~~~~]"
 
 #: packages/claudia-server/src/claudia_server/computes.py
 msgid "{problem}"

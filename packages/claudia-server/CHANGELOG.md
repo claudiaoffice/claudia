@@ -3,7 +3,12 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
-## [Unreleased]
+## [0.46.0] - 2026-11-25
+
+### Added
+- A person's private server (E8.5, D1620; CODE-99): `create_app(owner_key=...)` and `--owner-key-file FILE` make the
+  server answer `GET /api/owner?challenge=<64 lower-case hex digits>` to this computer with an HMAC of the challenge
+  and the port it listens on (`owner_proof.py`), so that her desktop apps use it only when it proves to be hers.
 
 ### Security
 - What a person may read of the chat and the history is decided in one place, `audience.Reader` (D2008), which every
