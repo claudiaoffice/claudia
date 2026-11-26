@@ -302,3 +302,42 @@ workspaces' "not now" (slice 4's list above). German follows the Sie form.
   (about 5:1): there is no paler grey in the menus to keep apart from it (D1642).
 - On a Mac, a chord without macOS's own key still answers to Cmd or Ctrl, as before; only macOS's own chords ask for
   the Control key itself.
+
+## After slices 4 and 5 · UX-95, UX-96, UX-97 (D1655, D1656), 2026-11-26
+
+**UX-97, words just typed and Shift+Home.** Failing first: the menus spec's step "I select a word" now presses
+Shift+Home right after typing, as a person does (it waited for the word to be sent before), and
+`web/tests/text-session.test.ts` selects across the words not sent yet. Two causes:
+- The page's selection was only taken where it was collapsed in the words not sent yet (Home, D1350). Now
+  `TextEditor.vue` works out each end of the page's selection as a place in the paragraph once those words are in it
+  (`placeOnceSent`), and the session selects that once they are sent (`selectOnceSent`, which replaces
+  `caretInUnsent`).
+- The caret was drawn as a selection over those words: its anchor before them, its focus behind. It is collapsed
+  behind them now, so the new check does not take a caret for a selection.
+
+**UX-96, the reference's own entries** (D1655, undecided). Failing first: the workbook test, with two new rows of the
+Context menus sheet (Show as ▸, Remove reference; Go to target moved to the second group); then
+`web/tests/reference-handlers.test.ts` and the spec scenario "A reference has a context menu of its own".
+- The definition's reference menu: Show As ▸ the five ways (`format.show-as-*`, checkable), Go to Target, Remove
+  Reference (`edit.remove-reference`). No keys (D1614); Remove Reference lost the "Delete" hint the web drew beside
+  it, because the definition has no key for it.
+- `lib/menus/reference-handlers.ts`: one map for the reference the menu is on, or for none (the workspaces' own maps,
+  which the Shortcuts list reads: "There is no reference here.").
+- Wrap Text… stays one entry with its choices (D1654); the purpose chooser of a column is a popover of a control and
+  gets no row.
+
+**UX-95, My Role… and Delete in the list** (D1656). Failing first: `specs/document-file/my-role-and-delete.feature`
+(four scenarios) and `web/tests/window-handlers.test.ts`, `web/tests/details.test.ts`.
+- The definition: File ▸ Manage ▸ My Role… (`file.manage.my-role`, Ctrl+Shift+Alt+L, everybody); it left
+  `NOT_BUILT_YET`.
+- `MyRoleDialog.vue` says your role and leads to `AssignOwnerDialog`, `AcceptOwnershipDialog` and
+  `LeaveDocumentDialog`, unchanged.
+- The front page's list on this server has a Delete button per document; `DeleteFromListDialog.vue` asks for the name
+  and password, and `deleteFromServer` in `lib/open.ts` connects, asks and closes, as `saveDetails` does (both now
+  `askOnce`). The deleted document leaves Mine and its collections too.
+- `DeleteDocumentDialog.vue` and `BaseSession.deleteDocument` went: nothing opened them since slice 4.
+
+**Assumptions:**
+- Accept Ownership… is offered to everybody but an owner, and Leave the Document… to everybody: the server says no
+  where it does not apply, as before.
+- Delete is offered in the list on this server only, not in Mine, which lists documents of other servers too.

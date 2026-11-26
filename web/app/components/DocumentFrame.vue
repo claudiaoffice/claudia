@@ -209,6 +209,7 @@ const noticeSaid = useNoticeSaid(() => state.notice)
       @close="dialog = null"
     />
     <ShareDialog v-if="dialog === 'share'" :session="session" @close="dialog = null" />
+    <MyRoleDialog v-if="dialog === 'my-role'" :session="session" @close="dialog = null" @choose="(step) => (dialog = step)" />
     <AssignOwnerDialog v-if="dialog === 'assign-owner'" :session="session" @close="dialog = null" />
     <AcceptOwnershipDialog v-if="dialog === 'accept-owner'" :session="session" @close="dialog = null" />
     <ChangePasswordDialog
@@ -221,7 +222,6 @@ const noticeSaid = useNoticeSaid(() => state.notice)
     <DownloadDialog v-if="dialog === 'download'" :session="session" @close="dialog = null" />
     <ExportFormatDialog v-if="dialog === 'export-format'" :session="session" :formats="exportFormats" @close="dialog = null" />
     <RedactionDialog v-if="redaction" :session="session" :picked="redaction" @close="redaction = null" @done="redacted" />
-    <DeleteDocumentDialog v-if="dialog === 'delete'" :session="session" @close="dialog = null" @deleted="((dialog = null), emit('leave'))" />
     <ShortcutsDialog v-if="dialog === 'shortcuts'" :groups="listing" :others="otherKeys" :extra="shortcutNotes" @close="dialog = null" />
     <AboutDialog v-if="dialog === 'about'" :app="app" @close="dialog = null" />
     <AiConsentDialog v-if="dialog === 'ai'" :session="session" @close="dialog = null" />

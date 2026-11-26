@@ -9,6 +9,7 @@ import { pasteAsPlainText } from '~/lib/clipboard'
 import type { Thing } from '~/lib/fits/facts'
 import type { ContextMenuOf, Handler, Handlers } from '~/lib/menus/assemble'
 import { useMenus, windowFacts } from '~/lib/menus/use-menus'
+import { referenceHandlers } from '~/lib/menus/reference-handlers'
 import { notYet, windowHandlers } from '~/lib/menus/window-handlers'
 import { canTurn } from '~/lib/turning'
 import { useI18n } from '~/lib/i18n'
@@ -294,6 +295,7 @@ const handlers = computed<Handlers>(() => ({
   'format.describe': { run: () => canvas.value?.openDescribe() },
   'edit.reference': { run: () => void frame.value?.referenceThing(state.selected ?? state.activeSlide) },
   'edit.go-to-target': { run: () => void goToTarget(), notNow: () => (state.selected && session.referenceIn(state.selected) ? null : t('There is no reference here.')) },
+  ...referenceHandlers(t, null),
   'edit.rename-slide': { run: () => askRename(), notNow: onSlide },
   'edit.edit-text': { run: () => void canvas.value?.beginEdit() },
   'edit.delete': { run: () => void remove() },

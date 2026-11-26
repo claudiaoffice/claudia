@@ -1,8 +1,7 @@
 <script setup lang="ts">
-// File ▸ Manage ▸ Assign new owner… (D141). A role lives inside its own password-sealed slot (D102), so handing
-// one over is a propose/accept pair: we prove it is us with our own password now, and the person we pick proves it
-// is them with theirs when they accept (elsewhere, the next time they open this menu and see the offer — there is
-// no separate "accept" screen yet; see the decision log).
+// File ▸ Manage ▸ My Role… ▸ Hand Over… (D141, UX-95). A role lives inside its own password-sealed slot (D102), so
+// handing one over is a propose/accept pair: we prove it is us with our own password now, and the person we pick
+// proves it is them with theirs when they accept, in their own My Role… (there is no notification yet).
 import { onMounted, ref } from 'vue'
 import type { BaseSession } from '~/lib/base-session'
 import { useI18n } from '~/lib/i18n'

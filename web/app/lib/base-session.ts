@@ -1529,14 +1529,6 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     return done !== false
   }
 
-  /** Remove this document from the server for good, confirming it with your own current password. There is no
-   * way back from this. */
-  async deleteDocument(password: string): Promise<boolean> {
-    const done = await this.attempt('delete_document', { password })
-    if (done !== false) this.close()
-    return done !== false
-  }
-
   /** The document's current content as Claudia's own format (not Word, Excel or PowerPoint, and not the history
    * or the chat): `{format, app, exported_at, state_schema, state}`, ready to be saved to a file. */
   async exportContent(): Promise<Record<string, unknown> | false> {

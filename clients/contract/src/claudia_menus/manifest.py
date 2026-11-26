@@ -489,8 +489,8 @@ def _clipboard(*, native: bool) -> tuple[Action, Action, Action, Action]:
 
 def _file_menu(*, title: str) -> Menu:
     """New, Open ▸ · Save Checkpoint…, Download · Print… · Manage ▸ · Close · Quit, the desktop's only (D1616).
-    Save, Assign New Owner…, Accept Ownership… and Leave Document… left the menu (the owner, 2026-11-25); Delete From
-    Server… went to the front page (D1608)."""
+    Save left the menu; Assign New Owner…, Accept Ownership… and Leave Document… became Manage ▸ My Role…, one dialog
+    (the owner, 2026-11-25, UX-95); Delete From Server… went to the front page's list (D1608)."""
     return Menu(
         "File",
         (
@@ -564,6 +564,13 @@ def _file_menu(*, title: str) -> Menu:
                             "Take content out of the document's history and chat for good",
                             key="<Primary><Shift>F8",
                             fits=EDITORS,
+                        ),
+                        _page(
+                            "file.manage.my-role",
+                            "My Role…",
+                            "Hand the document over, accept it from its owner, or leave it",
+                            key="<Primary><Alt><Shift>l",
+                            fits=ANYONE,
                         ),
                     ),
                 ),
@@ -970,8 +977,27 @@ def _paragraph_menus() -> tuple[ContextMenu, ...]:
     return (_thing("paragraph", "Paragraph", style=True), _thing("list", "List"))
 
 
+#: The ways a reference can show (E9.31 step H, ``references.ts``): id, words in its Show As submenu.
+REFERENCE_SHOWS = (
+    ("number", "Number"),
+    ("text", "Text"),
+    ("number-text", "Number and Text"),
+    ("page", "Page"),
+    ("name", "Name"),
+)
+
+
 def _reference_menu() -> ContextMenu:
-    """A reference, in the text or in a text box: Go to Target (D1607)."""
+    """A reference, in the text or in a text box: how it shows, Go to Target (D1607) and Remove Reference (UX-96)."""
+    show_as = Submenu(
+        "Show As",
+        tuple(
+            _page(
+                f"format.show-as-{show}", label, f"Show the reference as: {label.lower()}", checkable=True, fits=EDITORS
+            )
+            for show, label in REFERENCE_SHOWS
+        ),
+    )
     go = _page(
         "edit.go-to-target",
         "Go to Target",
@@ -979,7 +1005,8 @@ def _reference_menu() -> ContextMenu:
         key="<Primary><Alt>Return",
         fits=ANYONE,
     )
-    return ContextMenu("reference", "Reference", ((go,),))
+    remove = _page("edit.remove-reference", "Remove Reference", "Take the reference out of the text", fits=EDITORS)
+    return ContextMenu("reference", "Reference", ((show_as,), (go, remove)))
 
 
 ROW_ABOVE = _page(

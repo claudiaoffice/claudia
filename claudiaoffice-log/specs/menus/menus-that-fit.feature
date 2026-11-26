@@ -77,6 +77,18 @@ Feature: The menus offer what fits who I am and what I am doing, and what does n
     When I choose Style…
     Then the paragraph style popover opens for that paragraph
 
+  # UX-96: Show As and Remove Reference came from the web beside the definition; now they are the definition's too
+  @extended @app:composes
+  Scenario: A reference has a context menu of its own
+    Given I am the owner of a text with a reference to its heading "Spring"
+    When I press the right button on the reference
+    Then the menu shows Show As, Go to Target and Remove Reference
+    When I choose Show As ▸ Page
+    And I press the right button on the reference
+    Then Show As ▸ Page is ticked
+    When I choose Remove Reference
+    Then there is no reference in the text
+
   @core @firefox @app:computes
   Scenario: A pivot table's actions are in its context menu
     Given I am the owner of a sheet with a pivot table

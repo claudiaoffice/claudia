@@ -5,6 +5,7 @@ import {
   saveDetails,
   summaryOf,
   addTags,
+  deleteFromServer,
   tagChoices,
   tagCounts,
   tagsFromText,
@@ -136,6 +137,23 @@ describe('saving the details of a document from the front page', () => {
       throw new ProtocolError('unauthorized', 'that is not your current password')
     })
     expect(await saveDetails(() => link, 'nope', '', [])).toEqual({ error: 'that is not your current password' })
+    expect(link.closed).toBe(true)
+  })
+})
+
+// UX-95, D1608: deleting left the document's menus for the front page, where no document is open
+describe('deleting a document from the front page', () => {
+  it('asks the server with the owner’s password and closes the connection', async () => {
+    const link = new FakeLink(() => ({ deleted: true }))
+    expect(await deleteFromServer(() => link, 'secret')).toEqual({ deleted: true })
+    expect(link.requests).toEqual([['delete_document', { password: 'secret' }]])
+    expect(link.closed).toBe(true)
+  })
+  it('gives back the server’s sentence when somebody who is not an owner tries', async () => {
+    const link = new FakeLink(() => {
+      throw new ProtocolError('forbidden', 'only an owner of a document may delete it')
+    })
+    expect(await deleteFromServer(() => link, 'secret')).toEqual({ error: 'only an owner of a document may delete it' })
     expect(link.closed).toBe(true)
   })
 })

@@ -49,6 +49,7 @@ export const KEYS: Readonly<Record<string, ActionKey>> = {
   'file.download': { chord: { key: 's', code: 'KeyS', ctrl: true, alt: true }, owner: 'page' },
   'file.manage.change-password': { chord: { key: 'w', code: 'KeyW', ctrl: true, shift: true, alt: true }, owner: 'page' },
   'file.manage.export': { chord: { key: 'x', code: 'KeyX', ctrl: true, shift: true, alt: true }, owner: 'page' },
+  'file.manage.my-role': { chord: { key: 'l', code: 'KeyL', ctrl: true, shift: true, alt: true }, owner: 'page' },
   'file.manage.redact': { chord: { key: 'F8', ctrl: true, shift: true }, owner: 'page' },
   'file.manage.share': { chord: { key: 's', code: 'KeyS', ctrl: true, shift: true, alt: true }, owner: 'page' },
   'file.new': { chord: { key: 'n', code: 'KeyN', ctrl: true, alt: true }, owner: 'page' },
@@ -164,7 +165,7 @@ export const DEFINITIONS: Readonly<Record<AppName, AppDef>> = {
           { id: 'file.print', label: 'Print…', fits: 'role: anyone', kind: 'page' },
         ],
         [
-          { label: 'Manage', items: [{ id: 'file.manage.share', label: 'Share…', fits: 'role: owner', kind: 'page' }, { id: 'file.manage.change-password', label: 'Password…', fits: 'role: anyone', kind: 'page' }, { id: 'file.manage.export', label: 'Export…', fits: 'role: anyone', kind: 'page' }, { id: 'file.manage.redact', label: 'Redact History…', fits: 'role: editor or owner', kind: 'page' }] },
+          { label: 'Manage', items: [{ id: 'file.manage.share', label: 'Share…', fits: 'role: owner', kind: 'page' }, { id: 'file.manage.change-password', label: 'Password…', fits: 'role: anyone', kind: 'page' }, { id: 'file.manage.export', label: 'Export…', fits: 'role: anyone', kind: 'page' }, { id: 'file.manage.redact', label: 'Redact History…', fits: 'role: editor or owner', kind: 'page' }, { id: 'file.manage.my-role', label: 'My Role…', fits: 'role: anyone', kind: 'page' }] },
         ],
         [
           { id: 'file.close', label: 'Close', fits: 'role: anyone', kind: 'page' },
@@ -312,7 +313,11 @@ export const DEFINITIONS: Readonly<Record<AppName, AppDef>> = {
       ] },
       { id: 'reference', label: 'Reference', sections: [
         [
+          { label: 'Show As', items: [{ id: 'format.show-as-number', label: 'Number', fits: 'role: editor or owner', kind: 'page', checkable: true }, { id: 'format.show-as-text', label: 'Text', fits: 'role: editor or owner', kind: 'page', checkable: true }, { id: 'format.show-as-number-text', label: 'Number and Text', fits: 'role: editor or owner', kind: 'page', checkable: true }, { id: 'format.show-as-page', label: 'Page', fits: 'role: editor or owner', kind: 'page', checkable: true }, { id: 'format.show-as-name', label: 'Name', fits: 'role: editor or owner', kind: 'page', checkable: true }] },
+        ],
+        [
           { id: 'edit.go-to-target', label: 'Go to Target', fits: 'role: anyone', kind: 'page' },
+          { id: 'edit.remove-reference', label: 'Remove Reference', fits: 'role: editor or owner', kind: 'page' },
         ],
       ] },
     ],
@@ -333,7 +338,7 @@ export const DEFINITIONS: Readonly<Record<AppName, AppDef>> = {
           { id: 'file.print', label: 'Print…', fits: 'role: anyone', kind: 'page' },
         ],
         [
-          { label: 'Manage', items: [{ id: 'file.manage.share', label: 'Share…', fits: 'role: owner', kind: 'page' }, { id: 'file.manage.change-password', label: 'Password…', fits: 'role: anyone', kind: 'page' }, { id: 'file.manage.export', label: 'Export…', fits: 'role: anyone', kind: 'page' }, { id: 'file.manage.redact', label: 'Redact History…', fits: 'role: editor or owner', kind: 'page' }] },
+          { label: 'Manage', items: [{ id: 'file.manage.share', label: 'Share…', fits: 'role: owner', kind: 'page' }, { id: 'file.manage.change-password', label: 'Password…', fits: 'role: anyone', kind: 'page' }, { id: 'file.manage.export', label: 'Export…', fits: 'role: anyone', kind: 'page' }, { id: 'file.manage.redact', label: 'Redact History…', fits: 'role: editor or owner', kind: 'page' }, { id: 'file.manage.my-role', label: 'My Role…', fits: 'role: anyone', kind: 'page' }] },
         ],
         [
           { id: 'file.close', label: 'Close', fits: 'role: anyone', kind: 'page' },
@@ -514,7 +519,11 @@ export const DEFINITIONS: Readonly<Record<AppName, AppDef>> = {
       ] },
       { id: 'reference', label: 'Reference', sections: [
         [
+          { label: 'Show As', items: [{ id: 'format.show-as-number', label: 'Number', fits: 'role: editor or owner', kind: 'page', checkable: true }, { id: 'format.show-as-text', label: 'Text', fits: 'role: editor or owner', kind: 'page', checkable: true }, { id: 'format.show-as-number-text', label: 'Number and Text', fits: 'role: editor or owner', kind: 'page', checkable: true }, { id: 'format.show-as-page', label: 'Page', fits: 'role: editor or owner', kind: 'page', checkable: true }, { id: 'format.show-as-name', label: 'Name', fits: 'role: editor or owner', kind: 'page', checkable: true }] },
+        ],
+        [
           { id: 'edit.go-to-target', label: 'Go to Target', fits: 'role: anyone', kind: 'page' },
+          { id: 'edit.remove-reference', label: 'Remove Reference', fits: 'role: editor or owner', kind: 'page' },
         ],
       ] },
     ],
@@ -535,7 +544,7 @@ export const DEFINITIONS: Readonly<Record<AppName, AppDef>> = {
           { id: 'file.print', label: 'Print…', fits: 'role: anyone', kind: 'page' },
         ],
         [
-          { label: 'Manage', items: [{ id: 'file.manage.share', label: 'Share…', fits: 'role: owner', kind: 'page' }, { id: 'file.manage.change-password', label: 'Password…', fits: 'role: anyone', kind: 'page' }, { id: 'file.manage.export', label: 'Export…', fits: 'role: anyone', kind: 'page' }, { id: 'file.manage.redact', label: 'Redact History…', fits: 'role: editor or owner', kind: 'page' }] },
+          { label: 'Manage', items: [{ id: 'file.manage.share', label: 'Share…', fits: 'role: owner', kind: 'page' }, { id: 'file.manage.change-password', label: 'Password…', fits: 'role: anyone', kind: 'page' }, { id: 'file.manage.export', label: 'Export…', fits: 'role: anyone', kind: 'page' }, { id: 'file.manage.redact', label: 'Redact History…', fits: 'role: editor or owner', kind: 'page' }, { id: 'file.manage.my-role', label: 'My Role…', fits: 'role: anyone', kind: 'page' }] },
         ],
         [
           { id: 'file.close', label: 'Close', fits: 'role: anyone', kind: 'page' },
@@ -664,7 +673,11 @@ export const DEFINITIONS: Readonly<Record<AppName, AppDef>> = {
       ] },
       { id: 'reference', label: 'Reference', sections: [
         [
+          { label: 'Show As', items: [{ id: 'format.show-as-number', label: 'Number', fits: 'role: editor or owner', kind: 'page', checkable: true }, { id: 'format.show-as-text', label: 'Text', fits: 'role: editor or owner', kind: 'page', checkable: true }, { id: 'format.show-as-number-text', label: 'Number and Text', fits: 'role: editor or owner', kind: 'page', checkable: true }, { id: 'format.show-as-page', label: 'Page', fits: 'role: editor or owner', kind: 'page', checkable: true }, { id: 'format.show-as-name', label: 'Name', fits: 'role: editor or owner', kind: 'page', checkable: true }] },
+        ],
+        [
           { id: 'edit.go-to-target', label: 'Go to Target', fits: 'role: anyone', kind: 'page' },
+          { id: 'edit.remove-reference', label: 'Remove Reference', fits: 'role: editor or owner', kind: 'page' },
         ],
       ] },
     ],

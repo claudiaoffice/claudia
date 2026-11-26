@@ -27,7 +27,7 @@ The index is the status of record; a section below keeps the status of the round
 re-checked. **Opened** and **Fixed** are filled from 2026-11-20 on: for older items only where the status already gave
 the date.
 
-### Open (66)
+### Open (63)
 
 By priority (P1, P2, P3, then items that wait for a decision without one), then by ID.
 
@@ -47,7 +47,6 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | UX-71 | P2 | UX / computes | Text on a workbook's slide is drawn in the workbook's Body text (13 px), tiny on a 1600-unit slide | **needs decision** (measured; size 2) | 2026-11-22 |  |
 | UX-91 | P2 | UX / composes / Firefox | In Firefox the down arrow from the paragraph above a new table does not put the caret in its first box (Chromium does) | **new, open** (measured on CI) | 2026-11-25 |  |
 | UX-93 | P2 | UX / a11y | The font banner ("This document uses fonts this server does not have …") is dark text on a dark ground, about 1.1:1 (BITV 1.4.3 asks 4.5:1) | **new, open** (measured) | 2026-11-25 |  |
-| UX-95 | P2 | UX / clients | Assign New Owner…, Accept Ownership…, Leave Document… and Delete From Server… are in no menu of any client: their places, File ▸ Manage ▸ My Role… and the front page (D1608), are not built | **new, open** (read, menu build) | 2026-11-25 |  |
 | CODE-31 | P2 | Code / i18n | The history speaks English to everybody: command labels and summaries are not translated | **new, open** |  |  |
 | CODE-99 | P2 | Code / desktop clients | A person's apps use any Claudia server on port 8765 of the computer as their own, also another person's or a service's: with two people logged in, the second one's documents are saved in the first one's home folder | **new, open** (read); fix on the macOS installer branch (E8.5) | 2026-11-25 |  |
 | CODE-100 | P2 | Code / desktop clients | Next to a service of another version, the apps refuse to start and say it stops after ten minutes, which a service never does | **new, open** (read); fix on the macOS installer branch (E8.5) | 2026-11-25 |  |
@@ -73,8 +72,6 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | UX-53 | P3 | UX / computes | An object keeps its pixel size when rows or columns are inserted or resized, so it no longer covers the cells it covered (E6.17, D1230) | **new, open** |  |  |
 | UX-60 | P3 | UX / composes | Dragging an object to another paragraph is "Moved an object" in the history; the mock names the object and the paragraph | **new, open** (divergence from the mock of D1352; size 3) | 2026-11-20 |  |
 | UX-65 | P3 | UX / composes | Search & replace panel, find-only state: the results list overflows its container and the "text" badge of a result is clipped at the panel edge | **new, open** (`web/app/components/SearchPanel.vue`; **measured** in the running app; size 3) | 2026-11-22 |  |
-| UX-96 | P3 | UX / menus | The workbook's context menus lack what the web's have: a reference's Show As and Remove Reference, an object's wrap Gap…, computes' purpose of a table's column | **new, open** (read, menu build) | 2026-11-25 |  |
-| UX-97 | P3 | UX / composes | Shift+Home over words just typed, not sent yet, selects nothing: Copy, Cut and Name & Describe… are then not offered | **new, open** (measured) | 2026-11-25 |  |
 | CODE-03 | P3 | Code | README is out of date | open (not re-checked) |  |  |
 | CODE-04 | P3 | Code | Untyped functions escape the type check | verified open |  |  |
 | CODE-06 | P3 | Code | `--max-connections` is per document, not per server | open |  |  |
@@ -632,29 +629,3 @@ not visible in the text. So the import over-counts what it leaves out. **Accepta
 are those of paragraph marks reports no `formatting` loss.
 
 ## Found by the menu audit (2026-11-25; branch `menus`)
-
-### UX-95 · Four entries of File ▸ Manage have no place yet · P2 · size 2 · open
-**Read** while building the menus from the definition (slice 4 of the menu work, branch `menus`). The workbook replaces
-Assign New Owner…, Accept Ownership… and Leave Document… by File ▸ Manage ▸ My Role… (one dialog for the three), and
-moves Delete From Server… to the front page (D1608). Neither is built yet (`NOT_BUILT_YET` in
-`tests/test_menu_workbook.py`), so since slice 2 the desktop menus and since slice 4 the web menus have no way to them:
-an owner cannot hand the document over, a new owner cannot accept it, nobody can leave a document, and a document
-cannot be deleted from the server. The dialogs themselves are still there (`DocumentFrame.vue`). **Fix:** build My Role…
-and the front page's Delete (E5.23). **Acceptance:** a spec scenario each: hand over and accept through My Role…;
-delete a document from the list of the front page.
-
-### UX-96 · The context menus of the workbook leave out entries the web has · P3 · size 3 · open
-**Read** while building the context menus from the definition (slice 4). The web keeps these beside the definition's
-entries, so nothing was lost, but the workbook does not know them and a shell would not show them:
-- a reference in a text: Show As ▸ (its four ways) and Remove Reference, around the definition's Go to Target;
-- an object in a text: Wrap Text… opens the four modes and Gap… on the web (the workbook asks for the submenu; the
-  definition has one entry, which the key and the shells use to go on to the next mode);
-- computes: the purpose menu of a table's column (`TableMenu.vue`), which has no entry in the workbook at all.
-**Fix:** the owner decides whether they go into the workbook (then into the definition) or away.
-
-### UX-97 · Words just typed cannot be selected with Shift+Home · P3 · size 3 · open
-**Measured** in Chromium (the menus spec, branch `menus`): in a new text, type "Spring" and press Shift+Home at once:
-the page selects nothing (`getSelection()` is empty), so the Edit menu offers neither Copy, Cut nor Name & Describe….
-After the word is sent (a space), Shift+Home selects it. The words not yet sent sit in an overlay of their own
-(`caretInUnsent` in `TextEditor.vue`), which the key does not select across. **Acceptance:** a spec step types a word
-and selects it with Shift+Home at once, and the Edit menu offers Copy.

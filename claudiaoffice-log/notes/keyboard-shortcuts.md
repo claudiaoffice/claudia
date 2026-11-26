@@ -20,6 +20,7 @@ On a Mac, Ctrl is Cmd and Alt is Option.
 | File | Manage ▸ Password… | Ctrl+Shift+Alt+W |  |
 | File | Manage ▸ Export… | Ctrl+Shift+Alt+X |  |
 | File | Manage ▸ Redact History… | Ctrl+Shift+F8 |  |
+| File | Manage ▸ My Role… | Ctrl+Shift+Alt+L |  |
 | File | Close | Ctrl+Alt+W |  |
 | File | Quit | Ctrl+Q | the shell |
 | Edit | Undo | Ctrl+Z |  |
@@ -83,6 +84,7 @@ On a Mac, Ctrl is Cmd and Alt is Option.
 | File | Manage ▸ Password… | Ctrl+Shift+Alt+W |  |
 | File | Manage ▸ Export… | Ctrl+Shift+Alt+X |  |
 | File | Manage ▸ Redact History… | Ctrl+Shift+F8 |  |
+| File | Manage ▸ My Role… | Ctrl+Shift+Alt+L |  |
 | File | Close | Ctrl+Alt+W |  |
 | File | Quit | Ctrl+Q | the shell |
 | Edit | Undo | Ctrl+Z |  |
@@ -155,6 +157,7 @@ On a Mac, Ctrl is Cmd and Alt is Option.
 | File | Manage ▸ Password… | Ctrl+Shift+Alt+W |  |
 | File | Manage ▸ Export… | Ctrl+Shift+Alt+X |  |
 | File | Manage ▸ Redact History… | Ctrl+Shift+F8 |  |
+| File | Manage ▸ My Role… | Ctrl+Shift+Alt+L |  |
 | File | Close | Ctrl+Alt+W |  |
 | File | Quit | Ctrl+Q | the shell |
 | Edit | Undo | Ctrl+Z |  |

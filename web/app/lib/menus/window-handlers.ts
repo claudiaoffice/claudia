@@ -13,13 +13,13 @@ export type FrameDialog =
   | 'share'
   | 'shortcuts'
   | 'about'
+  | 'my-role'
   | 'assign-owner'
   | 'accept-owner'
   | 'leave'
   | 'change-password'
   | 'download'
   | 'export-format'
-  | 'delete'
   | 'redact'
   | 'open'
   | 'open-file'
@@ -76,6 +76,7 @@ export function windowHandlers(c: WindowContext): Handlers {
     'file.manage.change-password': dialog('change-password'),
     'file.manage.export': dialog('export-format'),
     'file.manage.redact': dialog('redact'),
+    'file.manage.my-role': dialog('my-role'),
     'file.close': { run: () => c.leave() },
     'edit.undo': {
       run: () => c.history.undo(),

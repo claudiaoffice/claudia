@@ -142,7 +142,7 @@ describe('typing', () => {
   it('a caret put into the words that are not sent yet stays there once they are sent', async () => {
     const { session } = await opened('')
     for (const c of 'First') session.type(c)
-    session.caretInUnsent(0) // Home: in front of the "First" that is drawn over the text
+    session.selectOnceSent(at(0)) // Home: in front of the "First" that is drawn over the text
     await session.flush()
     expect(text(session)).toEqual(['First'])
     expect(session.state.selection?.focus).toEqual(at(0))
@@ -154,9 +154,19 @@ describe('typing', () => {
   it('a caret in the middle of the unsent words stays in the middle', async () => {
     const { session } = await opened('')
     for (const c of 'abcd') session.type(c)
-    session.caretInUnsent(2)
+    session.selectOnceSent(at(2))
     await session.flush()
     expect(session.state.selection?.focus).toEqual(at(2))
+  })
+
+  // UX-97 (2026-11-26): Shift+Home right after typing selected nothing, so Copy and Cut were not offered
+  it('a selection reaching into the words that are not sent yet is the selection once they are sent', async () => {
+    const { session } = await opened('')
+    for (const c of 'Spring') session.type(c)
+    session.selectOnceSent(at(6), at(0)) // Shift+Home: from behind the drawn "Spring" to the start of the line
+    await session.flush()
+    expect(session.state.selection).toEqual({ anchor: at(6), focus: at(0) })
+    expect(session.selectedText()).toBe('Spring')
   })
 
   it('sends after a pause, too', async () => {

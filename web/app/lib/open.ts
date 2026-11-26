@@ -189,16 +189,26 @@ export function summaryOf(description: string | undefined): Span[] {
 
 /** Change the description and tags of a document without opening it: connect as its owner (the link is made with the
  *  owner's name and password), ask, and let go. Gives what the server kept, or a sentence for the person. */
-export async function saveDetails(
+export function saveDetails(
   makeLink: () => LinkLike,
   password: string,
   description: string,
   tags: string[],
 ): Promise<{ description: string; tags: string[] } | { error: string }> {
+  return askOnce(makeLink, 'set_details', { password, description, tags })
+}
+
+/** Delete a document from the server for good, from the front page (D1608): an owner's own password confirms it. */
+export function deleteFromServer(makeLink: () => LinkLike, password: string): Promise<{ deleted: true } | { error: string }> {
+  return askOnce(makeLink, 'delete_document', { password })
+}
+
+/** One request to a document that is not open: connect as the person, ask, close. A refusal is the server's sentence. */
+async function askOnce<T>(makeLink: () => LinkLike, method: string, params: Record<string, unknown>): Promise<T | { error: string }> {
   const link = makeLink()
   try {
     await link.connect()
-    return await link.request<{ description: string; tags: string[] }>('set_details', { password, description, tags })
+    return await link.request<T>(method, params)
   } catch (error) {
     if (error instanceof ProtocolError) return { error: error.message }
     return { error: t('The server cannot be reached.') }

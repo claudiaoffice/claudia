@@ -948,27 +948,6 @@ describe('the Manage menu (leaving, handing over ownership, deleting, exporting)
     expect(second.count('sheets')).toBe(1)
   })
 
-  it('deletes the document with a password, and closes the session', async () => {
-    const link = new FakeLink()
-    server(link)
-    link.handlers.delete_document = () => ({ deleted: true })
-    const session = new Session(() => link)
-    await session.open()
-    expect(await session.deleteDocument('Correct-Horse-9')).toBe(true)
-    expect(session.state.status).toBe('closed')
-  })
-
-  it('does not close the session when deleting is refused', async () => {
-    const link = new FakeLink()
-    server(link)
-    link.handlers.delete_document = () => {
-      throw new ProtocolError('forbidden', 'only an owner of a document may delete it')
-    }
-    const session = new Session(() => link)
-    await session.open()
-    expect(await session.deleteDocument('Correct-Horse-9')).toBe(false)
-    expect(session.state.status).toBe('open')
-  })
 
   it('exports the current content as plain data', async () => {
     const link = new FakeLink()

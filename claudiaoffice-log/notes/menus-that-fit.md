@@ -24,6 +24,8 @@ is one switch per reason. This note holds the design behind the decisions and th
 | D1650 | A notice speaks per condition; Copy and Share… have sentences of their own. |
 | D1651–D1653 | Ask ai… is one action; the must-not-break marker; an entry's own trial setting is grey or hide. |
 | D1654 | What only the page knows: an entry it cannot run now is greyed with its own sentence; choices of an entry (Wrap Text… ▸); a key that does not fit says why. |
+| D1655 | A reference's Show As ▸ and Remove Reference are rows of the workbook and entries of the definition; the purpose chooser of a column is a control's popover, not a menu (UX-96; undecided, for the owner). |
+| D1656 | File ▸ Manage ▸ My Role… says your role and leads to Hand Over…, Accept Ownership… and Leave the Document…; Delete is a button of the list on this server (UX-95). |
 
 ## The words of "fits when" (D1601)
 

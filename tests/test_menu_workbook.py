@@ -35,7 +35,6 @@ MAC_LEAVES_FILE = {"file.quit"}
 #: Entries the workbook has and the app cannot do yet: they come with their feature (the Diagnosis sheet, "Not built
 #: yet" and "Not in this app yet"). Only ever shrinks: the test below fails when one of them is in the definition.
 NOT_BUILT_YET = {
-    *((app, "File ▸ Manage ▸ My role…") for app in APPS),
     *((app, f"Edit ▸ Select {which} object") for app in APPS for which in ("next", "previous")),
     *(("computes", f"Insert ▸ Shape ▸ {shape}") for shape in ("Circle", "Rectangle", "Triangle")),
     ("computes", "Insert ▸ Text box"),

@@ -1,6 +1,7 @@
 <script setup lang="ts">
-// File ▸ Manage ▸ Leave document… (D141). Confirms it is really you, with your own current password, before
-// removing you — not the password that opened this connection a moment ago, in case somebody is still at your desk.
+// File ▸ Manage ▸ My Role… ▸ Leave the Document… (D141, UX-95). Confirms it is really you, with your own current
+// password, before removing you — not the password that opened this connection a moment ago, in case somebody is
+// still at your desk.
 import { ref } from 'vue'
 import type { BaseSession } from '~/lib/base-session'
 import { useI18n } from '~/lib/i18n'

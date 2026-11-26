@@ -520,6 +520,73 @@
       "sections": [
         [
           {
+            "items": [
+              {
+                "accelerators": [],
+                "checkable": true,
+                "fits": "role: editor or owner",
+                "id": "format.show-as-number",
+                "key_macos": null,
+                "key_owner": "page",
+                "kind": "page",
+                "label": "Number",
+                "role": null,
+                "start": false
+              },
+              {
+                "accelerators": [],
+                "checkable": true,
+                "fits": "role: editor or owner",
+                "id": "format.show-as-text",
+                "key_macos": null,
+                "key_owner": "page",
+                "kind": "page",
+                "label": "Text",
+                "role": null,
+                "start": false
+              },
+              {
+                "accelerators": [],
+                "checkable": true,
+                "fits": "role: editor or owner",
+                "id": "format.show-as-number-text",
+                "key_macos": null,
+                "key_owner": "page",
+                "kind": "page",
+                "label": "Number and Text",
+                "role": null,
+                "start": false
+              },
+              {
+                "accelerators": [],
+                "checkable": true,
+                "fits": "role: editor or owner",
+                "id": "format.show-as-page",
+                "key_macos": null,
+                "key_owner": "page",
+                "kind": "page",
+                "label": "Page",
+                "role": null,
+                "start": false
+              },
+              {
+                "accelerators": [],
+                "checkable": true,
+                "fits": "role: editor or owner",
+                "id": "format.show-as-name",
+                "key_macos": null,
+                "key_owner": "page",
+                "kind": "page",
+                "label": "Name",
+                "role": null,
+                "start": false
+              }
+            ],
+            "label": "Show As"
+          }
+        ],
+        [
+          {
             "accelerators": [
               "<Primary><Alt>Return"
             ],
@@ -530,6 +597,18 @@
             "key_owner": "page",
             "kind": "page",
             "label": "Go to Target",
+            "role": null,
+            "start": false
+          },
+          {
+            "accelerators": [],
+            "checkable": false,
+            "fits": "role: editor or owner",
+            "id": "edit.remove-reference",
+            "key_macos": null,
+            "key_owner": "page",
+            "kind": "page",
+            "label": "Remove Reference",
             "role": null,
             "start": false
           }
@@ -709,6 +788,20 @@
                 "key_owner": "page",
                 "kind": "page",
                 "label": "Redact History\u2026",
+                "role": null,
+                "start": false
+              },
+              {
+                "accelerators": [
+                  "<Primary><Alt><Shift>l"
+                ],
+                "checkable": false,
+                "fits": "role: anyone",
+                "id": "file.manage.my-role",
+                "key_macos": null,
+                "key_owner": "page",
+                "kind": "page",
+                "label": "My Role\u2026",
                 "role": null,
                 "start": false
               }

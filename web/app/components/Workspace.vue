@@ -32,6 +32,7 @@ import { insertFrame } from '~/lib/geometry'
 import type { Thing } from '~/lib/fits/facts'
 import type { ContextMenuOf, Handler, Handlers } from '~/lib/menus/assemble'
 import { useMenus, windowFacts } from '~/lib/menus/use-menus'
+import { referenceHandlers } from '~/lib/menus/reference-handlers'
 import { notYet, windowHandlers } from '~/lib/menus/window-handlers'
 import { canTurn } from '~/lib/turning'
 import { currentFunctionAt } from '~/lib/formula-help'
@@ -982,6 +983,7 @@ const handlers = computed<Handlers>(() => ({
   'edit.reference': { run: () => void frame.value?.referenceThing(thingInFocus() ?? '') },
   // references come to sheets with their text boxes
   'edit.go-to-target': { run: () => {}, notNow: () => t('There is no reference here.') },
+  ...referenceHandlers(t, null),
   'edit.rename-sheet': { run: () => askRename(), notNow: () => (shownTab.value ? null : t('Show a sheet first.')) },
   'edit.row-delete': { run: () => void structure('row', false) },
   'edit.column-delete': { run: () => void structure('col', false) },

@@ -203,12 +203,13 @@ def test_each_action_is_carried_out_by_exactly_one_party(app: manifest.Manifest)
             assert action.editing is None
 
 
-def test_checkable_actions_are_the_view_toggles_the_lists_and_the_language_picker(app: manifest.Manifest) -> None:
+def test_the_checkable_actions_are_the_toggles_the_lists_the_languages_and_show_as(app: manifest.Manifest) -> None:
     checkable = {a.id for a in app.actions if a.checkable}
     language_ids = {f"config.language.{tag}" for tag, _label in manifest.LANGUAGES}
     # ticked when the paragraphs are that kind of list, and while the headings are numbered (E9.22)
     shared = {"view.authors", "view.panel", "view.dark", "format.bulleted-list", "format.numbered-list"}
     shared |= {"format.number-headings"} | language_ids
+    shared |= {f"format.show-as-{show}" for show, _label in manifest.REFERENCE_SHOWS}  # a reference's way (D1655)
     own = {
         "composes": {"view.page"},
         "computes": {"tools.follow"},  # on while a computation is followed (E6.23)

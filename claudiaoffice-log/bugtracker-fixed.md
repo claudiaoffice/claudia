@@ -20,7 +20,7 @@ PROC-24 to PROC-27, CODE-58 to CODE-61, SEC-19, UX-44; SEC-15 fixed (see "Round 
 
 ## Index
 
-### Fixed (238)
+### Fixed (241)
 
 By ID. Items closed without a fix (superseded, wontfix) are here too.
 
@@ -120,6 +120,9 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | UX-89 | P3 | UX / a11y | A table's accessible name is "Table 1 Options…": the Options… button is inside its caption | **fixed** 2026-11-25 (batch 3 of the bug eater, `batch-3`) | 2026-11-25 | 2026-11-25 |
 | UX-90 | P2 | UX / a11y | About 25 other `role="status"` elements appear with their text already in them (`v-if`), so screen readers may not announce them (BITV 4.1.3), as the notice did (UX-88) | **fixed** 2026-11-25 (batch 4 of the bug eater, `batch-4`) | 2026-11-25 | 2026-11-25 |
 | UX-94 | P3 | UX / clients | The web menus and the desktop menus disagree in six places: the About entry's words, where Clear Cell Style sits, Flow and Page in composes' View, and the order of two pivot entries | **fixed** on `menus` (slice 4 of the menu work: the web assembles its menus from the one definition, D1644) | 2026-11-25 | 2026-11-25 |
+| UX-95 | P2 | UX / clients | Assign New Owner…, Accept Ownership…, Leave Document… and Delete From Server… are in no menu of any client: their places, File ▸ Manage ▸ My Role… and the front page (D1608), are not built | **fixed** on `menus` (File ▸ Manage ▸ My Role…, and Delete in the list of the front page; D1656) | 2026-11-25 | 2026-11-26 |
+| UX-96 | P3 | UX / menus | The workbook's context menus lack what the web's have: a reference's Show As and Remove Reference, an object's wrap Gap…, computes' purpose of a table's column | **fixed** on `menus` (a reference's Show As ▸ and Remove Reference in the workbook and the definition; D1655, for the owner to confirm) | 2026-11-25 | 2026-11-26 |
+| UX-97 | P3 | UX / composes | Shift+Home over words just typed, not sent yet, selects nothing: Copy, Cut and Name & Describe… are then not offered | **fixed** on `menus` (a selection into the words not sent yet is kept until they are sent) | 2026-11-25 | 2026-11-26 |
 | CODE-01 | P2 | Code | No coverage, no web lint; Playwright not declared | **fixed** |  |  |
 | CODE-02 | P3 | Code | 26 build files tracked in `web/dist` | fixed |  |  |
 | CODE-05 | P3 | Code | Dead branch in `Gateway.admit`; stale docstring in `state.py` | **fixed** (the branch was not dead: comment corrected) |  |  |
@@ -2881,3 +2884,35 @@ from `web/app/lib/document-menus.ts` and each workspace, and they differ:
 Not part of it, by design: Quit (desktop only), Apply Style (D301), and the shapes of the library in Edit (web only;
 the workbook makes them fixed entries, Insert ▸ Shape ▸ …). **Fixed** on `menus`, 2026-11-25 (slice 4): the web's menus are assembled from the one definition (D1644), as the
 desktop clients' are; the workbook test (`tests/test_menu_workbook.py`) and `web/tests/assemble.test.ts` keep them so.
+
+### UX-95 · Four entries of File ▸ Manage have no place yet · P2 · size 2 · fixed
+**Read** while building the menus from the definition (slice 4 of the menu work, branch `menus`). The workbook replaces
+Assign New Owner…, Accept Ownership… and Leave Document… by File ▸ Manage ▸ My Role… (one dialog for the three), and
+moves Delete From Server… to the front page (D1608). Neither is built yet (`NOT_BUILT_YET` in
+`tests/test_menu_workbook.py`), so since slice 2 the desktop menus and since slice 4 the web menus have no way to them:
+an owner cannot hand the document over, a new owner cannot accept it, nobody can leave a document, and a document
+cannot be deleted from the server. The dialogs themselves are still there (`DocumentFrame.vue`). **Fix:** build My Role…
+and the front page's Delete (E5.23). **Acceptance:** a spec scenario each: hand over and accept through My Role…;
+delete a document from the list of the front page.
+
+**Fixed** on `menus`, 2026-11-26: File ▸ Manage ▸ My Role… (Ctrl+Shift+Alt+L) says your role and leads to Hand Over…, Accept Ownership… and Leave the Document…; each document of the front page's list on this server has a Delete button, confirmed with the owner's name and password (D1656). Scenarios: `specs/document-file/my-role-and-delete.feature`.
+
+### UX-96 · The context menus of the workbook leave out entries the web has · P3 · size 3 · fixed
+**Read** while building the context menus from the definition (slice 4). The web keeps these beside the definition's
+entries, so nothing was lost, but the workbook does not know them and a shell would not show them:
+- a reference in a text: Show As ▸ (its four ways) and Remove Reference, around the definition's Go to Target;
+- an object in a text: Wrap Text… opens the four modes and Gap… on the web (the workbook asks for the submenu; the
+  definition has one entry, which the key and the shells use to go on to the next mode);
+- computes: the purpose menu of a table's column (`TableMenu.vue`), which has no entry in the workbook at all.
+**Fix:** the owner decides whether they go into the workbook (then into the definition) or away.
+
+**Fixed** on `menus`, 2026-11-26, as proposed in D1655 (undecided, for the owner): a reference's Show As ▸ and Remove Reference are rows 53 and 54 of the Context menus sheet and entries of the definition, and the web builds them from it; Wrap Text… stays one entry whose modes the page opens (D1654); the purpose chooser of a column is a popover of the column's chip, not a menu. Scenario: "A reference has a context menu of its own" (`specs/menus/menus-that-fit.feature`).
+
+### UX-97 · Words just typed cannot be selected with Shift+Home · P3 · size 3 · fixed
+**Measured** in Chromium (the menus spec, branch `menus`): in a new text, type "Spring" and press Shift+Home at once:
+the page selects nothing (`getSelection()` is empty), so the Edit menu offers neither Copy, Cut nor Name & Describe….
+After the word is sent (a space), Shift+Home selects it. The words not yet sent sit in an overlay of their own
+(`caretInUnsent` in `TextEditor.vue`), which the key does not select across. **Acceptance:** a spec step types a word
+and selects it with Shift+Home at once, and the Edit menu offers Copy.
+
+**Fixed** on `menus`, 2026-11-26: the page's selection is taken as places in the paragraph once the words not sent yet are in it, and selected when they are (`selectOnceSent`); the caret is drawn collapsed behind those words, no longer as a selection over them. The menus spec's step selects at once now.

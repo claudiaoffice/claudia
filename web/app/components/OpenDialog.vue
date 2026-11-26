@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, shallowRef, watch, watchEffect } from 'vue'
 import { Link, socketUrl } from '~/lib/protocol'
-import { appOfFileName, appOfServer, fetchDocsListing, filterByTag, filterListed, openSession, openableFor, placeUpload, saveDetails, sendFile, startPageAction, tagCounts, type AnySession, type Listed, type Upload, type Uploaded } from '~/lib/open'
+import { appOfFileName, appOfServer, fetchDocsListing, filterByTag, filterListed, openSession, openableFor, placeUpload, saveDetails, deleteFromServer, sendFile, startPageAction, tagCounts, type AnySession, type Listed, type Upload, type Uploaded } from '~/lib/open'
 import type { ImportPhase } from '~/lib/import-progress'
 import { createCollection, deleteCollection, entriesOf, forgetMine, keyOf, listCollections, listMine, nextShown, parseKey, rememberOpened, setInCollection, stillShown, type MineEntry } from '~/lib/mine'
 import { holdPresence } from '~/lib/presence'
@@ -146,6 +146,16 @@ const searchWords = computed(() => query.value.split(/\s+/).filter(Boolean))
 const editing = ref<{ id: string; app: string; description: string; tags: string[] } | null>(null)
 const detailsError = ref('')
 const detailsBusy = ref(false)
+/** A connection to a document of the list that is not open, as the person who confirms something about it. */
+function linkTo(target: { id: string; app: string }, as: { user: string; password: string }): () => Link {
+  return () =>
+    new Link({
+      url: socketUrl(target.id, { protocol: location.protocol, host: server.value }, target.app || undefined),
+      user: as.user,
+      password: as.password,
+      locale: currentLocale(),
+    })
+}
 function editDetails(id: string, app: string) {
   const listed = documents.value.find((d) => d.id === id && d.app === app)
   detailsError.value = ''
@@ -156,14 +166,7 @@ async function saveEditing(values: { user: string; password: string; description
   if (!target) return
   detailsBusy.value = true
   detailsError.value = ''
-  const makeLink = () =>
-    new Link({
-      url: socketUrl(target.id, { protocol: location.protocol, host: server.value }, target.app || undefined),
-      user: values.user,
-      password: values.password,
-      locale: currentLocale(),
-    })
-  const saved = await saveDetails(makeLink, values.password, values.description, values.tags)
+  const saved = await saveDetails(linkTo(target, values), values.password, values.description, values.tags)
   detailsBusy.value = false
   if ('error' in saved) {
     detailsError.value = saved.error
@@ -173,6 +176,32 @@ async function saveEditing(values: { user: string; password: string; description
   documents.value = documents.value.map((d) => (d.id === target.id && d.app === target.app ? { ...d, ...saved } : d))
   editing.value = null
   notice.value = t('The description and tags of {id} are saved.', { id: target.id })
+}
+/** The document whose Delete was pressed in the list on this server (D1608), and how deleting it goes. */
+const deleting = ref<{ id: string; app: string } | null>(null)
+const deleteError = ref('')
+const deleteBusy = ref(false)
+function askDelete(d: Listed) {
+  deleteError.value = ''
+  deleting.value = { id: d.id, app: d.app }
+}
+async function deleteListed(values: { user: string; password: string }) {
+  const target = deleting.value
+  if (!target) return
+  deleteBusy.value = true
+  deleteError.value = ''
+  const done = await deleteFromServer(linkTo(target, values), values.password)
+  deleteBusy.value = false
+  if ('error' in done) {
+    deleteError.value = done.error
+    return
+  }
+  user.value = values.user
+  documents.value = documents.value.filter((d) => !(d.id === target.id && d.app === target.app))
+  mine.value = forgetMine(keyOf({ origin: origin.value, app: target.app, id: target.id }))
+  collections.value = listCollections()
+  deleting.value = null
+  notice.value = t('{id} is deleted from the server.', { id: target.id })
 }
 /** How many documents of a collection this page shows (a desktop window: only its app's). */
 function shownIn(entries: string[]): number {
@@ -968,7 +997,7 @@ async function go(how: 'open' | 'create' | 'recover', from?: { upload: string; k
                 </li>
               </ul>
             </div>
-            <div v-if="shownCollection === null" class="list">
+            <div v-if="shownCollection === null" class="list" data-testid="server-documents">
               <div class="list-head">
                 <h2>{{ isSuite ? t('On {place} · {count}', { place: placeLabel, count: placeCount }) : t('On this server') }}</h2>
                 <div class="filters">
@@ -1009,6 +1038,15 @@ async function go(how: 'open' | 'create' | 'recover', from?: { upload: string; k
                       @click.stop="toggleMenu('place ' + placeKey(d))"
                     >
                       <svg width="12" height="15" viewBox="0 0 12 15" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M1 1h10v13l-5-4-5 4z" /></svg>
+                    </button>
+                    <button
+                      type="button"
+                      class="server-action"
+                      :title="t('Delete {id} from the server…', { id: d.id })"
+                      :aria-label="t('Delete {id} from the server…', { id: d.id })"
+                      @click="askDelete(d)"
+                    >
+                      <svg width="12" height="14" viewBox="0 0 12 14" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M1 3h10M4.5 3V1.5h3V3M2.5 3l.7 9.5h5.6L9.5 3" /></svg>
                     </button>
                   </div>
                   <DocDetails :description="d.description" :tags="d.tags" :active="tagFilter" :words="searchWords" @tag="toggleTag" />
@@ -1085,6 +1123,7 @@ async function go(how: 'open' | 'create' | 'recover', from?: { upload: string; k
       </div>
     </section>
     <RecoveryKeyDialog v-if="fresh" :recovery-key="fresh.key" :doc="doc.trim()" @done="proceed" />
+    <DeleteFromListDialog v-if="deleting" :id="deleting.id" :user="user" :busy="deleteBusy" :error="deleteError" @close="deleting = null" @delete="deleteListed" />
     <DetailsDialog
       v-if="editing"
       :id="editing.id"

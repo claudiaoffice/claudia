@@ -13,6 +13,7 @@ import re
 import pytest
 from conftest import Person, World, eventually
 from pytest_bdd import given, parsers, scenarios, then, when
+from test_names import make_heading, type_paragraphs
 
 scenarios("../../../claudiaoffice-log/specs/menus/menus-that-fit.feature")
 
@@ -138,10 +139,8 @@ def _select_a_word(world):
     person = me(world)
     person.page.keyboard.press("Escape")  # the Edit menu, open from the step before
     person.page.click("[data-testid=text]")
-    person.page.keyboard.type("Spring ")
-    eventually(lambda: _assert(person.paragraphs() == ["Spring"], person.paragraphs()))
-    person.page.keyboard.press("End")
-    person.page.keyboard.press("Shift+Home")
+    person.page.keyboard.type("Spring")
+    person.page.keyboard.press("Shift+Home")  # at once: the word is not sent yet (UX-97)
     person.page.wait_for_timeout(300)  # a person's next press comes after the page has seen the selection
     open_menu(person, "Edit")
 
@@ -248,7 +247,7 @@ def _right_on_paragraph(world):
 @then(parsers.parse("the menu shows {entries}"))
 def _context_shows(world, entries):
     names = re.split(r", | and ", re.sub(r", the same as .*$", "", entries))
-    lines = [line.removesuffix(" (off)") for line in context_lines(me(world))]
+    lines = [line.removesuffix(" (off)").removesuffix(" ▸") for line in context_lines(me(world))]
     assert set(names) <= set(lines), lines
     if entries.endswith("the same as the slide's tab"):
         page = me(world).page
@@ -260,6 +259,53 @@ def _context_shows(world, entries):
 @when(parsers.re(r"I choose (?P<entry>[^▸]+)$"))
 def _choose_in_context(world, entry):
     me(world).page.locator(f"{CONTEXT_MENU} [role^=menuitem]", has_text=entry).first.click()
+
+
+REFERENCE = "[data-testid=text] [data-atom]"
+
+
+@given(parsers.parse('I am the owner of a text with a reference to its heading "{title}"'))
+def _text_with_reference(world, title):
+    ann = as_role(world, "owner", "text")
+    type_paragraphs(ann, [title, "See "])
+    make_heading(ann, 0)
+    ann.page.keyboard.press("Control+End")
+    ann.menu("Insert", "Cross Reference")
+    search = ann.page.locator("[data-testid=reference-picker] input[type=search]")
+    search.fill(title)
+    search.press("Enter")
+    ann.page.wait_for_selector(REFERENCE)
+
+
+@when("I press the right button on the reference")
+def _right_on_reference(world):
+    me(world).page.locator(REFERENCE).first.click(button="right")
+
+
+def open_show_as(person: Person) -> None:
+    person.page.locator(f"{CONTEXT_MENU} > li > [role^=menuitem]", has_text="Show As").click()
+
+
+@when(parsers.parse("I choose Show As ▸ {way}"))
+def _choose_show_as(world, way):
+    person = me(world)
+    open_show_as(person)
+    person.page.locator(f"{CONTEXT_MENU} .sub [role^=menuitem]", has_text=re.compile(f"^✓?{re.escape(way)}$")).click()
+
+
+@then(parsers.parse("Show As ▸ {way} is ticked"))
+def _show_as_ticked(world, way):
+    person = me(world)
+    open_show_as(person)
+    ticked = person.page.eval_on_selector_all(
+        f"{CONTEXT_MENU} .sub [aria-checked=true]", "els => els.map(e => e.textContent.replace('✓', '').trim())"
+    )
+    assert ticked == [way], ticked
+
+
+@then("there is no reference in the text")
+def _no_reference(world):
+    eventually(lambda: _assert(me(world).page.locator(REFERENCE).count() == 0, "a reference is still there"))
 
 
 @then("the paragraph style popover opens for that paragraph")

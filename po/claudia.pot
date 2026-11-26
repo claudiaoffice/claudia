@@ -553,6 +553,10 @@ msgstr ""
 msgid "Accept"
 msgstr ""
 
+#: web/app/components/MyRoleDialog.vue
+msgid "Accept Ownership…"
+msgstr ""
+
 #: web/app/lib/export-losses.ts
 msgid "Accept or reject them first to have the words you want in the file."
 msgstr ""
@@ -1169,7 +1173,7 @@ msgstr ""
 msgid "Calculation step"
 msgstr ""
 
-#: web/app/components/AcceptOwnershipDialog.vue web/app/components/AddFontsDialog.vue web/app/components/AdminAccessDocuments.vue web/app/components/AdminFonts.vue web/app/components/AdminPageFooter.vue web/app/components/AiConsentDialog.vue web/app/components/AssignOwnerDialog.vue web/app/components/ChangePasswordDialog.vue web/app/components/DeleteDocumentDialog.vue web/app/components/DeleteStyleDialog.vue web/app/components/DetailsDialog.vue web/app/components/DownloadDialog.vue web/app/components/ExportFormatDialog.vue web/app/components/ImageImportDialog.vue web/app/components/ImportDialog.vue web/app/components/LeaveDocumentDialog.vue web/app/components/LineSizeDialog.vue web/app/components/NameAndDescribeDialog.vue web/app/components/NameDefinePopover.vue web/app/components/NamesDialog.vue web/app/components/OpenDialog.vue web/app/components/PivotCreateDialog.vue web/app/components/PivotDeleteDialog.vue web/app/components/PivotMembersDialog.vue web/app/components/PivotValueDialog.vue web/app/components/PromptDialog.vue web/app/components/RedactionDialog.vue web/app/components/RotatePopover.vue web/app/components/ShareDialog.vue web/app/components/SheetChartInsertDialog.vue web/app/components/SidePanel.vue web/app/components/SqlEditor.vue web/app/components/TableDialog.vue
+#: web/app/components/AcceptOwnershipDialog.vue web/app/components/AddFontsDialog.vue web/app/components/AdminAccessDocuments.vue web/app/components/AdminFonts.vue web/app/components/AdminPageFooter.vue web/app/components/AiConsentDialog.vue web/app/components/AssignOwnerDialog.vue web/app/components/ChangePasswordDialog.vue web/app/components/DeleteFromListDialog.vue web/app/components/DeleteStyleDialog.vue web/app/components/DetailsDialog.vue web/app/components/DownloadDialog.vue web/app/components/ExportFormatDialog.vue web/app/components/ImageImportDialog.vue web/app/components/ImportDialog.vue web/app/components/LeaveDocumentDialog.vue web/app/components/LineSizeDialog.vue web/app/components/NameAndDescribeDialog.vue web/app/components/NameDefinePopover.vue web/app/components/NamesDialog.vue web/app/components/OpenDialog.vue web/app/components/PivotCreateDialog.vue web/app/components/PivotDeleteDialog.vue web/app/components/PivotMembersDialog.vue web/app/components/PivotValueDialog.vue web/app/components/PromptDialog.vue web/app/components/RedactionDialog.vue web/app/components/RotatePopover.vue web/app/components/ShareDialog.vue web/app/components/SheetChartInsertDialog.vue web/app/components/SidePanel.vue web/app/components/SqlEditor.vue web/app/components/TableDialog.vue
 msgid "Cancel"
 msgstr ""
 
@@ -1413,7 +1417,7 @@ msgstr ""
 msgid "Click {what} in the document to pick them · {n} picked"
 msgstr ""
 
-#: clients/contract/src/claudia_menus/manifest.py web/app/components/AboutDialog.vue web/app/components/AdminLogin.vue web/app/components/AdminShell.vue web/app/components/AiConsentDialog.vue web/app/components/AssignOwnerDialog.vue web/app/components/ContentsDialog.vue web/app/components/DocumentFrame.vue web/app/components/ImagePropertiesDialog.vue web/app/components/NamesDialog.vue web/app/components/NumberingDialog.vue web/app/components/OutcomePopover.vue web/app/components/PivotPanel.vue web/app/components/PivotSqlDialog.vue web/app/components/RandomDialog.vue web/app/components/SearchPanel.vue web/app/components/ShortcutsDialog.vue web/app/components/StylesDialog.vue web/app/components/TableOptionsDialog.vue
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/AboutDialog.vue web/app/components/AdminLogin.vue web/app/components/AdminShell.vue web/app/components/AiConsentDialog.vue web/app/components/AssignOwnerDialog.vue web/app/components/ContentsDialog.vue web/app/components/DocumentFrame.vue web/app/components/ImagePropertiesDialog.vue web/app/components/MyRoleDialog.vue web/app/components/NamesDialog.vue web/app/components/NumberingDialog.vue web/app/components/OutcomePopover.vue web/app/components/PivotPanel.vue web/app/components/PivotSqlDialog.vue web/app/components/RandomDialog.vue web/app/components/SearchPanel.vue web/app/components/ShortcutsDialog.vue web/app/components/StylesDialog.vue web/app/components/TableOptionsDialog.vue
 msgid "Close"
 msgstr ""
 
@@ -1801,7 +1805,7 @@ msgstr ""
 msgid "Delete Table"
 msgstr ""
 
-#: web/app/components/DeleteDocumentDialog.vue
+#: web/app/components/DeleteFromListDialog.vue
 msgid "Delete for good"
 msgstr ""
 
@@ -1825,8 +1829,12 @@ msgstr ""
 msgid "Delete the style “{name}”?"
 msgstr ""
 
-#: web/app/components/DeleteDocumentDialog.vue
-msgid "Delete this document"
+#: web/app/components/DeleteFromListDialog.vue
+msgid "Delete {id} from the server"
+msgstr ""
+
+#: web/app/components/OpenDialog.vue
+msgid "Delete {id} from the server…"
 msgstr ""
 
 #: web/app/components/SidePanel.vue
@@ -2621,6 +2629,14 @@ msgstr ""
 msgid "Half the width of the confidence interval for a mean from a sample (Student t distribution)."
 msgstr ""
 
+#: web/app/components/MyRoleDialog.vue
+msgid "Hand Over…"
+msgstr ""
+
+#: clients/contract/src/claudia_menus/manifest.py
+msgid "Hand the document over, accept it from its owner, or leave it"
+msgstr ""
+
 #: web/app/components/AssignOwnerDialog.vue
 msgid "Hand {doc} over to somebody who already edits it. You will become an editor; they become the owner once they accept — confirm it is you with your own password."
 msgstr ""
@@ -2823,6 +2839,10 @@ msgstr ""
 
 #: web/app/components/RecoveryKeyDialog.vue
 msgid "I have stored the recovery key somewhere safe."
+msgstr ""
+
+#: web/app/components/MyRoleDialog.vue
+msgid "If an owner asked you to take the document over, accept it here."
 msgstr ""
 
 #: web/app/components/AcceptOwnershipDialog.vue
@@ -3161,6 +3181,10 @@ msgstr ""
 msgid "Leave document"
 msgstr ""
 
+#: web/app/components/MyRoleDialog.vue
+msgid "Leave the Document…"
+msgstr ""
+
 #: web/app/components/LeaveDocumentDialog.vue
 msgid "Leave this document"
 msgstr ""
@@ -3327,6 +3351,10 @@ msgstr ""
 
 #: clients/contract/src/claudia_menus/manifest.py
 msgid "Make a slide right after the sheet and move the chart onto it"
+msgstr ""
+
+#: web/app/components/MyRoleDialog.vue
+msgid "Make somebody who edits it the owner; you become an editor once they accept."
 msgstr ""
 
 #: clients/contract/src/claudia_menus/manifest.py
@@ -3513,6 +3541,14 @@ msgstr ""
 msgid "Multiplies the ranges cell by cell (they must have the same shape) and adds up the products."
 msgstr ""
 
+#: web/app/components/MyRoleDialog.vue
+msgid "My Role"
+msgstr ""
+
+#: clients/contract/src/claudia_menus/manifest.py
+msgid "My Role…"
+msgstr ""
+
 #: web/app/components/OpenDialog.vue
 msgid "My places"
 msgstr ""
@@ -3521,7 +3557,7 @@ msgstr ""
 msgid "My places and collections"
 msgstr ""
 
-#: web/app/components/AdminAccessDocuments.vue web/app/components/AdminFonts.vue web/app/components/DetailsDialog.vue web/app/components/ImportDialog.vue web/app/components/NameDefinePopover.vue web/app/components/NamesDialog.vue web/app/components/NumberingDialog.vue web/app/components/PivotCreateDialog.vue web/app/components/ShareDialog.vue web/app/components/SlideWorkspace.vue web/app/components/StyleSpec.vue web/app/components/Workspace.vue web/app/lib/reference-labels.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/AdminAccessDocuments.vue web/app/components/AdminFonts.vue web/app/components/DetailsDialog.vue web/app/components/ImportDialog.vue web/app/components/NameDefinePopover.vue web/app/components/NamesDialog.vue web/app/components/NumberingDialog.vue web/app/components/PivotCreateDialog.vue web/app/components/ShareDialog.vue web/app/components/SlideWorkspace.vue web/app/components/StyleSpec.vue web/app/components/Workspace.vue web/app/lib/reference-labels.ts
 msgid "Name"
 msgstr ""
 
@@ -3941,7 +3977,7 @@ msgstr ""
 msgid "Nothing yet. Type into a cell."
 msgstr ""
 
-#: web/app/components/NumberingDialog.vue web/app/lib/reference-labels.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/NumberingDialog.vue web/app/lib/reference-labels.ts
 msgid "Number"
 msgstr ""
 
@@ -3953,7 +3989,7 @@ msgstr ""
 msgid "Number Headings"
 msgstr ""
 
-#: web/app/lib/reference-labels.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/lib/reference-labels.ts
 msgid "Number and Text"
 msgstr ""
 
@@ -4083,6 +4119,10 @@ msgstr ""
 
 #: web/app/lib/menus/window-handlers.ts
 msgid "Only an owner can share this document."
+msgstr ""
+
+#: web/app/components/DeleteFromListDialog.vue
+msgid "Only an owner of the document can delete it."
 msgstr ""
 
 #: web/app/lib/menus/window-handlers.ts
@@ -4317,7 +4357,7 @@ msgstr ""
 msgid "Padding"
 msgstr ""
 
-#: web/app/components/StyleBar.vue web/app/lib/reference-labels.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/StyleBar.vue web/app/lib/reference-labels.ts
 msgid "Page"
 msgstr ""
 
@@ -4909,7 +4949,7 @@ msgstr ""
 msgid "Remove Column"
 msgstr ""
 
-#: web/app/components/TextWorkspace.vue
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Remove Reference"
 msgstr ""
 
@@ -5565,7 +5605,7 @@ msgstr ""
 msgid "Show"
 msgstr ""
 
-#: web/app/components/TextWorkspace.vue
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Show As"
 msgstr ""
 
@@ -5639,6 +5679,26 @@ msgstr ""
 
 #: clients/contract/src/claudia_menus/manifest.py
 msgid "Show the presentation full screen, beginning with the slide you are on"
+msgstr ""
+
+#: clients/contract/src/claudia_menus/manifest.py
+msgid "Show the reference as: name"
+msgstr ""
+
+#: clients/contract/src/claudia_menus/manifest.py
+msgid "Show the reference as: number"
+msgstr ""
+
+#: clients/contract/src/claudia_menus/manifest.py
+msgid "Show the reference as: number and text"
+msgstr ""
+
+#: clients/contract/src/claudia_menus/manifest.py
+msgid "Show the reference as: page"
+msgstr ""
+
+#: clients/contract/src/claudia_menus/manifest.py
+msgid "Show the reference as: text"
 msgstr ""
 
 #: clients/contract/src/claudia_menus/manifest.py
@@ -6078,6 +6138,10 @@ msgid "Take the pivot table away; its source stays"
 msgstr ""
 
 #: clients/contract/src/claudia_menus/manifest.py
+msgid "Take the reference out of the text"
+msgstr ""
+
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Take the selected cells' own style off, back to the table's"
 msgstr ""
 
@@ -6109,7 +6173,7 @@ msgstr ""
 msgid "Test answered"
 msgstr ""
 
-#: web/app/components/InsertBar.vue web/app/components/OpenDialog.vue web/app/components/SearchPanel.vue web/app/components/StyleBar.vue web/app/components/StyleSpec.vue web/app/lib/reference-labels.ts
+#: clients/contract/src/claudia_menus/manifest.py web/app/components/InsertBar.vue web/app/components/OpenDialog.vue web/app/components/SearchPanel.vue web/app/components/StyleBar.vue web/app/components/StyleSpec.vue web/app/lib/reference-labels.ts
 msgid "Text"
 msgstr ""
 
@@ -7481,7 +7545,7 @@ msgstr ""
 msgid "There is no place to go back to."
 msgstr ""
 
-#: web/app/components/SlideWorkspace.vue web/app/components/TextWorkspace.vue web/app/components/Workspace.vue
+#: web/app/components/SlideWorkspace.vue web/app/components/TextWorkspace.vue web/app/components/Workspace.vue web/app/lib/menus/reference-handlers.ts
 msgid "There is no reference here."
 msgstr ""
 
@@ -7761,7 +7825,7 @@ msgstr ""
 msgid "This removes {collection} from {server}, with its families: {families}. Documents that ask for them are shown with a stand-in from now on. The files are deleted from the server; there is no undo."
 msgstr ""
 
-#: web/app/components/DeleteDocumentDialog.vue
+#: web/app/components/DeleteFromListDialog.vue
 msgid "This removes {doc} from the server for good — its content, its history and its chat, and everybody's access to it. There is no way back: no recycle bin, no undo. Make sure everybody who needs something from it has it first (File ▸ Download)."
 msgstr ""
 
@@ -8473,6 +8537,10 @@ msgstr ""
 msgid "You are an editor."
 msgstr ""
 
+#: web/app/components/MyRoleDialog.vue
+msgid "You are an owner of {doc}."
+msgstr ""
+
 #: web/app/components/RedactionDialog.vue
 msgid "You are an owner."
 msgstr ""
@@ -8505,6 +8573,10 @@ msgstr ""
 msgid "You can change it anyway — this is a warning, not a refusal."
 msgstr ""
 
+#: web/app/components/MyRoleDialog.vue
+msgid "You can no longer open it, unless somebody adds you again. The only owner cannot leave."
+msgstr ""
+
 #: web/app/lib/fits/conditions.ts
 msgid "You can only look at this document."
 msgstr ""
@@ -8519,6 +8591,14 @@ msgstr ""
 
 #: web/app/lib/login-wait.ts
 msgid "You can try again now."
+msgstr ""
+
+#: web/app/components/MyRoleDialog.vue
+msgid "You edit {doc}."
+msgstr ""
+
+#: web/app/components/MyRoleDialog.vue
+msgid "You may only look at {doc}."
 msgstr ""
 
 #: web/app/components/LeaveDocumentDialog.vue
@@ -8537,7 +8617,7 @@ msgstr ""
 msgid "Your changes to the pattern are dropped."
 msgstr ""
 
-#: web/app/components/AdminLogin.vue web/app/components/DetailsDialog.vue web/app/components/FirstAdminSetup.vue web/app/components/ImportDialog.vue web/app/components/OpenDialog.vue
+#: web/app/components/AdminLogin.vue web/app/components/DeleteFromListDialog.vue web/app/components/DetailsDialog.vue web/app/components/FirstAdminSetup.vue web/app/components/ImportDialog.vue web/app/components/OpenDialog.vue
 msgid "Your name"
 msgstr ""
 
@@ -8549,7 +8629,7 @@ msgstr ""
 msgid "Your password for {doc} is changed."
 msgstr ""
 
-#: web/app/components/DeleteDocumentDialog.vue web/app/components/DetailsDialog.vue
+#: web/app/components/DeleteFromListDialog.vue web/app/components/DetailsDialog.vue
 msgid "Your password, to confirm"
 msgstr ""
 
@@ -11815,6 +11895,10 @@ msgstr ""
 
 #: packages/claudia-server/src/claudia_server/hub.py
 msgid "{id} cannot be taken in: {reason}"
+msgstr ""
+
+#: web/app/components/OpenDialog.vue
+msgid "{id} is deleted from the server."
 msgstr ""
 
 #: packages/claudia-server/src/claudia_server/hub.py

@@ -12,11 +12,11 @@ import type { TextSession } from '~/lib/text-session'
 import { hasHeadingStyles, headingsNumbered, type NumberingHost } from '~/lib/numbering'
 import { looksOf, type ContentsHost } from '~/lib/contents'
 import { usePageNumbers } from '~/lib/print/page-numbers'
-import { SHOWS, type Show } from '~/lib/references'
-import { showLabel } from '~/lib/reference-labels'
+import type { Show } from '~/lib/references'
 import type { Thing } from '~/lib/fits/facts'
 import type { ContextMenuOf, Handler, Handlers } from '~/lib/menus/assemble'
 import { useMenus, windowFacts } from '~/lib/menus/use-menus'
+import { referenceHandlers } from '~/lib/menus/reference-handlers'
 import { notYet, windowHandlers } from '~/lib/menus/window-handlers'
 import { canTurn } from '~/lib/turning'
 import { searchShortcuts } from '~/lib/shortcuts'
@@ -380,23 +380,18 @@ function goToTarget() {
   const found = referenceAtCaret()
   if (found && found.shown?.state !== 'broken') editor.value?.goTo(found.field.target)
 }
-/** A reference's own menu (mock-up C): Show As and Remove Reference, which the workbook does not list (UX-96), around the
- * definition's `reference` context menu, Go to Target. */
+/** A reference's own menu (mock-up C, D1607, UX-96): Show As ▸ its ways, Go to Target and Remove Reference. */
 const refMenu = ref<{ paragraph: string; index: number; x: number; y: number } | null>(null)
 const refMenuItems = computed<MenuItem[]>(() => {
   const at = refMenu.value
   const paragraph = at && state.paragraphs.find((b) => b.id === at.paragraph)
   const field = paragraph?.fields?.[at!.index]
   if (!at || !field) return []
-  const shows = SHOWS.map((s) => ({ label: `${field.show === s ? '✓ ' : ''}${t('Show As')} ${showLabel(s)}`, disabled: readonly.value || field.show === s, action: () => void session.setFieldShow(at.paragraph, at.index, s) }))
   const broken = paragraph.shown?.[at.index]?.state === 'broken'
-  const go = menuOf('reference', { 'edit.go-to-target': { run: () => editor.value?.goTo(field.target), notNow: () => (broken ? t('What this reference pointed at is gone.') : null) } })
-  return [
-    ...shows,
-    { label: '', separator: true },
-    ...go,
-    { label: t('Remove Reference'), hint: 'Delete', disabled: readonly.value, action: () => void session.replaceSelection('') },
-  ]
+  return menuOf('reference', {
+    ...referenceHandlers(t, { show: field.show, setShow: (s) => void session.setFieldShow(at.paragraph, at.index, s), remove: () => void session.replaceSelection('') }),
+    'edit.go-to-target': { run: () => editor.value?.goTo(field.target), notNow: () => (broken ? t('What this reference pointed at is gone.') : null) },
+  })
 })
 
 /** In Page view, the page each paragraph starts on, for the tables of contents (E9.31, step F). */
@@ -480,6 +475,7 @@ const handlers = computed<Handlers>(() => ({
   // the paragraph with the caret (D554), or the object selected
   'edit.reference': { run: () => void frame.value?.referenceThing(state.selectedObject ?? state.selection?.focus.paragraph ?? '') },
   'edit.go-to-target': { run: () => goToTarget(), notNow: () => (referenceAtCaret() ? null : t('There is no reference here.')) },
+  ...referenceHandlers(t, null),
   'edit.edit-text': { run: () => void (state.selectedObject && (state.editingObject = state.selectedObject)) },
   'edit.delete': { run: () => void (state.selectedObject && session.removeObject(state.selectedObject)) },
   // where a word may never break (D912, as in Word and LibreOffice): a key without an entry ("Keys without entry")
