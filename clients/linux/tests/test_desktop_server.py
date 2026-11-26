@@ -117,7 +117,7 @@ class Harness:
             port_free=lambda _port: port_free,
             version=lambda: version,
             connect=connect,
-            sleep=lambda _seconds: time.sleep(0.001),
+            sleep=lambda _seconds: time.sleep(0.001),  # work: the code's own pause between tries, made short
         )
 
 

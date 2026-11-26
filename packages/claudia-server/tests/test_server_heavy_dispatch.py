@@ -69,10 +69,12 @@ class FakePool:
 
     def __init__(self):
         self.calls: list[tuple] = []
+        self.submitted = asyncio.Event()  # set by the first call
         self.gate: asyncio.Event | None = None  # set to make submit() wait until the test releases it
 
     async def submit(self, fn, /, *args, **kwargs):
         self.calls.append((fn, args, kwargs))
+        self.submitted.set()
         if self.gate is not None:
             await self.gate.wait()
         return fn(*args, **kwargs)
@@ -86,10 +88,10 @@ def test_a_bare_heavy_call_is_dispatched_and_its_answer_lands():
     async def scenario():
         doc = _doc()
         pool = FakePool()
-        HeavyDispatcher(doc, pool)
+        dispatcher = HeavyDispatcher(doc, pool)
         fill(doc, {f"A{r + 1}": r for r in range(5)})
         fill(doc, {"B1": "=COUNT_HEAVY(A1:A5)"})
-        await asyncio.sleep(0)  # let the dispatched task run
+        await dispatcher.idle()
         assert shown(doc, "B1") == 5
         assert doc.model.calc.pending_heavy == {}
 
@@ -100,10 +102,10 @@ def test_a_heavy_call_wrapped_in_more_expression_is_never_dispatched():
     async def scenario():
         doc = _doc()
         pool = FakePool()
-        HeavyDispatcher(doc, pool)
+        dispatcher = HeavyDispatcher(doc, pool)
         fill(doc, {f"A{r + 1}": r for r in range(5)})
         fill(doc, {"B1": "=COUNT_HEAVY(A1:A5)+1"})
-        await asyncio.sleep(0)
+        await dispatcher.idle()
         assert pool.calls == []  # never submitted: the dispatcher cannot safely resolve this shape (see module docs)
         key = (S1, *at("B1"))
         assert key in doc.model.calc.pending_heavy  # left deferred, not guessed at
@@ -115,11 +117,11 @@ def test_a_resolved_calls_readers_are_woken():
     async def scenario():
         doc = _doc()
         pool = FakePool()
-        HeavyDispatcher(doc, pool)
+        dispatcher = HeavyDispatcher(doc, pool)
         fill(doc, {f"A{r + 1}": r for r in range(5)})
         fill(doc, {"B1": "=COUNT_HEAVY(A1:A5)"})
         fill(doc, {"C1": "=B1*10"})
-        await asyncio.sleep(0)
+        await dispatcher.idle()
         assert shown(doc, "C1") == 50
 
     run(scenario())
@@ -130,14 +132,13 @@ def test_a_stale_answer_is_discarded_not_applied():
         doc = _doc()
         pool = FakePool()
         pool.gate = asyncio.Event()
-        HeavyDispatcher(doc, pool)
+        dispatcher = HeavyDispatcher(doc, pool)
         fill(doc, {f"A{r + 1}": r for r in range(5)})
         fill(doc, {"B1": "=COUNT_HEAVY(A1:A5)"})
-        await asyncio.sleep(0)  # the dispatcher has submitted and is now waiting on the gate
+        await pool.submitted.wait()  # the dispatcher has submitted and is now waiting on the gate
         fill(doc, {"B1": "=1+1"})  # the document moves on while the worker is "still running"
         pool.gate.set()  # let the stale answer come back
-        await asyncio.sleep(0)
-        await asyncio.sleep(0)
+        await dispatcher.idle()
         assert shown(doc, "B1") == 2  # the new formula's value, untouched by the late answer
 
     run(scenario())
@@ -151,13 +152,11 @@ def test_a_second_submission_for_the_same_cell_is_not_launched_twice():
         dispatcher = HeavyDispatcher(doc, pool)
         fill(doc, {f"A{r + 1}": r for r in range(5)})
         fill(doc, {"B1": "=COUNT_HEAVY(A1:A5)"})
-        await asyncio.sleep(0)
-        dispatcher._on_event(None)  # another event fires while the first submission is still in flight
-        await asyncio.sleep(0)
-        assert len(pool.calls) == 1
+        await pool.submitted.wait()
+        fill(doc, {"D9": 1})  # another event fires while the first submission is still in flight
         pool.gate.set()
-        await asyncio.sleep(0)
-        await asyncio.sleep(0)
+        await dispatcher.idle()
+        assert len(pool.calls) == 1
 
     run(scenario())
 
@@ -167,14 +166,13 @@ def test_a_call_whose_formula_is_removed_before_it_answers_is_discarded_quietly(
         doc = _doc()
         pool = FakePool()
         pool.gate = asyncio.Event()
-        HeavyDispatcher(doc, pool)
+        dispatcher = HeavyDispatcher(doc, pool)
         fill(doc, {f"A{r + 1}": r for r in range(5)})
         fill(doc, {"B1": "=COUNT_HEAVY(A1:A5)"})
-        await asyncio.sleep(0)
+        await pool.submitted.wait()
         fill(doc, {"B1": ""})  # the formula itself is gone before the worker answers
         pool.gate.set()
-        await asyncio.sleep(0)
-        await asyncio.sleep(0)
+        await dispatcher.idle()
         assert shown(doc, "B1") is None
 
     run(scenario())
@@ -188,7 +186,7 @@ def test_close_stops_the_dispatcher_from_noticing_further_work():
         dispatcher.close()
         fill(doc, {f"A{r + 1}": r for r in range(5)})
         fill(doc, {"B1": "=COUNT_HEAVY(A1:A5)"})
-        await asyncio.sleep(0)
+        await dispatcher.idle()
         assert pool.calls == []
 
     run(scenario())
@@ -203,14 +201,11 @@ def test_a_bare_heavy_call_resolves_through_a_real_worker_pool():
     async def scenario():
         doc = _doc()
         pool = WorkerPool()
-        HeavyDispatcher(doc, pool)
+        dispatcher = HeavyDispatcher(doc, pool)
         try:
             fill(doc, {f"A{r + 1}": r for r in range(5)})
             fill(doc, {"B1": "=COUNT_HEAVY(A1:A5)"})
-            for _ in range(200):  # the real pool answers on its own schedule: poll briefly instead of one sleep(0)
-                if (S1, *at("B1")) not in doc.model.calc.pending_heavy:
-                    break
-                await asyncio.sleep(0.05)
+            await dispatcher.idle()  # the real pool answers on its own schedule
             assert shown(doc, "B1") == 5
         finally:
             await pool.stop()

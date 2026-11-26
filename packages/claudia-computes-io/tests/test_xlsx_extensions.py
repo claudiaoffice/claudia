@@ -20,7 +20,7 @@ def model_of(cells: dict[tuple[int, int], dict]) -> WorkbookModel:
     sheet = Sheet(SheetId("s1"), "Pricing")
     sheet.cells.update(cells)
     model.add_sheet(sheet, None)
-    model._calculate_loaded()  # noqa: SLF001
+    model.calculate_loaded()
     return model
 
 
@@ -130,7 +130,7 @@ def test_editing_an_imported_file_writes_the_same_way():
     sheet = current.sheets[SheetId("s1")]
     sheet.cells[(0, 1)] = formula("=ALTERNATIVES(5,6,7)")
     sheet.cells[(0, 2)] = formula('=RANDOM("lognormal",0,0.5)')
-    current._calculate_loaded()  # noqa: SLF001
+    current.calculate_loaded()
     patched = apply_edits_to_xlsx(original, baseline, current)
     ws = worksheet(patched)
     assert ws["B1"].value == 5 and ws["B1"].comment.text == "claudia alternatives: {5, 6, 7}"

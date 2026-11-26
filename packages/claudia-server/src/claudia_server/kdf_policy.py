@@ -94,10 +94,6 @@ class KdfPolicy:
         with self._changed:
             return self._changed.wait_for(lambda: self._finished >= self._generation, timeout)
 
-    def _set(self, params: KdfParams) -> None:
-        with self._changed:
-            self._params, self._measured = params, True
-
     def _measure(self) -> None:
         with self._changed:
             self._generation += 1

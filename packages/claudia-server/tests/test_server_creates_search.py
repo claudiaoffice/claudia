@@ -51,7 +51,7 @@ def test_creates_has_the_three_search_methods():
 
 
 def test_the_methods_are_documented_in_creates_words():
-    doc = creates_methods._methods["search_find"].doc
+    doc = creates_methods.describe()["methods"]["search_find"]["doc"]
     assert "slide" in doc and "notes" in doc and "section" not in doc
 
 

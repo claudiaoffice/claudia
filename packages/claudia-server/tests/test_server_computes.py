@@ -8,6 +8,7 @@ import pytest
 from claudia_computes import AddSheet, CellRegion, NumberFormat, WorkbookModel
 from claudia_computes.model import MAX_ROWS
 from claudia_core import Document, MemoryStore
+from claudia_search.testing import STOPPED_IN_TIME
 from claudia_server.auth import Account
 from claudia_server.computes import computes_methods
 from claudia_server.i18n import translate
@@ -999,7 +1000,7 @@ def test_a_pattern_that_could_run_forever_stops_at_the_deadline_and_says_so(book
     typed(book, "s1", [(9, 0, "a" * 200)])
     started = time.monotonic()
     found = search(book, {"mode": "pattern", "find": "(?:a|aa)+!|€"})
-    assert time.monotonic() - started < 1.0
+    assert time.monotonic() - started < STOPPED_IN_TIME
     assert found["timed_out"] and "error" not in found
     assert [(m["at"]["row"], m["at"]["col"]) for m in found["matches"]] == [(0, 1), (1, 1)]
 

@@ -91,7 +91,7 @@ def test_a_formula_that_could_not_be_drawn_is_drawn_when_the_document_is_opened_
         hub = Hub(MemoryProvider(SlideModel), methods=creates_methods, renderings=RenderDesk(service))
         first = await hub.open("deck", create=True)
         container = Client(first, ann).request("add_container", add)["result"]["container"]
-        await asyncio.sleep(1.0)
+        await first.rendered()
         late = Client(first, Account("bob", "editor"))
         (entry,) = late.request("containers")["result"]
         assert entry["image"] is None and entry["outcome"]["ok"] is False
@@ -107,13 +107,9 @@ def test_a_formula_that_could_not_be_drawn_is_drawn_when_the_document_is_opened_
             added="2026-11-17",
         )
         fonts.reload()
-        first.stop_rendering()
-        hub._documents.clear()
-        again = await hub.open("deck")
-        for _ in range(100):  # real TeX takes a moment
-            await asyncio.sleep(0.1)
-            if again.document.model.containers[container].image is not None:
-                break
+        first.stop_rendering()  # the server restarts: a new hub opens the document from what was kept
+        again = await Hub(hub.provider, methods=creates_methods, renderings=first.renderings).open("deck")
+        await again.rendered()  # real TeX takes a moment
         assert again.document.model.containers[container].image is not None
         json.dumps(Client(again, ann).request("containers")["result"])
 

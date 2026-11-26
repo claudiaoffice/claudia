@@ -136,9 +136,7 @@ def test_the_server_reads_the_state_folder_or_the_one_given(tmp_path):
 
 def test_the_command_line_fetches_and_reports(tmp_path, monkeypatch, capsys):
     monkeypatch.setattr(hyphenation, "read_lock", lambda text=None: read_lock(lock_text()))
-    monkeypatch.setattr(hyphenation, "_download", store().__getitem__)
-    assert hyphenation.main(["fetch", str(tmp_path / "h")]) == 0
+    assert hyphenation.main(["fetch", str(tmp_path / "h")], download=store().__getitem__) == 0
     assert "2 pattern files" in capsys.readouterr().out
-    monkeypatch.setattr(hyphenation, "_download", lambda url: b"wrong")
-    assert hyphenation.main(["fetch", str(tmp_path / "other")]) == 1
+    assert hyphenation.main(["fetch", str(tmp_path / "other")], download=lambda url: b"wrong") == 1
     assert "SHA-256" in capsys.readouterr().err

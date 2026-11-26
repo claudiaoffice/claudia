@@ -156,7 +156,7 @@ def test_details_are_plain_in_the_file_so_that_they_need_no_password(tmp_path):
         assert call(sock, "set_details", {"password": SEALED_PASSWORD, "description": "open to all", "tags": ["x"]})[
             "ok"
         ]
-    manifest = read_manifest(provider._file("alpha"))
+    manifest = read_manifest(tmp_path / "docs" / "alpha.claudia")  # the file anybody can see in the folder
     assert manifest.description == "open to all" and manifest.tags == ("x",)
 
 

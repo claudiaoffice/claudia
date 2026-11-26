@@ -35,7 +35,7 @@ def a_model(*, widths: dict[int, float] | None = None, heights: dict[int, float]
     sheet.cells[(1, 1)] = {"t": "int", "v": 4}
     sheet.col_widths.update(widths or {})
     sheet.row_heights.update(heights or {})
-    model._calculate_loaded()
+    model.calculate_loaded()
     return model
 
 

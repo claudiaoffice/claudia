@@ -187,7 +187,7 @@ class MemoryProvider:
         """Make an empty document."""
         log_, store = CommandLog(), MemoryStore()
         self._stored[doc_id] = (log_, store)
-        self._created[doc_id] = utc_now()
+        self._created[doc_id] = self._options.get("clock", utc_now)()
         return Document(self._model_cls.empty(), log=log_, store=store, **self._options)
 
     def open(self, doc_id: str) -> Document:
@@ -642,6 +642,12 @@ class HostedDocument:
                 del self._render_jobs[container_id]
         self._outcomes[container_id] = result
         self.broadcast({"event": "render_result", "data": result})
+
+    async def rendered(self) -> None:
+        """Return when every picture asked for so far has been made, or given up (as ``Assistant.idle`` does for the
+        questions): what a test waits for instead of guessing how long rendering takes (PROC-66)."""
+        while self._render_jobs:
+            await asyncio.gather(*self._render_jobs.values(), return_exceptions=True)
 
     def stop_rendering(self) -> None:
         """Nothing more is made for this document (it is being unloaded, or the server stops)."""

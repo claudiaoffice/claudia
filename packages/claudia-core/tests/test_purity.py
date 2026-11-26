@@ -30,6 +30,7 @@ FORBIDDEN_IMPORTS = {
     "uuid",
 }
 CLOCK_ONLY = {"time", "datetime"}  # only clock.py may read a clock
+TESTING_ONLY = {"gc", "sys"}  # the helpers for tests measure work: sys.monitoring counts it, gc is held off (PERF-14)
 # "paragraph" was here until E10.17 (D181), when a paragraph stopped being a composes idea: a creates text box
 # and the label inside a shape on a sheet carry the same entity, so the kernel is where it belongs. "slide" was here
 # until E6.31 (D1470), when a slide stopped being only creates': computes has slides among its sheets, so the slide's
@@ -51,6 +52,8 @@ def test_no_io_imports_and_no_open():
             elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
                 names = [node.module.split(".")[0]]
             for name in names:
+                if name in TESTING_ONLY and path.name == "testing.py":
+                    continue
                 assert name not in FORBIDDEN_IMPORTS, f"{path.name} imports {name}"
                 if name in CLOCK_ONLY:
                     assert path.name in ("clock.py", "testing.py"), f"{path.name} reads a clock"
@@ -92,9 +95,10 @@ def test_kernel_has_no_third_party_imports():
         "xml",  # assets.py: sanitizing an imported SVG with the standard library's own parser, no third party
     }
     for path, tree in modules().items():
+        allowed = stdlib | TESTING_ONLY if path.name == "testing.py" else stdlib
         for node in ast.walk(tree):
             if isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
-                assert node.module.split(".")[0] in stdlib, f"{path.name}: {node.module}"
+                assert node.module.split(".")[0] in allowed, f"{path.name}: {node.module}"
             if isinstance(node, ast.Import):
                 for a in node.names:
-                    assert a.name.split(".")[0] in stdlib, f"{path.name}: {a.name}"
+                    assert a.name.split(".")[0] in allowed, f"{path.name}: {a.name}"

@@ -1,68 +1,19 @@
 """Performance guards of the formula engine: how the cost of the hot paths grows with the size of the problem.
 
 Scaling tests, not stopwatches: they compare the same operation on a small and a large input and fail when the
-cost grows faster than it should, which is robust against slow machines (see the guards of claudia-core). Where the
-time itself still depends on the machine (memory caches), the work is counted instead (:func:`work_of`, PROC-61).
+cost grows faster than it should. The work is counted (``claudia_core.testing.work_of``: the same on every machine,
+PROC-61, PERF-14, D1661); only where the cost is spent in C, which counting cannot see, is it timed.
 """
 
-import gc
-import sys
 import time
 
 from claudia_computes import AddSheet, InsertRows, SetCells, Structure, WorkbookModel, parse_input
 from claudia_computes.calc import Round, Waiting
 from claudia_computes.formula import parse_formula
 from claudia_core import Document, MemoryStore
+from claudia_core.testing import best_of, work_of
 
 S1 = "s1"
-
-
-def best_of(repeat, fn):
-    """The fastest of ``repeat`` runs of ``fn``, with the cyclic garbage collector held off while they run.
-
-    A collection is triggered by how much has been allocated, not by the work being measured, so it lands in the
-    large case far more often than in the small one and reads as super-linear cost: reopening 8,000 formulas
-    measured 20-25x the time of 800 with it on, and 11x with it off (the guard's bound is 25x). ``timeit`` turns
-    it off for the same reason.
-    """
-    gc.collect()
-    was_enabled = gc.isenabled()
-    gc.disable()
-    try:
-        best = float("inf")
-        for _ in range(repeat):
-            started = time.perf_counter()
-            fn()
-            best = min(best, time.perf_counter() - started)
-        return best
-    finally:
-        if was_enabled:
-            gc.enable()
-
-
-def work_of(fn):
-    """How much Python ``fn`` runs: the lines it starts and the turns of its loops, a one-line comprehension's too.
-    The same on every machine and on every run, however busy the machine is or how big its caches are. It does not
-    see work done inside C (``x in a_list``, a list shifted by ``del``): a guard that must see that measures time."""
-    monitoring = sys.monitoring
-    tool = next(tool for tool in range(6) if monitoring.get_tool(tool) is None)  # (coverage may hold one)
-    monitoring.use_tool_id(tool, "work_of")
-    count = 0
-
-    def counted(*_event):
-        nonlocal count
-        count += 1
-
-    events = monitoring.events.LINE | monitoring.events.JUMP
-    try:
-        monitoring.register_callback(tool, monitoring.events.LINE, counted)
-        monitoring.register_callback(tool, monitoring.events.JUMP, counted)
-        monitoring.set_events(tool, events)
-        fn()
-    finally:
-        monitoring.set_events(tool, 0)
-        monitoring.free_tool_id(tool)
-    return count
 
 
 def workbook():
@@ -79,7 +30,7 @@ def fill_column(doc, formulas):
 def test_reading_a_formula_costs_what_its_length_costs():
     def parse_all(terms):
         text = "=" + "+".join(f"A{i % 90 + 1}*2" for i in range(terms))
-        return best_of(5, lambda: [parse_formula(text) for _ in range(10)])
+        return work_of(lambda: [parse_formula(text) for _ in range(10)])
 
     ratio = parse_all(1000) / parse_all(100)
     assert ratio < 25, f"parsing 10x more formula took {ratio:.0f}x as long (linear is about 10)"
@@ -91,7 +42,7 @@ def test_one_edit_costs_the_same_in_a_small_and_a_large_workbook():
         doc.execute(SetCells(S1, tuple((i, 0, parse_input(str(i))) for i in range(n))), author="ana")
         fill_column(doc, [f"=A{i + 1}*2" for i in range(n)])
         edits = [SetCells(S1, ((0, 0, parse_input(str(k))),)) for k in range(100, 160)]
-        return best_of(3, lambda: [doc.execute(edit, author="ana") for edit in edits])
+        return work_of(lambda: [doc.execute(edit, author="ana") for edit in edits])
 
     ratio = per_edit(10_000) / per_edit(1_000)
     assert ratio < 4, f"one edit cost {ratio:.1f}x as much with 10x more formulas (they do not depend on it)"
@@ -181,7 +132,7 @@ def test_opening_from_a_snapshot_is_linear_in_the_formulas():
         doc.execute(SetCells(S1, tuple((i, 0, parse_input(str(i))) for i in range(n))), author="ana")
         fill_column(doc, [f"=A{i + 1}+B{max(i, 1)}" for i in range(n)])
         state = doc.model.serialize()
-        return best_of(3, lambda: WorkbookModel.restore(state))
+        return work_of(lambda: WorkbookModel.restore(state))
 
     ratio = reopen(8_000) / reopen(800)
     assert ratio < 25, f"10x more formulas took {ratio:.0f}x as long to open (linear is about 10)"
@@ -193,7 +144,7 @@ def test_one_edit_does_not_look_at_every_range_in_its_column():
         doc.execute(SetCells(S1, tuple((i, 0, parse_input(str(i))) for i in range(n + 10))), author="ana")
         fill_column(doc, [f"=SUM(A{i + 1}:A{i + 10})" for i in range(n)])  # a window of ten rows for every row
         edits = [SetCells(S1, ((5, 0, parse_input(str(k))),)) for k in range(100, 160)]
-        return best_of(3, lambda: [doc.execute(edit, author="ana") for edit in edits])
+        return work_of(lambda: [doc.execute(edit, author="ana") for edit in edits])
 
     ratio = per_edit(20_000) / per_edit(2_000)
     assert ratio < 4, f"one edit cost {ratio:.1f}x as much with 10x more ranges in its column (only 10 read the cell)"
@@ -201,14 +152,10 @@ def test_one_edit_does_not_look_at_every_range_in_its_column():
 
 def test_a_structural_edit_is_linear_in_the_formulas():
     def insert(n):
-        def build():
-            doc = workbook()
-            doc.execute(SetCells(S1, tuple((i, 0, parse_input(str(i))) for i in range(n))), author="ana")
-            fill_column(doc, [f"=A{i + 1}*2" for i in range(n)])
-            return doc
-
-        docs = [build() for _ in range(3)]
-        return best_of(3, lambda: docs.pop().execute(Structure(InsertRows(S1, 0, 1)), author="ana"))
+        doc = workbook()
+        doc.execute(SetCells(S1, tuple((i, 0, parse_input(str(i))) for i in range(n))), author="ana")
+        fill_column(doc, [f"=A{i + 1}*2" for i in range(n)])
+        return work_of(lambda: doc.execute(Structure(InsertRows(S1, 0, 1)), author="ana"))
 
     ratio = insert(5_000) / insert(500)
     assert ratio < 25, f"10x more formulas took {ratio:.0f}x as long to insert a row (linear is about 10)"
@@ -222,7 +169,7 @@ def test_a_scratch_copy_costs_the_size_of_the_workbook_not_the_length_of_its_his
         fill_column(doc, [f"=A{i % 90 + 1}*2" for i in range(3000)])
         for k in range(edits):
             doc.execute(SetCells(S1, ((k % 90, 0, parse_input(str(k))),)), author="ana")
-        return best_of(3, doc.scratch)
+        return work_of(doc.scratch)
 
     ratio = scratch_time(2000) / scratch_time(50)
     assert ratio < 3, f"a copy after 2,000 edits took {ratio:.1f}x as long as after 50 (it should not depend on them)"

@@ -72,14 +72,27 @@ def test_a_new_target_is_measured_again():
     assert policy.describe()["target_seconds"] == 0.4
 
 
+class FirstHeld:
+    """A stand-in for ``calibrate`` whose first measuring is held up and finds ``BIG``; every later one finds
+    ``FLOOR`` at once."""
+
+    def __init__(self):
+        self.gate = threading.Event()
+        self.measurings = 0
+
+    def __call__(self, target, **more):
+        self.measurings += 1
+        if self.measurings == 1:
+            self.gate.wait(5)
+            return BIG
+        return FLOOR
+
+
 def test_an_old_measuring_does_not_overwrite_a_newer_one():
-    held = Measured(result=BIG)
-    held.gate.clear()
+    held = FirstHeld()
     policy = KdfPolicy(0.75, floor=FLOOR, calibrate=held)
     policy.start()
-    fresh = Measured(result=FLOOR)
-    policy._calibrate = fresh  # the next measuring is another one
-    policy.retarget(0.3)
+    policy.retarget(0.3)  # the next measuring is another one
     assert policy.wait(5)
     held.gate.set()
     for thread in threading.enumerate():
@@ -110,7 +123,9 @@ def test_new_documents_take_the_cost_as_it_is_when_they_are_made(tmp_path):
     store = SealedDocuments(tmp_path, ListModel, kdf=policy.current)
     store.add_user("one", "Annabelle", "Correct-Horse-9", "owner")
     assert read_manifest(tmp_path / "docs" / "one.claudia").kdf == CHEAP
-    policy._set(KdfParams(iterations=2, memory_kib=128, lanes=1))
+    held.result = KdfParams(iterations=2, memory_kib=128, lanes=1)  # the machine is measured again: a new cost
+    policy.retarget(0.4)
+    assert policy.wait(5)
     store.add_user("two", "Annabelle", "Correct-Horse-9", "owner")
     assert read_manifest(tmp_path / "docs" / "two.claudia").kdf == KdfParams(iterations=2, memory_kib=128, lanes=1)
     assert read_manifest(tmp_path / "docs" / "one.claudia").kdf == CHEAP, "the first keeps what it was made with"

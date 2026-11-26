@@ -51,7 +51,7 @@ def test_composes_has_the_three_search_methods():
 
 
 def test_the_methods_are_documented_in_composes_words():
-    doc = composes_methods._methods["search_find"].doc
+    doc = composes_methods.describe()["methods"]["search_find"]["doc"]
     assert "heading" in doc and "section" in doc and "sheet" not in doc
 
 

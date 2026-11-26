@@ -228,11 +228,16 @@ class SlowEngine:
     def __init__(self):
         self.running = 0
         self.most_at_once = 0
+        self.started = asyncio.Event()
+        self.free = asyncio.Event()  # cleared: it plans until the test sets it
+        self.free.set()
 
     async def plan_async(self, task: Task):
         self.running += 1
         self.most_at_once = max(self.most_at_once, self.running)
-        await asyncio.sleep(0.05)
+        self.started.set()
+        await self.free.wait()
+        await asyncio.sleep(0.05)  # work: the planning, long enough for a second question to overlap if it could
         self.running -= 1
         return [Say(f"slowly: {task.text}")]
 
@@ -252,10 +257,12 @@ def test_an_engine_that_plans_with_await_is_awaited():
 def test_the_event_loop_is_free_while_an_engine_waits():
     async def test(hosted, assistant):
         ann, ben = Person(hosted, ANN), Person(hosted, BEN)
+        assistant.engine.free.clear()
         ann.request("chat", {"text": "@ai please"})
         working = asyncio.create_task(assistant.idle())
-        await asyncio.sleep(0.01)
+        await assistant.engine.started.wait()
         assert ben.request("ping")["ok"] and ann.said() == [], "ben was served while the engine was still working"
+        assistant.engine.free.set()
         await working
         assert ann.said() == ["slowly: please"]
 

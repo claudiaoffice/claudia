@@ -10,6 +10,7 @@ import contextlib
 import pytest
 
 from claudia_search import Query, SearchError, SearchTimeout
+from claudia_search.testing import STOPPED_IN_TIME
 
 
 def builder(parts=(), conditions=(), *, combine="all", match_case=False, whole="none", replace=None):
@@ -379,7 +380,7 @@ def test_a_pattern_that_backtracks_without_end_costs_at_most_its_deadline(patter
         started = time.monotonic()
         with contextlib.suppress(SearchTimeout):
             compiled.matches(text, started + 0.2)
-        assert time.monotonic() - started < 0.6
+        assert time.monotonic() - started < STOPPED_IN_TIME
 
 
 def test_a_search_that_runs_out_of_time_says_so():
@@ -400,7 +401,7 @@ def test_without_a_deadline_one_call_still_has_a_limit(monkeypatch):
     started = time.monotonic()
     with pytest.raises(SearchTimeout):
         pattern_query("(?:a|aa)+!").compile().matches("a" * 60)
-    assert time.monotonic() - started < 0.5
+    assert time.monotonic() - started < STOPPED_IN_TIME
 
 
 @pytest.mark.parametrize("method", ["admits", "left_out", "replaced"])

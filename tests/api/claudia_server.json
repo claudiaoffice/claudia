@@ -301,7 +301,8 @@
   ],
   "init": "(document: 'Document', workers: 'Submittable', *, timeout: 'float' = 30.0)",
   "methods": {
-   "close": "(self) -> 'None'"
+   "close": "(self) -> 'None'",
+   "idle": "(self) -> 'None'"
   },
   "properties": []
  },
@@ -346,6 +347,7 @@
    "pick_color": "(self) -> 'str'",
    "render_outcomes": "(self) -> 'dict[str, dict]'",
    "render_unfinished": "(self) -> 'None'",
+   "rendered": "(self) -> 'None'",
    "role_of": "(self, user: 'str') -> 'str | None'",
    "stop_rendering": "(self) -> 'None'",
    "sweep": "(self) -> 'None'",
@@ -791,7 +793,7 @@
   "class": [
    "object"
   ],
-  "init": "(*, max_workers: 'int' = 4, max_waiting: 'int | None' = None)",
+  "init": "(*, max_workers: 'int' = 4, max_waiting: 'int | None' = None, make_executor: 'Callable[[int], Executor]' = <function WorkerPool.<lambda>>)",
   "methods": {
    "stop": "(self) -> 'None'",
    "submit": "(self, fn: 'Callable[P, R]', /, *args: 'P.args', **kwargs: 'P.kwargs') -> 'R'"
