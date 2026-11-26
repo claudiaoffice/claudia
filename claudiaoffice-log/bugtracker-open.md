@@ -27,7 +27,7 @@ The index is the status of record; a section below keeps the status of the round
 re-checked. **Opened** and **Fixed** are filled from 2026-11-20 on: for older items only where the status already gave
 the date.
 
-### Open (68)
+### Open (72)
 
 By priority (P1, P2, P3, then items that wait for a decision without one), then by ID.
 
@@ -39,9 +39,10 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | SEC-25 | P2 | Security | Through `apply` an editor can send any command the server knows: wipe the document with `Import` (no undo), forge checkpoints, redaction and restore records, also inside a `Batch` | **new, open** (measured; widened 2026-11-25) | 2026-11-25 |  |
 | SEC-26 | P2 | Security | A viewer's office export (odt, docx) says who made and last changed the document and when, and dates the open suggestions, all from the history her role may not read | **new, open** (measured) | 2026-11-25 |  |
 | SEC-27 | P2 | Security / privacy | A picture's local path (`source_path`) is stored in the document's content, so every key holder reads it (snapshot, sealed file, export), although only the importer was meant to see it | **new, open** (measured; no app sends a path today) | 2026-11-25 |  |
+| SEC-30 | P2 | Security | A person's raw `core.DefineAsset` / `UpdateAsset` skips what `add_image` does to a picture: an SVG is not sanitised when an asset is read from its data | **new, open** (read) | 2026-11-26 |  |
 | PERF-02 | P2 | Performance | Journal `fsync` on the event loop for every edit | verified open (2026-11-12; see CODE-13) |  |  |
 | PERF-10 | P2 | Performance | What-if outcomes are recalculated on the event loop: 9 s per edit in a 1,000-cell model | **new, open** |  |  |
-| PERF-14 | P2 | Performance | Exporting a kept workbook (xlsx, ods) recalculates the whole live model on the event loop | **new, open** (read) | 2026-11-25 |  |
+| PERF-15 | P2 | Performance | Exporting a kept workbook (xlsx, ods) recalculates the whole live model on the event loop | **new, open** (read) | 2026-11-25 |  |
 | UX-22 | P2 | UX | The history speaks three dialects: one per app | **new, open** |  |  |
 | UX-42 | P2 | UX / all | A document cannot be renamed: its name is sealed into the file, which the uid was meant to avoid | **decided, open** (D536, E5.21) |  |  |
 | UX-51 | P2 | UX / composes | The words go round the unturned frame of a turned object, not its bounding box (D1226 decides the box); turning is on screen in composes since D1232 | **new, open** (read) |  |  |
@@ -100,7 +101,10 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | CODE-103 | P3 | computes I/O | The ods chart patch: a chart in a cell that is moved and described in one export makes overlapping edits, so the kept file is written anew | **new, open** (read) | 2026-11-25 |  |
 | CODE-104 | P3 | computes I/O | The pictures of an xlsx that LibreOffice wrote are not read in, nor the turned ones of such an ods | **new, open** (measured) | 2026-11-25 |  |
 | CODE-105 | P3 | composes I/O | docx: a paragraph mark's own run properties count as a `formatting` loss, though nothing is lost | **new, open** (measured) | 2026-11-25 |  |
-| CODE-106 | P3 | composes I/O | The patch of a kept odt reports losses (`style`, `removed-…`) that the server never passes on: they are not in the Export dialog | **new, open** (read) | 2026-11-25 |  |
+| CODE-109 | P3 | composes I/O | The patch of a kept odt reports losses (`style`, `removed-…`) that the server never passes on: they are not in the Export dialog | **new, open** (read) | 2026-11-25 |  |
+| CODE-110 | P3 | Code / desktop clients | Both desktop shells cut a path longer than 4096 characters without a word; such a picture path would be saved wrong | **new, open** (read) | 2026-11-26 |  |
+| PROC-70 | P3 | Process / tests | `uv run pytest clients/linux/tests` cannot load `test_contract.py`: `jsonschema` is not in the uv environment | **new, open** (measured) | 2026-11-26 |  |
+| SEC-31 | P3 | Security / privacy | A viewer's office export of a document whose imported file was kept still carries that file's own authors and dates (metadata, tracked changes) | **needs decision** (read) | 2026-11-26 |  |
 
 ## Security
 
@@ -655,7 +659,8 @@ are those of paragraph marks reports no `formatting` loss.
 ## Found in the architecture review of 2026-11-25
 
 Logged by the owner's word of 2026-11-25 (`/tmp` report "Architecture review · claudia", candidates 1, 3 and 6, and the
-triage that went with it). SEC-25 was widened by the same triage.
+triage that went with it). SEC-25 was widened by the same triage. CODE-109 and PERF-15 were logged on `batch-5` as
+CODE-106 and PERF-14, numbers the `test-quality` branch had taken meanwhile; renumbered 2026-11-26.
 
 ### SEC-25, widened (2026-11-25, measured)
 Not only `Import`: `_apply` (`protocol.py`) decodes every command the registry knows and refuses only the assistant. As
@@ -696,7 +701,7 @@ The per-person mask (`ImageImport.masked`, `to_data_for`) is gone: a kept path i
 server (everyone sees the same path; an empty one is nowhere), core, web (`images`, `shell-bridge`, `local-files`),
 both shells' `picked`; each seen red first.
 
-### CODE-106 · The patch of a kept odt drops the losses it reports · P3 · size 3 · open
+### CODE-109 · The patch of a kept odt drops the losses it reports · P3 · size 3 · open
 **Read** (architecture review of 2026-11-25): `apply_edits_to_odt` takes a `losses` log and adds `style` and
 `removed-<kind>` losses to it (`odt.py`), but the server's patch lambda in `composes.py` (`_export_office`, the odt
 branch of `export_with_original`) ignores the log it is given (`_`), so these losses never reach the Export dialog.
@@ -710,9 +715,46 @@ formula is written as its value and no `formula` loss is reported; a fresh expor
 The same holds for `authorship`, `notes-…`, `agenda` and `reference` on every kept file: a patched export never calls
 `*_export_losses`. **First test:** a kept xlsx with a formula Excel cannot say reports `formula` in `export_office`.
 
-### PERF-14 · Exporting a kept workbook recalculates the live model on the event loop · P2 · size 2 · open
+### PERF-15 · Exporting a kept workbook recalculates the live model on the event loop · P2 · size 2 · open
 **Read** (architecture review of 2026-11-25): `export_office` runs synchronously in `dispatch`; the patch path hands the
 live model to the xlsx and ods patches, which both call `current.calc.recalculate_all()` (`xlsx.py`, `ods.py`): a full
 recalculation on the loop for every export of a kept workbook, while everybody else's edits wait. The loss walk
 translates every formula a second time. Not timed. Belongs with A1 (the execution model). **First test:** another
 person's `ping` is answered within 50 ms while a kept 10,000-formula workbook is exported.
+
+## Found in batch 5 of the bug eater (2026-11-26)
+
+Logged by the owner's word of 2026-11-26. Found while fixing SEC-25 and SEC-27 and in the code review of batch 5
+(`implementation-notes/bug-eater-batch-5.md`, where they were proposed as SEC-28, CODE-108 and PROC-67: numbers other
+branches had taken meanwhile).
+
+### SEC-30 · A raw asset skips the picture checks of add_image · P2 · size 2 · open
+**Read** (batch 5, reviewing the list of who may send which change, D2007): `add_image` decodes a picture, checks it and
+sanitises an SVG before it becomes an asset; a person who sends `core.DefineAsset` or `core.UpdateAsset` through `apply`
+gives the asset's data directly, and `ImageAsset.from_data` checks its size and format but does not sanitise an SVG.
+Claudia's own pages show pictures only through `<img>`, where an SVG's scripts never run, so the editor is not attacked;
+but an export (odt, docx, pptx, odp, xlsx, ods) or a downloaded picture carries the SVG as it was given to programs that
+may run it. **Acceptance:** an SVG with a script sent as a raw `DefineAsset` is refused or stored sanitised, the same as
+through `add_image`; the decision is whether the asset kinds become changes only the server makes (D2007) or whether
+`from_data` sanitises wherever an asset comes in (also a document file or an import).
+
+### CODE-110 · The desktop shells cut a long path without a word · P3 · size 3 · open
+**Read** by the helper of batch 5 (SEC-27): the GTK shell's `file_result` and the Neutralino core's `fileResult` cut a
+path to 4096 characters, so a picture whose path is longer would be kept with a wrong path ("Don't save the path"
+unticked, D2009). **Acceptance:** a path the shell cannot pass whole is not passed (the dialog then offers no path), or
+the limit is the contract's and refused with a word.
+
+### PROC-70 · The Linux client's tests do not load in the uv environment · P3 · size 3 · open
+**Measured** by the helper of batch 5: `uv run pytest clients/linux/tests` stops at collecting `test_contract.py`
+because `jsonschema` is not in the uv environment; the Linux README says to run the tests with the system `python3`,
+which has it. CI runs them its own way. **Acceptance:** one documented command runs all of the Linux client's tests
+that need no display, in the uv environment, or the README and `check_debt.py` say the same one.
+
+### SEC-31 · A viewer's export of a kept file carries that file's own who and when · P3 · needs decision
+**Read** in the spec review of batch 5: when a document's imported file was kept, `export_office` patches that file.
+`apply_edits_to_docx` and `apply_edits_to_xlsx` get no document info, so the kept `docProps/core.xml` (creator, created,
+lastModifiedBy, modified) passes through; for odt, `update_meta` with an empty info keeps `initial-creator`,
+`creation-date`, `dc:creator` and `dc:date`; the file's own tracked changes keep their authors and dates. This is the
+original file's metadata, not Claudia's history, so SEC-26 (D2008) does not cover it. **Decision** (owner): does a
+viewer's export of a kept file keep the original's own who and when, or say none of it, as for a document made here?
+

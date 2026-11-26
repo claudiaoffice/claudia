@@ -34,17 +34,17 @@ the Linux and the Neutralino clients; the API snapshots regenerated. Versions ar
 - The assistant (`Account.assistant()`, the editor "ai") reads the chat as any editor does: public messages and those
   to or from "ai".
 - A kept original's own metadata and tracked changes (when an imported file was kept and is patched) are the original
-  file's, not Claudia's history, and stay as they were; the owner is asked below.
+  file's, not Claudia's history, and stay as they were; logged for the owner's decision as SEC-31.
 - SEC-27: ticked sends `""`; with no path known the dialog sends `null`. The tick stays when another file is picked in
   the same dialog; the dialog is new each time it opens, so the tick is back to "save" every time.
 
-## Found in this batch (proposed, not logged)
+## Found in this batch (logged 2026-11-26 by the owner's word, under the next free numbers)
 
 | ID | Size | What | How known |
 |---|---|---|---|
-| SEC-28 | 2 | A person's raw `core.DefineAsset` / `UpdateAsset` skips what `add_image` does to a picture: an SVG is sanitised there, but not when an asset is read from its data (`ImageAsset.from_data`). Claudia shows pictures only through `<img>`, where an SVG's scripts never run, but an export or a downloaded picture would carry it to other programs | read |
-| CODE-108 | 3 | Both shells cut a path longer than 4096 characters without a word; such a path would be saved wrong | read (helper) |
-| PROC-67 | 3 | `uv run pytest clients/linux/tests` cannot load `test_contract.py`: `jsonschema` is not in the uv environment (the Linux README says to use the system python3) | measured (helper) |
+| SEC-30 | 2 | A person's raw `core.DefineAsset` / `UpdateAsset` skips what `add_image` does to a picture: an SVG is sanitised there, but not when an asset is read from its data (`ImageAsset.from_data`). Claudia shows pictures only through `<img>`, where an SVG's scripts never run, but an export or a downloaded picture would carry it to other programs | read |
+| CODE-110 | 3 | Both shells cut a path longer than 4096 characters without a word; such a path would be saved wrong | read (helper) |
+| PROC-70 | 3 | `uv run pytest clients/linux/tests` cannot load `test_contract.py`: `jsonschema` is not in the uv environment (the Linux README says to use the system python3) | measured (helper) |
 
 ## Say what could not be run
 
