@@ -92,22 +92,18 @@ def test_the_install_hint_is_german() -> None:
     assert "sudo apt install python3-gi" in hint
 
 
-def test_the_language_is_installed_before_the_command_line_is_read(monkeypatch: pytest.MonkeyPatch) -> None:
-    """`--help` and a refused `--server` are the first things a person reads: they must already speak the language."""
-    order: list[str] = []
+def test_the_language_is_installed_before_the_command_line_is_read(
+    monkeypatch: pytest.MonkeyPatch, tmp_path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """`--help` and a refused `--server` are the first things a person reads: they must already speak the language
+    chosen in Preferences ▸ App Language (CODE-106: it was checked by replacing the private `_resolve_locale`)."""
+    from claudia_shell_gtk.settings import save_shell_locale
 
-    def resolve_locale() -> str:
-        order.append("locale")
-        return "de"
-
-    monkeypatch.setattr(main_module, "_resolve_locale", resolve_locale)
-    monkeypatch.setattr(main_module, "install_translation", lambda locale: order.append(f"install {locale}"))
-
-    def parse(app, argv):
-        order.append("parse")
-        raise SystemExit(0)
-
-    monkeypatch.setattr(main_module.cli, "parse", parse)
-    with pytest.raises(SystemExit):
-        main_module.run("computes", ["--help"])
-    assert order == ["locale", "install de", "parse"]
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
+    save_shell_locale("de")
+    try:
+        with pytest.raises(SystemExit):
+            main_module.run("computes", ["--help"])
+    finally:
+        main_module.install_translation("en")  # the language is the process's: the next test starts in English
+    assert "Weitere Argumente werden an GTK weitergereicht." in capsys.readouterr().out

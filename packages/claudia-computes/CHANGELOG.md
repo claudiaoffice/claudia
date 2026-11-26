@@ -5,6 +5,10 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+### Changed
+- `WorkbookModel.calculate_loaded()` is public (it was `_calculate_loaded`): the importers fill a model's contents
+  directly and then calculate it, and they and their tests called it by a private name (CODE-106).
+
 ## [0.13.0] - 2026-11-25
 
 ### Changed

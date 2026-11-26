@@ -95,6 +95,19 @@ def _free_port() -> int:
         return probe.getsockname()[1]
 
 
+def answers_health(port: int, *, within: float) -> bool:
+    """Whether the server on ``port`` answers its health check before ``within`` seconds have passed. Asks again and
+    again: how long a process takes to start is up to the machine, not to the test."""
+    deadline = time.monotonic() + within
+    while time.monotonic() < deadline:
+        try:
+            with urllib.request.urlopen(f"http://127.0.0.1:{port}/api/health", timeout=1) as answer:
+                return answer.status == 200
+        except OSError:
+            time.sleep(0.2)  # the poll's pace, not a wait for something to happen
+    return False
+
+
 def test_a_real_server_stops_by_itself_once_nobody_uses_it(tmp_path):
     port = _free_port()
     server = subprocess.Popen(
@@ -117,18 +130,14 @@ def test_a_real_server_stops_by_itself_once_nobody_uses_it(tmp_path):
         text=True,
     )
     try:
-        deadline = time.monotonic() + 60
-        while time.monotonic() < deadline:
-            try:
-                with urllib.request.urlopen(f"http://127.0.0.1:{port}/api/health", timeout=1) as answer:
-                    assert answer.status == 200
-                    break
-            except OSError:
-                time.sleep(0.2)
-        assert server.wait(timeout=30) == 0
+        assert answers_health(port, within=60), "the server did not start"
+        # communicate, not wait: a server that writes more than the pipe holds (4 KiB on Windows) would block on its
+        # own output and never stop, which reads as "it did not stop in time" (PROC-63)
+        output, _ = server.communicate(timeout=60)
+        assert server.returncode == 0
     finally:
         if server.poll() is None:
             server.kill()
-    output = server.stdout.read()
+            server.communicate()
     assert "nobody has used the server" in output or "Shutting down" in output
     assert not (tmp_path / "docs" / ".lock").read_text(), "the lock file stays; the lock went with the process"

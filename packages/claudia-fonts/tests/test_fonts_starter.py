@@ -185,12 +185,10 @@ def test_collection_folders_finds_one_collection_or_several(tmp_path):
 def test_the_command_line_fetches_and_reports(tmp_path, monkeypatch, capsys):
     collections, store = lock_of(tmp_path)
     monkeypatch.setattr("claudia_fonts.starter.read_lock", lambda text=None: tuple(collections))
-    monkeypatch.setattr("claudia_fonts.starter._download", store.__getitem__)
-    assert main(["fetch", str(tmp_path / "fonts")]) == 0
+    assert main(["fetch", str(tmp_path / "fonts")], download=store.__getitem__) == 0
     assert "1 collections" in capsys.readouterr().out
-    monkeypatch.setattr("claudia_fonts.starter._download", lambda url: b"other")
     (tmp_path / "fonts" / "testsans" / "OFL.txt").unlink()
-    assert main(["fetch", str(tmp_path / "fonts")]) == 1
+    assert main(["fetch", str(tmp_path / "fonts")], download=lambda url: b"other") == 1
     assert "SHA-256" in capsys.readouterr().err
 
 

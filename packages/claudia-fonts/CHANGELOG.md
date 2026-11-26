@@ -3,6 +3,12 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [Unreleased]
+
+### Added
+- `to_woff2(data)`, and `WebFontCache(directory, compress=to_woff2)`: how a WOFF2 file is made can be given (CODE-106).
+- `python -m claudia_fonts`'s `main(argv, download=)`: the download function, as `fetch` takes it.
+
 ## [0.4.0] - 2026-11-16
 
 Adding fonts through the server settings, and who may receive them (E3.13 f, D1041).

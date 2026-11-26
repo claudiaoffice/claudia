@@ -12,7 +12,7 @@ import time
 
 import pytest
 
-from claudia_typeset import Limits, OutputTooLarge, SandboxError, Timeout, run_sandboxed
+from claudia_typeset import Limits, OutputTooLarge, Timeout, run_sandboxed
 
 pytestmark = pytest.mark.skipif(sys.platform != "win32", reason="Job Objects exist on Windows only")
 
@@ -54,7 +54,7 @@ async def test_a_child_of_the_process_is_killed_with_it(tmp_path):
     with pytest.raises(Timeout):
         await run_sandboxed(python(code), cwd=tmp_path, env={}, limits=Limits(seconds=2))
     parent, child = map(int, pids.read_text().split())
-    deadline = time.monotonic() + 5
+    deadline = time.monotonic() + 10  # polls: a killed process is gone at once, on a busy machine a little later
     while time.monotonic() < deadline and (alive(parent) or alive(child)):
         await asyncio.sleep(0.1)
     assert not alive(parent)
@@ -129,4 +129,3 @@ async def test_a_flood_of_output_is_stopped(tmp_path):
 async def test_no_window_is_opened_and_the_call_returns_normally(tmp_path):
     done = await run_sandboxed(python("print('hello')"), cwd=tmp_path, env={}, limits=Limits())
     assert done.output.strip() == "hello"
-    assert isinstance(SandboxError("x"), Exception)

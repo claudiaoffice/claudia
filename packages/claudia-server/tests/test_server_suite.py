@@ -7,7 +7,7 @@ import pytest
 from starlette.testclient import TestClient
 from starlette.websockets import WebSocketDisconnect
 
-from claudia_core.testing import ListModel
+from claudia_core.testing import FakeClock, ListModel
 from claudia_server import Hub, MemoryProvider, ScryptDirectory, create_app
 from claudia_server.hub import HubError
 from claudia_server.suite import Module, Suite
@@ -100,16 +100,21 @@ def test_the_document_cap_counts_every_app_together():
 
 
 def test_the_list_holds_the_documents_of_every_app_newest_first():
-    suite = two_apps()
+    clock = FakeClock()  # one clock for both apps, a second apart: no nap that a coarse system clock could swallow
+    suite = Suite(
+        [
+            Module(Hub(MemoryProvider(model, clock=clock.time)), ScryptDirectory(cost=2**4))
+            for model in (ListModel, OtherList)
+        ]
+    )
 
     async def scenario():
-        await suite.module("test-list").hub.open("a", create=True)
-        await asyncio.sleep(0.002)
-        await suite.module("test-other").hub.open("b", create=True)
+        await suite.module("test-other").hub.open("a", create=True)
+        await suite.module("test-list").hub.open("b", create=True)  # newer, in the app whose name sorts first
         return suite.listing()
 
     listed = asyncio.run(scenario())
-    assert [(d["id"], d["app"]) for d in listed] == [("b", "test-other"), ("a", "test-list")]
+    assert [(d["id"], d["app"]) for d in listed] == [("b", "test-list"), ("a", "test-other")]
 
 
 # ----------------------------------------------------------------------------------------------- over the network

@@ -1,6 +1,7 @@
 """The sealed store (E2.1 to E2.3, E2.7): documents and their people in their sealed document files, behind the server's
 two interfaces (``DocumentProvider`` and ``UserDirectory``)."""
 
+import os
 import sys
 import time
 
@@ -8,7 +9,7 @@ import pytest
 
 from claudia_core import Document
 from claudia_core.testing import Insert, ListModel
-from claudia_document_file import JournalWriter, KdfParams, journal_path
+from claudia_document_file import JournalWriter, KdfParams, crypto, journal_path
 from claudia_server.auth import AuthRefused, Credentials
 from claudia_server.sealed import SealedDocuments
 
@@ -148,20 +149,31 @@ def test_the_name_ai_cannot_log_in_and_other_rubbish_is_refused(tmp_path):
     assert store.verify("plan", Credentials(5, ANN_PW)) is None  # type: ignore[arg-type]
 
 
-def test_a_missing_document_costs_as_much_time_as_a_wrong_password(tmp_path):
-    """SEC-04: how long the answer takes must not tell whether a document exists."""
+def hashes_of(monkeypatch, work):
+    """The costs (passes, memory, lanes) of the password hashes ``work`` runs, in order."""
+    real, seen = crypto.argon2id, []
+
+    def counted(password, salt, params, length, **kwargs):
+        seen.append((params.iterations, params.memory_kib, params.lanes))
+        return real(password, salt, params, length, **kwargs)
+
+    with monkeypatch.context() as patched:
+        patched.setattr(crypto, "argon2id", counted)
+        work()
+    return seen
+
+
+def test_a_missing_document_costs_as_much_time_as_a_wrong_password(tmp_path, monkeypatch):
+    """SEC-04: how long the answer takes must not tell whether a document exists.
+
+    The time is the password hash: the rest is microseconds against its tenths of a second. So both answers must run
+    the same hashes at the same cost. Counted, not timed: a stopwatch on a busy runner measured the runner (PROC-66)."""
     store = SealedDocuments(tmp_path, ListModel, kdf=KdfParams(iterations=2, memory_kib=16384, lanes=1))
     start(store)
-
-    # The fastest of several tries, taken alternately, is the cost of the work itself; a busy machine only adds to the
-    # others (the median of a loaded run is what made this test flaky).
-    fastest = {"plan": float("inf"), "nothing-here": float("inf")}
-    for _ in range(9):
-        for doc_id, best in fastest.items():
-            started = time.perf_counter()
-            sign_in(store, "Annabelle", "wrong-Pass-1", doc_id=doc_id)
-            fastest[doc_id] = min(best, time.perf_counter() - started)
-    assert 1 / 1.5 < fastest["plan"] / fastest["nothing-here"] < 1.5, fastest
+    wrong = hashes_of(monkeypatch, lambda: sign_in(store, "Annabelle", "wrong-Pass-1", doc_id="plan"))
+    missing = hashes_of(monkeypatch, lambda: sign_in(store, "Annabelle", "wrong-Pass-1", doc_id="nothing-here"))
+    assert wrong, "a wrong password is hashed"
+    assert missing == wrong
 
 
 # --- only somebody with all the keys can bring a document up ---------------------------------------------------------
@@ -342,8 +354,10 @@ def test_a_file_that_is_not_a_document_does_not_break_the_list(tmp_path):
 def test_documents_are_listed_newest_first_with_their_app(tmp_path):
     store = store_in(tmp_path)
     start(store, "older")
-    time.sleep(0.02)
     start(store, "newer")
+    a_minute_ago = time.time() - 60  # set, not waited for: file times are as coarse as the file system (PROC-66)
+    for path in (tmp_path / "docs").glob("older.claudia*"):  # the document and its journal
+        os.utime(path, (a_minute_ago, a_minute_ago))
     found = store.documents()
     assert [info.id for info in found] == ["newer", "older"]
     assert {info.app for info in found} == {ListModel.app}

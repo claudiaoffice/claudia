@@ -28,7 +28,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from collections.abc import Callable
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import Executor, ProcessPoolExecutor
 from concurrent.futures.process import BrokenProcessPool
 from typing import ParamSpec, TypeVar
 
@@ -55,15 +55,24 @@ def _call(fn: Callable, args: tuple, kwargs: dict):
 class WorkerPool:
     """A process pool reachable from the event loop. No process is started until the first :meth:`submit`."""
 
-    def __init__(self, *, max_workers: int = DEFAULT_WORKERS, max_waiting: int | None = None):
+    def __init__(
+        self,
+        *,
+        max_workers: int = DEFAULT_WORKERS,
+        max_waiting: int | None = None,
+        make_executor: Callable[[int], Executor] = lambda workers: ProcessPoolExecutor(max_workers=workers),
+    ):
+        """``make_executor(max_workers)`` makes the pool of processes, the first time and again after one broke; a
+        test gives one whose crashes it can time (CODE-106)."""
         self.max_workers = max_workers
         self.max_waiting = max_waiting
-        self._executor: ProcessPoolExecutor | None = None
+        self._make_executor = make_executor
+        self._executor: Executor | None = None
         self._waiting = 0
 
-    def _ensure(self) -> ProcessPoolExecutor:
+    def _ensure(self) -> Executor:
         if self._executor is None:
-            self._executor = ProcessPoolExecutor(max_workers=self.max_workers)
+            self._executor = self._make_executor(self.max_workers)
         return self._executor
 
     async def submit(self, fn: Callable[P, R], /, *args: P.args, **kwargs: P.kwargs) -> R:
@@ -88,7 +97,7 @@ class WorkerPool:
         finally:
             self._waiting -= 1
 
-    def _discard(self, executor: ProcessPoolExecutor) -> None:
+    def _discard(self, executor: Executor) -> None:
         """Shut the given (broken) executor down, and clear it from ``self`` only if it is still the current one.
 
         Two tasks can break the same pool at once; each reaches here with its own reference to the executor that

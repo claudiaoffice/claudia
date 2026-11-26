@@ -69,7 +69,8 @@ def request(ws, method, params, request_id=2):
 
 
 def hosted(client, app, doc_id):
-    return client.app.state.suite.module(app).hub._documents[doc_id]
+    """The document as the server holds it (it is open: a window is in it)."""
+    return client.portal.call(client.app.state.suite.module(app).hub.open, doc_id)
 
 
 # ------------------------------------------------------------------------------------------------ the upload

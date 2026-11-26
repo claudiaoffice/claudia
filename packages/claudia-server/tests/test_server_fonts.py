@@ -185,7 +185,7 @@ def test_a_fonts_folder_that_does_not_exist_stops_the_server(tmp_path):
         make_plan(["--no-tls", "--state-dir", str(tmp_path / "s"), "--fonts", str(tmp_path / "missing")])
 
 
-def test_making_a_webfont_does_not_hold_up_the_rest_of_the_server(tmp_path, monkeypatch):
+def test_making_a_webfont_does_not_hold_up_the_rest_of_the_server(tmp_path):
     """PERF-09: WOFF2 compression takes seconds for an ordinary font (2.4 s for DejaVu Sans, 37 s for a 10 MB one);
     it was done on the event loop, so every other request of every document waited for it."""
     import threading
@@ -197,9 +197,10 @@ def test_making_a_webfont_does_not_hold_up_the_rest_of_the_server(tmp_path, monk
         release.wait(10)
         return b"wOF2" + data[:16]
 
-    monkeypatch.setattr("claudia_fonts.webfonts._woff2", slow_woff2)
     root = collection(tmp_path / "fonts" / "test")
-    c, service = client(tmp_path, root)
+    service = FontService.from_folders([root], tmp_path / "webfonts")
+    service.make_webfont = slow_woff2
+    c = TestClient(create_app(Hub(MemoryProvider(ListModel)), ScryptDirectory(), fonts=service))
     font = service.servable()[0]
     with c:
         fetching = threading.Thread(target=lambda: c.get(f"/api/fonts/{font.sha256}.woff2"))

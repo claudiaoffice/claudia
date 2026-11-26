@@ -5,6 +5,16 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+### Fixed
+- A question stopped while Anthropic is silent ends at once: the stop cuts the read, which waited for the read timeout
+  (30 s) before, so a server's shutdown or a switch of provider waited that long (PROC-67).
+
+### Added
+- `ModelRunner(clock=)`: the clock the time limit of an answer is read on (default `time.monotonic`), so a test needs
+  no stopwatch (D1662, PROC-66).
+- For tests (`claudia_ai.testing`): `Hold` (work that waits until the test lets it go: `hold`, `begun`, `let_go`),
+  `FakeModel` and `FakeAnthropic` can be held, `FakeModel(clock=FakeTime())` spends its `delay` on a fake clock (D1660).
+
 ## [0.5.0] - 2026-11-24
 
 The AI is given who it is, how it behaves in an app and how to do the app's usual tasks (E7.2).

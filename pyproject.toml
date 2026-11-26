@@ -53,6 +53,9 @@ dev = [
 [tool.pytest.ini_options]
 testpaths = ["packages", "tests"]
 addopts = "-q"
+markers = [
+    "must_not_break(story): the test of the key risk of a story, that the feature does not do what it is for (coding standards §2, PROC-68)",
+]
 
 [tool.ruff]
 line-length = 120

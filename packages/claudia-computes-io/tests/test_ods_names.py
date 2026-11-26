@@ -41,7 +41,7 @@ def a_model(*names: NamedRange, sheet_name: str = "Data") -> WorkbookModel:
         data.cells[position] = content
     for named in names:
         model.names.put(named)
-    model._calculate_loaded()
+    model.calculate_loaded()
     return model
 
 
@@ -108,7 +108,7 @@ def test_a_name_of_one_sheet_is_written_inside_that_sheet():
 def test_a_formula_that_uses_a_name_still_calculates_after_the_trip():
     model = a_model(RATE)
     model.sheets[DATA].cells[(1, 3)] = {"t": "formula", "v": "=Rate*10"}
-    model._calculate_loaded()
+    model.calculate_loaded()
     back = ods_to_workbook(workbook_to_ods(model))
     assert back.sheets[DATA].cells[(1, 3)] == {"t": "formula", "v": "=Rate*10"}
     assert back.sheets[DATA].grid[(1, 3)] == 40
@@ -117,7 +117,7 @@ def test_a_formula_that_uses_a_name_still_calculates_after_the_trip():
 def test_a_formula_that_names_a_table_column_is_written_as_its_value_because_openformula_has_no_columns():
     model = a_model(TABLE)
     model.sheets[DATA].cells[(0, 3)] = {"t": "formula", "v": "=SUM(Sales[Amount])"}
-    model._calculate_loaded()
+    model.calculate_loaded()
     assert model.sheets[DATA].grid[(0, 3)] == 10
     assert Loss("formula", "reference", 1) in ods_export_losses(model)
     back = ods_to_workbook(workbook_to_ods(model))

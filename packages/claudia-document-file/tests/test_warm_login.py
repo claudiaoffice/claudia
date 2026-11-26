@@ -73,7 +73,7 @@ def test_a_name_is_taken_the_way_names_are_compared(hashed):
 
 def test_what_was_warmed_expires(hashed, monkeypatch):
     now = [1000.0]
-    monkeypatch.setattr(crypto, "_now", lambda: now[0])
+    monkeypatch.setattr(crypto, "warm_clock", lambda: now[0])
     crypto.warm_login_material("Correct-Horse-9", "ann", SALT, CHEAP)
     now[0] += crypto.WARM_SECONDS + 1
     crypto.derive_login_material("Correct-Horse-9", "ann", SALT, CHEAP)
@@ -88,7 +88,7 @@ def test_what_is_kept_is_bounded(hashed):
 
 def test_the_password_is_not_kept_in_the_clear():
     crypto.warm_login_material("Correct-Horse-9", "ann", SALT, CHEAP)
-    for key in crypto._warm:
+    for key in crypto.warm_material_names():
         assert b"Correct-Horse-9" not in key and b"ann" not in key
 
 

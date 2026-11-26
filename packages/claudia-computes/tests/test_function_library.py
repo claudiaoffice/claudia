@@ -108,11 +108,13 @@ def test_countif_criteria(criterion, count):
 
 
 def test_criteria_that_accept_empty_cells_count_them_without_listing_a_column():
-    import time
+    """Counted, not timed (PROC-66): a million rows cost what ten do, on any machine, however busy."""
+    from claudia_core.testing import work_of
 
-    started = time.perf_counter()
     assert run('=COUNTIF(A1:A1000000, "<>north")', DATA) == 1_000_000 - 2
-    assert time.perf_counter() - started < 0.05
+    million = work_of(lambda: run('=COUNTIF(A1:A1000000, "<>north")', DATA))
+    ten = work_of(lambda: run('=COUNTIF(A1:A10, "<>north")', DATA))
+    assert million < 2 * ten, f"a million rows took {million / ten:.0f}x the work of ten: the column was listed"
 
 
 def test_sumif_and_friends():
