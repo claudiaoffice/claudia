@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// File ▸ Manage ▸ My Role… (the workbook, UX-95): the one place for what a person does about their own role. It says
+// File ▸ Manage ▸ My Role… (the workbook, UX-98): the one place for what a person does about their own role. It says
 // what that role is and leads to the three steps, each its own dialog as before (D141): an owner hands the document
 // over, somebody who was asked accepts it, and anyone leaves. The server says no where a step does not apply to you
 // (an editor nobody asked to take over, the only owner leaving), so no choice is hidden on a guess.

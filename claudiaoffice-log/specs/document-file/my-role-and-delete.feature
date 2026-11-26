@@ -3,7 +3,7 @@ Feature: My role in a document, and deleting a document from the list of documen
   File ▸ Manage ▸ My Role… is the one place for what a person does about their own role (the workbook, D1608): an owner
   hands the document over to an editor, that editor accepts it there, and anyone can leave the document. Deleting a
   document from the server left the document's menus for the front page: each document of the list on this server has
-  a Delete button, confirmed by the owner's name and password (UX-95).
+  a Delete button, confirmed by the owner's name and password (UX-98).
 
   @core
   Scenario: An owner hands the document over through My Role…, and the editor accepts it there

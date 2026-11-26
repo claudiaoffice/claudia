@@ -119,12 +119,12 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | UX-88 | P2 | UX / a11y | A notice (toast) is a `role=status` element made together with its text, which screen readers may not announce (BITV 4.1.3) | **fixed** 2026-11-25 (batch 3 of the bug eater, `batch-3`) | 2026-11-25 | 2026-11-25 |
 | UX-89 | P3 | UX / a11y | A table's accessible name is "Table 1 Options…": the Options… button is inside its caption | **fixed** 2026-11-25 (batch 3 of the bug eater, `batch-3`) | 2026-11-25 | 2026-11-25 |
 | UX-90 | P2 | UX / a11y | About 25 other `role="status"` elements appear with their text already in them (`v-if`), so screen readers may not announce them (BITV 4.1.3), as the notice did (UX-88) | **fixed** 2026-11-25 (batch 4 of the bug eater, `batch-4`) | 2026-11-25 | 2026-11-25 |
-| UX-94 | P3 | UX / clients | The web menus and the desktop menus disagree in six places: the About entry's words, where Clear Cell Style sits, Flow and Page in composes' View, and the order of two pivot entries | **fixed** on `menus` (slice 4 of the menu work: the web assembles its menus from the one definition, D1644) | 2026-11-25 | 2026-11-25 |
-| UX-95 | P2 | UX / clients | Assign New Owner…, Accept Ownership…, Leave Document… and Delete From Server… are in no menu of any client: their places, File ▸ Manage ▸ My Role… and the front page (D1608), are not built | **fixed** on `menus` (File ▸ Manage ▸ My Role…, and Delete in the list of the front page; D1656) | 2026-11-25 | 2026-11-26 |
-| UX-96 | P3 | UX / menus | The workbook's context menus lack what the web's have: a reference's Show As and Remove Reference, an object's wrap Gap…, computes' purpose of a table's column | **fixed** on `menus` (a reference's Show As ▸ and Remove Reference in the workbook and the definition; D1655, for the owner to confirm) | 2026-11-25 | 2026-11-26 |
-| UX-97 | P3 | UX / composes | Shift+Home over words just typed, not sent yet, selects nothing: Copy, Cut and Name & Describe… are then not offered | **fixed** on `menus` (a selection into the words not sent yet is kept until they are sent) | 2026-11-25 | 2026-11-26 |
-| CODE-108 | P2 | Code / clients | The page told the Windows and macOS shells the states of context-menu entries, which they refused as unknown actions at every report | **fixed** on `menus` (slice 6: the page names only the bar's entries) | 2026-11-26 | 2026-11-26 |
-| PROC-70 | P2 | Process | The Linux client's GTK tests had not run on `menus` since slice 2: seven of them still asked for File ▸ Save and Shift+F10 | **fixed** on `menus` (brought to the definition; run under Xvfb) | 2026-11-26 | 2026-11-26 |
+| UX-97 | P3 | UX / clients | The web menus and the desktop menus disagree in six places: the About entry's words, where Clear Cell Style sits, Flow and Page in composes' View, and the order of two pivot entries | **fixed** on `menus` (slice 4 of the menu work: the web assembles its menus from the one definition, D1644) | 2026-11-25 | 2026-11-25 |
+| UX-98 | P2 | UX / clients | Assign New Owner…, Accept Ownership…, Leave Document… and Delete From Server… are in no menu of any client: their places, File ▸ Manage ▸ My Role… and the front page (D1608), are not built | **fixed** on `menus` (File ▸ Manage ▸ My Role…, and Delete in the list of the front page; D1656) | 2026-11-25 | 2026-11-26 |
+| UX-99 | P3 | UX / menus | The workbook's context menus lack what the web's have: a reference's Show As and Remove Reference, an object's wrap Gap…, computes' purpose of a table's column | **fixed** on `menus` (a reference's Show As ▸ and Remove Reference in the workbook and the definition; D1655, for the owner to confirm) | 2026-11-25 | 2026-11-26 |
+| UX-100 | P3 | UX / composes | Shift+Home over words just typed, not sent yet, selects nothing: Copy, Cut and Name & Describe… are then not offered | **fixed** on `menus` (a selection into the words not sent yet is kept until they are sent) | 2026-11-25 | 2026-11-26 |
+| CODE-112 | P2 | Code / clients | The page told the Windows and macOS shells the states of context-menu entries, which they refused as unknown actions at every report | **fixed** on `menus` (slice 6: the page names only the bar's entries) | 2026-11-26 | 2026-11-26 |
+| PROC-71 | P2 | Process | The Linux client's GTK tests had not run on `menus` since slice 2: seven of them still asked for File ▸ Save and Shift+F10 | **fixed** on `menus` (brought to the definition; run under Xvfb) | 2026-11-26 | 2026-11-26 |
 | CODE-01 | P2 | Code | No coverage, no web lint; Playwright not declared | **fixed** |  |  |
 | CODE-02 | P3 | Code | 26 build files tracked in `web/dist` | fixed |  |  |
 | CODE-05 | P3 | Code | Dead branch in `Gateway.admit`; stale docstring in `state.py` | **fixed** (the branch was not dead: comment corrected) |  |  |
@@ -2871,7 +2871,7 @@ extent, letting formulas go); the kernel's counted guards are backed by the cloc
 
 ## Fixed by the menu work (branch `menus`)
 
-### UX-94 · The web menus and the desktop menus disagree in six places · P3 · size 3 · fixed
+### UX-97 · The web menus and the desktop menus disagree in six places · P3 · size 3 · fixed
 **Measured** by the menu audit (phase 1 of the menu work, branch `menus`; `scripts/menu_capture.py` and
 `scripts/menu_audit.py`, rows "Web and desktop differ" of the Diagnosis sheet in `notes/claudia-menus.xlsx`). The
 desktop clients take their menus from the manifest (then `clients/linux/src/claudia_shell_gtk/manifest.py`, now `clients/contract/src/claudia_menus/manifest.py`, D1643), the web client
@@ -2887,7 +2887,7 @@ Not part of it, by design: Quit (desktop only), Apply Style (D301), and the shap
 the workbook makes them fixed entries, Insert ▸ Shape ▸ …). **Fixed** on `menus`, 2026-11-25 (slice 4): the web's menus are assembled from the one definition (D1644), as the
 desktop clients' are; the workbook test (`tests/test_menu_workbook.py`) and `web/tests/assemble.test.ts` keep them so.
 
-### UX-95 · Four entries of File ▸ Manage have no place yet · P2 · size 2 · fixed
+### UX-98 · Four entries of File ▸ Manage have no place yet · P2 · size 2 · fixed
 **Read** while building the menus from the definition (slice 4 of the menu work, branch `menus`). The workbook replaces
 Assign New Owner…, Accept Ownership… and Leave Document… by File ▸ Manage ▸ My Role… (one dialog for the three), and
 moves Delete From Server… to the front page (D1608). Neither is built yet (`NOT_BUILT_YET` in
@@ -2899,7 +2899,7 @@ delete a document from the list of the front page.
 
 **Fixed** on `menus`, 2026-11-26: File ▸ Manage ▸ My Role… (Ctrl+Shift+Alt+L) says your role and leads to Hand Over…, Accept Ownership… and Leave the Document…; each document of the front page's list on this server has a Delete button, confirmed with the owner's name and password (D1656). Scenarios: `specs/document-file/my-role-and-delete.feature`.
 
-### UX-96 · The context menus of the workbook leave out entries the web has · P3 · size 3 · fixed
+### UX-99 · The context menus of the workbook leave out entries the web has · P3 · size 3 · fixed
 **Read** while building the context menus from the definition (slice 4). The web keeps these beside the definition's
 entries, so nothing was lost, but the workbook does not know them and a shell would not show them:
 - a reference in a text: Show As ▸ (its four ways) and Remove Reference, around the definition's Go to Target;
@@ -2910,7 +2910,7 @@ entries, so nothing was lost, but the workbook does not know them and a shell wo
 
 **Fixed** on `menus`, 2026-11-26, as proposed in D1655 (undecided, for the owner): a reference's Show As ▸ and Remove Reference are rows 53 and 54 of the Context menus sheet and entries of the definition, and the web builds them from it; Wrap Text… stays one entry whose modes the page opens (D1654); the purpose chooser of a column is a popover of the column's chip, not a menu. Scenario: "A reference has a context menu of its own" (`specs/menus/menus-that-fit.feature`).
 
-### UX-97 · Words just typed cannot be selected with Shift+Home · P3 · size 3 · fixed
+### UX-100 · Words just typed cannot be selected with Shift+Home · P3 · size 3 · fixed
 **Measured** in Chromium (the menus spec, branch `menus`): in a new text, type "Spring" and press Shift+Home at once:
 the page selects nothing (`getSelection()` is empty), so the Edit menu offers neither Copy, Cut nor Name & Describe….
 After the word is sent (a space), Shift+Home selects it. The words not yet sent sit in an overlay of their own
@@ -2919,14 +2919,14 @@ and selects it with Shift+Home at once, and the Edit menu offers Copy.
 
 **Fixed** on `menus`, 2026-11-26: the page's selection is taken as places in the paragraph once the words not sent yet are in it, and selected when they are (`selectOnceSent`); the caret is drawn collapsed behind those words, no longer as a selection over them. The menus spec's step selects at once now.
 
-### CODE-108 · The Windows and macOS shells refused the states of context-menu entries · P2 · size 3 · fixed
+### CODE-112 · The Windows and macOS shells refused the states of context-menu entries · P2 · size 3 · fixed
 **Measured** while building slice 6 of the menu work (branch `menus`): since slice 4 the page named every action of the
 definition in `action_state`, context menus and keys without an entry included, and `clients/neutralino/src/bridge.ts`
 answered each report with `unknown_action` for those, which the page logged as a warning. Only the bar's entries are
 the shells' (D1645). **Fixed** on `menus`, 2026-11-26: the page names only the entries of the bar
 (`web/tests/assemble.test.ts`, "names only what stands in the menu bar").
 
-### PROC-70 · The Linux client's GTK tests did not run on the branch · P2 · size 3 · fixed
+### PROC-71 · The Linux client's GTK tests did not run on the branch · P2 · size 3 · fixed
 **Measured** on `menus`, 2026-11-26: the environment of the menu work had no GTK 4, so `clients/linux`'s tests ran
 without their 64 GTK tests from slice 2 on. Once GTK, libadwaita and WebKitGTK were installed, seven failed: they
 still used File ▸ Save (gone in the workbook; File ▸ Save Checkpoint… is `file.save-as`) and Shift+F10 as the

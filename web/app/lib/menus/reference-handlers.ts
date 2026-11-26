@@ -1,4 +1,4 @@
-// What a reference's own menu does (D1607, UX-96): Show As ▸ its ways and Remove Reference. Go to Target has a key,
+// What a reference's own menu does (D1607, UX-99): Show As ▸ its ways and Remove Reference. Go to Target has a key,
 // which works at the caret, so each workspace keeps its own. Where the entries stand and when they fit is the
 // definition's (`menus.generated.ts`). The calls are `t('...')` on purpose, for `scripts/extract_i18n.py`.
 import type { Translate } from '../fits/conditions'

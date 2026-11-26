@@ -1,4 +1,4 @@
-// A reference's own menu (D1607, UX-96): Show As ▸ its ways and Remove Reference, from the definition like every entry.
+// A reference's own menu (D1607, UX-99): Show As ▸ its ways and Remove Reference, from the definition like every entry.
 import { describe, expect, it, vi } from 'vitest'
 import { DEFAULT_POLICY } from '~/lib/fits/policy'
 import { assembleMenus, type MenuInput } from '~/lib/menus/assemble'

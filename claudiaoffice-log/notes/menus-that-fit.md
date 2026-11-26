@@ -24,8 +24,8 @@ is one switch per reason. This note holds the design behind the decisions and th
 | D1650 | A notice speaks per condition; Copy and Share… have sentences of their own. |
 | D1651–D1653 | Ask ai… is one action; the must-not-break marker; an entry's own trial setting is grey or hide. |
 | D1654 | What only the page knows: an entry it cannot run now is greyed with its own sentence; choices of an entry (Wrap Text… ▸); a key that does not fit says why. |
-| D1655 | A reference's Show As ▸ and Remove Reference are rows of the workbook and entries of the definition; the purpose chooser of a column is a control's popover, not a menu (UX-96; undecided, for the owner). |
-| D1656 | File ▸ Manage ▸ My Role… says your role and leads to Hand Over…, Accept Ownership… and Leave the Document…; Delete is a button of the list on this server (UX-95). |
+| D1655 | A reference's Show As ▸ and Remove Reference are rows of the workbook and entries of the definition; the purpose chooser of a column is a control's popover, not a menu (UX-99; undecided, for the owner). |
+| D1656 | File ▸ Manage ▸ My Role… says your role and leads to Hand Over…, Accept Ownership… and Leave the Document…; Delete is a button of the list on this server (UX-98). |
 
 ## The words of "fits when" (D1601)
 
@@ -75,7 +75,7 @@ until there is help (E13).
 ## What follows for the build (input for the architecture step)
 
 - **One menu definition for every client.** The definition carries each action's rule. Today the web defines its menus
-  apart from the manifest, which is the cause of UX-94. The audit and the decisions on the menu work agreed one
+  apart from the manifest, which is the cause of UX-97. The audit and the decisions on the menu work agreed one
   definition.
 - **The client works out what fits.** It knows the role, the selection, the document's state, the server's tools and
   the ai's provider from what the server already sends. The answer also goes to a native shell:

@@ -140,7 +140,7 @@ def _select_a_word(world):
     person.page.keyboard.press("Escape")  # the Edit menu, open from the step before
     person.page.click("[data-testid=text]")
     person.page.keyboard.type("Spring")
-    person.page.keyboard.press("Shift+Home")  # at once: the word is not sent yet (UX-97)
+    person.page.keyboard.press("Shift+Home")  # at once: the word is not sent yet (UX-100)
     person.page.wait_for_timeout(300)  # a person's next press comes after the page has seen the selection
     open_menu(person, "Edit")
 

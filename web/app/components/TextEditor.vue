@@ -346,7 +346,7 @@ function placeSelection() {
   if (document.activeElement?.closest('[data-table]')) return // the caret is in a box of a table, not in the words
   if (document.activeElement !== container && !(sel.anchorNode && container.contains(sel.anchorNode))) return
   const same = mine.anchor.paragraph === mine.focus.paragraph && mine.anchor.offset === mine.focus.offset
-  const a = domPoint(mine.anchor, same) // a caret goes behind the words not sent yet, at both ends (UX-97)
+  const a = domPoint(mine.anchor, same) // a caret goes behind the words not sent yet, at both ends (UX-100)
   const f = domPoint(mine.focus, same)
   if (!a || !f) return
   const there = sel.anchorNode === a[0] && sel.anchorOffset === a[1] && sel.focusNode === f[0] && sel.focusOffset === f[1]
@@ -377,7 +377,7 @@ const key = (a: Pos, f: Pos): string => `${a.paragraph}:${a.offset}-${f.paragrap
  *  shows something other than what we put there (the model is ahead of the page for a moment after each change). */
 /** A point of the page's selection as a place in its paragraph once the words typed but not sent yet are in it
  *  (they are drawn over the paragraph, which does not have them yet), and whether it is in those words and whether
- *  behind them; `null` if the point is not in the text. Only the page knows these places (D1350, UX-97). */
+ *  behind them; `null` if the point is not in the text. Only the page knows these places (D1350, UX-100). */
 function placeOnceSent(node: Node, offset: number): { pos: Pos; inUnsent: boolean; behind: boolean } | null {
   const pos = posFromDom(node, offset)
   const el = pos && paragraphEl(pos.paragraph)

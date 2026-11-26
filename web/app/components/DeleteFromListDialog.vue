@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Delete on the front page (D1608, UX-95): a document is deleted from the server from the list of documents, not from
+// Delete on the front page (D1608, UX-98): a document is deleted from the server from the list of documents, not from
 // its own menus. Owners only, confirmed with the owner's name and own current password; the server checks both, and
 // says why not to anybody else. There is no way back: no recycle bin, no undo.
 import { ref } from 'vue'

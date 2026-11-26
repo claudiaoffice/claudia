@@ -141,7 +141,7 @@ describe('saving the details of a document from the front page', () => {
   })
 })
 
-// UX-95, D1608: deleting left the document's menus for the front page, where no document is open
+// UX-98, D1608: deleting left the document's menus for the front page, where no document is open
 describe('deleting a document from the front page', () => {
   it('asks the server with the owner’s password and closes the connection', async () => {
     const link = new FakeLink(() => ({ deleted: true }))

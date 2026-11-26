@@ -27,7 +27,7 @@ The index is the status of record; a section below keeps the status of the round
 re-checked. **Opened** and **Fixed** are filled from 2026-11-20 on: for older items only where the status already gave
 the date.
 
-### Open (64)
+### Open (65)
 
 By priority (P1, P2, P3, then items that wait for a decision without one), then by ID.
 
@@ -48,7 +48,8 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | UX-91 | P2 | UX / composes / Firefox | In Firefox the down arrow from the paragraph above a new table does not put the caret in its first box (Chromium does) | **new, open** (measured on CI) | 2026-11-25 |  |
 | UX-93 | P2 | UX / a11y | The font banner ("This document uses fonts this server does not have …") is dark text on a dark ground, about 1.1:1 (BITV 1.4.3 asks 4.5:1) | **new, open** (measured) | 2026-11-25 |  |
 | CODE-31 | P2 | Code / i18n | The history speaks English to everybody: command labels and summaries are not translated | **new, open** |  |  |
-| CODE-107 | P2 | Code / i18n | The native menus of the Windows and macOS clients are always in English: the generated listing has the English labels and nothing translates them | **new, open** (read) | 2026-11-26 |  |
+| CODE-111 | P2 | Code / i18n | The native menus of the Windows and macOS clients are always in English: the generated listing has the English labels and nothing translates them | **new, open** (read) | 2026-11-26 |  |
+| PROC-72 | P3 | Process / tests | The composes-computes-creates scenario "The way back stays until I use it or start working" failed once in creates when the machine was busy: the text box on slide 9 was not there to click within 30 s | **new, open** (measured once) | 2026-11-26 |  |
 | CODE-99 | P2 | Code / desktop clients | A person's apps use any Claudia server on port 8765 of the computer as their own, also another person's or a service's: with two people logged in, the second one's documents are saved in the first one's home folder | **new, open** (read); fix on the macOS installer branch (E8.5) | 2026-11-25 |  |
 | CODE-100 | P2 | Code / desktop clients | Next to a service of another version, the apps refuse to start and say it stops after ten minutes, which a service never does | **new, open** (read); fix on the macOS installer branch (E8.5) | 2026-11-25 |  |
 | PROC-15 | P2 | Process | The tracker and the backlog lag the code: fixed items still "open", 64 stories at a placeholder 50 % | partly fixed 2026-11-25 (batch 1: the index guard); the backlog's placeholder 50 % stays open |  |  |
@@ -194,7 +195,7 @@ Rename to `--max-connections-per-document`, document it, and keep the server-wid
 placeholder. **Fix.** A branch that fixes a tracked item changes its row in the same commit (CONTRIBUTING rule);
 `test_backlog.py` could refuse `progress: 50` on a story without a status-evidence paragraph.
 
-### CODE-107 · The Windows and macOS menus are always in English · P2 · size 2 · open
+### CODE-111 · The Windows and macOS menus are always in English · P2 · size 2 · open
 **Read** while building slice 6 of the menu work (branch `menus`): `clients/neutralino/src/menu.ts` builds the native
 menu from `src/generated/menu.<app>.json`, which holds the definition's English labels, and nothing in the shell page
 translates them; the page only relabels the entries whose words change (Undo …). The Linux shell translates its menus
@@ -202,6 +203,13 @@ with gettext (`menu_xml`'s `translate`), and the web its own. So a German person
 web and English ones on Windows and macOS. **Fix:** the shell page takes the page's catalogue for the locale it was
 welcomed with, or the generator writes one listing per language (slice 8 of the menu work, I18N). **Acceptance:** a
 shell page test with the German catalogue: File ▸ Open ▸ Document… is "Datei ▸ Öffnen ▸ Dokument…".
+
+### PROC-72 · A names scenario failed once in creates on a busy machine · P3 · size 3 · open
+**Measured** once on `menus`, 2026-11-26: `tests/e2e/specs/test_names.py::test_the_way_back_stays_until_i_use_it_or_start_working`
+failed while the Linux client's GTK tests and the web unit tests ran beside the browser specs: Ben's
+`select_object` waited 30 s for `[data-testid=slide] .obj` on slide 9 and found none. It passed three times alone and
+in the next full run. Probably the slide's objects arrive late under load and the step clicks before it has waited
+for them. **Acceptance:** the step waits for the text box Ann made on slide 9 to be shown to Ben before it selects.
 
 ## Round of 2026-11-13 at `cfa2d91`
 

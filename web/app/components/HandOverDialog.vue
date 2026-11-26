@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// File ▸ Manage ▸ My Role… ▸ Hand Over… (D141, UX-95). A role lives inside its own password-sealed slot (D102), so
+// File ▸ Manage ▸ My Role… ▸ Hand Over… (D141, UX-98). A role lives inside its own password-sealed slot (D102), so
 // handing one over is a propose/accept pair: we prove it is us with our own password now, and the person we pick
 // proves it is them with theirs when they accept, in their own My Role… (there is no notification yet).
 import { onMounted, ref } from 'vue'

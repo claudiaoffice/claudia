@@ -159,7 +159,7 @@ describe('typing', () => {
     expect(session.state.selection?.focus).toEqual(at(2))
   })
 
-  // UX-97 (2026-11-26): Shift+Home right after typing selected nothing, so Copy and Cut were not offered
+  // UX-100 (2026-11-26): Shift+Home right after typing selected nothing, so Copy and Cut were not offered
   it('a selection reaching into the words that are not sent yet is the selection once they are sent', async () => {
     const { session } = await opened('')
     for (const c of 'Spring') session.type(c)

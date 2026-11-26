@@ -502,7 +502,7 @@ def _clipboard(*, native: bool) -> tuple[Action, Action, Action, Action]:
 def _file_menu(*, title: str) -> Menu:
     """New, Open ▸ · Save Checkpoint…, Download · Print… · Manage ▸ · Close · Quit, the desktop's only (D1616).
     Save left the menu; Assign New Owner…, Accept Ownership… and Leave Document… became Manage ▸ My Role…, one dialog
-    (the owner, 2026-11-25, UX-95); Delete From Server… went to the front page's list (D1608)."""
+    (the owner, 2026-11-25, UX-98); Delete From Server… went to the front page's list (D1608)."""
     return Menu(
         "File",
         (
@@ -1000,7 +1000,7 @@ REFERENCE_SHOWS = (
 
 
 def _reference_menu() -> ContextMenu:
-    """A reference, in the text or in a text box: how it shows, Go to Target (D1607) and Remove Reference (UX-96)."""
+    """A reference, in the text or in a text box: how it shows, Go to Target (D1607) and Remove Reference (UX-99)."""
     show_as = Submenu(
         "Show As",
         tuple(

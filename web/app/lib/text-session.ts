@@ -149,7 +149,7 @@ export class TextSession extends BaseSession<TextState> {
   private moved = 0
   /** How often the caret had been moved by the person when the pending words were begun (see `sendPending`). */
   private typedAt = 0
-  /** What the page selected in the words not sent yet (Home or Shift+Home right after typing, D1350, UX-97): selected
+  /** What the page selected in the words not sent yet (Home or Shift+Home right after typing, D1350, UX-100): selected
    *  once they are sent. */
   private unsentSelection: { at: Pos; anchor: Pos; focus: Pos } | null = null
   private ready = false
@@ -673,7 +673,7 @@ export class TextSession extends BaseSession<TextState> {
 
   /** The page's caret or selection reaches into the words typed but not sent yet (Home or Shift+Home right after
    *  typing): they go out now, and then `anchor` and `focus` are selected, places in the paragraph as it will be with
-   *  them (UTF-16 units, as the page counts), instead of the caret going behind them (D1350, UX-97). While they are not
+   *  them (UTF-16 units, as the page counts), instead of the caret going behind them (D1350, UX-100). While they are not
    *  sent the paragraph does not have them, so before and after them are one place in it, and only the page knows. */
   selectOnceSent(anchor: Pos, focus: Pos): void {
     const unwritten = this.state.pending

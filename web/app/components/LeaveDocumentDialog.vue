@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// File ▸ Manage ▸ My Role… ▸ Leave the Document… (D141, UX-95). Confirms it is really you, with your own current
+// File ▸ Manage ▸ My Role… ▸ Leave the Document… (D141, UX-98). Confirms it is really you, with your own current
 // password, before removing you — not the password that opened this connection a moment ago, in case somebody is
 // still at your desk.
 import { ref } from 'vue'

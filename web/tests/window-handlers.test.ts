@@ -35,7 +35,7 @@ describe('the entries every window has', () => {
     expect(c.open).toHaveBeenCalledWith('about')
   })
 
-  // UX-95: hand over, accept and leave had no entry since the workbook made them one dialog
+  // UX-98: hand over, accept and leave had no entry since the workbook made them one dialog
   it('opens the My Role dialog from File ▸ Manage ▸ My Role…', () => {
     const c = context()
     windowHandlers(c)['file.manage.my-role']!.run()

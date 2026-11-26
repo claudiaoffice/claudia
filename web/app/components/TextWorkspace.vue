@@ -380,7 +380,7 @@ function goToTarget() {
   const found = referenceAtCaret()
   if (found && found.shown?.state !== 'broken') editor.value?.goTo(found.field.target)
 }
-/** A reference's own menu (mock-up C, D1607, UX-96): Show As ▸ its ways, Go to Target and Remove Reference. */
+/** A reference's own menu (mock-up C, D1607, UX-99): Show As ▸ its ways, Go to Target and Remove Reference. */
 const refMenu = ref<{ paragraph: string; index: number; x: number; y: number } | null>(null)
 const refMenuItems = computed<MenuItem[]>(() => {
   const at = refMenu.value
