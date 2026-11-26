@@ -3,6 +3,7 @@
 import asyncio
 from contextlib import contextmanager
 
+from list_app import list_methods
 from starlette.testclient import TestClient
 
 from claudia_core.testing import Insert, ListModel
@@ -16,7 +17,7 @@ PASSWORD = "correct horse battery"
 
 
 def serve(provider, **options):
-    return TestClient(create_app(Hub(provider), ScryptDirectory(cost=2**4), **options))
+    return TestClient(create_app(Hub(provider, methods=list_methods), ScryptDirectory(cost=2**4), **options))
 
 
 def test_an_empty_server_lists_nothing():
@@ -35,13 +36,7 @@ def test_documents_are_listed_with_app_time_and_people_online():
                 )
                 assert ws.receive_json()["ok"]
                 if doc_id == "beta":
-                    ws.send_json(
-                        {
-                            "id": 2,
-                            "method": "apply",
-                            "params": {"command": {"k": "list.Insert", "s": 1, "d": {"index": 0, "value": 1}}},
-                        }
-                    )
+                    ws.send_json({"id": 2, "method": "insert", "params": {"index": 0, "value": 1}})
                     while ws.receive_json().get("id") != 2:
                         pass
                     listed = client.get("/api/docs").json()["documents"]

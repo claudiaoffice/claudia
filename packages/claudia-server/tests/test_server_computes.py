@@ -1451,15 +1451,3 @@ def test_a_chart_does_not_turn(book):
         call(book, "rotate_object", {"id": added["object"], "rotation": 90})
     assert caught.value.code == "command_error"
     assert objects(book)[0]["rotation"] == 0
-
-
-def test_an_editor_cannot_land_a_result_only_the_server_works_out(book):
-    """SEC-25 (D2007): a heavy formula's result comes from the server's own worker (``ApplyCalculated``, written as the
-    assistant's); sent raw by a person it would put any value on the waiting cell under that name. It is refused."""
-    from claudia_computes import ApplyCalculated
-    from claudia_core.commands import encode
-
-    call(book, "add_sheet", {"name": "Costs"})
-    with pytest.raises(RequestError) as caught:
-        call(book, "apply", {"command": encode(ApplyCalculated("s1", 0, 0, 42))}, BEN)
-    assert caught.value.code == "forbidden"

@@ -8,6 +8,7 @@ from __future__ import annotations
 import base64
 import logging
 
+from list_app import list_methods
 from starlette.testclient import TestClient
 from test_server_app import INSERT, Peer, refused
 
@@ -39,11 +40,11 @@ def test_no_key_is_in_the_log_of_a_whole_session(tmp_path, caplog):
     person (which renews the keys), leaving (which seals the document) and coming back."""
     caplog.set_level(logging.DEBUG)
     store = SealedDocuments(tmp_path, ListModel, kdf=CHEAP, pack_every=2)
-    with TestClient(create_app(Hub(store), store)) as client:
+    with TestClient(create_app(Hub(store, methods=list_methods), store)) as client:
         ann = Peer(client, user=ANN, password=ANN_PW, create=True)
         assert ann.request("add_user", {"name": BEN, "password": BEN_PW, "role": "editor"})["ok"]
         for _ in range(5):
-            assert ann.request("apply", {"command": INSERT})["ok"]
+            assert ann.request("insert", INSERT)["ok"]
         assert ann.request("chat", {"text": "a word"})["ok"]
         before = keys_now(tmp_path)
         assert refused(client, user=BEN, password="Wrong-Pass-1") == (4401, "unauthorized")

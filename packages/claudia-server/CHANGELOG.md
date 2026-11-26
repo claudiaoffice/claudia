@@ -3,6 +3,14 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [Unreleased]
+
+### Removed
+- **Breaking** — the protocol's `apply` method is gone (D2010; SEC-25, SEC-30). It ran a change sent in its stored
+  form `{k, s, d}` and so walked around the checks of every app's own methods; no client sent it. A person's change
+  comes in only through an app's named methods (`set_cells`, `replace_text`, `add_object`, ...). The messages of its
+  refusals left the catalogs.
+
 ## [0.46.0] - 2026-11-25
 
 ### Added

@@ -39,17 +39,6 @@ class UnknownCommand(KernelError):
         self.kind = kind
 
 
-class ServerOnly(KernelError):
-    """A change only the server makes, through its own methods and their checks, came from outside (SEC-25, D2007):
-    an import, a document's setup, a checkpoint, a redaction, a restore, a switch of line."""
-
-    code: ClassVar[str] = "server_only"
-
-    def __init__(self, kind: str):
-        super().__init__(f"The change {kind!r} is made by the server only, through its own methods.")
-        self.kind = kind
-
-
 class SchemaTooNew(KernelError):
     """A command was written by a newer version than this one understands."""
 

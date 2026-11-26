@@ -231,6 +231,7 @@ def test_a_removed_block_is_refused_when_the_document_is_opened(tmp_path):
 
 
 def test_a_server_that_is_stopped_packs_the_documents_it_had_open(tmp_path):
+    from list_app import list_methods
     from starlette.testclient import TestClient
     from test_server_app import INSERT, Peer
 
@@ -238,9 +239,9 @@ def test_a_server_that_is_stopped_packs_the_documents_it_had_open(tmp_path):
     from claudia_server.hub import Hub
 
     store = store_in(tmp_path)
-    with TestClient(create_app(Hub(store), store)) as client:
+    with TestClient(create_app(Hub(store, methods=list_methods), store)) as client:
         ann = Peer(client, user="Annabelle", password=ANN_PW, create=True)
-        assert ann.request("apply", {"command": INSERT})["ok"]
+        assert ann.request("insert", INSERT)["ok"]
         ann.close()
     assert "head.bin" in names(tmp_path)
     assert read_state(archive(tmp_path), keys_of(tmp_path)).pending == 0

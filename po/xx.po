@@ -9449,10 +9449,6 @@ msgstr "[întérnàl sérvér érrôr~~~~~~~~]"
 msgid "invalid administrator name “{name}”"
 msgstr "[învàlîd àdmînîstràtôr nàmé “{name}”~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py
-msgid "invalid command: {reason!r}"
-msgstr "[învàlîd cômmànd: {réàsôn!r}~~~~~~~~~~~]"
-
 #: web/app/components/SidePanel.vue
 msgid "is working"
 msgstr "[îs wôrkîng~~~~]"
@@ -10464,10 +10460,6 @@ msgstr "[thé àccéss sécrét nééds àt léàst {count} chàràctérs~~~~~~~
 #: packages/claudia-server/src/claudia_server/admin_api.py
 msgid "the answer length must be at least 1"
 msgstr "[thé ànswér léngth mûst bé àt léàst 1~~~~~~~~~~~~~~]"
-
-#: packages/claudia-server/src/claudia_server/protocol.py
-msgid "the assistant cannot apply a raw command; use the app's own methods"
-msgstr "[thé àssîstànt cànnôt àpply à ràw cômmànd; ûsé thé àpp's ôwn méthôds~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
 #: packages/claudia-server/src/claudia_server/protocol.py
 msgid "the assistant does not export the document"
@@ -11576,10 +11568,6 @@ msgstr "[{kind} (décôràtîvé)~~~~~~~~]"
 #: web/app/lib/descriptions.ts
 msgid "{kind} (no description)"
 msgstr "[{kind} (nô déscrîptîôn)~~~~~~~~~]"
-
-#: packages/claudia-server/src/claudia_server/protocol.py
-msgid "{kind} is made by the server only, through its own methods"
-msgstr "[{kind} îs màdé by thé sérvér ônly, thrôûgh îts ôwn méthôds~~~~~~~~~~~~~~~~~~~~~~~]"
 
 #: web/app/lib/descriptions.ts
 msgid "{kind}: {words}"

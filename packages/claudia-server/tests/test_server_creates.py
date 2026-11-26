@@ -357,7 +357,7 @@ def test_the_methods_are_described_for_client_developers(deck):
     ):
         assert described[name]["doc"], name
     assert described["add_object"]["write"] and not described["slide"]["write"]
-    assert {"ping", "apply", "undo", "lock"} <= set(described), "the core methods are all there"
+    assert {"ping", "undo", "lock"} <= set(described), "the core methods are all there"
 
 
 def test_a_stale_base_is_refused_like_everywhere(deck):

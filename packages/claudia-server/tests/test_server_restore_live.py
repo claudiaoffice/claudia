@@ -10,12 +10,13 @@ import asyncio
 import json
 
 import pytest
+from list_app import list_methods
 
 from claudia_core.testing import ListModel
 from claudia_server.auth import Account
 from claudia_server.hub import Hub, MemoryProvider
 
-INSERT = {"k": "list.Insert", "s": 1, "d": {"index": 0, "value": 5}}
+INSERT = {"index": 0, "value": 5}
 
 
 class Client:
@@ -48,7 +49,7 @@ def provider(clock):
 
 @pytest.fixture
 def hub(provider, clock):
-    return Hub(provider, clock=clock.lock_time)
+    return Hub(provider, clock=clock.lock_time, methods=list_methods)
 
 
 @pytest.fixture
@@ -60,10 +61,10 @@ def hosted(hub):
 def worked(hosted):
     """ana and ben each do something, then ana saves a checkpoint, then each does one more thing."""
     ana, ben = Client(hosted, Account("ana", "owner")), Client(hosted, Account("ben", "editor"))
-    ana.request("apply", {"command": INSERT})
-    ben.request("apply", {"command": INSERT})
+    ana.request("insert", INSERT)
+    ben.request("insert", INSERT)
     ana.request("save_checkpoint", {"label": "good"})
-    ana.request("apply", {"command": INSERT})
+    ana.request("insert", INSERT)
     for c in (ana, ben):
         c.forget()
     return hosted, ana, ben
@@ -110,9 +111,9 @@ def test_an_unknown_policy_is_rejected(hosted):
 # ------------------------------------------------------------------------------------------ proposing: the lone editor
 def test_the_only_editor_gets_no_vote(hosted):
     ana = Client(hosted, Account("ana", "owner"))
-    ana.request("apply", {"command": INSERT})
+    ana.request("insert", INSERT)
     ana.request("save_checkpoint", {"label": "good"})
-    ana.request("apply", {"command": INSERT})
+    ana.request("insert", INSERT)
     ana.forget()
     answer = ana.request("propose_restore", {"checkpoint": 1})
     assert answer["result"] == {"applied": True, "proposal": None}
@@ -123,9 +124,9 @@ def test_the_only_editor_gets_no_vote(hosted):
 def test_a_viewer_connected_does_not_count_as_an_editor(hosted):
     ana = Client(hosted, Account("ana", "owner"))
     Client(hosted, Account("vera", "viewer"))
-    ana.request("apply", {"command": INSERT})
+    ana.request("insert", INSERT)
     ana.request("save_checkpoint", {"label": "good"})
-    ana.request("apply", {"command": INSERT})
+    ana.request("insert", INSERT)
     ana.forget()
     assert ana.request("propose_restore", {"checkpoint": 1})["result"]["applied"] is True
 
@@ -162,7 +163,7 @@ def test_an_unknown_checkpoint_is_a_command_error(worked):
 def test_the_only_editor_goes_back_to_a_step_at_once(hosted):
     ana = Client(hosted, Account("ana", "owner"))
     for _ in range(3):
-        ana.request("apply", {"command": INSERT})
+        ana.request("insert", INSERT)
     answer = ana.request("propose_restore_step", {"revision": "main:1"})["result"]
     assert answer == {"applied": True, "proposal": None}
     assert ana.request("snapshot")["result"]["revision"].startswith("restore-1:")
@@ -249,9 +250,9 @@ def test_a_vote_that_does_not_resolve_it_still_tells_everybody(hosted):
         Client(hosted, Account("cara", "editor")),
     )
     for c in (ana, ben, cara):
-        c.request("apply", {"command": INSERT})
+        c.request("insert", INSERT)
     ana.request("save_checkpoint", {"label": "good"})
-    ana.request("apply", {"command": INSERT})
+    ana.request("insert", INSERT)
     ana.request("propose_restore", {"checkpoint": 1})
     for c in (ana, ben, cara):
         c.forget()
@@ -292,9 +293,9 @@ def test_an_editor_who_is_not_the_proposer_cannot_withdraw(worked):
 def test_an_owner_may_withdraw_somebody_elses_suggestion(hosted):
     ana, ben = Client(hosted, Account("ana", "owner")), Client(hosted, Account("ben", "editor"))
     for c in (ana, ben):
-        c.request("apply", {"command": INSERT})
+        c.request("insert", INSERT)
     ben.request("save_checkpoint", {"label": "good"})
-    ben.request("apply", {"command": INSERT})
+    ben.request("insert", INSERT)
     ben.request("propose_restore", {"checkpoint": 1})
     assert ana.request("withdraw_restore")["result"] == {}
 
@@ -322,9 +323,9 @@ def test_leaving_drops_an_editor_from_the_vote(hosted):
         Client(hosted, Account("cara", "editor")),
     )
     for c in (ana, ben, cara):
-        c.request("apply", {"command": INSERT})
+        c.request("insert", INSERT)
     ana.request("save_checkpoint", {"label": "good"})
-    ana.request("apply", {"command": INSERT})
+    ana.request("insert", INSERT)
     ana.request("propose_restore", {"checkpoint": 1})
     ben.close()
     proposal = hosted.restore.open_proposal
@@ -348,9 +349,9 @@ def test_leaving_can_resolve_it(hosted):
         Client(hosted, Account("cara", "editor")),
     )
     for c in (ana, ben, cara):
-        c.request("apply", {"command": INSERT})
+        c.request("insert", INSERT)
     ana.request("save_checkpoint", {"label": "good"})
-    ana.request("apply", {"command": INSERT})
+    ana.request("insert", INSERT)
     ana.request("propose_restore", {"checkpoint": 1})
     ben.request("answer_restore", {"agree": True})
     ana.forget()

@@ -305,12 +305,11 @@ class Rogue:
 @pytest.mark.parametrize(
     "step",
     [
-        Call("apply", {"command": {}}),
         Call("chat", {"text": "hello"}),
         Call("undo"),
         Call("save_checkpoint", {}),
     ],
-    ids=["apply", "chat", "undo", "save_checkpoint"],
+    ids=["chat", "undo", "save_checkpoint"],
 )
 def test_the_assistant_cannot_reach_a_method_outside_its_allow_list(step):
     async def test(hosted, assistant):
@@ -323,7 +322,7 @@ def test_the_assistant_cannot_reach_a_method_outside_its_allow_list(step):
     scenario(test, Rogue(step))
 
 
-def test_a_composes_assistant_may_suggest_but_not_replace_text_set_style_or_apply():
+def test_a_composes_assistant_may_suggest_but_not_replace_text_or_set_style():
     async def run(step, *, suggests):
         hub = Hub(MemoryProvider(TextModel), methods=composes_methods)
         hosted = await hub.open("essay", create=True)
@@ -352,4 +351,3 @@ def test_a_composes_assistant_may_suggest_but_not_replace_text_set_style_or_appl
         )
     )
     asyncio.run(run(Call("set_style", {"paragraph": "b1", "style": "title"}), suggests=False))
-    asyncio.run(run(Call("apply", {"command": {}}), suggests=False))

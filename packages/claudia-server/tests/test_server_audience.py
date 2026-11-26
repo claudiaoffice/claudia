@@ -11,6 +11,7 @@ import re
 from pathlib import Path
 
 import pytest
+from list_app import list_methods
 
 from claudia_core.testing import ListModel
 from claudia_server import audience
@@ -20,7 +21,7 @@ from claudia_server.auth import Account
 from claudia_server.hub import Hub, MemoryProvider
 from claudia_server.protocol import RequestError, core_methods
 
-INSERT = {"k": "list.Insert", "s": 1, "d": {"index": 0, "value": 5}}
+INSERT = {"index": 0, "value": 5}
 PACKAGES = Path(__file__).resolve().parents[2]
 SERVER_SRC = PACKAGES / "claudia-server" / "src"
 
@@ -159,7 +160,7 @@ class Client:
 @pytest.fixture
 def hosted(clock):
     provider = MemoryProvider(ListModel, clock=clock.time, lock_clock=clock.lock_time)
-    return asyncio.run(Hub(provider, clock=clock.lock_time).open("plan", create=True))
+    return asyncio.run(Hub(provider, clock=clock.lock_time, methods=list_methods).open("plan", create=True))
 
 
 @pytest.fixture
@@ -175,7 +176,7 @@ def room(hosted):
 
 def test_a_viewer_sees_the_change_but_not_who_made_it_or_when(room):
     ann, ben, vera = room
-    ann.request("apply", {"command": INSERT})
+    ann.request("insert", INSERT)
     assert vera.events("command"), "she hears of the change"
     assert all(set(e) == {"type", "revision"} for e in vera.events("command"))
     assert {"author", "time", "label", "summary", "origin"} <= set(ben.events("command")[0]), "the editor is unchanged"
@@ -183,7 +184,7 @@ def test_a_viewer_sees_the_change_but_not_who_made_it_or_when(room):
 
 def test_a_viewer_hears_nothing_of_undo_state_checkpoints_or_chat(room):
     ann, ben, vera = room
-    ann.request("apply", {"command": INSERT})
+    ann.request("insert", INSERT)
     ann.request("save_checkpoint", {"label": "good"})
     ann.request("chat", {"text": "for everybody"})
     ann.request("chat", {"text": "@ben private"})
@@ -212,9 +213,9 @@ def test_a_viewer_does_not_see_that_the_ai_is_typing(room, hosted):
 
 def test_a_restore_reaches_a_viewer_as_a_reload_only(hosted):
     ann, vera = Client(hosted, Account("ann", "owner")), Client(hosted, Account("vera", "viewer"))
-    ann.request("apply", {"command": INSERT})
+    ann.request("insert", INSERT)
     ann.request("save_checkpoint", {"label": "good"})
-    ann.request("apply", {"command": INSERT})
+    ann.request("insert", INSERT)
     ann.forget(), vera.forget()
     assert ann.request("propose_restore", {"checkpoint": 1})["result"]["applied"] is True
     assert vera.events("branch") == [{"type": "branch"}] and vera.events("rebuilt")
@@ -224,7 +225,7 @@ def test_a_restore_reaches_a_viewer_as_a_reload_only(hosted):
 
 def test_the_welcome_of_a_viewer_carries_no_history(hosted):
     ann = Client(hosted, Account("ann", "owner"))
-    ann.request("apply", {"command": INSERT})
+    ann.request("insert", INSERT)
     ann.request("save_checkpoint", {"label": "good"})
     vera = Client(hosted, Account("vera", "viewer"))
     welcome = vera.connection.welcome()
@@ -266,7 +267,7 @@ def test_a_viewer_is_refused_the_chat_log(room):
 
 def test_owners_and_editors_still_read_both(room):
     ann, ben, vera = room
-    ann.request("apply", {"command": INSERT})
+    ann.request("insert", INSERT)
     ann.request("chat", {"text": "hello"})
     for client in (ann, ben):
         assert client.request("log", {"limit": 5})["ok"]
@@ -276,7 +277,7 @@ def test_owners_and_editors_still_read_both(room):
 
 def test_a_viewer_still_reads_the_content_and_the_names(room):
     ann, ben, vera = room
-    ann.request("apply", {"command": INSERT})
+    ann.request("insert", INSERT)
     assert vera.request("snapshot")["result"]["state"] == {"items": [5]}
     assert (
         vera.request("ping")["ok"] and vera.request("users")["ok"] and vera.request("presence", {"regions": []})["ok"]

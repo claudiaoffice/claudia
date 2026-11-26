@@ -9449,10 +9449,6 @@ msgstr ""
 msgid "invalid administrator name “{name}”"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py
-msgid "invalid command: {reason!r}"
-msgstr ""
-
 #: web/app/components/SidePanel.vue
 msgid "is working"
 msgstr ""
@@ -10463,10 +10459,6 @@ msgstr ""
 
 #: packages/claudia-server/src/claudia_server/admin_api.py
 msgid "the answer length must be at least 1"
-msgstr ""
-
-#: packages/claudia-server/src/claudia_server/protocol.py
-msgid "the assistant cannot apply a raw command; use the app's own methods"
 msgstr ""
 
 #: packages/claudia-server/src/claudia_server/protocol.py
@@ -11575,10 +11567,6 @@ msgstr ""
 
 #: web/app/lib/descriptions.ts
 msgid "{kind} (no description)"
-msgstr ""
-
-#: packages/claudia-server/src/claudia_server/protocol.py
-msgid "{kind} is made by the server only, through its own methods"
 msgstr ""
 
 #: web/app/lib/descriptions.ts

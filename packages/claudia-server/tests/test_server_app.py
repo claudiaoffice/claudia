@@ -7,6 +7,7 @@ import json
 import re
 
 import pytest
+from list_app import list_methods
 from starlette.testclient import TestClient
 from starlette.websockets import WebSocketDisconnect
 
@@ -16,7 +17,7 @@ from claudia_server.app import create_app
 from claudia_server.auth import ScryptDirectory
 from claudia_server.hub import Hub, MemoryProvider
 
-INSERT = {"k": "list.Insert", "s": 1, "d": {"index": 0, "value": 5}}
+INSERT = {"index": 0, "value": 5}
 PASSWORD = "correct horse battery"
 
 
@@ -33,6 +34,7 @@ def directory():
 def build(provider, directory, **hub_options):
     allowed = hub_options.pop("allowed_origins", ())
     web_dir = hub_options.pop("web_dir", None)
+    hub_options.setdefault("methods", list_methods)
     return create_app(Hub(provider, **hub_options), directory, allowed_origins=allowed, web_dir=web_dir)
 
 
@@ -179,7 +181,7 @@ def test_two_people_see_each_others_edits_and_the_response_comes_last(client, di
     directory.add_user("plan", "Ben", "another good password", "editor")
     ben = Peer(client, user="Ben", password="another good password")
     ann.pushed, ben.pushed = [], []
-    response = ann.request("apply", {"command": INSERT})
+    response = ann.request("insert", INSERT)
     assert response["ok"] and response["result"] == {"revision": "main:1"}
     assert [f["data"]["revision"] for f in ann.pushed if f["event"] == "command"] == ["main:1"]
     ben_view = ben.request("snapshot")["result"]
@@ -193,14 +195,14 @@ def test_a_closed_client_does_not_disturb_the_others(client, directory):
     directory.add_user("plan", "Ben", "another good password", "editor")
     ben = Peer(client, user="Ben", password="another good password")
     ben.close()
-    assert ann.request("apply", {"command": INSERT})["ok"]
+    assert ann.request("insert", INSERT)["ok"]
     ann.close()
 
 
 def test_edits_survive_a_restart(provider, directory):
     with TestClient(build(provider, directory)) as first:
         peer = Peer(first, create=True)
-        peer.request("apply", {"command": INSERT})
+        peer.request("insert", INSERT)
         peer.close()
     with TestClient(build(provider, directory)) as second:  # a new hub on the same storage and users
         peer = Peer(second)
@@ -241,9 +243,9 @@ def test_presence_and_locks_over_the_websocket(client, directory):
     directory.add_user("plan", "Ben", "another good password", "editor")
     ben = Peer(client, user="Ben", password="another good password")
     assert ann.request("lock", {"regions": [{"kind": "interval", "start": 0, "end": 1}]})["ok"]
-    assert ben.request("apply", {"command": INSERT})["error"]["code"] == "locked"
+    assert ben.request("insert", INSERT)["error"]["code"] == "locked"
     ann.close()  # a dropped connection releases the lock
-    assert ben.request("apply", {"command": INSERT})["ok"]
+    assert ben.request("insert", INSERT)["ok"]
     ben.close()
 
 
@@ -251,14 +253,14 @@ def test_an_edit_in_flight_during_a_restore_is_refused_over_the_wire(provider, d
     app = build(provider, directory)
     with TestClient(app) as c:
         ann = Peer(c, create=True)
-        ann.request("apply", {"command": INSERT})
+        ann.request("insert", INSERT)
         ann.request("save_checkpoint", {"label": "good"})
-        ann.request("apply", {"command": INSERT})
+        ann.request("insert", INSERT)
         seen = ann.request("ping")["result"]["revision"]
         hosted = c.portal.call(app.state.hub.open, "plan")  # the one already open
         # the server-side act; the wire method waits for the rules of a live session
         c.portal.call(lambda: hosted.document.restore_checkpoint(1, author="ann"))
-        reply = ann.request("apply", {"command": INSERT, "base": seen})
+        reply = ann.request("insert", {**INSERT, "base": seen})
         assert reply["error"]["code"] == "stale"
         assert any(f["event"] == "branch" for f in ann.pushed) and any(f["event"] == "rebuilt" for f in ann.pushed)
         assert ann.request("snapshot")["result"]["state"] == {"items": [5]}

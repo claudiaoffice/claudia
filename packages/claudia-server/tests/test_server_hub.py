@@ -7,6 +7,7 @@ import asyncio
 import json
 
 import pytest
+from list_app import list_methods
 
 from claudia_core import Revision
 from claudia_core.testing import FakeClock, Insert, Interval, ListModel
@@ -14,7 +15,7 @@ from claudia_server.auth import Account
 from claudia_server.hub import Hub, HubError, MemoryProvider
 from claudia_server.protocol import Limits, core_methods
 
-INSERT = {"k": "list.Insert", "s": 1, "d": {"index": 0, "value": 5}}
+INSERT = {"index": 0, "value": 5}
 
 
 class Client:
@@ -52,6 +53,7 @@ def provider(clock):
 def make_hub(provider, clock):
     def make(**options):
         options.setdefault("clock", clock.lock_time)
+        options.setdefault("methods", list_methods)
         return Hub(provider, **options)
 
     return make
@@ -109,7 +111,7 @@ def test_a_reopened_document_has_its_state_and_history(provider, make_hub, ann):
     async def scenario():
         first = make_hub()
         hosted = await first.open("plan", create=True)
-        Client(hosted, ann).request("apply", {"command": INSERT})
+        Client(hosted, ann).request("insert", INSERT)
         return await make_hub().open("plan")  # another hub on the same storage, as after a restart
 
     again = asyncio.run(scenario())
@@ -132,7 +134,7 @@ def test_the_welcome_describes_the_document_and_the_people_in_it(hosted):
     ann, ben = Account("ann", "owner"), Account("ben", "editor")
     first = Client(hosted, ann)
     second = Client(hosted, ben)
-    first.request("apply", {"command": INSERT})
+    first.request("insert", INSERT)
     first.request("save_checkpoint", {"label": "start"})
     welcome = Client(hosted, Account("cleo", "viewer")).connection.welcome()
     assert (welcome["user"], welcome["role"], welcome["doc"], welcome["app"]) == ("cleo", "viewer", "plan", "test-list")
@@ -184,7 +186,7 @@ def test_a_result_that_cannot_be_sent_becomes_an_internal_error(hosted, ann):
 def test_events_reach_everyone_and_arrive_before_the_response(hosted):
     ann, ben = Client(hosted, Account("ann", "owner")), Client(hosted, Account("ben", "editor"))
     ann.forget(), ben.forget()
-    response = ann.request("apply", {"command": INSERT})
+    response = ann.request("insert", INSERT)
     assert response["ok"] and ann.frames[-1] is response, "the response is last"
     assert [e["revision"] for e in ann.events("command")] == ["main:1"] and ben.events("command")[0]["author"] == "ann"
     assert ann.frames.index(next(f for f in ann.frames if f.get("event") == "command")) < len(ann.frames) - 1
@@ -193,23 +195,23 @@ def test_events_reach_everyone_and_arrive_before_the_response(hosted):
 def test_history_events_go_to_their_author_only(hosted):
     ann, ben = Client(hosted, Account("ann", "owner")), Client(hosted, Account("ben", "editor"))
     ann.forget(), ben.forget()
-    ann.request("apply", {"command": INSERT})
+    ann.request("insert", INSERT)
     assert ann.events("history")[-1]["undo_label"] == "Insert 5" and ben.events("history") == []
 
 
 def test_each_user_has_their_own_undo_history(hosted):
     ann, ben = Client(hosted, Account("ann", "owner")), Client(hosted, Account("ben", "editor"))
-    ann.request("apply", {"command": INSERT})
-    ben.request("apply", {"command": {"k": "list.Insert", "s": 1, "d": {"index": 1, "value": 6}}})
+    ann.request("insert", INSERT)
+    ben.request("insert", {"index": 1, "value": 6})
     assert ann.request("undo")["result"]["applied"] and hosted.document.model.items == [6]
     assert ben.request("history")["result"]["can_undo"] is True
 
 
 def test_viewers_see_everything_but_cannot_write(hosted):
     ann, vera = Client(hosted, Account("ann", "owner")), Client(hosted, Account("vera", "viewer"))
-    ann.request("apply", {"command": INSERT})
+    ann.request("insert", INSERT)
     assert vera.events("command")
-    assert vera.request("apply", {"command": INSERT})["error"]["code"] == "forbidden"
+    assert vera.request("insert", INSERT)["error"]["code"] == "forbidden"
 
 
 def test_a_broken_client_never_breaks_the_edit(hosted):
@@ -219,9 +221,9 @@ def test_a_broken_client_never_breaks_the_edit(hosted):
         raise BrokenPipeError
 
     broken = hosted.connect(Account("ben", "editor"), dead)
-    assert ann.request("apply", {"command": INSERT})["ok"]
+    assert ann.request("insert", INSERT)["ok"]
     assert broken.broken, "the transport is told to drop it"
-    assert ann.request("apply", {"command": INSERT})["ok"]
+    assert ann.request("insert", INSERT)["ok"]
 
 
 def test_chat_for_one_person_reaches_only_sender_and_recipient(hosted):
@@ -235,18 +237,18 @@ def test_chat_for_one_person_reaches_only_sender_and_recipient(hosted):
 
 def test_a_restore_moves_everybody_and_edits_in_flight_are_refused(hosted):
     ann, ben = Client(hosted, Account("ann", "owner")), Client(hosted, Account("ben", "editor"))
-    ann.request("apply", {"command": INSERT})
+    ann.request("insert", INSERT)
     ann.request("save_checkpoint", {"label": "good"})
-    ann.request("apply", {"command": INSERT})
+    ann.request("insert", INSERT)
     seen_by_ben = ben.request("ping")["result"]["revision"]  # main:3
     ann.forget(), ben.forget()
     hosted.document.restore_checkpoint(1, author="ann")  # the server-side act (the wire method waits for the rules)
     for client in (ann, ben):
         assert [e["new"] for e in client.events("branch")] == ["restore-1"] and client.events("rebuilt")
-    stale = ben.request("apply", {"command": INSERT, "base": seen_by_ben})
+    stale = ben.request("insert", {**INSERT, "base": seen_by_ben})
     assert stale["error"]["code"] == "stale" and hosted.document.model.items == [5]
     assert ben.request("snapshot")["result"]["branch"] == "restore-1"
-    assert ben.request("apply", {"command": INSERT, "base": ben.request("ping")["result"]["revision"]})["ok"]
+    assert ben.request("insert", {**INSERT, "base": ben.request("ping")["result"]["revision"]})["ok"]
 
 
 # ------------------------------------------------------------------------------------------ people
@@ -262,7 +264,7 @@ def test_joining_and_leaving_are_announced(hosted):
 
 def test_closing_unsubscribes_but_keeps_the_undo_steps(hosted):
     ann = Client(hosted, Account("ann", "owner"))
-    ann.request("apply", {"command": INSERT})
+    ann.request("insert", INSERT)
     ann.connection.close()
     ann.forget()
     hosted.document.execute(Insert(0, 1), author="ben")
@@ -307,12 +309,12 @@ def test_presence_is_shared_but_not_echoed(hosted):
 def test_a_lock_rejects_everybody_else_and_ends_with_the_last_connection_of_its_owner(hosted):
     ann, ben = Client(hosted, Account("ann", "owner")), Client(hosted, Account("ben", "editor"))
     ben.request("lock", {"regions": [{"kind": "interval", "start": 0, "end": 1}]})
-    assert ann.request("apply", {"command": INSERT})["error"]["code"] == "locked"
+    assert ann.request("insert", INSERT)["error"]["code"] == "locked"
     second_window = Client(hosted, Account("ben", "editor"))
     ben.connection.close()
-    assert ann.request("apply", {"command": INSERT})["error"]["code"] == "locked", "his other window keeps it"
+    assert ann.request("insert", INSERT)["error"]["code"] == "locked", "his other window keeps it"
     second_window.connection.close()
-    assert ann.request("apply", {"command": INSERT})["ok"]
+    assert ann.request("insert", INSERT)["ok"]
     assert hosted.document.presence.of("ben") is None
 
 
@@ -324,20 +326,20 @@ def test_a_lock_lapses_when_its_owner_goes_quiet(make_hub, clock):
     ann.forget()
     clock.advance(29)
     hub.sweep()
-    assert ann.request("apply", {"command": INSERT})["error"]["code"] == "locked"
+    assert ann.request("insert", INSERT)["error"]["code"] == "locked"
     clock.advance(2)
     hub.sweep()
     assert ann.events("ephemeral")[-1]["data"]["locked"] is False, "others are told the lock is gone"
-    assert ann.request("apply", {"command": INSERT})["ok"]
+    assert ann.request("insert", INSERT)["ok"]
     assert hosted.document.presence.of("ben") is not None, "his presence stays"
 
 
 def test_a_lock_moves_with_the_edits_of_others(hosted):
     ann, ben = Client(hosted, Account("ann", "owner")), Client(hosted, Account("ben", "editor"))
-    ann.request("apply", {"command": INSERT})
-    ann.request("apply", {"command": {"k": "list.Insert", "s": 1, "d": {"index": 1, "value": 6}}})
+    ann.request("insert", INSERT)
+    ann.request("insert", {"index": 1, "value": 6})
     ben.request("lock", {"regions": [{"kind": "interval", "start": 1, "end": 2}]})
-    assert ann.request("apply", {"command": INSERT})["ok"]  # inserted in front of his element
+    assert ann.request("insert", INSERT)["ok"]  # inserted in front of his element
     assert hosted.document.presence.of("ben").regions == (Interval(2, 3),)
 
 

@@ -123,7 +123,7 @@ def test_the_model_can_only_use_the_editing_methods_and_is_told_about_them():
         prompt = system_prompt(model)
         for name in ("set_cells", "add_sheet", "structure", "resize_lines"):
             assert f"- {name}(" in prompt
-        for name in ("add_user", "chat", "apply", "undo", "save_checkpoint", "lock"):
+        for name in ("add_user", "chat", "undo", "save_checkpoint", "lock"):
             assert f"- {name}(" not in prompt
         assert "base" not in prompt, "the revision of a view is the client's business"
 

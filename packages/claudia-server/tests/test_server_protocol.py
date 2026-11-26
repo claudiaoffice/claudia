@@ -9,17 +9,18 @@ import json
 from pathlib import Path
 
 import pytest
+from list_app import list_methods
 
 from claudia_composes import TextModel
 from claudia_computes import WorkbookModel
 from claudia_core import Document, MemoryStore, Revision
-from claudia_core.commands import Batch, Checkpoint, Import, Redacted, Redaction, Restore, Setup, Switch, encode
 from claudia_core.testing import Insert, Interval, Remove
 from claudia_creates import SlideModel
 from claudia_document_file import read_export
 from claudia_server.auth import Account
 from claudia_server.composes import composes_methods
 from claudia_server.computes import computes_methods
+from claudia_server.creates import creates_methods
 from claudia_server.protocol import (
     DEFAULT_LOCALE,
     ERROR_CODES,
@@ -36,11 +37,11 @@ def ctx_for(doc, account, *, users=("ann", "ben"), limits=None, locale="en"):
     return Context(doc, account, limits or Limits(), users=lambda: list(users), lock_seconds=30.0, locale=locale)
 
 
-def call(doc, account, name, params=None, *, table=core_methods, **options):
+def call(doc, account, name, params=None, *, table=list_methods, **options):
     return table.dispatch(ctx_for(doc, account, **options), name, params)
 
 
-INSERT = {"k": "list.Insert", "s": 1, "d": {"index": 0, "value": 5}}
+INSERT = {"index": 0, "value": 5}
 
 
 # ------------------------------------------------------------------------------------------ the table
@@ -53,7 +54,6 @@ def test_every_method_is_documented_and_described():
         "ping",
         "snapshot",
         "changes_since",
-        "apply",
         "undo",
         "redo",
         "save_checkpoint",
@@ -150,15 +150,15 @@ def test_request_error_detail_is_only_in_to_dict_when_given():
 
 
 # ---------------------------------------------------------------------------------------- writing
-def test_apply_executes_a_command_as_the_account(doc, ann):
-    result = call(doc, ann, "apply", {"command": INSERT})
+def test_an_apps_method_executes_its_change_as_the_account(doc, ann):
+    result = call(doc, ann, "insert", INSERT)
     assert result == {"revision": "main:1"} and doc.model.items == [5]
     assert doc.log.get(Revision("main", 1)).author == "ann"
 
 
-def test_apply_with_the_base_the_client_saw(doc, ann):
+def test_an_edit_with_the_base_the_client_saw(doc, ann):
     doc.execute(Insert(0, 1), author="ben")
-    call(doc, ann, "apply", {"command": INSERT, "base": "main:1"})
+    call(doc, ann, "insert", {**INSERT, "base": "main:1"})
     assert doc.model.items == [5, 1]
 
 
@@ -169,44 +169,40 @@ def test_an_edit_in_flight_during_a_restore_is_refused_with_stale(doc, ann):
     doc.restore_checkpoint(1, author="ben")
     before = doc.model.serialize()
     with pytest.raises(RequestError) as caught:
-        call(doc, ann, "apply", {"command": INSERT, "base": "main:3"})
+        call(doc, ann, "insert", {**INSERT, "base": "main:3"})
     assert caught.value.code == "stale" and "reload" in caught.value.message.lower()
     assert caught.value.detail == "stale_edit"
     assert doc.model.serialize() == before
 
 
-def test_a_command_the_model_refuses_changes_nothing(doc, ann):
+def test_a_change_the_model_refuses_changes_nothing(doc, ann):
     with pytest.raises(RequestError) as caught:
-        call(doc, ann, "apply", {"command": {"k": "list.Remove", "s": 1, "d": {"index": 9}}})
+        call(doc, ann, "remove", {"index": 9})
     assert caught.value.code == "command_error" and doc.revision is None
 
 
-def test_unknown_and_too_new_commands_are_bad_requests(doc, ann):
-    with pytest.raises(RequestError, match="ext.Thing") as unknown:
-        call(doc, ann, "apply", {"command": {"k": "ext.Thing", "s": 1, "d": {}}})
-    assert unknown.value.code == "bad_request"
-    with pytest.raises(RequestError, match="newer") as new:
-        call(doc, ann, "apply", {"command": {"k": "list.Insert", "s": 9, "d": {"index": 0, "value": 1}}})
-    assert new.value.code == "bad_request"
-    for broken in ({}, {"k": "list.Insert"}, {"k": "list.Insert", "s": 1, "d": {"index": 0}}):
-        with pytest.raises(RequestError) as caught:
-            call(doc, ann, "apply", {"command": broken})
-        assert caught.value.code == "bad_request"
+def test_no_method_takes_a_change_in_its_stored_form():
+    """D2010: a person's change comes in only through an app's named methods and their checks. There is no method
+    that runs a change sent as `{k, s, d}` (the protocol's `apply` until 2026-11-26: SEC-25, SEC-30)."""
+    for table in (core_methods, composes_methods, computes_methods, creates_methods):
+        assert "apply" not in table.names()
+        methods = table.describe(Limits())["methods"]
+        assert not [name for name, info in methods.items() for p in info["params"] if p["name"] == "command"]
 
 
 def test_a_lock_held_by_a_colleague_refuses_the_edit(doc, ann, ben):
     doc.lock("ben", [Interval(0, 1)], ttl=30)
     with pytest.raises(RequestError) as caught:
-        call(doc, ann, "apply", {"command": INSERT})
+        call(doc, ann, "insert", INSERT)
     assert caught.value.code == "locked" and "ben" in caught.value.message
     assert caught.value.detail == "region_held"
-    call(doc, ben, "apply", {"command": INSERT})  # his own lock does not stop him
+    call(doc, ben, "insert", INSERT)  # his own lock does not stop him
 
 
 def test_viewers_may_read_but_not_write(doc, vera):
     assert call(doc, vera, "snapshot")["state"] == {"items": []}
     for name, params in (
-        ("apply", {"command": INSERT}),
+        ("insert", INSERT),
         ("undo", None),
         ("redo", None),
         ("chat", {"text": "hi"}),
@@ -221,8 +217,8 @@ def test_viewers_may_read_but_not_write(doc, vera):
 
 # ------------------------------------------------------------------------- SEC-10: an account's own allow-list
 def test_an_account_may_be_restricted_to_an_allow_list_of_write_methods(doc, ann):
-    restricted = Account(ann.user, ann.role, allowed_methods=frozenset({"apply"}))
-    call(doc, restricted, "apply", {"command": INSERT})  # "apply" is in its allow-list
+    restricted = Account(ann.user, ann.role, allowed_methods=frozenset({"insert"}))
+    call(doc, restricted, "insert", INSERT)  # "insert" is in its allow-list
     assert doc.model.items == [5]
     with pytest.raises(RequestError) as caught:
         call(doc, restricted, "undo")  # "undo" is not
@@ -233,48 +229,9 @@ def test_an_account_may_be_restricted_to_an_allow_list_of_write_methods(doc, ann
 
 def test_an_ordinary_account_has_no_allow_list_and_is_limited_only_by_its_role(doc, ann):
     assert ann.allowed_methods is None
-    call(doc, ann, "apply", {"command": INSERT})
+    call(doc, ann, "insert", INSERT)
     call(doc, ann, "undo")
     assert doc.model.items == []
-
-
-def test_the_assistant_cannot_apply_a_raw_command_even_if_apply_were_in_its_allow_list(doc):
-    """SEC-10 item 3: `apply` refuses `account.system` unconditionally, so it cannot be used as a tunnel around an
-    app's own wrapper checks (`composes._people_only` and the like), whatever the allow-list happens to say."""
-    ai = Account.assistant(("apply",))
-    with pytest.raises(RequestError) as caught:
-        call(doc, ai, "apply", {"command": INSERT})
-    assert caught.value.code == "forbidden"
-    assert doc.model.items == []
-
-
-# SEC-25 (D2007): the changes only the server makes, through its own methods and their checks (who may restore, redact,
-# mark a checkpoint, import). Sent raw, by anybody, they are refused, also inside a batch, and nothing changes.
-SERVER_ONLY = {
-    "core.Import": Import(name="other.odt", fmt="odt", state={"items": []}, sha256=None),
-    "core.Setup": Setup((Insert(0, 1),), "Set up the document"),
-    "core.Checkpoint": Checkpoint("Approved by legal", Revision("main", 1)),
-    "core.Redaction": Redaction((Revision("main", 1),), (1,)),
-    "core.Redacted": Redacted("list.Insert", {}),
-    "core.Restore": Restore("Before the edits", Revision("main", 1), "main"),
-    "core.Switch": Switch("main"),
-}
-
-
-@pytest.mark.parametrize("kind", sorted(SERVER_ONLY))
-def test_an_editor_cannot_send_a_change_only_the_server_makes(doc, ann, kind):
-    call(doc, ann, "apply", {"command": INSERT})
-
-    def log_now():
-        return call(doc, ann, "branches"), call(doc, ann, "checkpoints"), call(doc, ann, "ping")
-
-    before = log_now()
-    for sent in (SERVER_ONLY[kind], Batch((Insert(0, 2), SERVER_ONLY[kind]), "Two changes")):
-        with pytest.raises(RequestError) as caught:
-            call(doc, ann, "apply", {"command": encode(sent)})
-        assert caught.value.code == "forbidden", kind
-        assert log_now() == before
-        assert doc.model.items == [5]
 
 
 SENDERS = Path(__file__).with_name("command_senders.json")
@@ -282,7 +239,7 @@ SENDERS = Path(__file__).with_name("command_senders.json")
 
 def test_every_kind_of_change_is_in_the_reviewed_list_with_who_may_send_it():
     """D2007: a new kind of change cannot come in unreviewed: it is added to tests/command_senders.json as "person" (an
-    app or a script may send it through `apply`) or "server" (made only through the server's own methods)."""
+    app's method makes it for a person) or "server" (made only through the server's own methods)."""
     reviewed = json.loads(SENDERS.read_text(encoding="utf-8"))
     actual = {}
     for model in (TextModel, WorkbookModel, SlideModel):
@@ -299,15 +256,10 @@ def test_every_kind_of_change_is_in_the_reviewed_list_with_who_may_send_it():
     )
 
 
-def test_an_editor_may_still_send_a_batch_of_her_own_changes(doc, ann):
-    call(doc, ann, "apply", {"command": encode(Batch((Insert(0, 1), Insert(1, 2)), "Two numbers"))})
-    assert doc.model.items == [1, 2]
-
-
 # --------------------------------------------------------------------------------------- undo / redo
 def test_undo_and_redo_are_per_account(doc, ann, ben):
-    call(doc, ann, "apply", {"command": INSERT})
-    call(doc, ben, "apply", {"command": {"k": "list.Insert", "s": 1, "d": {"index": 1, "value": 6}}})
+    call(doc, ann, "insert", INSERT)
+    call(doc, ben, "insert", {"index": 1, "value": 6})
     assert call(doc, ann, "history") == {
         "can_undo": True,
         "can_redo": False,
@@ -321,7 +273,7 @@ def test_undo_and_redo_are_per_account(doc, ann, ben):
 
 
 def test_undo_that_would_overwrite_a_colleague_is_a_conflict(doc, ann, ben):
-    call(doc, ann, "apply", {"command": INSERT})
+    call(doc, ann, "insert", INSERT)
     doc.execute(Remove(0), author="ben")  # ben removed the element ann inserted
     with pytest.raises(RequestError) as caught:
         call(doc, ann, "undo")
@@ -330,7 +282,7 @@ def test_undo_that_would_overwrite_a_colleague_is_a_conflict(doc, ann, ben):
 
 
 def test_undo_into_a_lock_is_refused(doc, ann, ben):
-    call(doc, ann, "apply", {"command": INSERT})
+    call(doc, ann, "insert", INSERT)
     doc.lock("ben", [Interval(0, 1)], ttl=30)
     with pytest.raises(RequestError) as caught:
         call(doc, ann, "undo")
@@ -339,7 +291,7 @@ def test_undo_into_a_lock_is_refused(doc, ann, ben):
 
 # ---------------------------------------------------------------------------------------- checkpoints
 def test_checkpoints_are_saved_and_listed(doc, ann):
-    call(doc, ann, "apply", {"command": INSERT})
+    call(doc, ann, "insert", INSERT)
     assert call(doc, ann, "save_checkpoint", {"label": "first"})["saved"] is True
     assert call(doc, ann, "save_checkpoint", {})["saved"] is False  # nothing changed
     listed = call(doc, ann, "checkpoints")
@@ -403,11 +355,11 @@ def test_chat_is_posted_with_the_connected_users_for_addressing(doc, ann):
 # ----------------------------------------------------------------------------------- parameter checks
 def test_malformed_params_are_bad_requests(doc, ann):
     for name, params in (
-        ("apply", {"command": "x"}),
-        ("apply", {}),
-        ("apply", {"command": INSERT, "base": 5}),
-        ("apply", {"command": INSERT, "base": "nonsense"}),
-        ("apply", {"command": INSERT, "extra": 1}),
+        ("insert", {"index": "x", "value": 5}),
+        ("insert", {}),
+        ("insert", {**INSERT, "base": 5}),
+        ("insert", {**INSERT, "base": "nonsense"}),
+        ("insert", {**INSERT, "extra": 1}),
         ("ping", {"unexpected": 1}),
         ("ping", [1]),
         ("chat", {"text": 5}),
@@ -418,7 +370,7 @@ def test_malformed_params_are_bad_requests(doc, ann):
 
 
 def test_defaults_and_nulls(doc, ann):
-    call(doc, ann, "apply", {"command": INSERT, "base": None})
+    call(doc, ann, "insert", {**INSERT, "base": None})
     call(doc, ann, "save_checkpoint", {"label": None})
     assert doc.checkpoints[0].label == "Checkpoint 1"
     assert call(doc, ann, "ping", None)["branch"] == "main"

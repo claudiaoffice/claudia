@@ -4,6 +4,7 @@ import json
 import zipfile
 
 import pytest
+from list_app import list_methods
 from starlette.testclient import TestClient
 from test_server_app import INSERT, Peer, refused
 
@@ -22,7 +23,7 @@ VERA, VERA_PW = "Cornelia", "Purple-Monkey-5"
 def server(tmp_path):
     """A server on the folder; building another one is a restart."""
     store = SealedDocuments(tmp_path, ListModel, kdf=CHEAP)
-    return TestClient(create_app(Hub(store), store))
+    return TestClient(create_app(Hub(store, methods=list_methods), store))
 
 
 def all_bytes(folder):
@@ -40,7 +41,7 @@ def test_a_session_survives_a_restart_and_leaves_nothing_readable(tmp_path):
     with server(tmp_path) as client:
         ann = Peer(client, user=ANN, password=ANN_PW, create=True)
         assert ann.hello["result"]["role"] == "owner"
-        assert ann.request("apply", {"command": INSERT})["ok"]
+        assert ann.request("insert", INSERT)["ok"]
         ann.request("chat", {"text": "the-forecast-is-confidential-4711"})
         assert ann.request("add_user", {"name": BEN, "password": BEN_PW, "role": "editor"})["ok"]
         ann.close()
@@ -73,7 +74,7 @@ def test_a_viewer_reads_while_the_document_is_open_but_cannot_write(tmp_path):
         ann.request("add_user", {"name": VERA, "password": VERA_PW, "role": "viewer"})
         vera = Peer(client, user=VERA, password=VERA_PW)
         assert vera.hello["result"]["role"] == "viewer"
-        assert vera.request("apply", {"command": INSERT})["error"]["code"] == "forbidden"
+        assert vera.request("insert", INSERT)["error"]["code"] == "forbidden"
         vera.close()
         ann.close()
 

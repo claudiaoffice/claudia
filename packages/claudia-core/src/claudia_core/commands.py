@@ -22,7 +22,7 @@ from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, ClassVar, Literal
 
-from .errors import MissingUpcaster, SchemaTooNew, ServerOnly, UnknownCommand
+from .errors import MissingUpcaster, SchemaTooNew, UnknownCommand
 from .revision import Revision
 
 if TYPE_CHECKING:
@@ -47,8 +47,9 @@ class Command(ABC):
     schema: ClassVar[int] = 1
     undoable = True  # False for commands that are nobody's undo step (chat-like, checkpoints, ...)
     meta: ClassVar[bool] = False  # True: changes no model state, only the log (checkpoint, redaction)
-    #: Who may send this command (D2007). ``"person"``, the default, is the app or a script; ``"server"`` makes it only
-    #: through its own methods and their checks, and :meth:`CommandRegistry.for_persons` refuses it.
+    #: Who may make this command (D2007). ``"person"``, the default: an app's method makes it for a person;
+    #: ``"server"``: only the server's own methods make it, after their checks. No method takes one from
+    #: outside (D2010).
     sender: ClassVar[Sender] = "person"
 
     @property
@@ -141,7 +142,6 @@ class CommandRegistry:
     def __init__(self):
         self._classes: dict[str, type[Command]] = {}
         self._upcasters: dict[tuple[str, int], Callable[[dict], dict]] = {}
-        self._persons_only = False
 
     def register(self, cls: type[Command]) -> type[Command]:
         """Class decorator. Extensions (UserFunction/plugin commands) register the same way."""
@@ -171,23 +171,11 @@ class CommandRegistry:
         return {kind: cls.schema for kind, cls in self._classes.items()}
 
     def class_of(self, kind: str) -> type[Command]:
-        """The class registered for ``kind``; raises ``UnknownCommand``, or ``ServerOnly`` in a registry
-        :meth:`for_persons` for a kind only the server makes."""
+        """The class registered for ``kind``; raises ``UnknownCommand``."""
         try:
-            cls = self._classes[kind]
+            return self._classes[kind]
         except KeyError:
             raise UnknownCommand(kind) from None
-        if self._persons_only and cls.sender != "person":
-            raise ServerOnly(kind)
-        return cls
-
-    def for_persons(self) -> CommandRegistry:
-        """This registry as it decodes what a person sends (SEC-25, D2007): a command only the server makes is refused
-        with ``ServerOnly``, at any depth, since a command that holds commands decodes them through the same
-        registry."""
-        persons = CommandRegistry()
-        persons._classes, persons._upcasters, persons._persons_only = dict(self._classes), dict(self._upcasters), True
-        return persons
 
     def decode(self, envelope: dict) -> Command:
         """Turn a stored envelope into a command, upcasting old schemas; ``SchemaTooNew`` if it is from the future."""

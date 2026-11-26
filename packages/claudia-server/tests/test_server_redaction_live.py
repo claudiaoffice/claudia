@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import ClassVar
 
 import pytest
+from list_app import list_methods, list_methods_for
 
 from claudia_core import Command, new_registry
 from claudia_core.testing import ListModel
@@ -17,7 +18,7 @@ SECRET = 424242
 
 
 def insert(index, value):
-    return {"k": "list.Insert", "s": 1, "d": {"index": index, "value": value}}
+    return {"index": index, "value": value}
 
 
 class Client:
@@ -37,15 +38,19 @@ class Client:
 
 @pytest.fixture
 def hosted(clock):
-    hub = Hub(MemoryProvider(ListModel, clock=clock.time, lock_clock=clock.lock_time), clock=clock.lock_time)
+    hub = Hub(
+        MemoryProvider(ListModel, clock=clock.time, lock_clock=clock.lock_time),
+        clock=clock.lock_time,
+        methods=list_methods,
+    )
     return asyncio.run(hub.open("plan", create=True))
 
 
 @pytest.fixture
 def people(hosted):
     ana, ben = Client(hosted, Account("ana", "owner")), Client(hosted, Account("ben", "editor"))
-    ana.request("apply", {"command": insert(0, 1)})  # main:1
-    ben.request("apply", {"command": insert(1, SECRET)})  # main:2
+    ana.request("insert", insert(0, 1))  # main:1
+    ben.request("insert", insert(1, SECRET))  # main:2
     ben.request("chat", {"text": f"the code is {SECRET}"})  # chat 1
     ben.request("chat", {"text": f"@ana between us: {SECRET}"})  # chat 2, private
     return hosted, ana, ben
@@ -158,11 +163,15 @@ class NaiveModel(ListModel):
 
 
 def test_an_editor_whose_redaction_would_blank_somebody_elses_later_step_asks_an_owner(clock):
-    hub = Hub(MemoryProvider(NaiveModel, clock=clock.time, lock_clock=clock.lock_time), clock=clock.lock_time)
+    hub = Hub(
+        MemoryProvider(NaiveModel, clock=clock.time, lock_clock=clock.lock_time),
+        clock=clock.lock_time,
+        methods=list_methods_for(NaiveInsert, NaiveRemove),
+    )
     hosted = asyncio.run(hub.open("plan", create=True))
     ana, ben = Client(hosted, Account("ana", "owner")), Client(hosted, Account("ben", "editor"))
-    ben.request("apply", {"command": {"k": "naive.Insert", "s": 1, "d": {"index": 0, "value": SECRET}}})
-    ana.request("apply", {"command": {"k": "naive.Remove", "s": 1, "d": {"index": 0}}})  # needs ben's step
+    ben.request("insert", {"index": 0, "value": SECRET})
+    ana.request("remove", {"index": 0})  # needs ben's step
     shown = ben.request("redaction_plan", {"revisions": ["main:1"]})["result"]  # he sees why, for the dialog
     assert shown["dependents"] == ["main:2"] and shown["allowed"] is False and shown["others"] == ["ana"]
     assert "state" not in shown
@@ -175,7 +184,7 @@ def test_an_editor_whose_redaction_would_blank_somebody_elses_later_step_asks_an
 def test_nobody_redacts_while_a_restore_is_suggested(people):
     hosted, ana, ben = people
     ana.request("save_checkpoint", {"label": "start"})
-    ben.request("apply", {"command": insert(0, 7)})
+    ben.request("insert", insert(0, 7))
     proposed = ana.request("propose_restore", {"checkpoint": 1})["result"]
     assert proposed["proposal"] is not None  # ben is connected too, so it waits for him
     reply = ben.request("redact", {"revisions": ["main:2"], "dependents": []})

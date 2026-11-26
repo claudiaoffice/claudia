@@ -2,7 +2,7 @@
 
 Messages are JSON text frames.
 
-    client -> server   {"id": 7, "method": "apply", "params": {"command": {...}, "base": "main:12"}}
+    client -> server   {"id": 7, "method": "set_cells", "params": {"sheet": "s1", "cells": [...], "base": "main:12"}}
     server -> client   {"id": 7, "ok": true,  "result": {"revision": "main:13"}}
                        {"id": 7, "ok": false, "error": {"code": "stale", "message": "..."}}
     server -> client   {"event": "command", "data": {...}}                    pushed, no id
@@ -15,8 +15,10 @@ The method table is the single source of truth: it validates parameters, says wh
 ``MethodTable.describe`` (served at ``/api/protocol``) so clients in other languages can be generated or checked
 against it (E3.2). The table in this module, ``core_methods``, holds what every app has (documents, undo,
 checkpoints, presence, locks, chat); an app takes ``core_methods.extended()`` and adds its own methods and parameter
-types. A *command* travels in its stored form (``{"k": kind, "s": schema, "d": data}``), so the protocol never needs
-to know what a spreadsheet, a text or a slide is.
+types. A person's change comes in only through an app's named methods, which build the command and check it; no method
+takes a command in its stored form (D2010). A command travels in its stored form (``{"k": kind, "s": schema, "d":
+data}``) only from the server to clients, in events and ``changes_since``, so the protocol never needs to know what a
+spreadsheet, a text or a slide is.
 
 Restoring a checkpoint or switching the line moves everybody, so neither happens from a bare request: an owner or
 editor *suggests* it (``propose_restore``, ``propose_switch``), and it is carried out once everybody who is
@@ -46,11 +48,8 @@ from claudia_core import (
     KernelError,
     RegionHeld,
     Revision,
-    SchemaTooNew,
-    ServerOnly,
     StaleEdit,
     UndoConflict,
-    UnknownCommand,
 )
 from claudia_document_file import AuditRecord, Part, clean_details, write_export
 
@@ -1025,30 +1024,6 @@ def _users(ctx):
 
 
 # -- writing
-@core_methods.method("apply", "command:dict base:revision?", write=True)
-def _apply(ctx, command, base):
-    """Execute a command in its stored form `{k, s, d}` as this account. `base` is the revision the client's view was
-    at: if the document moved to another line meanwhile the edit is refused with `stale`. Refused with `locked` if a
-    colleague holds the part it touches; `command_error` if the command itself is rejected. Nothing changes on any
-    error. Refused with `forbidden` for the assistant (SEC-10): a raw command would walk around the checks an app's
-    own methods make against it (a place that is not there, a picture without words, the page set up by people),
-    whatever `apply` itself is allowed to call. Refused with `forbidden` for anybody, also inside a batch, for a change
-    only the server makes through its own methods and their checks (SEC-25, D2007): an import, a document's setup, a
-    checkpoint, a redaction, a restore, a switch of line."""
-    if ctx.account.system:
-        raise RequestError("forbidden", msg("the assistant cannot apply a raw command; use the app's own methods"))
-    try:
-        parsed = ctx.document.model.registry.for_persons().decode(command)
-    except ServerOnly as exc:
-        raise RequestError(
-            "forbidden", msg("{kind} is made by the server only, through its own methods", kind=exc.kind)
-        ) from exc
-    except (UnknownCommand, SchemaTooNew) as exc:
-        raise RequestError("bad_request", message_of(exc)) from exc
-    except (KeyError, TypeError, ValueError, AttributeError) as exc:
-        raise RequestError("bad_request", msg("invalid command: {reason!r}", reason=message_of(exc))) from exc
-    applied = ctx.document.execute(parsed, author=ctx.user, base=base)
-    return {"revision": applied.revision.to_data()}
 
 
 def _stepped(applied) -> dict:

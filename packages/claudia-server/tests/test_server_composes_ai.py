@@ -80,7 +80,7 @@ def test_composes_has_a_model_driven_ai_that_quotes_words():
     assert {"suggest_words", "replace_words", "add_paragraphs", "set_style"} <= set(MODEL_METHODS["composes"])
     assert {"suggest", "suggest_words"} == set(SUGGEST_METHODS["composes"])
     assert set(NOT_FOR_A_MODEL["composes"]) == {"suggest", "replace_text"}, "offsets are never offered (D681)"
-    assert not {"apply", "make_list", "set_page", "change_style", "rename_thing"} & set(MODEL_METHODS["composes"])
+    assert not {"make_list", "set_page", "change_style", "rename_thing"} & set(MODEL_METHODS["composes"])
     assert stand_in_assistant_for(TextModel) is not None, "without a model the stand-in still answers"
 
 

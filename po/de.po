@@ -9449,10 +9449,6 @@ msgstr "Interner Serverfehler"
 msgid "invalid administrator name “{name}”"
 msgstr "Ungültiger Name für eine Administratorin oder einen Administrator: „{name}“"
 
-#: packages/claudia-server/src/claudia_server/protocol.py
-msgid "invalid command: {reason!r}"
-msgstr "Ungültiger Befehl: {reason!r}"
-
 #: web/app/components/SidePanel.vue
 msgid "is working"
 msgstr "arbeitet"
@@ -10464,10 +10460,6 @@ msgstr "Der Zugangsschlüssel braucht mindestens {count} Zeichen"
 #: packages/claudia-server/src/claudia_server/admin_api.py
 msgid "the answer length must be at least 1"
 msgstr "Die Antwortlänge muss mindestens 1 sein"
-
-#: packages/claudia-server/src/claudia_server/protocol.py
-msgid "the assistant cannot apply a raw command; use the app's own methods"
-msgstr "Der Assistent kann keinen rohen Befehl ausführen; nutzen Sie die Methoden der App"
 
 #: packages/claudia-server/src/claudia_server/protocol.py
 msgid "the assistant does not export the document"
@@ -11576,10 +11568,6 @@ msgstr "{kind} (dekorativ)"
 #: web/app/lib/descriptions.ts
 msgid "{kind} (no description)"
 msgstr "{kind} (ohne Beschreibung)"
-
-#: packages/claudia-server/src/claudia_server/protocol.py
-msgid "{kind} is made by the server only, through its own methods"
-msgstr "{kind} macht nur der Server, mit seinen eigenen Methoden"
 
 #: web/app/lib/descriptions.ts
 msgid "{kind}: {words}"
