@@ -1,0 +1,11 @@
+--- a/src/mkbom.cpp
++++ b/src/mkbom.cpp
+@@ -394,7 +394,7 @@
+         info2->unknown1 = 1;
+         info2->checksum = htonl(node.checksum);
+         info2->linkNameLength = htonl(node.linkNameLength);
+-        strcpy( info2->linkName, node.linkName.c_str() );
++        memcpy( info2->linkName, node.linkName.c_str(), node.linkNameLength ); /* not strcpy: no room for a NUL when there is no link */
+ 
+         BOMPathInfo1 info1;
+         info1.id = htonl( j + 1 );
