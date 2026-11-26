@@ -46,6 +46,8 @@ from typing import Any
 
 __all__ = [
     "Action",
+    "ContextMenu",
+    "Keys",
     "Kind",
     "KeyOwner",
     "LANGUAGES",
@@ -162,8 +164,9 @@ class Action:
     key_owner: KeyOwner = KeyOwner.PAGE
     """Who listens for :attr:`keys`: see :class:`KeyOwner`."""
     fits: str = ""
-    """When the entry fits, in the workbook's words, word for word (D1601, D1605, D1646): ``"role: editor or owner ·
-    selection: something"``. The page judges it; ``scripts``' workbook test holds it to the workbook."""
+    """The workbook's words for when the entry fits, word for word, such as
+    ``"role: editor or owner · selection: something"`` (D1601, D1605, D1646). The page judges it; the workbook test
+    holds it to the workbook."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -243,8 +246,8 @@ class Manifest:
 
     @property
     def actions(self) -> tuple[Action, ...]:
-        """Every action once, where it first stands: the menus, the header-bar toggles, the context menus, then the
-        keys without an entry."""
+        """Each action once, in the place where it first stands, in this order of places — the menus, the header-bar
+        toggles, the context menus, then the keys without an entry."""
         seen: dict[str, Action] = {}
         everywhere = (
             *(a for menu in self.menus for a in menu.all_actions()),
