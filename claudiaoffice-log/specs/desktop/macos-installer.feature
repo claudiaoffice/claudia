@@ -1,9 +1,10 @@
 # The macOS package: install, open, update, uninstall (E8.5; D1625-D1629 proposed).
 #
 # Approved by the owner on 2026-11-25 (his answers are in the scenarios and in D1625-D1629). An unsigned package for Apple Silicon, macOS 14 and newer, installed for
-# all people of the Mac. No Mac runner is connected, so these scenarios are run by packaging/macos/test-install.sh in a
-# macOS virtual machine on the owner's Mac (UTM or Tart), and by unit tests of the package's parts on any system.
-# Opening an unsigned package ("Open Anyway") needs a person and is checked by hand.
+# all people of the Mac. No Mac runner is connected: the package is built on Linux in CI (2026-11-26) and these
+# scenarios are run by packaging/macos/test-install.sh on the owner's Mac (or a macOS virtual machine), and by unit
+# tests of the package's parts on any system, which their tags name. Opening an unsigned package ("Open Anyway") needs
+# a person and is checked by hand. The last scenario was added on 2026-11-26 (the package in CI): to be reviewed.
 Feature: claudia installed on a Mac from one package
 
   @core
@@ -86,3 +87,9 @@ Feature: claudia installed on a Mac from one package
     When I open the claudia package
     Then the installer says that claudia needs a Mac with Apple Silicon and macOS 14 or newer
     And nothing is installed
+
+  @core
+  Scenario: Every release offers the package to download
+    When the version 0.5.0 is tagged
+    Then its GitHub release offers "claudia-office-0.5.0-macos-arm64.pkg" for download, next to the Windows installer and the Debian package
+    And the package was built and checked by CI, without a Mac
