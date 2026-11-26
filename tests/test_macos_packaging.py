@@ -11,6 +11,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import plistlib
+import shutil
 import stat
 import subprocess
 import sys
@@ -379,3 +380,73 @@ def test_the_server_is_installed_for_macos_on_apple_silicon_from_the_lock_file(t
     assert install[install.index("--python-version") + 1] == "3.14"
     assert install[install.index("--target") + 1] == str(tmp_path / "python" / "lib" / "python3.14" / "site-packages")
     assert "--only-binary" in install
+
+
+# ------------------------------------------------------------------------------------------------------ the package
+def fake_mkbom(tmp_path: Path) -> Path:
+    """bomutils' mkbom as the build calls it (-u 0 -g 0 FOLDER BOM): writes a stand-in Bom and what it was asked."""
+    return executable(tmp_path / "mkbom", '#!/bin/sh\nprintf "BOM %s\\n" "$*" > "$6"\n')
+
+
+def members(package: Path) -> list[str]:
+    done = subprocess.run(["bsdtar", "-tf", str(package)], capture_output=True, text=True, check=True)
+    return done.stdout.split()
+
+
+def member(package: Path, name: str) -> bytes:
+    return subprocess.run(["bsdtar", "-xOf", str(package), name], capture_output=True, check=True).stdout
+
+
+needs_bsdtar = pytest.mark.skipif(shutil.which("bsdtar") is None, reason="libarchive's bsdtar is not installed")
+
+
+@needs_bsdtar
+def test_the_package_holds_the_installer_and_its_two_parts(staged, tmp_path):
+    package = build.package(staged, fake_mkbom(tmp_path), tmp_path / "dist", VERSION)
+    assert package.name == "claudia-office-0.5.0-macos-arm64.pkg"
+    found = members(package)
+    for name in ("Distribution", "Resources/en.lproj/welcome.html", "Resources/de.lproj/Localizable.strings"):
+        assert name in found
+    for part in ("apps.pkg", "service.pkg"):
+        for name in ("Bom", "Payload", "Scripts", "PackageInfo"):
+            assert f"{part}/{name}" in found
+
+
+@needs_bsdtar
+def test_each_part_says_what_it_is_and_how_big(staged, tmp_path):
+    package = build.package(staged, fake_mkbom(tmp_path), tmp_path / "dist", VERSION)
+    apps = ET.fromstring(member(package, "apps.pkg/PackageInfo"))
+    assert apps.get("identifier") == "de.claudia-office.apps" and apps.get("version") == "0.5.0"
+    assert [s.tag for s in apps.find("scripts")] == ["preinstall", "postinstall"]
+    service = ET.fromstring(member(package, "service.pkg/PackageInfo"))
+    assert [s.tag for s in service.find("scripts")] == ["postinstall"]
+    refs = {r.get("id"): r for r in ET.fromstring(member(package, "Distribution")).iter("pkg-ref") if r.text}
+    assert refs["de.claudia-office.apps"].text == "#apps.pkg"
+    assert refs["de.claudia-office.apps"].get("installKBytes") == apps.find("payload").get("installKBytes")
+    assert int(apps.find("payload").get("installKBytes")) > int(service.find("payload").get("installKBytes"))
+
+
+@needs_bsdtar
+def test_a_parts_payload_and_scripts_are_what_was_staged_and_its_bom_lists_the_same_folder(staged, tmp_path):
+    package = build.package(staged, fake_mkbom(tmp_path), tmp_path / "dist", VERSION)
+    payload = tmp_path / "Payload"
+    payload.write_bytes(member(package, "service.pkg/Payload"))
+    names = subprocess.run(["bsdtar", "-tf", str(payload)], capture_output=True, text=True, check=True).stdout.split(
+        "\n"
+    )
+    assert f"./Library/LaunchDaemons/{build.SERVICE_LABEL}.plist" in names
+    scripts = tmp_path / "Scripts"
+    scripts.write_bytes(member(package, "apps.pkg/Scripts"))
+    assert (
+        "./postinstall"
+        in subprocess.run(["bsdtar", "-tf", str(scripts)], capture_output=True, text=True, check=True).stdout
+    )
+    assert member(package, "service.pkg/Bom").decode().startswith(f"BOM -u 0 -g 0 {staged / 'service' / 'root'} ")
+
+
+def test_no_package_is_made_with_a_program_that_is_not_signed(staged, tmp_path):
+    library = staged / "apps" / "root" / RUNTIME / "python" / "lib" / "_unsigned.so"
+    library.write_bytes(b"\xcf\xfa\xed\xfe" + bytes(28))  # a Mach-O with no load commands, so with no signature
+    with pytest.raises(build.BuildError, match="_unsigned.so"):
+        build.package(staged, fake_mkbom(tmp_path), tmp_path / "dist", VERSION)
+    assert not (tmp_path / "dist").exists()

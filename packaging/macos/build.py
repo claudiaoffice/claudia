@@ -36,6 +36,8 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 sys.path.insert(0, str(HERE.parent))
 sys.path.insert(0, str(HERE))
+import flatpkg  # noqa: E402  (packaging/macos/flatpkg.py)
+import macho  # noqa: E402  (packaging/macos/macho.py)
 from shared import (  # noqa: E402  (packaging/shared.py)
     BuildError,
     Version,
@@ -253,8 +255,15 @@ function claudiaCanRunHere() {{
 """
 
 
-def distribution(version: Version) -> str:
-    """productbuild's distribution file: the title, the pages, the two parts, and the check of the Mac."""
+def distribution(version: Version, kbytes: dict[str, int] | None = None) -> str:
+    """productbuild's distribution file: the title, the pages, the two parts, and the check of the Mac. ``kbytes``:
+    the size of each part (``apps``, ``service``), which the installer shows; known once the package is made."""
+
+    def ref(part: str) -> str:
+        size = f' installKBytes="{kbytes[part]}"' if kbytes else ""
+        version_text = html.escape(version.text)
+        return f'<pkg-ref id="{BUNDLE_PREFIX}.{part}" version="{version_text}"{size} auth="root">#{part}.pkg</pkg-ref>'
+
     script = f"<script><![CDATA[{INSTALLATION_CHECK}]]></script>"
     return f"""<?xml version="1.0" encoding="utf-8"?>
 <installer-gui-script minSpecVersion="2">
@@ -278,8 +287,8 @@ def distribution(version: Version) -> str:
     <choice id="service" title="SERVICE_TITLE" description="SERVICE_DESCRIPTION" start_selected="false">
         <pkg-ref id="{BUNDLE_PREFIX}.service"/>
     </choice>
-    <pkg-ref id="{BUNDLE_PREFIX}.apps" version="{html.escape(version.text)}" auth="root">apps.pkg</pkg-ref>
-    <pkg-ref id="{BUNDLE_PREFIX}.service" version="{html.escape(version.text)}" auth="root">service.pkg</pkg-ref>
+    {ref("apps")}
+    {ref("service")}
 </installer-gui-script>
 """
 
@@ -367,6 +376,71 @@ def stage(root: Path, out: Path, *, python: Path, node: Path, version: Version) 
     return out
 
 
+# -------------------------------------------------------------------------------------------------------- package
+PARTS = {"apps": ("preinstall", "postinstall"), "service": ("postinstall",)}
+
+
+def check_signatures(stage_dir: Path) -> int:
+    """How many Mach-O files the package holds; refused if one has no signature (macho.py, the owner's Q4)."""
+    missing = [
+        str(part / "root" / path)
+        for part in (stage_dir / name for name in PARTS)
+        for path in macho.unsigned(part / "root")
+    ]
+    if missing:
+        raise BuildError(
+            "these programs or libraries have no code signature, which Apple Silicon needs to run them: "
+            + ", ".join(missing)
+            + ". Sign them ad-hoc (rcodesign sign) or take a build that has one."
+        )
+    return sum(macho.count(stage_dir / name / "root") for name in PARTS)
+
+
+def _folder_members(folder: Path, prefix: str) -> list[tuple[str, bytes | None]]:
+    found: list[tuple[str, bytes | None]] = [(prefix, None)]
+    for path in sorted(folder.rglob("*"), key=lambda p: p.relative_to(folder).as_posix()):
+        name = f"{prefix}/{path.relative_to(folder).as_posix()}"
+        found.append((name, None) if path.is_dir() else (name, path.read_bytes()))
+    return found
+
+
+def package(stage_dir: Path, mkbom: Path, out: Path, version: Version, mtime: int = 0) -> Path:
+    """The package of a stage: each part's payload, scripts, Bom (bomutils' ``mkbom``) and PackageInfo, the
+    distribution file with the parts' sizes, and the installer's pages, in one xar archive (flatpkg.py). ``mtime``: the
+    time the payload's files get (the commit's), so that one commit gives one package."""
+    check_signatures(stage_dir)
+    sizes: dict[str, int] = {}
+    parts: list[tuple[str, bytes | None]] = []
+    work = stage_dir / "work"
+    work.mkdir(exist_ok=True)
+    for name, scripts in PARTS.items():
+        root = stage_dir / name / "root"
+        files, sizes[name] = flatpkg.count(root)
+        bom = work / f"{name}.bom"
+        subprocess.run([str(mkbom), "-u", "0", "-g", "0", str(root), str(bom)], check=True)
+        info = flatpkg.package_info(
+            f"{BUNDLE_PREFIX}.{name}", version.text, files=files, kbytes=sizes[name], scripts=scripts
+        )
+        parts += [
+            (f"{name}.pkg", None),
+            (f"{name}.pkg/Bom", bom.read_bytes()),
+            (f"{name}.pkg/Payload", flatpkg.payload(root, mtime)),
+            (f"{name}.pkg/Scripts", flatpkg.payload(stage_dir / name / "scripts", mtime)),
+            (f"{name}.pkg/PackageInfo", info),
+        ]
+    archive = flatpkg.xar(
+        [
+            ("Distribution", distribution(version, sizes).encode("utf-8")),
+            *_folder_members(stage_dir / "resources", "Resources"),
+            *parts,
+        ]
+    )
+    out.mkdir(parents=True, exist_ok=True)
+    target = out / package_name(version)
+    target.write_bytes(archive)
+    return target
+
+
 # ------------------------------------------------------------------------------------------------------------ cli
 def _arguments(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
@@ -391,6 +465,16 @@ def _arguments(argv: list[str]) -> argparse.Namespace:
     staged.add_argument("--node", type=Path, required=True)
     staged.add_argument("--version", required=True, help="the text of the version (build.py version prints it)")
     staged.add_argument("--out", type=Path, default=ROOT / "build" / "macos")
+
+    signatures = commands.add_parser("check-signatures", help="refuse a stage with a program that has no signature")
+    signatures.add_argument("stage", type=Path)
+
+    packaged = commands.add_parser("package", help="make the .pkg of a stage")
+    packaged.add_argument("--stage", type=Path, default=ROOT / "build" / "macos")
+    packaged.add_argument("--mkbom", type=Path, required=True, help="bomutils' mkbom (built from the pinned source)")
+    packaged.add_argument("--version", required=True)
+    packaged.add_argument("--time", type=int, default=0, help="the time of the payload's files (the commit's)")
+    packaged.add_argument("--out", type=Path, default=ROOT / "dist")
     return parser.parse_args(argv)
 
 
@@ -411,6 +495,11 @@ def main(argv: list[str]) -> int:
         elif arguments.command == "stage":
             version = parse_version(arguments.version)
             print(stage(ROOT, arguments.out, python=arguments.python, node=arguments.node, version=version))
+        elif arguments.command == "check-signatures":
+            print(f"{check_signatures(arguments.stage)} programs and libraries, each with its signature")
+        elif arguments.command == "package":
+            version = parse_version(arguments.version)
+            print(package(arguments.stage, arguments.mkbom, arguments.out, version, arguments.time))
     except (BuildError, subprocess.CalledProcessError, OSError) as problem:
         print(f"error: {problem}", file=sys.stderr)
         return 1

@@ -1,0 +1,175 @@
+"""The flat package's formats, written in Python because the package is built on Linux (E8.5, the owner's Q3 (c),
+2026-11-26): the payload (cpio "odc", gzipped) and the xar archive around everything. Each is read back here by
+libarchive's ``bsdtar``, a reader that knows nothing of this code; the xar header and the checksum of its table of
+contents are checked by hand. The Bom comes from bomutils' ``mkbom`` and is CI's to check.
+"""
+
+from __future__ import annotations
+
+import gzip
+import hashlib
+import importlib.util
+import shutil
+import stat
+import struct
+import subprocess
+import sys
+import xml.etree.ElementTree as ET
+import zlib
+from pathlib import Path
+
+import pytest
+
+ROOT = Path(__file__).resolve().parent.parent
+SPEC = importlib.util.spec_from_file_location("macos_flatpkg", ROOT / "packaging" / "macos" / "flatpkg.py")
+flatpkg = importlib.util.module_from_spec(SPEC)
+sys.modules["macos_flatpkg"] = flatpkg
+SPEC.loader.exec_module(flatpkg)
+
+needs_bsdtar = pytest.mark.skipif(shutil.which("bsdtar") is None, reason="libarchive's bsdtar is not installed")
+
+
+@pytest.fixture
+def tree(tmp_path):
+    root = tmp_path / "root"
+    app = root / "Applications" / "claudia composes.app" / "Contents" / "MacOS"
+    app.mkdir(parents=True)
+    (app / "claudia-composes").write_text("#!/bin/sh\n", encoding="utf-8")
+    (app / "claudia-composes").chmod(0o755)
+    python = root / "Library" / "Application Support" / "Claudia" / "runtime" / "python" / "bin"
+    python.mkdir(parents=True)
+    (python / "python3.14").write_bytes(b"\xcf\xfa\xed\xfe" + bytes(100))
+    (python / "python3.14").chmod(0o755)
+    (python / "python3").symlink_to("python3.14")
+    (root / "Library" / "Application Support" / "Claudia" / "VERSION").write_text("0.5.0\n", encoding="utf-8")
+    empty = root / "Library" / "Logs"
+    empty.mkdir(parents=True)
+    return root
+
+
+def unpack(archive: Path, into: Path) -> Path:
+    into.mkdir(parents=True, exist_ok=True)
+    subprocess.run(["bsdtar", "-xpf", str(archive), "-C", str(into)], check=True)
+    return into
+
+
+def listing(root: Path) -> dict[str, tuple[str, int, bytes | str]]:
+    """Each path under ``root``: its kind, mode and contents (a symlink's target)."""
+    found = {}
+    for path in sorted(root.rglob("*")):
+        relative = path.relative_to(root).as_posix()
+        if path.is_symlink():
+            found[relative] = ("link", 0, str(path.readlink()))
+        elif path.is_dir():
+            found[relative] = ("dir", stat.S_IMODE(path.stat().st_mode), b"")
+        else:
+            found[relative] = ("file", stat.S_IMODE(path.stat().st_mode), path.read_bytes())
+    return found
+
+
+# --------------------------------------------------------------------------------------------------------- payload
+@needs_bsdtar
+def test_the_payload_holds_every_file_folder_and_link_with_its_mode(tree, tmp_path):
+    payload = tmp_path / "Payload"
+    payload.write_bytes(flatpkg.payload(tree))
+    assert listing(unpack(payload, tmp_path / "out")) == listing(tree)
+
+
+def test_the_payload_is_gzipped_odc_cpio_owned_by_root_with_dot_slash_paths(tree):
+    data = gzip.decompress(flatpkg.payload(tree))
+    assert data[:6] == b"070707"
+    names, uids, gids = [], set(), set()
+    offset = 0
+    while True:
+        header = data[offset : offset + 76]
+        uid, gid = int(header[24:30], 8), int(header[30:36], 8)
+        name_size, file_size = int(header[59:65], 8), int(header[65:76], 8)
+        name = data[offset + 76 : offset + 76 + name_size - 1].decode()
+        offset += 76 + name_size + file_size
+        if name == "TRAILER!!!":
+            break
+        names.append(name)
+        uids.add(uid)
+        gids.add(gid)
+    assert names[0] == "."
+    assert all(n == "." or n.startswith("./") for n in names)
+    assert "./Library/Application Support/Claudia/runtime/python/bin/python3" in names
+    assert uids == {0} and gids == {0}
+
+
+def test_the_payload_is_the_same_for_the_same_files(tree):
+    """No time or order of the building machine in it: two builds of one commit give one package."""
+    assert flatpkg.payload(tree) == flatpkg.payload(tree)
+
+
+def test_the_size_of_a_payload_is_counted_as_macos_installer_shows_it(tree):
+    files, kbytes = flatpkg.count(tree)
+    assert files == len(list(tree.rglob("*"))) + 1  # and the root folder itself
+    assert kbytes >= 1
+
+
+# ------------------------------------------------------------------------------------------------------------- xar
+def members():
+    return [
+        ("Distribution", b"<installer-gui-script/>"),
+        ("Resources", None),
+        ("Resources/de.lproj", None),
+        ("Resources/de.lproj/welcome.html", "<p>Willkommen ä</p>".encode()),
+        ("apps.pkg", None),
+        ("apps.pkg/PackageInfo", b"<pkg-info/>"),
+        ("apps.pkg/Payload", bytes(range(256)) * 50),
+    ]
+
+
+@needs_bsdtar
+def test_the_xar_archive_holds_every_member_as_written(tmp_path):
+    archive = tmp_path / "claudia.pkg"
+    archive.write_bytes(flatpkg.xar(members()))
+    out = unpack(archive, tmp_path / "out")
+    for name, data in members():
+        if data is None:
+            assert (out / name).is_dir(), name
+        else:
+            assert (out / name).read_bytes() == data, name
+
+
+def test_the_xar_header_and_the_checksum_of_its_table_of_contents():
+    data = flatpkg.xar(members())
+    magic, header_size, version, toc_compressed, toc_size, algorithm = struct.unpack(">4sHHQQI", data[:28])
+    assert (magic, header_size, version, algorithm) == (b"xar!", 28, 1, 1)  # 1: SHA-1
+    compressed = data[28 : 28 + toc_compressed]
+    toc = zlib.decompress(compressed)
+    assert len(toc) == toc_size
+    heap = data[28 + toc_compressed :]
+    assert heap[:20] == hashlib.sha1(compressed).digest()  # noqa: S324 (the format's own checksum)
+    root = ET.fromstring(toc)
+    assert root.find("toc/checksum").get("style") == "sha1"
+    assert root.findtext("toc/checksum/offset") == "0" and root.findtext("toc/checksum/size") == "20"
+
+
+def test_each_member_carries_its_checksums_and_its_place_in_the_heap():
+    data = flatpkg.xar(members())
+    _, _, _, toc_compressed, _, _ = struct.unpack(">4sHHQQI", data[:28])
+    heap = data[28 + toc_compressed :]
+    toc = ET.fromstring(zlib.decompress(data[28 : 28 + toc_compressed]))
+    payload = next(f for f in toc.iter("file") if f.findtext("name") == "Payload")
+    offset, length = int(payload.findtext("data/offset")), int(payload.findtext("data/length"))
+    stored = heap[offset : offset + length]
+    assert stored == bytes(range(256)) * 50
+    assert payload.findtext("data/extracted-checksum") == hashlib.sha1(stored).hexdigest()  # noqa: S324
+    assert payload.find("data/encoding").get("style") == "application/octet-stream"
+
+
+# ----------------------------------------------------------------------------------------------------- PackageInfo
+def test_package_info_names_the_part_its_scripts_and_its_size():
+    info = ET.fromstring(
+        flatpkg.package_info(
+            "de.claudia-office.apps", "0.5.0", files=12, kbytes=3400, scripts=("preinstall", "postinstall")
+        )
+    )
+    assert info.get("identifier") == "de.claudia-office.apps" and info.get("version") == "0.5.0"
+    assert info.get("install-location") == "/" and info.get("auth") == "root"
+    assert info.get("relocatable") == "false", "an app found elsewhere on the Mac must not take the update"
+    assert info.find("payload").get("numberOfFiles") == "12" and info.find("payload").get("installKBytes") == "3400"
+    assert [s.get("file") for s in info.find("scripts")] == ["./preinstall", "./postinstall"]
+    assert [s.tag for s in info.find("scripts")] == ["preinstall", "postinstall"]
