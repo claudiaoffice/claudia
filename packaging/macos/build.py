@@ -445,8 +445,9 @@ def package(stage_dir: Path, mkbom: Path, out: Path, version: Version, mtime: in
     for name, scripts in PARTS.items():
         root = stage_dir / name / "root"
         files, sizes[name] = flatpkg.count(root)
-        bom = work / f"{name}.bom"
-        subprocess.run([str(mkbom), "-u", "0", "-g", "0", str(root), str(bom)], check=True)
+        bom, listed = work / f"{name}.bom", work / f"{name}.bom.txt"
+        listed.write_text(flatpkg.bom_listing(root), encoding="utf-8")
+        subprocess.run([str(mkbom), "-i", str(listed), str(bom)], check=True)
         info = flatpkg.package_info(
             f"{BUNDLE_PREFIX}.{name}", version.text, files=files, kbytes=sizes[name], scripts=scripts
         )

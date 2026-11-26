@@ -184,3 +184,34 @@ def test_a_payload_is_listed_with_paths_and_modes_as_lsbom_lists_a_bom(tree):
     link = (tree / "Library" / "Application Support" / "Claudia" / "runtime" / "python" / "bin" / "python3").lstat()
     assert found["./Library/Application Support/Claudia/runtime/python/bin/python3"] == f"{link.st_mode:o}"
     assert len(found) == len(list(tree.rglob("*"))) + 1
+
+
+# ------------------------------------------------------------------------------------------------------------- Bom
+@pytest.mark.parametrize("data", [b"", b"hi\n", bytes(range(256)) * 300, b"x" * 70000])
+def test_the_checksum_is_posix_cksum_as_bomutils_writes_it(data):
+    expected = int(subprocess.run(["cksum"], input=data, capture_output=True, check=True).stdout.split()[0])
+    assert flatpkg.cksum(data) == expected
+
+
+def test_the_bom_list_names_every_path_of_the_payload_also_hidden_ones(tree):
+    """mkbom reading a folder leaves out names that start with a dot (python-docx's `.rels`, fastapi's `.agents`):
+    the Bom is made from this list instead, as lsbom prints a Bom."""
+    (tree / "Library" / ".hidden").mkdir()
+    (tree / "Library" / ".hidden" / ".rels").write_bytes(b"hi\n")
+    lines = flatpkg.bom_listing(tree).splitlines()
+    assert lines[0] == ".\t40755\t0/0"
+    assert "./Library/.hidden\t40755\t0/0" in lines
+    assert f"./Library/.hidden/.rels\t100644\t0/0\t3\t{flatpkg.cksum(b'hi' + bytes([10]))}" in lines
+    link = (tree / "Library" / "Application Support" / "Claudia" / "runtime" / "python" / "bin" / "python3").lstat()
+    target = b"python3.14"
+    assert (
+        f"./Library/Application Support/Claudia/runtime/python/bin/python3\t{link.st_mode:o}\t0/0\t{len(target)}"
+        f"\t{flatpkg.cksum(target)}\tpython3.14"
+    ) in lines
+    assert [line.split("\t")[:2] for line in lines] == [list(entry) for entry in flatpkg.listing(flatpkg.payload(tree))]
+
+
+def test_a_link_whose_target_has_whitespace_is_refused_for_the_bom(tree):
+    (tree / "Library" / "odd").symlink_to("a target")
+    with pytest.raises(ValueError, match="a target"):
+        flatpkg.bom_listing(tree)

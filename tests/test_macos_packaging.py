@@ -405,8 +405,8 @@ def test_the_suites_own_packages_are_built_as_wheels_and_everything_is_installed
 
 # ------------------------------------------------------------------------------------------------------ the package
 def fake_mkbom(tmp_path: Path) -> Path:
-    """bomutils' mkbom as the build calls it (-u 0 -g 0 FOLDER BOM): writes a stand-in Bom and what it was asked."""
-    return executable(tmp_path / "mkbom", '#!/bin/sh\nprintf "BOM %s\\n" "$*" > "$6"\n')
+    """bomutils' mkbom as the build calls it (-i LIST BOM): its stand-in Bom is the list it was given."""
+    return executable(tmp_path / "mkbom", '#!/bin/sh\n[ "$1" = -i ] || exit 2\ncp "$2" "$3"\n')
 
 
 def members(package: Path) -> list[str]:
@@ -448,7 +448,7 @@ def test_each_part_says_what_it_is_and_how_big(staged, tmp_path):
 
 
 @needs_bsdtar
-def test_a_parts_payload_and_scripts_are_what_was_staged_and_its_bom_lists_the_same_folder(staged, tmp_path):
+def test_a_parts_payload_and_scripts_are_what_was_staged_and_its_bom_lists_the_same_paths(staged, tmp_path):
     package = build.package(staged, fake_mkbom(tmp_path), tmp_path / "dist", VERSION)
     payload = tmp_path / "Payload"
     payload.write_bytes(member(package, "service.pkg/Payload"))
@@ -462,7 +462,8 @@ def test_a_parts_payload_and_scripts_are_what_was_staged_and_its_bom_lists_the_s
         "./postinstall"
         in subprocess.run(["bsdtar", "-tf", str(scripts)], capture_output=True, text=True, check=True).stdout
     )
-    assert member(package, "service.pkg/Bom").decode().startswith(f"BOM -u 0 -g 0 {staged / 'service' / 'root'} ")
+    bom_list = member(package, "service.pkg/Bom").decode().splitlines()
+    assert [line.split("\t")[:2] for line in bom_list] == [list(e) for e in build.flatpkg.listing(payload.read_bytes())]
 
 
 def test_no_package_is_made_with_a_program_that_is_not_signed(staged, tmp_path):

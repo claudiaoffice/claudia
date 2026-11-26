@@ -7,7 +7,9 @@ Q3 (c), 2026-11-26). What ``pkgbuild`` and ``productbuild`` write on a Mac:
 * the **xar** archive that holds the distribution file, the installer's pages and the parts (``xar``): a header, the
   table of contents as zlib-compressed XML, then the heap with the SHA-1 of that table first and the members' data.
 
-A part's **Bom** (the list of files macOS Installer keeps as the receipt) comes from bomutils' ``mkbom``, built in CI.
+A part's **Bom** (the list of files macOS Installer keeps as the receipt) is made by bomutils' ``mkbom``, built in CI,
+from a list written here (``bom_listing``, as ``lsbom`` prints a Bom): from a folder, mkbom leaves out the names that
+start with a dot.
 Nothing here depends on the time or the order of the machine that builds: one commit gives one package.
 """
 
@@ -89,6 +91,52 @@ def listing(payload_data: bytes) -> list[tuple[str, str]]:
         if name == TRAILER:
             return found
         found.append((name, f"{mode:o}"))
+
+
+def _crc_table() -> list[int]:
+    table = []
+    for byte in range(256):
+        crc = byte << 24
+        for _ in range(8):
+            crc = ((crc << 1) ^ 0x04C11DB7) if crc & 0x80000000 else (crc << 1)
+        table.append(crc & 0xFFFFFFFF)
+    return table
+
+
+_CRC = _crc_table()
+
+
+def cksum(data: bytes) -> int:
+    """POSIX ``cksum``: the CRC-32 that a Bom keeps of each file (and of a link's target), as bomutils computes it."""
+    crc = 0
+    for byte in data:
+        crc = _CRC[byte ^ (crc >> 24)] ^ ((crc << 8) & 0xFFFFFFFF)
+    length = len(data)
+    while length:
+        crc = _CRC[(length & 0xFF) ^ (crc >> 24)] ^ ((crc << 8) & 0xFFFFFFFF)
+        length >>= 8
+    return crc ^ 0xFFFFFFFF
+
+
+def bom_listing(root: Path) -> str:
+    """Every path that the payload of ``root`` installs, as ``lsbom`` prints a Bom and ``mkbom -i`` reads it: the
+    path, the mode in octal, ``uid/gid``, and for a file or link its size and checksum (and a link's target)."""
+    lines = []
+    for name, path in _entries(root):
+        info = path.lstat()
+        mode = f"{info.st_mode:o}"
+        if stat.S_ISLNK(info.st_mode):
+            target = os.readlink(path)
+            if target != "".join(target.split()):
+                raise ValueError(f"{name} links to '{target}': a Bom's list cannot hold a link target with whitespace")
+            data = target.encode("utf-8")
+            lines.append(f"{name}\t{mode}\t{ROOT_UID}/{ROOT_GID}\t{len(data)}\t{cksum(data)}\t{target}")
+        elif stat.S_ISDIR(info.st_mode):
+            lines.append(f"{name}\t{mode}\t{ROOT_UID}/{ROOT_GID}")
+        else:
+            data = path.read_bytes()
+            lines.append(f"{name}\t{mode}\t{ROOT_UID}/{ROOT_GID}\t{len(data)}\t{cksum(data)}")
+    return "".join(f"{line}\n" for line in lines)
 
 
 def count(root: Path) -> tuple[int, int]:
