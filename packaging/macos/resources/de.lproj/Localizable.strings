@@ -1,0 +1,6 @@
+/* Die Worte des claudia-Installationsprogramms (packaging/macos/build.py, Distribution). */
+"APPS_TITLE" = "claudia";
+"APPS_DESCRIPTION" = "claudia composes, claudia computes und claudia creates, und uninstall claudia.";
+"SERVICE_TITLE" = "claudia-Dienst";
+"SERVICE_DESCRIPTION" = "Claudia-Server als Dienst, damit die Personen dieses Macs Dokumente teilen: „Geteilt auf diesem Computer“.";
+"NEEDS_APPLE_SILICON" = "claudia braucht einen Mac mit Apple Silicon und macOS 14 oder neuer.";

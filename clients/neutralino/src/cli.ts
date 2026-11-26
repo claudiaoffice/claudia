@@ -21,6 +21,8 @@ export interface Options {
   /** The server to connect to instead of starting one, or `null` to start the app's own. */
   server: Address | null
   debug: boolean
+  /** Write the window's start into its run folder instead of opening it (the macOS app, E8.5, D1626). */
+  prepare?: boolean
 }
 
 /** What to do with a command line: run, or print something and stop. */
@@ -40,6 +42,7 @@ export function usage(app: App, platform: HostPlatform = hostPlatform()): string
     '  --server URL  connect to this server instead of starting one on this computer',
     '                (https://host[:port]; plain http is only accepted for this computer)',
     '  --debug       print where the logs are, and switch on the web inspector',
+    '  --prepare     (an installed app on a Mac) write how to start the window into its run folder, and exit',
     '  --version     show the version and exit',
     '  --help        show this help and exit',
   ].join('\n')
@@ -53,13 +56,14 @@ export function parseCommand(app: string, argv: readonly string[], version: stri
     return { kind: 'usage_error', text: `error: ${problem.message}`, code: 2 }
   }
   const command = commandOf(getIdentity(app))
-  let values: { server?: string; debug?: boolean; version?: boolean; help?: boolean }
+  let values: { server?: string; debug?: boolean; prepare?: boolean; version?: boolean; help?: boolean }
   try {
     values = parseArgs({
       args: [...argv],
       options: {
         server: { type: 'string' },
         debug: { type: 'boolean' },
+        prepare: { type: 'boolean' },
         version: { type: 'boolean' },
         help: { type: 'boolean', short: 'h' },
       },
@@ -80,7 +84,7 @@ export function parseCommand(app: string, argv: readonly string[], version: stri
       return { kind: 'usage_error', text: `${usage(app).split('\n')[0]}\nerror: argument --server: ${refused.message}`, code: 2 }
     }
   }
-  return { kind: 'run', options: { app, server, debug: values.debug === true } }
+  return { kind: 'run', options: { app, server, debug: values.debug === true, ...(values.prepare ? { prepare: true } : {}) } }
 }
 
 /** `node dist/launch.js APP …`: the app and the arguments after it. Without one it is an error: this client has no

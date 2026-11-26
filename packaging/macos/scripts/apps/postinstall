@@ -1,0 +1,11 @@
+#!/bin/sh
+# After the apps are installed or updated (E8.5, D1625): the claudia service runs the new version, if it is installed.
+# Installing the service itself is the service's own postinstall, which runs after this one.
+T="${3%/}"
+LABEL="de.claudia-office.server"
+PLIST="$T/Library/LaunchDaemons/$LABEL.plist"
+
+if [ -f "$PLIST" ] && ! launchctl print "system/$LABEL" >/dev/null 2>&1; then
+  launchctl bootstrap system "$PLIST" || echo "claudia: the service could not be started again; see /Library/Logs/Claudia/server.log" >&2
+fi
+exit 0

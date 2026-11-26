@@ -41,6 +41,8 @@ claudiaoffice-log/.obsidian/workspace*.json
 
 # Patches handed around in chat, and macOS litter
 *.patch
+!packaging/macos/*.patch
+# (the build applies those: they are sources, not deliveries)
 *DS_Store*
 
 # Coverage data the gate's `tests` step writes (CODE-01)

@@ -18,16 +18,22 @@
 // back to a plain `node` from PATH when there is none. Environment variable names are not case-sensitive on Windows,
 // and `process.env` keeps the name it was given (`Path`): a copy into a plain object that then sets `PATH` would hold
 // both (`environmentWith`), so that is done the careful way everywhere.
+//
+// An installed app on a Mac (E8.5, D1626) is a launcher script inside `claudia <app>.app` that runs this with
+// `--prepare` and then execs the `window.sh` it wrote: the process macOS launched becomes the window itself, so the
+// Dock shows one icon with the app's name. `--prepare` does everything up to the window and writes, instead of
+// starting it, what differs in the window's environment and the `exec` of the Neutralino inside the app.
 
-import { accessSync, constants, existsSync, readFileSync } from 'node:fs'
+import { accessSync, constants, existsSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs'
 import { spawn as nodeSpawn } from 'node:child_process'
+import { homedir } from 'node:os'
 import { delimiter, dirname, join } from 'node:path'
 import { arch as hostArch, argv as processArgv, env as processEnv, execPath } from 'node:process'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { buildCoreCommand, DEFAULT_COMMAND, setCoreCommand, setInspector, setLogicalPixels } from './core-command.js'
 import { parseCommand, splitAppArgument, type Options } from './cli.js'
 import { getIdentity, type AppIdentity } from './identity.js'
-import { appFolder, claudiaFolder, serverStateDir, stateDir, type Env } from './paths.js'
+import { appFolder, serverStateDir, stateDir, type Env } from './paths.js'
 import { packagedEnvironment, readPackaged, stageApp, type Packaged } from './packaged.js'
 import { hostPlatform, type HostPlatform, type WindowBinary } from './platform/host.js'
 import { SetupProblem } from './platform/setup-problem.js'
@@ -141,7 +147,7 @@ export interface RunDeps {
   findBinary?: (appDir: string, env: Env) => string | null
   /** The operating system's ways (src/platform/host.ts); this build's by default. */
   platform?: HostPlatform
-  /** The binary a window is started from (default: the platform's, a .app bundle on a Mac). */
+  /** The binary a checkout's window is started from (default: the platform's, a .app bundle on a Mac). */
   windowBinary?: (appDir: string, downloaded: string, identity: AppIdentity) => WindowBinary
   /** The short name of a path for the core's command (default: the platform's; on Windows asked of `cmd`). */
   shortName?: (path: string) => string | null
@@ -149,8 +155,10 @@ export interface RunDeps {
   packaged?: (appDir: string) => Packaged | null
   /** Copies the app's folder to the folder the window runs from (src/packaged.ts's `stageApp` by default). */
   stage?: (appDir: string, target: string) => void
-  /** Where a packaged client's window of `app` runs from (default: `run/<app>` in the person's own folder). */
+  /** Where a packaged client's window of `app` runs from (default: the platform's). */
   runFolder?: (app: string) => string
+  /** Makes `link` a symbolic link to `target` (node in a Mac's run folder; `symlinkSync` by default). */
+  linkNode?: (target: string, link: string) => void
   /** Sets the core's command in the app's config (default: in neutralino.config.json). */
   setCommand?: (appDir: string, command: string) => void
   /** Switches the window's web inspector on or off in the app's config (default: in neutralino.config.json). */
@@ -185,17 +193,10 @@ export async function run(options: Options, deps: RunDeps = {}): Promise<number>
     )
     return 1
   }
-  let window: WindowBinary
-  try {
-    window = (deps.windowBinary ?? platform.windowBinary)(appDir, downloaded, identity)
-  } catch (problem) {
-    err(`Could not prepare this app's window binary: ${(problem as Error).message}`)
-    return 1
-  }
-
   // A packaged client runs from a copy of the app's folder in the person's own folder (src/packaged.ts); a checkout runs
   // from the folder itself. Neutralino starts the core with a command line that has this folder in it (`${NL_PATH}`)
   // and cannot tell a space in a folder name from a space between words: the short name does it where there is one.
+  // Read first: an installed app's window binary is taken as it is (never written next to).
   let packaged: Packaged | null
   try {
     packaged = (deps.packaged ?? readPackaged)(appDir)
@@ -203,9 +204,22 @@ export async function run(options: Options, deps: RunDeps = {}): Promise<number>
     err((problem as Error).message)
     return 1
   }
+  if (options.prepare && packaged === null) {
+    err('--prepare is for an installed app on a Mac; a checkout opens its window without it.')
+    return 1
+  }
+  // An installed app's binary is taken as it is: on a Mac it is inside the app (claudia <app>.app/Contents/MacOS), which
+  // names it (D1626), and nothing is written into an installation.
+  let window: WindowBinary
+  try {
+    window = packaged !== null ? { binary: downloaded } : (deps.windowBinary ?? platform.windowBinary)(appDir, downloaded, identity)
+  } catch (problem) {
+    err(`Could not prepare this app's window binary: ${(problem as Error).message}`)
+    return 1
+  }
   let workDir = appDir
   if (packaged !== null) {
-    workDir = (deps.runFolder ?? ((app) => join(claudiaFolder(platform, env), 'run', app)))(options.app)
+    workDir = (deps.runFolder ?? ((app) => platform.runFolder(app, env, env.HOME || homedir())))(options.app)
     try {
       ;(deps.stage ?? stageApp)(appDir, workDir)
     } catch (problem) {
@@ -217,7 +231,7 @@ export async function run(options: Options, deps: RunDeps = {}): Promise<number>
   if (safeDir === null) {
     err(
       `The folder of the app has a space in its path (${workDir}), and no short name.\n` +
-        (packaged !== null ? 'Set LOCALAPPDATA to a folder without spaces and start it again.' : 'Move the checkout to a path without spaces and start it again.'),
+        (packaged !== null ? platform.runFolderWithSpace : 'Move the checkout to a path without spaces and start it again.'),
     )
     return 1
   }
@@ -230,6 +244,16 @@ export async function run(options: Options, deps: RunDeps = {}): Promise<number>
     for (const [name, value] of Object.entries(packagedEnvironment(packaged, env))) environmentWith(environment, name, value)
   }
   let nodeForCore = commandSafePath(nodeBinary, deps.shortName ?? ((path) => platform.shortPath(path)))
+  if (nodeForCore === null && packaged !== null && platform.linkNodeIntoRun) {
+    // No short names on a Mac: a link in the run folder (no space in its path, checked above) names the bundled node.
+    nodeForCore = join(workDir, 'node')
+    try {
+      ;(deps.linkNode ?? symlinkSync)(nodeBinary, nodeForCore)
+    } catch (problem) {
+      err(`Could not link node into the folder this window runs from (${workDir}): ${(problem as Error).message}`)
+      return 1
+    }
+  }
   if (nodeForCore === null) {
     // No short name either: the core's command cannot hold this path. The launcher already put node's folder first in
     // the PATH of the window, so a plain `node` is the same program -- if Neutralino looks it up there.
@@ -258,6 +282,16 @@ export async function run(options: Options, deps: RunDeps = {}): Promise<number>
     out(`logs: ${join(stateDir(options.app), 'shell.log')} and ${join(serverStateDir(), 'server.log')}; the web inspector is on`)
   }
   const [shellBinary, ...shellArgs] = buildShellCommand(window.binary, workDir)
+  if (options.prepare) {
+    // The run folder is a fresh copy at every start: nothing to put back.
+    try {
+      writeFileSync(join(workDir, WINDOW_SCRIPT), windowScript(environmentChanges(env, environment), [shellBinary as string, ...shellArgs]), { mode: 0o600 })
+    } catch (problem) {
+      err(`Could not write how to start the window (${join(workDir, WINDOW_SCRIPT)}): ${(problem as Error).message}`)
+      return 1
+    }
+    return 0
+  }
   try {
     return await runWindow(shellBinary as string, shellArgs, environment, window.processName, deps, err)
   } finally {
@@ -270,6 +304,33 @@ export async function run(options: Options, deps: RunDeps = {}): Promise<number>
       err(`Could not put the default core command back: ${(problem as Error).message}`)
     }
   }
+}
+
+/** The script `--prepare` writes into the run folder; the macOS app's program execs it (D1626). */
+export const WINDOW_SCRIPT = 'window.sh'
+
+/** What `environment` sets or removes compared with `base`: `null` for a variable it does not have. */
+export function environmentChanges(base: Env, environment: Readonly<Record<string, string>>): Record<string, string | null> {
+  const changes: Record<string, string | null> = {}
+  for (const [name, value] of Object.entries(environment)) if (base[name] !== value) changes[name] = value
+  for (const [name, value] of Object.entries(base)) if (value !== undefined && !(name in environment)) changes[name] = null
+  return changes
+}
+
+/** `value` as one word of a POSIX shell, whatever it holds. */
+export function shellQuote(value: string): string {
+  return `'${value.replace(/'/g, `'\\''`)}'`
+}
+
+/** A `/bin/sh` script that makes `changes` to its environment and then becomes `command`. */
+export function windowScript(changes: Readonly<Record<string, string | null>>, command: readonly string[]): string {
+  const lines = ['#!/bin/sh', '# Written by the launcher (--prepare) at every start of this app; the app runs it.']
+  for (const [name, value] of Object.entries(changes)) {
+    if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(name)) throw new Error(`not a variable a shell can set: ${name}`)
+    lines.push(value === null ? `unset ${name}` : `export ${name}=${shellQuote(value)}`)
+  }
+  lines.push(`exec ${command.map(shellQuote).join(' ')}`)
+  return `${lines.join('\n')}\n`
 }
 
 function runWindow(

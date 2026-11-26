@@ -1,0 +1,22 @@
+#!/bin/sh
+# Before the apps are installed or updated (E8.5, D1625). macOS Installer runs this as root; $3 is the target volume.
+# The claudia service is stopped while its runtime is replaced (postinstall starts it again: an update keeps it), the
+# apps that are open are closed, as the Windows installer closes them (their windows and servers would go on from
+# deleted files), and the runtime and the apps of an older version are removed, so that no file of it stays.
+T="${3%/}"
+C="$T/Library/Application Support/Claudia"
+LABEL="de.claudia-office.server"
+
+if launchctl print "system/$LABEL" >/dev/null 2>&1; then
+  launchctl bootout "system/$LABEL" || true
+fi
+# Matched by what they run, as uninstall.sh does: the windows, the cores (from each person's run folder), the servers.
+pkill -f "$C/runtime/(node|server|python)/" || true
+pkill -f "/Library/Caches/Claudia/run/" || true
+pkill -f "$T/Applications/claudia (composes|computes|creates)\.app/Contents/MacOS/" || true
+rm -rf "$C/runtime"
+for app in composes computes creates; do
+  rm -rf "$T/Applications/claudia $app.app"
+done
+rm -rf "$T/Applications/Utilities/uninstall claudia.app"
+exit 0

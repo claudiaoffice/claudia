@@ -154,6 +154,7 @@ GitHub Actions does the work (`.github/workflows/`):
 | `docker.yml` | `main`, tags `v*`, pull requests (build only) | builds the server image, starts each app once as a test, pushes `ghcr.io/claudiaoffice/claudia-server` (`:latest`, `:sha-<commit>`, `:1.2.3` for tags) |
 | `deploy-demo.yml` | after `docker.yml` succeeded on `main`; by hand | copies the image to the Scaleway registry and redeploys the demo containers; by hand it deploys any image tag, which is also the way back to an earlier version |
 | `deb.yml` | `main`, tags `v*`, pull requests | builds `claudia-office_<version>_amd64.deb` (the three desktop apps, server, Python 3.14 and web app in one package), installs it on a clean runner and starts every app; on a tag the file is attached to the GitHub release |
+| `macos.yml` | `main`, tags `v*`, pull requests, by hand | builds `claudia-office-<version>-macos-arm64.pkg` on Linux (the three apps, the uninstaller, the runtime and the optional service) and reads it back; on a tag the file is attached to the GitHub release. It cannot be installed in CI: `packaging/macos/test-install.sh` on a Mac (packaging/macos/README.md) |
 
 To release: set the version in `clients/linux/src/claudia_shell_gtk/_version.py`, then tag `vX.Y.Z` and push the tag.
 The set-up of the demo deployment (secrets and variables) is described at the top of `deploy-demo.yml`. Build the

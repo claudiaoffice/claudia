@@ -605,6 +605,113 @@ describe('run of a packaged client (D741)', () => {
   })
 })
 
+describe('run of a packaged client on a Mac: --prepare (E8.5, D1626)', () => {
+  // The app's own program (claudia creates.app/Contents/MacOS/claudia-creates) runs the launcher with --prepare and then
+  // execs the window.sh it wrote, so the process macOS launched becomes the window: one Dock icon, the app's name.
+  const RUNTIME = '/Library/Application Support/Claudia/runtime'
+  const INSTALLED = `${RUNTIME}/client/apps/creates`
+  const packaged = { web: `${RUNTIME}/web`, server: `${RUNTIME}/server/claudia-server` }
+  const creates = { app: 'creates', server: null, debug: false, prepare: true } as const
+  let home: string
+  let window: string
+  beforeEach(() => {
+    home = mkdtempSync(join(tmpdir(), 'mac-home-'))
+    // a stand-in for Neutralino inside the app bundle, with a space in its path as the real one has
+    const macos = join(home, 'Applications', 'claudia creates.app', 'Contents', 'MacOS')
+    mkdirSync(macos, { recursive: true })
+    window = join(macos, 'neutralino')
+    writeFileSync(window, '#!/bin/sh\nprintf "arg:%s\\n" "$@"\nprintf "app:%s\\nweb:%s\\npath:%s\\n" "$CLAUDIA_SHELL_APP" "$CLAUDIA_WEB_DIR" "$PATH"\n')
+    chmodSync(window, 0o755)
+  })
+  afterEach(() => rmSync(home, { recursive: true, force: true }))
+  const mac = (overrides: Partial<RunDeps> = {}) => {
+    const links: { target: string; link: string }[] = []
+    const h = harness({
+      platform: MACOS_HOST,
+      windowBinary: undefined,
+      findBinary: undefined,
+      env: { PATH: '/usr/bin:/bin', HOME: home, CLAUDIA_NEUTRALINO_BIN: window },
+      appDir: () => INSTALLED,
+      nodeBinary: `${RUNTIME}/node/bin/node`,
+      packaged: () => packaged,
+      stage: (_from, to) => void mkdirSync(to, { recursive: true }),
+      linkNode: (target, link) => void links.push({ target, link }),
+      ...overrides,
+    })
+    return { ...h, links }
+  }
+  const runFolder = () => join(home, 'Library', 'Caches', 'Claudia', 'run', 'creates')
+
+  it('starts no window, and writes the one to start into the run folder in Caches', async () => {
+    const { deps, spawned } = mac({
+      windowBinary: () => {
+        throw new Error('a bundle would be written into the installation')
+      },
+    })
+    expect(await run(creates, deps)).toBe(0)
+    expect(spawned).toEqual([])
+    const script = readFileSync(join(runFolder(), 'window.sh'), 'utf8')
+    expect(script.startsWith('#!/bin/sh\n')).toBe(true)
+    expect(script.trimEnd().split('\n').at(-1)).toBe(
+      `exec '${window}' '--path=${runFolder()}' '--res-mode=directory'`,
+    )
+  })
+
+  it.skipIf(process.platform === 'win32')('starts, as the window, the Neutralino inside the app, with what the core needs, quoted for any path', async () => {
+    const { deps } = mac({ packaged: () => ({ ...packaged, web: "/Library/Application Support/Claudia/it's web" }) })
+    await run(creates, deps)
+    const { execFileSync } = await import('node:child_process')
+    const printed = execFileSync('/bin/sh', [join(runFolder(), 'window.sh')], { env: { PATH: '/usr/bin:/bin', HOME: home }, encoding: 'utf8' })
+    expect(printed.split('\n')).toEqual([
+      `arg:--path=${runFolder()}`,
+      'arg:--res-mode=directory',
+      'app:creates',
+      "web:/Library/Application Support/Claudia/it's web",
+      `path:${RUNTIME}/node/bin:/usr/bin:/bin`,
+      '',
+    ])
+  })
+
+  it('writes only what it changes, not the rest of her environment', async () => {
+    const { deps } = mac({ env: { PATH: '/usr/bin', HOME: home, CLAUDIA_NEUTRALINO_BIN: window, SECRET_TOKEN: 'x' } })
+    await run(creates, deps)
+    const script = readFileSync(join(runFolder(), 'window.sh'), 'utf8')
+    expect(script).not.toMatch(/SECRET_TOKEN|HOME=/)
+    expect(script).toContain("export CLAUDIA_SHELL_APP='creates'")
+  })
+
+  it("has the core started by a link to the bundled node in the run folder: node's own path has a space", async () => {
+    const { deps, links, commands, out } = mac()
+    await run(creates, deps)
+    expect(links).toEqual([{ target: `${RUNTIME}/node/bin/node`, link: join(runFolder(), 'node') }])
+    expect(commands[0]!.command).toContain(join(runFolder(), 'node'))
+    expect(commands[0]!.command).not.toContain('Application Support')
+    expect(out.join('\n')).not.toContain('plain')
+  })
+
+  it('leaves the core command in the run folder, which is a fresh copy at every start, and never writes into the installation', async () => {
+    const { deps, commands, inspectors } = mac()
+    await run(creates, deps)
+    expect(commands).toHaveLength(1)
+    expect(commands[0]!.appDir).toBe(runFolder())
+    expect(inspectors.every((i) => i.appDir === runFolder())).toBe(true)
+  })
+
+  it('is refused for a checkout, which has no installed app around it, and starts nothing', async () => {
+    const { deps, spawned, err } = mac({ packaged: () => null })
+    expect(await run(creates, deps)).toBe(1)
+    expect(spawned).toEqual([])
+    expect(err.join('\n')).toContain('--prepare')
+  })
+
+  it("says in a Mac's words when the run folder has a space in its path", async () => {
+    const { deps, err } = mac({ runFolder: () => '/Users/Max Muster/Library/Caches/Claudia/run/creates', stage: () => {} })
+    expect(await run(creates, deps)).toBe(1)
+    expect(err.join('\n')).not.toContain('LOCALAPPDATA')
+    expect(err.join('\n')).toContain('home folder')
+  })
+})
+
 describe('run of a checkout in a folder with a space on Windows', () => {
   it('uses the short name of the folder, which the core\'s command can hold', async () => {
     const { deps, spawned } = harness({

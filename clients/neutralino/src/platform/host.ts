@@ -36,9 +36,16 @@ export interface HostPlatform {
   /** Whether Neutralino takes the window's size in physical pixels, so the config's size must be asked for in logical
    * ones to show the whole page on a scaled display (Windows; macOS sizes windows in points already; D749). */
   readonly windowSizeInPhysicalPixels: boolean
-  /** The binary a window is started from: on macOS a small .app bundle around the downloaded one, so the app's name
-   * shows; on Windows the downloaded binary itself. */
+  /** The binary a checkout's window is started from: on macOS a small .app bundle around the downloaded one, so the
+   * app's name shows; on Windows the downloaded binary itself. (An installed app's is taken as it is: launch.ts.) */
   windowBinary(appDir: string, downloaded: string, identity: AppIdentity): WindowBinary
+  /** Where a packaged client's window of `app` runs from, a fresh copy at every start (src/packaged.ts). */
+  runFolder(app: string, env: Env, home: string): string
+  /** What to do when that folder has a space in its path, which the core's command line cannot hold, in words. */
+  readonly runFolderWithSpace: string
+  /** Whether the core is started through a link to node in the run folder, because node's own path has a space and
+   * there is no short name (macOS: `/Library/Application Support/…`, E8.5). */
+  readonly linkNodeIntoRun: boolean
   /** The Open and Save dialogs and the viewer that prints (D501, D502). */
   dialogs(log?: (message: string) => void): Dialogs
   /** Ends the process `pid` and everything it started (`false`: it could not); absent where signals to the process

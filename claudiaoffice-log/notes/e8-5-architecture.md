@@ -275,26 +275,45 @@ exec /bin/sh "$HOME/Library/Caches/Claudia/run/composes/window.sh" >>"$L/compose
   macOS only). The "Set LOCALAPPDATA" hint becomes the platform's own words.
 * `packaged.json` on the Mac: `{"web": "../web", "server": "../server/claudia-server/claudia-server"}`.
 
-### Build
+### Build (changed 2026-11-26: built on Linux in CI, the owner's answers Q1–Q7 below)
+
+GitHub's hosted macOS runners do not come for this repository, so nothing of the build may need a Mac. Every step that
+did (PyInstaller, `iconutil`, `codesign`, `osacompile`, `pkgbuild`, `productbuild`) has a Linux way:
 
 ```
 packaging/
-  server/claudia-server.spec, server_entry.py   moved from packaging/windows/ (both installers build the same server)
-  shared.py           version from the tag, SHA-256 pins, download: moved out of windows/build.py
-  windows/...         imports shared.py and server/; otherwise unchanged
-  macos/build.py      the file work, testable on any system: stage the runtime, Info.plists, the launcher scripts,
-                      distribution.xml, the LaunchDaemon plist, packaged.json   (tests/test_macos_packaging.py)
-  macos/build.sh      what needs a Mac: pyinstaller, iconutil (.icns from the PNGs), codesign -s - (ad-hoc, every
-                      Mach-O; Apple Silicon runs nothing unsigned), osacompile (the uninstaller), pkgbuild, productbuild;
-                      --release vX.Y.Z uploads with gh
+  macos/build.py      everything, on any system: stage the runtime, Info.plists, the launcher scripts, packaged.json,
+                      the LaunchDaemon plist, distribution.xml, the icons (Pillow writes .icns); check that every
+                      Mach-O is signed; make the package       (tests/test_macos_packaging.py)
+  macos/flatpkg.py    the flat package's formats: the payload (cpio "odc", gzip) and the xar archive around it;
+                      the Bom comes from bomutils' `mkbom`, built in CI from a pinned commit
+  macos/macho.py      which files are Mach-O, and whether each carries a code signature (LC_CODE_SIGNATURE)
+  macos/third-party.json   CPython 3.14 for macOS arm64 (python-build-standalone), Node 22 darwin-arm64, bomutils:
+                      pinned by version and SHA-256
   macos/scripts/      preinstall/postinstall of the two component packages
   macos/resources/    welcome and licence pages, en.lproj and de.lproj
-  macos/uninstall.sh
-  macos/test-install.sh   the install test, run in a macOS VM
-  third-party.json    + Node for darwin-arm64
-.github/workflows/macos.yml   build + test-install on macos-14 (arm64); trigger only workflow_dispatch and
-                              `if: false`, with the same note as ci.yml's macOS entry
+  macos/uninstall.sh, macos/uninstall-app.sh   the uninstaller and the program of "uninstall claudia.app"
+  macos/test-install.sh   the install test, on the owner's Mac (or a macOS VM; a macOS runner once there is one)
+.github/workflows/macos.yml   on ubuntu-latest: build, read the package back with bsdtar and check it, keep it 30 days;
+                      a tag v* attaches it to the GitHub release (as windows.yml and deb.yml); the install-test job is
+                      written and switched off (`if: false`) until a macOS runner exists
 ```
+
+* **The server** is not a PyInstaller build (PyInstaller cannot build for macOS on Linux): `runtime/python/` is a
+  relocatable CPython 3.14 for macOS arm64 (python-build-standalone, what uv installs), with the server and its
+  dependencies installed into it for macOS (`uv pip install --python-platform aarch64-apple-darwin --target`, from the
+  lock file: every dependency has a macOS arm64 wheel). `runtime/server/claudia-server` is a short script that runs
+  `python -m claudia_server`, so the apps (`packaged.json`) and the LaunchDaemon call one path. Windows keeps its
+  PyInstaller recipe where it is (answer 4 below no longer concerns the Mac).
+* **Signatures:** Apple Silicon runs no unsigned code; an ad-hoc signature is enough, and what was built on a Mac
+  (CPython, Node, Neutralino, the wheels' libraries) carries one. Nothing is changed in them, so nothing is signed: the
+  build fails if a Mach-O file has no signature (`macho.py`). `rcodesign` (Linux) signs ad-hoc only if one ever lacks it.
+* **Icons** with Pillow instead of `iconutil`; **"uninstall claudia.app"** is a small app whose program is a shell
+  script asking for an administrator through `osascript` (`with administrator privileges`), instead of an applet made
+  with `osacompile`: the same dialog.
+* **What CI checks:** structure, file list, scripts, plists, signatures, versions of the package as `bsdtar` reads it.
+  **What it cannot:** installing it. The first install of each change is the owner's, with `test-install.sh`; whether a
+  downloaded unsigned package needs "Open Anyway" is learnt there.
 
 * **`productbuild`** makes one `claudia-office-<version>-macos-arm64.pkg` from two component packages: **apps**
   (required) and **service** (`start_selected="false"`, so off by default in "Customize").
@@ -324,11 +343,11 @@ packaging/
 | D1622 | A service is a place of its own, found through a marker the installer writes | D743 (supersedes its "apps use the service's documents") |
 | D1623 | Place names are made by the page: Private / Shared on this computer | D243's "This computer" |
 | D1624 | The computer's administrators can read the service's setup code | D1371 (where the code is said) |
-| D1625 | The macOS package: an unsigned `.pkg`, apps + optional service, Apple Silicon, macOS 14 | E8.1's macOS line |
+| D1625 | The macOS package: an unsigned `.pkg`, apps + optional service, Apple Silicon, macOS 14; its server a relocatable CPython | E8.1's macOS line |
 | D1626 | The macOS app is a launcher script that execs the window inside its own bundle | the minimal `.app` of `macos-app-bundle.ts`, for an installation |
 | D1627 | The macOS service is a LaunchDaemon under its own account `_claudia` | mirrors D743 |
 | D1628 | Uninstalling on macOS is an applet that leaves documents and each person's settings | |
-| D1629 | The macOS package is built on the owner's Mac and tested in a VM; `macos.yml` waits switched off | D742 (testing by installing) |
+| D1629 | The macOS package is built on Linux in CI and attached to each release; installing it is tested on the owner's Mac | D742 (testing by installing) |
 
 ## The owner's answers (2026-11-25)
 
@@ -348,3 +367,13 @@ packaging/
   keeps ACL entries over a mode change); the install test checks that an administrator can read the code.
 * Windows: the profile-folder hash may collide between two accounts on one PC (handled as a taken port, and logged).
 * Existing per-person Mine, collections and server bookmarks of `127.0.0.1:8765` look empty once (accepted, Q15).
+
+## The owner's answers on building in CI (2026-11-26)
+
+GitHub's macOS runners never come, but the package is to be built in CI and offered with each release like the Windows
+installer and the Debian package. Q1 build on `ubuntu-latest`: yes. Q2 relocatable CPython plus the server's macOS
+wheels instead of PyInstaller: yes. Q3 xar and cpio written in Python, the Bom by `mkbom` from a pinned commit, the
+package read back with `bsdtar` in CI: (c). Q4 no signing step, a check that every Mach-O is signed: yes. Q5 the
+uninstaller a script app with `osascript`, icons with Pillow: yes. Q6 `macos.yml` like `windows.yml` (pull requests,
+main, by hand; 30 days; attached to the release of a tag), its install-test job written and off: yes. Q7 the first
+install is the owner's, with `test-install.sh`: ok. The `macos-latest` entry of ci.yml's Python job stays off.

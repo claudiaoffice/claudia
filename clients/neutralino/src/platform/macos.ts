@@ -37,6 +37,9 @@ export const MACOS_HOST: HostPlatform = {
     const binary = ensureAppBundle({ binDir: join(appDir, 'bin'), sourceBinary: downloaded, identity, displayName })
     return { binary, processName: displayName }
   },
+  runFolder: (app, _env, home) => join(home, 'Library', 'Caches', 'Claudia', 'run', app),
+  runFolderWithSpace: 'Your home folder has a space in its path, which the window cannot be started from.',
+  linkNodeIntoRun: true,
   dialogs: (log) => macDialogs(log),
   // No killTree: a detached server is the leader of its own process group, and signals reach it (server.ts sends them).
   // A Mac has no short names; a path with a space in it cannot go on the core's command line.

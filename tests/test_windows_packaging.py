@@ -7,6 +7,7 @@ installs: a file the script names that the stage never makes, a message that has
 uninstaller and the installer spell differently.
 """
 
+import hashlib
 import importlib.util
 import json
 import re
@@ -85,7 +86,7 @@ def test_the_pin_of_winsw_is_a_sha256_of_a_versioned_url():
 def test_a_file_that_differs_from_its_pin_is_refused(tmp_path):
     file = tmp_path / "tool.exe"
     file.write_bytes(b"one")
-    build.verify_sha256(file, build.sha256_of(file))
+    build.verify_sha256(file, hashlib.sha256(b"one").hexdigest())
     with pytest.raises(build.BuildError, match="not the file that was pinned"):
         build.verify_sha256(file, "0" * 64)
 

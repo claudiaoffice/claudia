@@ -1,0 +1,209 @@
+# Builds the macOS package of claudia (E8.5, D1625-D1629): the three apps and "uninstall claudia" in Applications, the
+# runtime with its own Python and Node, and the claudia service as a part chosen under "Customize". For Apple Silicon,
+# macOS 14 and newer, unsigned (packaging/macos/README.md).
+#
+#   pull request / push to main   build and check the package; it is kept as a workflow artifact for 30 days
+#   tag v1.2.3                    the same, and the package is attached to the GitHub release of the tag
+#
+# Built on Linux: GitHub's hosted macOS runners do not come for this repository (the owner, 2026-11-25 and -26), and
+# nothing of the build needs a Mac (notes/e8-5-architecture.md, part 3). CI cannot install the package; the install test
+# is packaging/macos/test-install.sh on a Mac, and its job below is switched off until there is a macOS runner.
+name: macOS package
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+    paths:
+      - packaging/**
+      - clients/neutralino/**
+      - web/**
+      - layout/**
+      - packages/**
+      - pyproject.toml
+      - uv.lock
+      - .github/workflows/macos.yml
+  workflow_dispatch:
+
+concurrency:
+  group: macos-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+env:
+  PILLOW: "13.0.0" # as uv.lock has it: the stage makes the apps' icons with it
+
+jobs:
+  package:
+    name: Build the package
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    outputs:
+      name: ${{ steps.version.outputs.name }}
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: |
+            web/package-lock.json
+            clients/neutralino/package-lock.json
+
+      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7.6.0
+        with:
+          python-version: "3.14"
+          enable-cache: true
+
+      - name: The version of this build
+        id: version
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            tag="$GITHUB_REF_NAME"; extra=()
+          else
+            tag="$(node -p "require('./clients/neutralino/package.json').version")"
+            extra=(--build "$GITHUB_RUN_NUMBER" --commit "$GITHUB_SHA")
+          fi
+          version="$(uv run --no-project python packaging/macos/build.py version "$tag" "${extra[@]}")"
+          name="$(uv run --no-project python packaging/macos/build.py version "$tag" "${extra[@]}" --field name)"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+          echo "time=$(git log -1 --format=%ct)" >> "$GITHUB_OUTPUT"
+          echo "Package $name"
+
+      - name: Web frontend
+        working-directory: web
+        run: |
+          npm ci
+          npm run build
+
+      - name: Desktop client and the Neutralino binary of each app
+        working-directory: clients/neutralino
+        run: |
+          npm ci
+          npm run build:macos
+          for app in composes computes creates; do
+            (cd "apps/$app" && npx --yes @neutralinojs/neu update)
+          done
+
+      - name: Third-party files, pinned (CPython and Node for macOS on Apple Silicon, bomutils)
+        run: |
+          uv run --no-project python packaging/macos/build.py check-pins
+          mkdir -p build/python build/node build/bomutils
+          # each is tried, so that one run says the SHA-256 of every file that does not match its pin
+          refused=0
+          for name in python node bomutils; do
+            uv run --no-project python packaging/macos/build.py fetch "$name" "build/$name.tar.gz" || refused=1
+          done
+          [ "$refused" = 0 ]
+          tar -xzf build/python.tar.gz -C build/python --strip-components=1
+          tar -xzf build/node.tar.gz -C build/node --strip-components=1
+          tar -xzf build/bomutils.tar.gz -C build/bomutils --strip-components=1
+
+      # mkbom writes the Bom of each part; lsbom reads it back below. bomutils 0.2 needs two things on today's compilers:
+      # a fix of mkbom's copy of a link name (packaging/macos/bomutils-mkbom.patch), and C++14 for lsbom.
+      - name: bomutils' mkbom and lsbom
+        run: |
+          patch -d build/bomutils -p1 < packaging/macos/bomutils-mkbom.patch
+          make -C build/bomutils build/bin/mkbom
+          make -C build/bomutils build/bin/lsbom CXXFLAGS="-Wall -std=gnu++14"
+
+      - name: The server and what it needs, for macOS, into the runtime's Python
+        run: uv run --no-project python packaging/macos/build.py server --python build/python
+
+      - name: Stage the files of the package
+        run: >
+          uv run --no-project --with "pillow==$PILLOW" python packaging/macos/build.py stage
+          --python build/python --node build/node --version "${{ steps.version.outputs.version }}" --out build/macos
+
+      - name: Every program and library carries a code signature
+        run: uv run --no-project python packaging/macos/build.py check-signatures build/macos
+
+      - name: Make the package
+        run: >
+          uv run --no-project python packaging/macos/build.py package --stage build/macos
+          --mkbom build/bomutils/build/bin/mkbom --version "${{ steps.version.outputs.version }}"
+          --time "${{ steps.version.outputs.time }}" --out dist
+
+      # Read back by libarchive, which knows nothing of packaging/macos/flatpkg.py.
+      - name: The package as another reader sees it
+        env:
+          PKG: dist/${{ steps.version.outputs.name }}
+        run: |
+          sudo apt-get install -y -qq libarchive-tools
+          ls -l "$PKG"
+          bsdtar -tf "$PKG" | tee build/members.txt
+          for member in Distribution apps.pkg/Bom apps.pkg/Payload apps.pkg/Scripts apps.pkg/PackageInfo \
+                        service.pkg/Bom service.pkg/Payload service.pkg/Scripts service.pkg/PackageInfo \
+                        Resources/en.lproj/welcome.html Resources/de.lproj/welcome.html; do
+            grep -qx "$member" build/members.txt || { echo "::error::$member is missing"; exit 1; }
+          done
+          bsdtar -xOf "$PKG" Distribution | grep -q "<title>claudia ${{ steps.version.outputs.version }}</title>"
+          # what the Bom says is installed (macOS keeps it as the receipt) is what the payload installs, with its mode
+          for part in apps service; do
+            bsdtar -xOf "$PKG" "$part.pkg/Bom" > "build/$part.bom"
+            bsdtar -xOf "$PKG" "$part.pkg/Payload" > "build/$part.payload"
+            build/bomutils/build/bin/lsbom "build/$part.bom" | cut -f1,2,3 | sort > "build/$part.bom.txt"
+            uv run --no-project python packaging/macos/build.py list-payload "build/$part.payload" | sort > "build/$part.payload.txt"
+            diff "build/$part.bom.txt" "build/$part.payload.txt" || { echo "::error::$part.pkg: its Bom and its payload differ"; exit 1; }
+            echo "$part.pkg: $(wc -l < "build/$part.bom.txt") paths, the same in its Bom and its payload"
+          done
+          bsdtar -xOf "$PKG" apps.pkg/Payload | bsdtar -tvf - > build/apps.txt
+          for file in "./Applications/claudia composes.app/Contents/MacOS/neutralino" \
+                      "./Library/Application Support/Claudia/runtime/python/bin/python3" \
+                      "./Library/Application Support/Claudia/runtime/server/claudia-server" \
+                      "./Applications/Utilities/uninstall claudia.app/Contents/MacOS/uninstall-claudia"; do
+            grep -qF "$file" build/apps.txt || { echo "::error::$file is not in the payload"; exit 1; }
+          done
+          echo "$(wc -l < build/apps.txt) files in the apps' part"
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: claudia-office-macos
+          path: dist/*.pkg
+          if-no-files-found: error
+          retention-days: 30
+
+  # The install test of packaging/macos/test-install.sh, on a Mac. Switched off, not removed: GitHub's hosted macOS
+  # runners do not come for this repository (the owner, 2026-11-25). Make it `if: true` once another runner service with
+  # Macs is connected; until then the owner runs the script on his Mac.
+  install-test:
+    name: Install, use, update and uninstall (on a Mac)
+    if: false
+    needs: package
+    runs-on: macos-14
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: claudia-office-macos
+          path: dist
+      - name: Install test
+        run: sudo packaging/macos/test-install.sh "dist/${{ needs.package.outputs.name }}"
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [package]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: claudia-office-macos
+          path: dist
+      - name: Attach to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          # The Windows installer's and the Debian package's workflows make the release too: whichever is first, the
+          # others add their files to it.
+          gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 \
+            || gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --generate-notes \
+            || gh release view "$GITHUB_REF_NAME" >/dev/null
+          gh release upload "$GITHUB_REF_NAME" dist/*.pkg --clobber

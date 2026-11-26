@@ -1,0 +1,55 @@
+#!/bin/sh
+# The claudia service (E8.5, D1627): the server for the people of this Mac to share documents, under its own hidden
+# account _claudia, started now and at every start of the Mac. macOS Installer runs this as root; $3 is the target
+# volume (always the start volume: the package says rootVolumeOnly).
+#
+# Its state folder holds its setup code while it has no administrator: the Mac's administrators may read it, through an
+# inherited ACL (D1624); everyone else may not, and her app tells her to ask one.
+set -e
+T="${3%/}"
+C="$T/Library/Application Support/Claudia"
+LABEL="de.claudia-office.server"
+PLIST="$T/Library/LaunchDaemons/$LABEL.plist"
+ACCOUNT="_claudia"
+
+free_id() {
+  used="$(dscl . -list /Users UniqueID | awk '{print $2}'; dscl . -list /Groups PrimaryGroupID | awk '{print $2}')"
+  id=499
+  while printf '%s\n' "$used" | grep -qx "$id"; do
+    id=$((id - 1))
+    [ "$id" -gt 300 ] || { echo "claudia: no free account number below 500" >&2; exit 1; }
+  done
+  echo "$id"
+}
+
+if ! dscl . -read "/Users/$ACCOUNT" >/dev/null 2>&1; then
+  id="$(free_id)"
+  dscl . -create "/Groups/$ACCOUNT"
+  dscl . -create "/Groups/$ACCOUNT" PrimaryGroupID "$id"
+  dscl . -create "/Groups/$ACCOUNT" Password '*'
+  dscl . -create "/Users/$ACCOUNT"
+  dscl . -create "/Users/$ACCOUNT" UniqueID "$id"
+  dscl . -create "/Users/$ACCOUNT" PrimaryGroupID "$id"
+  dscl . -create "/Users/$ACCOUNT" UserShell /usr/bin/false
+  dscl . -create "/Users/$ACCOUNT" NFSHomeDirectory /var/empty
+  dscl . -create "/Users/$ACCOUNT" RealName "claudia service"
+  dscl . -create "/Users/$ACCOUNT" Password '*'
+  dscl . -create "/Users/$ACCOUNT" IsHidden 1
+fi
+
+mkdir -p "$C/shared/documents" "$C/shared/state/admin" "$T/Library/Logs/Claudia"
+# Only these folders, never recursively: what is in them is the service's already, and a hard link it made there to a
+# file of the system must not be given to it.
+chown "$ACCOUNT:$ACCOUNT" "$C/shared" "$C/shared/documents" "$C/shared/state" "$C/shared/state/admin" \
+  "$T/Library/Logs/Claudia"
+chmod 750 "$C/shared" "$C/shared/state"
+chmod 700 "$C/shared/state/admin"
+chmod +a "group:admin allow list,search,readattr,readextattr,readsecurity" "$C/shared" "$C/shared/state"
+chmod +a "group:admin allow list,search,read,readattr,readextattr,readsecurity,file_inherit,directory_inherit" \
+  "$C/shared/state/admin"
+
+if launchctl print "system/$LABEL" >/dev/null 2>&1; then
+  launchctl bootout "system/$LABEL" || true
+fi
+launchctl bootstrap system "$PLIST"
+exit 0
