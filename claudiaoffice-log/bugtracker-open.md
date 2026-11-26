@@ -27,7 +27,7 @@ The index is the status of record; a section below keeps the status of the round
 re-checked. **Opened** and **Fixed** are filled from 2026-11-20 on: for older items only where the status already gave
 the date.
 
-### Open (63)
+### Open (65)
 
 By priority (P1, P2, P3, then items that wait for a decision without one), then by ID.
 
@@ -37,6 +37,7 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | SEC-22 | P2 | Security | Who wrote which stretch (`runs`, E9.10) is part of the content state, so a viewer still receives it: in the `blocks` method, in `text` events, in the snapshot and in her own sealed file, although D1261 says no data should be behind "show who wrote what" for a viewer | **new, open**, needs the owner's decision (mask it live and in the viewer's file, or accept it as content) |  |  |
 | SEC-24 | P2 | Security / privacy | An owner's export writes every chat message into the file, also the private ones between other people that she cannot read in the document | **new, open** (read) | 2026-11-25 |  |
 | SEC-25 | P2 | Security | An editor can send a whole `Import` command through `apply` and so replace the document (or write a forged "History of the original") | **new, open** (read) | 2026-11-25 |  |
+| SEC-28 | P2 | Security / desktop clients | On Windows anyone can make everyone's apps list her own server as "Shared on this computer" (the service file in `%ProgramData%` is writable by every account) | **new, open** (read) | 2026-11-25 |  |
 | PERF-02 | P2 | Performance | Journal `fsync` on the event loop for every edit | verified open (2026-11-12; see CODE-13) |  |  |
 | PERF-10 | P2 | Performance | What-if outcomes are recalculated on the event loop: 9 s per edit in a 1,000-cell model | **new, open** |  |  |
 | UX-22 | P2 | UX | The history speaks three dialects: one per app | **new, open** |  |  |
@@ -48,8 +49,7 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | UX-91 | P2 | UX / composes / Firefox | In Firefox the down arrow from the paragraph above a new table does not put the caret in its first box (Chromium does) | **new, open** (measured on CI) | 2026-11-25 |  |
 | UX-93 | P2 | UX / a11y | The font banner ("This document uses fonts this server does not have …") is dark text on a dark ground, about 1.1:1 (BITV 1.4.3 asks 4.5:1) | **new, open** (measured) | 2026-11-25 |  |
 | CODE-31 | P2 | Code / i18n | The history speaks English to everybody: command labels and summaries are not translated | **new, open** |  |  |
-| CODE-99 | P2 | Code / desktop clients | A person's apps use any Claudia server on port 8765 of the computer as their own, also another person's or a service's: with two people logged in, the second one's documents are saved in the first one's home folder | **new, open** (read); fix on the macOS installer branch (E8.5) | 2026-11-25 |  |
-| CODE-100 | P2 | Code / desktop clients | Next to a service of another version, the apps refuse to start and say it stops after ten minutes, which a service never does | **new, open** (read); fix on the macOS installer branch (E8.5) | 2026-11-25 |  |
+| CODE-108 | P2 | Code / desktop clients | A desktop window cannot connect to a server of all three apps (`"app": null`), so "Shared on this computer" cannot be opened | **new, open** (measured) | 2026-11-25 |  |
 | PROC-15 | P2 | Process | The tracker and the backlog lag the code: fixed items still "open", 64 stories at a placeholder 50 % | partly fixed 2026-11-25 (batch 1: the index guard); the backlog's placeholder 50 % stays open |  |  |
 | PROC-30 | P2 | Process / desktop clients | The Neutralino (Windows, macOS) tests and the GTK client were not run for `object-interaction`: the generated menus were rebuilt and the manifest unit tests pass, nothing more | **new, open** |  |  |
 | UX-64 | P2 | UX / all apps | Dark mode: a part of the sidebar (History & Chat / Help) is not readable or has too little contrast; the exact symptom was not written down when it was seen (see entry) | **needs decision** (symptom to be re-stated; size 2) | 2026-11-22 |  |
@@ -91,6 +91,8 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | CODE-68 | P3 | computes | Computes cannot make a text box or a shape, though a model can hold one (a file from another app) and an export reports it as `object` | **new, open** |  |  |
 | CODE-74 | P3 | Code | `export_content` still answers `{format: "claudia-export 1", ...}`, a JSON that is neither the zip of D1270 nor documented anywhere; it is recorded as an export and the panel says "exported as claudia-export 1"; no window calls it | **new, open** (size 3; remove it or make it the zip) |  |  |
 | UX-92 | P3 | UX / i18n | History & Chat says "undo" and "redo" in English before a step, and the "History of the original" copies it | **new, open** (read) | 2026-11-25 |  |
+| UX-95 | P3 | UX / Windows | With User Account Control on, an administrator of the PC is told to ask an administrator for the service's setup code | **new, open** (read) | 2026-11-25 |  |
+| UX-96 | P3 | UX / desktop clients | A page reloaded after its server restarted gets the old setup code, and the code field appears | **new, open** (read) | 2026-11-25 |  |
 | CODE-101 | P3 | Code / Import | A pptx placeholder's inherited size and alignment (a title's 44 pt, centred) are neither read nor reported | **new, open** (read) | 2026-11-25 |  |
 | CODE-102 | P3 | Code / Import | A pptx box with several bulleted paragraphs comes in with one bullet (one paragraph per box), and no loss says so | **new, open** (measured) | 2026-11-25 |  |
 | CODE-103 | P3 | computes I/O | The ods chart patch: a chart in a cell that is moved and described in one export makes overlapping edits, so the kept file is written anew | **new, open** (read) | 2026-11-25 |  |
@@ -350,16 +352,19 @@ three hand-written ids. **Acceptance.** A new text's Format ▸ Styles menu has 
 ### CODE-62 · A window that revives the shared server while the old one still holds the port starts it on a random port · P3 · new, open
 **Measured** (found while fixing the `deb.yml` job on 2026-11-17, reported to the owner as a size 3 bug): D445 says
 every app of the suite talks to one shared local server on the same port. When the server is gone, a shell window
-revives it (`_keep_presence` in `clients/linux/src/claudia_shell_gtk/desktop_server.py`). If the old server process
+revives it (`_keep_presence` in `clients/linux/src/claudia_shell_gtk/private_server.py`, then `desktop_server.py`). If the old server process
 is still shutting down and holds the port, `free_port` chooses a random one, so the revived server lives on a port
 nobody has remembered and `desktop-server.json` and `CLAUDIA_SERVER_PORT` no longer agree with it. The CI job showed
 it: the window was ended after the server, revived it on a random port, and the new server then found the folder lock
-of the old one ("another Claudia server uses …/documents"). The Neutralino twin, `clients/neutralino/src/desktop-server.ts`,
+of the old one ("another Claudia server uses …/documents"). The Neutralino twin, `clients/neutralino/src/private-server.ts` (then `desktop-server.ts`),
 is built the same way and is likely affected (**read**, not run).
 **Acceptance:** a test in which the first server still holds the port while a window revives it: the revived server
 waits for the port (a bounded time) and starts on the same one; only when the port stays taken does it say so, instead
 of silently using another.
 **Worked around** in `deb.yml` (the window is ended first, then the server is waited for); the cause is not fixed.
+**Since E8.5 part 1 (2026-11-25, `mac-installer`):** a revived server is started again on the port its page is on when
+that is free; when it is held, on the next port of her range (D1621), written down as `instead`, so her apps agree on
+it. The bounded wait the acceptance asks for is not built.
 
 ### SEC-19 · Imports have no memory cap · P2 · open
 Imports run on `hub.workers`; `check_package` refuses bombs by declared size, but a 512 MiB package may still build a
@@ -526,24 +531,48 @@ workbook's Body text, 13 px for the cells of a sheet, which on a slide of 1600 �
 needed:** whether a workbook's slides get text styles of their own (as creates has), or the slide is drawn at another
 scale. Until then a person makes the text larger with a style of her own.
 
-## Reported 2026-11-25, while designing the macOS installer (E8.5)
+## Reported while building the macOS installer (E8.5; branch `mac-installer`, 2026-11-25)
 
-### CODE-99 · Another person's server is taken for one's own · P2 · size 2 · open
-**Read:** `DesktopServer.ensure()` takes any Claudia server that answers on 8765 (or the remembered port) and serves the
-window's app at the same version as this computer's server, "whoever started it". On a computer with two people logged in
-(fast user switching on macOS and Windows, two sessions on Linux), the second person's windows use the first person's
-server: her new documents are written into the first person's home folder, as the first person's files, and she sees the
-list of the first person's documents. When the first person logs out, the server goes, the second person's apps start her
-own, and her earlier documents seem lost. With a service running (D743, Windows) every person's apps use the service's
-documents instead of their own. **Acceptance:** a scenario with two people on one computer, each with her own documents,
-where neither sees the other's list and each finds her own documents again after the other has logged out.
+CODE-99, CODE-100 and UX-94 were fixed by parts 1 and 2 and moved to `bugtracker-fixed.md` (2026-11-26). Found in the
+code review and the use-it run of part 2 (`implementation-notes/e8-5-shared-place.md`), logged at the owner's request:
 
-### CODE-100 · A service of another version locks the apps out · P2 · size 2 · open
-**Read:** `checkIsOurs` refuses a Claudia server of another version and tells the person that it "stops by itself ten
-minutes after its last window has closed". A service never does. Windows: an install "only for me" that is newer than an
-all-users install with the service; macOS: `./start-mac-client.sh` next to an installed service. The apps cannot start
-until someone stops the service. **Acceptance:** a scenario with a service of another version on the computer, where the
-person's apps start her own server and open.
+### SEC-28 · On Windows anyone can make everyone's apps list her own server as "Shared on this computer" · P2 · size 1 · open
+**Read** (the spec review of E8.5 part 2): the apps find the computer's service through
+`%ProgramData%\Claudia\service.json` (D1622). By default every account of a Windows PC may create files and folders in
+`%ProgramData%`, and the installer changes the rights only of the service's state folder. On a PC without the service
+(or after it was removed), one person can write a `service.json` naming a claudia server of her own on 127.0.0.1;
+every other person's apps then list it as "Shared on this computer", and they sign in there with their own passwords.
+macOS is not affected: `/Library/Application Support` is writable by root only. D1622 refused to find the service by
+probing 8765 for the same reason. **Proposed fix:** on Windows, the installer writes the service's address and state
+folder to `HKLM\Software\Claudia\Service` (writable by administrators only) and the apps read it there; or the apps
+trust the file only when its owner is `Administrators` or `SYSTEM`. Either changes D1622 for Windows: a new decision.
+**Acceptance:** a test where a `service.json` written by an ordinary account is not listed.
+
+### CODE-108 · A desktop window cannot connect to a server of all three apps · P2 · size 1 · open
+**Measured** (use-it run of E8.5 part 2, 2026-11-25): the connect check of both shells (`connection.ts` /
+`connection.py` `interpret`) wants `app` in `/api/docs`; a server of several apps (D430), like the computer's service
+or a demo server of all three apps, answers `"app": null, "apps": ["composes", "computes", "creates"]`, and the window
+says "That does not look like a Claudia server". So "Shared on this computer" is listed but cannot be opened in the
+apps. Older than `mac-installer` (no window connected to the service before part 2). **Proposed fix:** a server whose
+`apps` holds the window's app is reached as that app; one whose `apps` does not hold it is `wrong_app`; in both twins.
+**Acceptance:** `connection.test.ts` and `test_connection.py` with a listing of three apps.
+
+### UX-95 · With User Account Control, an administrator is told to ask an administrator · P3 · size 2 · open
+**Read** (D1624, known limit): the Windows installer opens the service's state folder, with its setup code, only to
+`Administrators`, `SYSTEM` and the service. With User Account Control on, an administrator's apps run without the rights
+of the `Administrators` group, so they cannot read the code and her setup page says "Only an administrator of this
+computer can name this server's first administrator. Ask one." She can read
+`%ProgramData%\Claudia\state\admin\setup-code` in Explorer (which asks for her consent) and type it. macOS has no such
+split. **Proposed fix:** the installer also gives read access to the account that ran it (`{username}`); or the page
+names where an administrator finds the code. **Acceptance:** CI's Windows install check reads the code as the installing
+account without elevation.
+
+### UX-96 · A page reloaded after its server restarted gets the old setup code · P3 · size 3 · open
+**Read** (the spec review of E8.5 part 2): the shell reads the setup code when it shows a server (`Core.show`), and a
+reloaded page gets the code kept from then. If the server started again meanwhile (a new code), the page sends the old
+one, the server refuses it, and the code field appears with the usual hint. The same holds for her own server since
+D1373. **Proposed fix:** the core reads the code anew at every hello of the page (the bridge asks the core instead of
+keeping it). **Acceptance:** a core test where the code changes between two hellos.
 
 ## Found in batch 3 of the bug eater (2026-11-25; branch `batch-3`)
 

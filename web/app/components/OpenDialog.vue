@@ -40,7 +40,7 @@ const emit = defineEmits<{ opened: [session: AnySession]; close: [] }>()
 const server = ref(new URLSearchParams(location.search).get('server') ?? location.host)
 const origin = computed(() => `${location.protocol}//${server.value}`)
 // Where the servers come from. In a plain browser they are this browser's own bookmarks (`localStorage`, per origin).
-// In a Claudia desktop shell the shell keeps them — one list per app, across servers, with "This computer" first when
+// In a Claudia desktop shell the shell keeps them — one list per app, across servers, with her private place first when
 // the shell started a server — and connecting to one is the shell's job: it checks the server, then shows it in this
 // same window. (A page that navigated there itself would be handed to the person's browser: the shell never lets its
 // view leave the server it showed.)
@@ -260,7 +260,7 @@ function settle() {
   } else {
     if (bridge.servers === null) return
     const entry = bridge.servers.find((b) => b.origin === origin.value)
-    if (entry && !entry.custom && !entry.local && entry.label !== pendingLabel) {
+    if (entry && !entry.custom && !entry.local && !entry.shared && entry.label !== pendingLabel) {
       bridge.sendServers(withBookmark(bridge.servers, origin.value, pendingLabel))
     }
   }
@@ -970,7 +970,7 @@ async function go(how: 'open' | 'create' | 'recover', from?: { upload: string; k
             </div>
             <div v-if="shownCollection === null" class="list">
               <div class="list-head">
-                <h2>{{ isSuite ? t('On {place} · {count}', { place: placeLabel, count: placeCount }) : t('On this server') }}</h2>
+                <h2>{{ isSuite ? t('{place} · {count}', { place: placeLabel, count: placeCount }) : t('On this server') }}</h2>
                 <div class="filters">
                 <select v-if="placeTags.length" v-model="tagFilter" class="filter" data-testid="tag-filter" :aria-label="t('Which tags')">
                   <option value="">{{ t('all tags') }}</option>

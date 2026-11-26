@@ -11,6 +11,10 @@ superseded-by: []
 
 # D445 · The desktop apps share one local server on a fixed port; it outlives its windows and stops ten minutes after nothing is connected
 
+**Since E8.5 (2026-11-25):** the server is a person's own, "Private on this computer": her three apps share it, on a
+port of her account (D1621), and use a server they find there only when it proves to be hers (D1620). What follows
+about one server for the computer, found by its port whoever started it, is what CODE-99 fixed.
+
 **The three desktop apps of a person use one local server for all three apps, with one folder of documents and one of
 state for the suite. The first app that needs it starts it; the others find it (a small file in the state folder
 says where it runs, and D435's folder lock settles two starting at once). Its port is chosen at the first start and

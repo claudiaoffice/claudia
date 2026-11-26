@@ -172,6 +172,17 @@ def test_a_loopback_server_that_is_not_marked_local_is_kept() -> None:
     assert [e["origin"] for e in kept] == ["http://localhost:8420"]
 
 
+def test_the_shared_service_is_kept_only_once_a_person_named_it() -> None:
+    """Linux has no service (E8.5, Q21), but the rule of the list is the same as on macOS and Windows (D1622)."""
+    kept = servers.sanitize(
+        [
+            {**entry("http://127.0.0.1:8765", "Shared on this computer"), "shared": True},
+            {**entry("http://127.0.0.1:8766", "Family", True), "shared": True},
+        ]
+    )
+    assert kept == [entry("http://127.0.0.1:8766", "Family", True)]
+
+
 def test_the_page_gets_this_computer_first_and_the_remembered_servers_after_it() -> None:
     saved = [entry("https://a.example.org", "A")]
     shown = servers.for_page(saved, local_origin="http://127.0.0.1:41233", local_label="This computer")

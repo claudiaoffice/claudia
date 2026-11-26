@@ -45,6 +45,7 @@ known-first-party = ["claudia_shell_gtk"]
 
 [tool.mypy]
 python_version = "3.12"  # the floor of this client; the root configuration checks for 3.14
+platform = "linux"  # the Linux client: checked as Linux code wherever mypy runs (os.getuid, E8.5)
 check_untyped_defs = true
 warn_unused_ignores = true
 warn_redundant_casts = true

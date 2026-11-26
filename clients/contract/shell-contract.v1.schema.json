@@ -52,6 +52,7 @@
       "description": "Shell to page, the answer to 'hello': the version both will speak, who the shell is and what it offers.",
       "type": "object",
       "required": ["type", "contract", "shell", "capabilities"],
+      "not": { "required": ["setup_code", "ask_administrator"] },
       "properties": {
         "type": { "const": "welcome" },
         "contract": { "type": "integer", "minimum": 1 },
@@ -84,6 +85,10 @@
           "description": "The setup code of the shell's own server while it has no administrator (D1373, SEC-12): the page shows the server settings without asking for it. Optional; only sent to a page of the shell's own server, never to a server the window was connected to.",
           "type": "string",
           "pattern": "^[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}$"
+        },
+        "ask_administrator": {
+          "description": "True for a page of the computer's shared service (E8.5, D1624) while it has no administrator and the person of this shell may not read its setup code: the page tells her that only an administrator of this computer can name the server's first administrator. Optional; never sent together with 'setup_code'.",
+          "const": true
         }
       }
     },
@@ -141,7 +146,8 @@
         "origin": { "description": "scheme://host[:port], nothing else.", "type": "string", "minLength": 1, "maxLength": 255 },
         "label": { "type": "string", "maxLength": 128 },
         "custom": { "description": "True once a person has named it: a refreshed default name no longer replaces it.", "type": "boolean" },
-        "local": { "description": "True for this computer's own server, which the shell adds itself and never remembers.", "type": "boolean" }
+        "local": { "description": "True for her own server on this computer ('Private on this computer', D1623), which the shell adds itself and never remembers.", "type": "boolean" },
+        "shared": { "description": "True for the computer's shared service ('Shared on this computer', E8.5, D1622), which the shell adds while it is installed; it remembers only a name a person gave it.", "type": "boolean" }
       }
     },
     "connect": {

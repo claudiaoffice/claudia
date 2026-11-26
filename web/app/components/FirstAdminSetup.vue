@@ -6,12 +6,22 @@
 // Every server asks for its setup code here (D1370; mock-up notes/mockups/sec12-first-administrator-setup-code.svg):
 // typed from the server's log, filled in from a link of the log (panel 3), or handed over by the desktop app, in
 // which case there is no field at all (panel 5). A code the page was given is checked first; if the server refuses
-// it, the field appears.
+// it, the field appears. On the computer's shared service, the app of a person who may not read its code says so, and
+// the field's hint tells her to ask an administrator of this computer (E8.5, D1624).
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { adminApi, AdminApiError } from '~/lib/admin-api'
 import type { SetupRefusal, useAdminSession } from '~/lib/admin-session'
 import { useI18n } from '~/lib/i18n'
-import { codeField, forgetSetupCode, onSetupCode, rememberedSetupCode, type CodeCheck, type GivenCode } from '~/lib/setup-code'
+import {
+  codeField,
+  forgetSetupCode,
+  mustAskAdministrator,
+  onAskAdministrator,
+  onSetupCode,
+  rememberedSetupCode,
+  type CodeCheck,
+  type GivenCode,
+} from '~/lib/setup-code'
 
 const { t } = useI18n()
 
@@ -28,6 +38,7 @@ const codeError = ref('')
 
 const given = ref<GivenCode | null>(rememberedSetupCode())
 const check = ref<CodeCheck>('unchecked')
+const askAdministrator = ref(mustAskAdministrator())
 const field = computed(() => codeField(props.setupCode, given.value, check.value))
 
 function wrongCode(): string {
@@ -69,12 +80,13 @@ function useAnotherCode() {
   codeError.value = ''
 }
 
-let stopListening = () => {}
+const removers: Array<() => void> = []
 onMounted(() => {
   if (given.value) void verify(given.value)
-  stopListening = onSetupCode((code) => void verify(code)) // the desktop app's welcome may come after the page drew
+  // the desktop app's welcome may come after the page drew
+  removers.push(onSetupCode((code) => void verify(code)), onAskAdministrator((ask) => (askAdministrator.value = ask)))
 })
-onUnmounted(() => stopListening())
+onUnmounted(() => removers.forEach((remove) => remove()))
 
 function refused(refusal: SetupRefusal) {
   if (refusal.kind === 'taken') return emit('taken')
@@ -148,6 +160,7 @@ function keepLocal() {
           {{ t('From the link you opened.') }}
           <button class="link" type="button" @click="useAnotherCode">{{ t('Use another code') }}</button>
         </p>
+        <p v-else-if="askAdministrator" id="setup-code-hint" class="hint">{{ t('Only an administrator of this computer can name this server\'s first administrator. Ask one.') }}</p>
         <p v-else id="setup-code-hint" class="hint">{{ t('In the server\'s log where it started, or in admin/setup-code in its state folder. A restart of the server makes a new code.') }}</p>
       </div>
 

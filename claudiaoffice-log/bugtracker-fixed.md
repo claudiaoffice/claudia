@@ -20,7 +20,7 @@ PROC-24 to PROC-27, CODE-58 to CODE-61, SEC-19, UX-44; SEC-15 fixed (see "Round 
 
 ## Index
 
-### Fixed (237)
+### Fixed (241)
 
 By ID. Items closed without a fix (superseded, wontfix) are here too.
 
@@ -45,6 +45,7 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | SEC-20 | P2 | Security | Behind `--behind-proxy` every client had the proxy's address, so the per-address caps (waiting sockets, lookups, uploads) were one cap for everybody | **fixed** 2026-11-19 (D1275, branch `e2-document-sec`) |  | 2026-11-19 |
 | SEC-21 | P2 | Security / performance | Methods that confirm a password (`set_details`, `delete_document`, `leave`, `change_password`, `propose_owner`, `download_claudia`) hash on the event loop, in `Connection.handle`, not in a thread: at 0.75 s (D1267) each stops every connection of the server for that long | **fixed** 2026-11-19 on branch `e2-document-sec` (D1277) |  | 2026-11-19 |
 | SEC-23 | P3 | Security | Two objects that hold a document's keys printed them in their text (`repr`): `_Held` in `claudia_server/sealed.py` and `Renewed` in `claudia_document_file/renewal.py`; nothing logged them yet, but one `logger.debug(held)` or a traceback with locals would have | **fixed** 2026-11-22 on branch `e2-7-close` | 2026-11-22 | 2026-11-22 |
+| SEC-29 | P2 | Security / Windows | Every account of a Windows PC with the service could read its setup code and name herself its first administrator | **fixed** 2026-11-26 (`mac-installer`, E8.5 parts 1 and 2, merged into `main` with the owner's agreement) | 2026-11-25 | 2026-11-26 |
 | PERF-01 | P2 | Performance | `cells` window cost grows with the whole sheet | **fixed** (re-measured 2026-11-12) |  |  |
 | PERF-03 | P3 | Performance | `users.json` rewritten and fsynced in full on every user added | superseded by the container |  |  |
 | PERF-04 | P3 | Performance | `GET /api/docs` scans the disk on every request | fixed (listing cache) |  |  |
@@ -119,6 +120,7 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | UX-88 | P2 | UX / a11y | A notice (toast) is a `role=status` element made together with its text, which screen readers may not announce (BITV 4.1.3) | **fixed** 2026-11-25 (batch 3 of the bug eater, `batch-3`) | 2026-11-25 | 2026-11-25 |
 | UX-89 | P3 | UX / a11y | A table's accessible name is "Table 1 Options…": the Options… button is inside its caption | **fixed** 2026-11-25 (batch 3 of the bug eater, `batch-3`) | 2026-11-25 | 2026-11-25 |
 | UX-90 | P2 | UX / a11y | About 25 other `role="status"` elements appear with their text already in them (`v-if`), so screen readers may not announce them (BITV 4.1.3), as the notice did (UX-88) | **fixed** 2026-11-25 (batch 4 of the bug eater, `batch-4`) | 2026-11-25 | 2026-11-25 |
+| UX-94 | P3 | UX / desktop clients | The list of a place's documents is headed "On {place}", which reads "On Shared on this computer" with the new place names | **fixed** 2026-11-26 (`mac-installer`, E8.5 parts 1 and 2, merged into `main` with the owner's agreement) | 2026-11-25 | 2026-11-26 |
 | CODE-01 | P2 | Code | No coverage, no web lint; Playwright not declared | **fixed** |  |  |
 | CODE-02 | P3 | Code | 26 build files tracked in `web/dist` | fixed |  |  |
 | CODE-05 | P3 | Code | Dead branch in `Gateway.admit`; stale docstring in `state.py` | **fixed** (the branch was not dead: comment corrected) |  |  |
@@ -191,6 +193,8 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | CODE-97 | P2 | Code / Windows | A node.exe (the core of a window) stayed running after its window was killed: Neutralino does not end its extension and the link to it did not break | **fixed** 2026-11-25 on `win-installer-fix` (D753) | 2026-11-25 | 2026-11-25 |
 | CODE-92 | P2 | Code / i18n | The server settings answer only in English: the administrator API's refusals were plain text, not messages | **fixed** 2026-11-25 (batch 1 of the bug eater, `batch-1`), D2003 | 2026-11-24 |  |
 | CODE-98 | P3 | Code / web | About 25 components repeat the look-only notice instead of calling `session.tellLookOnly()` | **fixed** 2026-11-25 (batch 3 of the bug eater, `batch-3`) | 2026-11-25 | 2026-11-25 |
+| CODE-99 | P2 | Code / desktop clients | A person's apps use any Claudia server on port 8765 of the computer as their own, also another person's or a service's: with two people logged in, the second one's documents are saved in the first one's home folder | **fixed** 2026-11-26 (`mac-installer`, E8.5 parts 1 and 2, merged into `main` with the owner's agreement) | 2026-11-25 | 2026-11-26 |
+| CODE-100 | P2 | Code / desktop clients | Next to a service of another version, the apps refuse to start and say it stops after ten minutes, which a service never does | **fixed** 2026-11-26 (`mac-installer`, E8.5 parts 1 and 2, merged into `main` with the owner's agreement) | 2026-11-25 | 2026-11-26 |
 | CODE-106 | P3 | Code / tests | Tests reached into private code where a public seam was missing: `_calculate_loaded`, `Hub._documents`, `KdfPolicy._set`, `WorkerPool._discard`, eleven private names patched | **fixed** 2026-11-25 (`test-quality`) | 2026-11-25 | 2026-11-25 |
 | PROC-01 | P1 | Process | No CI workflow in the repository | fixed (verified at `54d1245`) |  |  |
 | PROC-02 | P2 | Process | The quality gate prints "everything is clean" when half of it was skipped | fixed |  |  |
@@ -2863,3 +2867,43 @@ three); `best_of` measures processor time in batches of 0.2 s where the cost may
 extent, letting formulas go); the kernel's counted guards are backed by the clock, as its log keeps its steps in lists
 (a copy in C counts as nothing: caught by the backstop). Every guard passed twice under the same load.
 
+## E8.5 macOS installer, parts 1 and 2 (branch `mac-installer`): merged 2026-11-26 with the owner's agreement
+
+### CODE-99 · Another person's server is taken for one's own · P2 · size 2 · fixed
+**Built on `mac-installer` (2026-11-25, E8.5 part 1), in review:** a person's apps use only a server that proves to be hers (D1620), on
+a port of her account (D1621); scenarios of `desktop/private-place.feature` marked `# CODE-99`, tests in
+`clients/neutralino/tests/private-server.test.ts` and `clients/linux/tests/test_private_server.py`.
+**Read:** `DesktopServer.ensure()` takes any Claudia server that answers on 8765 (or the remembered port) and serves the
+window's app at the same version as this computer's server, "whoever started it". On a computer with two people logged in
+(fast user switching on macOS and Windows, two sessions on Linux), the second person's windows use the first person's
+server: her new documents are written into the first person's home folder, as the first person's files, and she sees the
+list of the first person's documents. When the first person logs out, the server goes, the second person's apps start her
+own, and her earlier documents seem lost. With a service running (D743, Windows) every person's apps use the service's
+documents instead of their own. **Acceptance:** a scenario with two people on one computer, each with her own documents,
+where neither sees the other's list and each finds her own documents again after the other has logged out.
+**Fixed** 2026-11-26: merged into `main` with `mac-installer`.
+
+### CODE-100 · A service of another version locks the apps out · P2 · size 2 · fixed
+**Built on `mac-installer` (2026-11-25, E8.5 part 1), in review:** a server that is not hers is never compared with her version
+(D1620); scenario of `desktop/private-place.feature` marked `# CODE-100`, same tests.
+**Read:** `checkIsOurs` refuses a Claudia server of another version and tells the person that it "stops by itself ten
+minutes after its last window has closed". A service never does. Windows: an install "only for me" that is newer than an
+all-users install with the service; macOS: `./start-mac-client.sh` next to an installed service. The apps cannot start
+until someone stops the service. **Acceptance:** a scenario with a service of another version on the computer, where the
+person's apps start her own server and open.
+**Fixed** 2026-11-26: merged into `main` with `mac-installer`.
+
+### UX-94 · "On Shared on this computer" heads the list of a place's documents · P3 · size 3 · fixed
+**Seen** in the screenshot of the browser scenario of `desktop/private-place.feature` (2026-11-25): the list's heading was
+built as `t('On {place} · {count}')`, which suited "This computer" but reads "On Shared on this computer · 0" with the
+names of D1623. **Built on `mac-installer`, in review:** the heading is the place's name and the count, `{place} ·
+{count}` (German the same), as the headline above it; scenario `# UX-94` of `desktop/private-place.feature`.
+**Fixed** 2026-11-26: merged into `main` with `mac-installer`.
+
+### SEC-29 · Every account of a Windows PC with the service could read its setup code · P2 · size 2 · fixed
+**Read** (E8.5 part 2, while building D1624): the service's state folder `%ProgramData%\Claudia\state` inherited the
+rights of `%ProgramData%`, where `Users` may read; so while the service had no administrator, anyone of the PC could
+read `admin\setup-code` and make herself the first administrator of everybody's shared documents. **Fix** (D1624):
+the installer takes the inherited rights off the state folder and grants `SYSTEM`, `Administrators` and the service
+only (`claudia.iss`); `tests/test_windows_packaging.py` and the install check of `windows.yml` (the folder has no
+`BUILTIN\Users`). **Fixed** 2026-11-26: merged into `main` with `mac-installer`.

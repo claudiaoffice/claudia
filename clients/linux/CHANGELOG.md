@@ -4,6 +4,20 @@ Newest first. The shell contract has its own version (`clients/contract/`); this
 
 ## [0.1.0] - unreleased
 
+### Added (E8.5, D1622, D1624): the shell contract knows the shared service
+- Contract v1, additive: a server entry's optional `shared` and `welcome`'s optional `ask_administrator`. The Linux
+  client has no service (E8.5, Q21) and sets neither; `servers.sanitize` keeps a shared entry only once a person named it,
+  as on macOS and Windows.
+
+### Changed (E8.5, D1620, D1621, D1623; CODE-99, CODE-100): her private server
+- The desktop's one shared server is now a person's private server, "Private on this computer":
+  `desktop_server.py`/`DesktopServer` became `private_server.py`/`PrivateServer`. It is on a port of her account
+  (20000–29999, `private_port.py`; `CLAUDIA_SERVER_PORT` still takes its place), started with `--owner-key-file`
+  (`owner_key.py`), and used only when it proves to be hers. While something else holds her port it goes to the next
+  free port of her range, written down as `{"instead": N}` in `desktop-server.json` (older files are not read).
+- `SERVER_PORT`, `read_port`, `write_port` and `server.free_port` are gone. The shell's own label for the entry is
+  "Private on this computer" (translated); the page names it in her language.
+
 ### Added (SEC-12, D1373): the setup code of the desktop's own server
 - The shell contract's `welcome` may carry `setup_code` (optional, so version 1 stays): the setup code of the shell's
   own server while it has no administrator, read in its state folder at every `hello`, and only for a page of that
