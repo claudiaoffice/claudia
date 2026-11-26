@@ -516,7 +516,7 @@
   ]
  },
  "PROTOCOL_VERSION": {
-  "value": "2"
+  "value": "3"
  },
  "PoolBusy": {
   "class": [

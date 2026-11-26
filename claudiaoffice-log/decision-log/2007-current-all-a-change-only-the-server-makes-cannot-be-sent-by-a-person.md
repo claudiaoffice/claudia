@@ -24,10 +24,10 @@ only are `core.Import`, `core.Setup`, `core.Checkpoint`, `core.Redaction`, `core
 `core.Switch`: each is made by the server's own method (import, a new document, File ▸ Save, Redact…, Restore…, the
 switch of line), which checks the role first. So is `computes.ApplyCalculated`, a heavy formula's result, which only
 the server's worker lands (found by the review of the list; written as the assistant's, it would let a person put any
-value on a waiting cell under that name). `apply` decodes what a person sends with the registry
-`for_persons()`, which refuses a server-only kind with `ServerOnly` (`forbidden` on the wire) wherever it sits: a
-change that holds changes decodes them through the same registry, so a batch cannot carry one in. Nothing changes and
-nothing is written to the history.
+value on a waiting cell under that name). Until D2010 took `apply` away, it decoded what a person sent with the registry
+`for_persons()`, which refused a server-only kind with `ServerOnly` (`forbidden` on the wire) wherever it sat: a
+change that holds changes decoded them through the same registry, so a batch could not carry one in. Nothing changed
+and nothing was written to the history.
 
 **Review.** `packages/claudia-server/tests/command_senders.json` lists every kind of every app with who may send it; a
 new kind fails a test until somebody says which it is, the way `method_reads.json` does for what a method reads (D1261).

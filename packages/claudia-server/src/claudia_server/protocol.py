@@ -83,7 +83,7 @@ if TYPE_CHECKING:
 
     from .containers import RenderDesk
 
-PROTOCOL_VERSION = 2
+PROTOCOL_VERSION = 3  # 3: apply is gone (D2010)
 INT_MAX = 2**31 - 1
 MAX_LOG = 5000
 

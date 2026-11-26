@@ -32,13 +32,15 @@ without it is accepted and `Document.execute(base=None)` skips the stale check. 
 `set_restore_policy`, `discard_side_history`), `what_if_apply`, `what_if_commit`.
 
 Who calls the 99 without `base` today:
-- **web client:** nobody. 78 calls go through `write()`, which adds it; the 12 composes calls that run inside a queued
-  job (`replace_text` twice, `set_style`, `name_thing`, `insert_reference`, `insert_contents`, `remove_contents`,
-  `make_list` and `indent_item` twice each, `deviate_style`) add it by hand. The GTK and Neutralino shells send no
+- **web client:** nobody. 78 calls go through `write()`, which adds it; 13 add it by hand: the 12 composes calls that
+  run inside a queued job (`replace_text` twice, `set_style`, `name_thing`, `insert_reference`, `insert_contents`,
+  `remove_contents`, `make_list` and `indent_item` twice each, `deviate_style`) and `delete_style` in all apps
+  (`base-session.ts`, through `request()`). The GTK and Neutralino shells send no
   document methods of their own.
 - **the ai:** never (`model_engine.HIDDEN_PARAMS` hides it from the model; `Assistant._call` adds none).
 - **`what_if_apply`:** whatever its inner `params` hold.
-- **`scripts/measure_blocks.py`** and about 970 calls in 54 server test files.
+- about 970 calls in 54 server test files (counted by method name; `scripts/measure_blocks.py` calls
+  `Document.execute` directly, not a method).
 
 **Can it be mandatory? Yes**, with one rule for `null`: the web client sends `base: null` for a document that has no
 step yet (a composes text whose maker's language is unknown starts empty), so "mandatory" means *present*, and `null`
@@ -53,15 +55,24 @@ made on (`on_path` asks only whether that revision is still on the line, so its 
    consent flow, which names its own revisions. `undo`, `redo` and `save_checkpoint` get the check too (see SEC-32).
 2. Wire: `base` moves out of `params` into the request frame, `{id, method, params, base}` (protocol 2 → 3).
 3. Web: `Link.request` (or `attempt`) puts `base: state.revision` on every request; the 12 hand-added ones and
-   `write()`'s go. Reads ignore it. The client then has one place where `base` is added, the server one where it is
-   checked.
+   `write()`'s go (14 places today). Reads ignore it. The client then has one place where `base` is added, the server
+   one where it is checked.
 4. The ai: `Assistant._call` passes the revision its task was planned on. `what_if_apply` checks the frame's `base`.
 5. Tests: the server tests' request helpers (about 15: `call`, `Client`, `Peer`, `Person`, ...) add `base` the way the
    client does, so the 970 calls do not change.
 
 The smaller step, if the owner prefers it: keep `base` a parameter, make it required (`base:revision` with `null`
 allowed only on an empty document), and teach the ai and the test helpers to send it. That closes SEC-32 but keeps the
-99 specs and the 13 places in the client.
+99 specs and the 14 places in the client.
+
+**The code review** (two reviewers, standards and spec) found: `docs/server.md` still described `apply`;
+`PROTOCOL_VERSION` not raised (now 3; `docs/core-kernel.md` said 1); D2007's rule still spoke of `for_persons()` in the
+present; `list_app.py` rebuilt `wire.done` and had no types; a stale `used._apply` in `vulture_whitelist.py`;
+`web/public/i18n/xx.json` not regenerated; the note's count of places that add `base` missed `delete_style` and
+wrongly named `scripts/measure_blocks.py`. All fixed. Not changed: `test_no_method_takes_a_change_in_its_stored_form`
+finds a raw-change method by its name and a parameter named `command`, so a method taking `change: dict` would pass
+it; no method can be checked for what it decodes. `Command.sender` is read by nothing at run time (question to the
+owner, below).
 
 ## Assumptions
 

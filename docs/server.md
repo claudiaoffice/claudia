@@ -163,9 +163,11 @@ answer `forbidden`. A person who was away gets the new keys at her next login, f
 * Requests are `{"id", "method", "params"}`; responses `{"id", "ok", "result" | "error"}`; pushed events
   `{"event", "data"}`. The methods are the ones of `claudia_server.protocol.core_methods`; an app adds its own to a copy
   (`core_methods.extended()`).
-* `apply` takes the command in its stored form and a `base` revision, the view the client was looking at. If the
-  document has moved to another line since (a checkpoint was restored, or somebody took the way back) the edit is
-  refused with `stale`, so nothing lands on a document the person is not looking at.
+* A change comes in only through an app's named methods (`set_cells`, `replace_text`, `add_object`, ...), which build
+  it and check it first; no method takes a change in its stored form (D2010, protocol 3). An editing method takes a
+  `base` revision, the view the client was looking at. If the document has moved to another line since (a checkpoint
+  was restored, or somebody took the way back) the edit is refused with `stale`, so nothing lands on a document the
+  person is not looking at.
 * Who receives what: command and state events go to everybody; `history` only to its author; a private chat message to
   its sender and recipient; ephemeral messages (presence, typing) are not echoed to the sender.
 * The history panel reads `log` (the newest entries of the visible history, each with a sentence such as `B3 = 40`).

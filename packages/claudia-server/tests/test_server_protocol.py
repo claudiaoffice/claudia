@@ -47,7 +47,7 @@ INSERT = {"index": 0, "value": 5}
 # ------------------------------------------------------------------------------------------ the table
 def test_every_method_is_documented_and_described():
     description = core_methods.describe(Limits())
-    assert description["protocol"] == 2 and description["errors"].keys() == ERROR_CODES.keys()
+    assert description["protocol"] == 3 and description["errors"].keys() == ERROR_CODES.keys()
     for name, info in description["methods"].items():
         assert info["doc"], f"{name} has no description"
     assert {
