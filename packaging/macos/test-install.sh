@@ -6,8 +6,9 @@
 #
 # It installs the package without the service, then with it, then over itself, and uninstalls it, and checks after each
 # step what specs/desktop/macos-installer.feature asks. It removes claudia at the end; documents of an earlier
-# installation stay, as the uninstaller leaves them. What needs a person -- "Open Anyway" for a downloaded package, a
-# window with its Dock icon -- is not checked here: open claudia composes from Applications once it says PASS.
+# installation stay, as the uninstaller leaves them. It opens windows of claudia composes in the session of the person
+# who runs it (sudo from her account, logged in at the Mac's screen). What needs a person's eyes -- "Open Anyway" for a
+# downloaded package, one Dock icon with the app's name -- is not checked here: look once while it runs.
 set -u
 PKG="${1:?usage: sudo $0 claudia-office-<version>-macos-arm64.pkg}"
 HERE="$(cd "$(dirname "$0")" && pwd)"
@@ -48,6 +49,28 @@ all_signed() { # codesign checks what macho.py could only see is there: that eac
     done)"
   [ -z "$unsigned" ] || { echo "$unsigned" >&2; return 1; }
 }
+GUI_ID=""
+as_her() { launchctl asuser "$GUI_ID" sudo -u "$PERSON" -H "$@"; } # in her login session, where windows open
+window_of() { pgrep -f "/Applications/claudia $1\.app/Contents/MacOS/neutralino"; }
+opens() { # opens APP: its window runs within a minute
+  as_her open -a "/Applications/claudia $1.app"
+  i=0
+  while [ "$i" -lt 60 ]; do
+    window_of "$1" >/dev/null && return 0
+    sleep 1 # work: macOS starts the app, the launcher prepares, the window comes; nothing to wait on but time
+    i=$((i + 1))
+  done
+  return 1
+}
+gone_within() { # gone_within SECONDS PATTERN: no process matches within that time
+  i=0
+  while [ "$i" -lt "$1" ]; do
+    pgrep -f "$2" >/dev/null || return 0
+    sleep 1 # work: processes end on their own after the window closes
+    i=$((i + 1))
+  done
+  return 1
+}
 no_claudia_process() {
   ! pgrep -f "$R/(node|server|python)/|/Library/Caches/Claudia/run/|/Applications/claudia (composes|computes|creates)\.app/Contents/MacOS/"
 }
@@ -78,6 +101,7 @@ if [ -z "$PERSON" ] || [ "$PERSON" = root ]; then
   echo "Run this with sudo from a person's account." >&2
   exit 2
 fi
+GUI_ID="$(id -u "$PERSON")"
 [ -f "$PKG" ] || { echo "$PKG is not there." >&2; exit 2; }
 
 echo "== The package"
@@ -104,6 +128,11 @@ as_person "$R/server/claudia-server" --host 127.0.0.1 --port 8811 --no-tls --dir
 check "...and answers" answers 8811
 check "...as the suite's server does (smoke test)" "$R/python/bin/python3" "$HERE/../smoke_server.py" http://127.0.0.1:8811
 pkill -f "port 8811" || true
+check "claudia composes opens a window" opens composes
+check "...and what its start printed is in her log" test -s "/Users/$PERSON/Library/Logs/Claudia/composes.log"
+as_her osascript -e 'quit app id "de.claudia-office.composes"' >/dev/null 2>&1
+check "quitting it leaves no process of its window within half a minute" \
+  gone_within 30 "/Applications/claudia composes\.app/Contents/MacOS/|/Library/Caches/Claudia/run/composes/"
 
 echo "== Installing with the service"
 check "the installer succeeds" install_package service
@@ -117,13 +146,16 @@ echo "kept" >"$C/shared/documents/test-install-kept.txt"
 mkdir -p "/Users/$PERSON/Library/Application Support/Claudia"
 echo "kept" >"/Users/$PERSON/Library/Application Support/Claudia/test-install-kept.txt"
 
-echo "== Updating over itself"
-check "the installer succeeds" install_package service
+echo "== Updating over itself, without changing its parts (the service stays as it is), with an app open"
+check "claudia computes opens a window" opens computes
+check "the installer succeeds" install_package
+check "the open app was closed for the update" gone_within 30 "/Applications/claudia computes\.app/Contents/MacOS/"
 check "the shared documents are still there" test -f "$C/shared/documents/test-install-kept.txt"
 check "her own folder is still there" test -f "/Users/$PERSON/Library/Application Support/Claudia/test-install-kept.txt"
 check "the claudia service runs again" answers 8765
 
-echo "== Uninstalling"
+echo "== Uninstalling, with an app open"
+check "claudia creates opens a window" opens creates
 words="$("$R/uninstall.sh" 2>&1)"
 check "the last words say what is left" sh -c "printf '%s' \"\$1\" | grep -q 'claudia is removed. These folders are left'" _ "$words"
 for app in composes computes creates; do
@@ -137,6 +169,8 @@ check "no process of claudia runs" no_claudia_process
 check "the shared documents are still there" test -f "$C/shared/documents/test-install-kept.txt"
 check "her own documents and settings are still there" test -f "/Users/$PERSON/Library/Application Support/Claudia/test-install-kept.txt"
 check "her Caches/Claudia is gone" absent "/Users/$PERSON/Library/Caches/Claudia"
+check "her logs are still there" test -f "/Users/$PERSON/Library/Logs/Claudia/composes.log"
+check "the shared documents are the administrators' to open" as_person cat "$C/shared/documents/test-install-kept.txt"
 check "macOS forgot the package" sh -c "! pkgutil --pkg-info de.claudia-office.apps"
 rm -f "$C/shared/documents/test-install-kept.txt" "/Users/$PERSON/Library/Application Support/Claudia/test-install-kept.txt"
 

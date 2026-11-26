@@ -19,7 +19,7 @@ mkdir -p build/python build/node build/bomutils
 uv run --no-project python $B fetch python build/python.tar.gz && tar -xzf build/python.tar.gz -C build/python --strip-components=1
 uv run --no-project python $B fetch node build/node.tar.gz && tar -xzf build/node.tar.gz -C build/node --strip-components=1
 uv run --no-project python $B fetch bomutils build/bomutils.tar.gz && tar -xzf build/bomutils.tar.gz -C build/bomutils --strip-components=1
-make -C build/bomutils
+patch -d build/bomutils -p1 < packaging/macos/bomutils-mkbom.patch && make -C build/bomutils build/bin/mkbom
 uv run --no-project python $B server --python build/python
 uv run --no-project --with pillow python $B stage --python build/python --node build/node --version 0.5.0 --out build/macos
 uv run --no-project python $B check-signatures build/macos
@@ -32,6 +32,7 @@ uv run --no-project python $B package --stage build/macos --mkbom build/bomutils
 | `flatpkg.py` | the formats of a flat package: payload and scripts (cpio, gzipped), PackageInfo, the xar archive |
 | `macho.py` | which files are Mach-O, and whether each carries a code signature |
 | `third-party.json` | CPython and Node for macOS on Apple Silicon, bomutils: pinned by SHA-256 |
+| `bomutils-mkbom.patch` | bomutils 0.2's mkbom wrote one byte past a link name's room; the build applies this fix |
 | `scripts/apps/`, `scripts/service/` | the parts' preinstall and postinstall |
 | `uninstall.sh`, `uninstall-app.sh` | the uninstaller, and the program of "uninstall claudia.app" |
 | `resources/` | the installer's welcome page and words, English and German (the licence page is made from `LICENSE`) |
@@ -52,7 +53,8 @@ bomutils publishes no list (its file is GitHub's archive of the tag): its pin is
 
 Apple Silicon runs no code without a signature; an ad-hoc one is enough, and CPython, Node, Neutralino and the wheels'
 libraries carry one, since they were built on a Mac. The build changes none of them and signs none: `check-signatures`
-refuses a stage with a Mach-O file that has none. Should a download ever lack one, sign it ad-hoc with
+refuses a stage with a Mach-O file whose arm64 slice has none (universal wheels such as lxml's carry an unsigned Intel
+slice, which Apple Silicon never runs). Should a download ever lack one, sign it ad-hoc with
 [`rcodesign`](https://github.com/indygreg/apple-platform-rs) (`rcodesign sign FILE`), which runs on Linux.
 
 ## Installing it, and the install test

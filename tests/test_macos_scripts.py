@@ -12,9 +12,14 @@ from __future__ import annotations
 import re
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
+
+pytestmark = pytest.mark.skipif(
+    sys.platform == "win32", reason="the macOS package is built on Linux: POSIX file modes, /bin/sh"
+)
 
 ROOT = Path(__file__).resolve().parent.parent
 MACOS = ROOT / "packaging" / "macos"
@@ -27,6 +32,7 @@ STANDINS = {
     'case "$2" in\n'
     '  -read) for a in $ACCOUNTS; do [ "$3" = "/Users/$a" ] || [ "$3" = "/Groups/$a" ] && exit 0; done; exit 56 ;;\n'
     '  -list) for n in $USED; do echo "someone $n"; done ;;\n'
+    '  -delete) [ -z "$DSCL_FAILS" ] || { echo "eDSPermissionError" >&2; exit 1; } ;;\n'
     "esac\n",
     "pkill": 'echo "pkill $*" >> "$LOG"\nexit 1\n',
     "pkgutil": 'echo "pkgutil $*" >> "$LOG"\n',
@@ -49,7 +55,14 @@ def mac(tmp_path):
     log.touch()
 
     def run(script: Path, *arguments: str, **environment: str) -> subprocess.CompletedProcess:
-        env = {"PATH": f"{bin_dir}:/usr/bin:/bin", "LOG": str(log), "LOADED": "", "ACCOUNTS": "", "USED": ""}
+        env = {
+            "PATH": f"{bin_dir}:/usr/bin:/bin",
+            "LOG": str(log),
+            "LOADED": "",
+            "ACCOUNTS": "",
+            "USED": "",
+            "DSCL_FAILS": "",
+        }
         return subprocess.run(
             ["/bin/sh", str(script), *arguments], env=env | environment, capture_output=True, text=True, check=False
         )
@@ -103,6 +116,23 @@ def test_without_the_service_nothing_is_started(mac):
     assert not any("bootstrap" in line for line in asked())
 
 
+def test_an_update_ends_claudias_processes_before_it_replaces_the_runtime_they_run_from(mac):
+    """As the Windows installer closes the apps: a server or window of the old version would run from deleted files."""
+    volume, run, asked = mac
+    assert run(MACOS / "scripts" / "apps" / "preinstall", *install_args(volume)).returncode == 0
+    ended = [line.removeprefix("pkill -f ") for line in asked() if line.startswith("pkill")]
+    assert ended == UNINSTALL_ENDS(volume)
+
+
+def UNINSTALL_ENDS(volume: Path) -> list[str]:  # noqa: N802  (what uninstall.sh ends, which the update ends too)
+    c = f"{volume}/{CLAUDIA}"
+    return [
+        f"{c}/runtime/(node|server|python)/",
+        "/Library/Caches/Claudia/run/",
+        f"{volume}/Applications/claudia (composes|computes|creates)\\.app/Contents/MacOS/",
+    ]
+
+
 # ------------------------------------------------------------------------------------------------ the service
 def test_the_service_gets_a_hidden_account_with_a_free_number_below_500(mac):
     volume, run, asked = mac
@@ -133,7 +163,13 @@ def test_the_shared_folders_belong_to_the_service_and_its_setup_code_is_for_the_
     assert run(MACOS / "scripts" / "service" / "postinstall", *install_args(volume)).returncode == 0
     shared = volume / CLAUDIA / "shared"
     assert (shared / "documents").is_dir() and (shared / "state" / "admin").is_dir()
-    assert f"chown -R _claudia:_claudia {shared} {volume}/Library/Logs/Claudia" in asked()
+    # only the folders it makes, never recursively: a hard link the service made in its own folders to a file of the
+    # system would otherwise be given to it at the next update
+    assert (
+        f"chown _claudia:_claudia {shared} {shared}/documents {shared}/state {shared}/state/admin "
+        f"{volume}/Library/Logs/Claudia"
+    ) in asked()
+    assert not any(line.startswith("chown -R") for line in asked())
     acl = [line for line in asked() if line.startswith("chmod +a")]
     admin = next(line for line in acl if line.endswith(f"{shared}/state/admin"))
     assert "group:admin allow" in admin and "read" in admin and "file_inherit" in admin
@@ -200,7 +236,7 @@ def test_uninstalling_stops_the_service_and_removes_its_account_and_the_receipts
     lines = asked()
     assert f"launchctl bootout system/{LABEL}" in lines
     assert "dscl . -delete /Users/_claudia" in lines and "dscl . -delete /Groups/_claudia" in lines
-    assert f"chown -R root:admin {volume}/{CLAUDIA}/shared" in lines
+    assert any(line.startswith(f"chown root:admin {volume}/{CLAUDIA}/shared") for line in lines)
     assert f"pkgutil --volume {volume} --forget de.claudia-office.apps" in lines
     assert f"pkgutil --volume {volume} --forget de.claudia-office.service" in lines
 
@@ -227,12 +263,108 @@ def test_uninstalling_ends_every_process_of_claudia_and_not_itself(installed):
         assert not any(re.search(pattern, command) for pattern in patterns), command
 
 
+def test_uninstalling_ends_the_same_processes_as_an_update(installed):
+    volume, run, asked, _, _ = installed
+    run(MACOS / "uninstall.sh", str(volume))
+    assert [line.removeprefix("pkill -f ") for line in asked() if line.startswith("pkill")] == UNINSTALL_ENDS(volume)
+
+
+def test_the_shared_documents_are_left_to_the_macs_administrators_to_open_and_no_hard_link_is_followed(installed):
+    volume, run, asked, _, kept = installed
+    shared = volume / CLAUDIA / "shared"
+    document = kept["shared documents"]
+    document.chmod(0o600)  # as the server writes it
+    linked = shared / "documents" / "hosts"
+    elsewhere = make(volume / "private" / "etc" / "hosts")
+    linked.hardlink_to(elsewhere)
+    run(MACOS / "uninstall.sh", str(volume))
+    given = [line for line in asked() if line.startswith("chown root:admin")]
+    assert any(str(document) in line for line in given)
+    assert not any(str(linked) in line for line in given)
+    assert document.stat().st_mode & 0o060 == 0o060
+    assert elsewhere.stat().st_mode & 0o020 == 0
+
+
+def test_her_caches_are_not_reached_through_a_link_she_made(installed):
+    volume, run, _, _, _ = installed
+    elsewhere = make(volume / "important" / "Caches" / "Claudia" / "keep")
+    (volume / "Users" / "bob").mkdir()
+    (volume / "Users" / "bob" / "Library").symlink_to(volume / "important")
+    run(MACOS / "uninstall.sh", str(volume))
+    assert elsewhere.exists()
+
+
+def test_an_uninstall_that_fails_says_so_and_not_that_claudia_is_removed(installed):
+    volume, run, _, _, _ = installed
+    done = run(MACOS / "uninstall.sh", str(volume), ACCOUNTS="_claudia", DSCL_FAILS="1")
+    assert done.returncode == 1
+    assert "claudia is removed" not in done.stdout
+    assert "could not be removed completely" in done.stdout + done.stderr
+
+
 def test_uninstalling_twice_does_no_harm(installed):
     volume, run, _, _, kept = installed
     run(MACOS / "uninstall.sh", str(volume))
     done = run(MACOS / "uninstall.sh", str(volume))
     assert done.returncode == 0, done.stderr
     assert all(path.exists() for path in kept.values())
+
+
+# --------------------------------------------------------------------------------------------- the uninstaller app
+OSASCRIPT = (
+    'printf "%s\\n" "osascript $*" >> "$LOG"\n'
+    'case "$*" in\n'
+    '  *"do shell script"*) for last; do :; done; /bin/sh "$last" ;;\n'
+    '  *"cancel button"*) exit "${CANCEL:-0}" ;;\n'
+    "esac\n"
+)
+
+
+@pytest.fixture
+def uninstaller(mac, tmp_path):
+    """uninstall-app.sh with its uninstall.sh where a test can put it, osascript and defaults as stand-ins."""
+    volume, run, asked = mac
+    bin_dir = tmp_path / "bin"
+    (bin_dir / "osascript").write_text("#!/bin/sh\n" + OSASCRIPT, encoding="utf-8")
+    (bin_dir / "osascript").chmod(0o755)
+    (bin_dir / "defaults").write_text('#!/bin/sh\nprintf "(\\n    \\"%s\\",\\n    \\"en-US\\"\\n)\\n" "$LANG1"\n')
+    (bin_dir / "defaults").chmod(0o755)
+    script = tmp_path / "uninstall.sh"
+    script.write_text(
+        '#!/bin/sh\necho "uninstalled" >> "$LOG"\necho "${SAYS:-claudia is removed.}"\nexit "${FAILS:-0}"\n'
+    )
+    script.chmod(0o755)
+    app = (MACOS / "uninstall-app.sh").read_text(encoding="utf-8")
+    assert 'S="/Library/Application Support/Claudia/runtime/uninstall.sh"' in app
+    tried = tmp_path / "uninstall-app.sh"
+    tried.write_text(app.replace('S="/Library/Application Support/Claudia/runtime/uninstall.sh"', f'S="{script}"'))
+    return tried, run, asked
+
+
+def said(asked) -> list[str]:
+    return [line for line in asked() if line.startswith("osascript") and "display dialog" in line]
+
+
+def test_the_uninstaller_asks_first_and_does_nothing_when_she_cancels(uninstaller):
+    app, run, asked = uninstaller
+    assert run(app, CANCEL="1", LANG1="en-US").returncode == 0
+    assert "uninstalled" not in asked()
+    assert "are closed" in said(asked)[0]
+
+
+def test_the_uninstaller_says_it_is_done_in_her_language(uninstaller):
+    app, run, asked = uninstaller
+    assert run(app, LANG1="de-DE").returncode == 0
+    assert "uninstalled" in asked()
+    assert "geschlossen" in said(asked)[0]
+    assert "claudia ist entfernt" in said(asked)[-1]
+
+
+def test_the_uninstaller_says_what_failed(uninstaller):
+    app, run, asked = uninstaller
+    done = run(app, LANG1="en-US", FAILS="1", SAYS="claudia could not be removed completely. These steps failed: rm")
+    assert done.returncode == 1
+    assert "These steps failed: rm" in said(asked)[-1]
 
 
 # ------------------------------------------------------------------------------------------------------- shellcheck

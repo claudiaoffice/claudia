@@ -20,6 +20,10 @@ from pathlib import Path
 
 import pytest
 
+pytestmark = pytest.mark.skipif(
+    sys.platform == "win32", reason="the macOS package is built on Linux: POSIX file modes, /bin/sh"
+)
+
 ROOT = Path(__file__).resolve().parent.parent
 SPEC = importlib.util.spec_from_file_location("macos_flatpkg", ROOT / "packaging" / "macos" / "flatpkg.py")
 flatpkg = importlib.util.module_from_spec(SPEC)
@@ -70,6 +74,7 @@ def listing(root: Path) -> dict[str, tuple[str, int, bytes | str]]:
 # --------------------------------------------------------------------------------------------------------- payload
 @needs_bsdtar
 def test_the_payload_holds_every_file_folder_and_link_with_its_mode(tree, tmp_path):
+    (tree / "Applications").chmod(0o775)  # as every Mac has it, and so as the payload lists it
     payload = tmp_path / "Payload"
     payload.write_bytes(flatpkg.payload(tree))
     assert listing(unpack(payload, tmp_path / "out")) == listing(tree)
@@ -78,7 +83,7 @@ def test_the_payload_holds_every_file_folder_and_link_with_its_mode(tree, tmp_pa
 def test_the_payload_is_gzipped_odc_cpio_owned_by_root_with_dot_slash_paths(tree):
     data = gzip.decompress(flatpkg.payload(tree))
     assert data[:6] == b"070707"
-    names, uids, gids = [], set(), set()
+    names, uids, gids = [], set(), {}
     offset = 0
     while True:
         header = data[offset : offset + 76]
@@ -90,11 +95,12 @@ def test_the_payload_is_gzipped_odc_cpio_owned_by_root_with_dot_slash_paths(tree
             break
         names.append(name)
         uids.add(uid)
-        gids.add(gid)
+        gids[name] = gid
     assert names[0] == "."
     assert all(n == "." or n.startswith("./") for n in names)
     assert "./Library/Application Support/Claudia/runtime/python/bin/python3" in names
-    assert uids == {0} and gids == {0}
+    assert uids == {0}
+    assert {name for name, gid in gids.items() if gid != 0} == {"./Applications"}  # admin, as on every Mac
 
 
 def test_the_payload_is_the_same_for_the_same_files(tree):
@@ -177,7 +183,7 @@ def test_package_info_names_the_part_its_scripts_and_its_size():
 
 def test_a_payload_is_listed_with_paths_and_modes_as_lsbom_lists_a_bom(tree):
     """CI compares the two: what the Bom says macOS installed is what the payload installs."""
-    found = dict(flatpkg.listing(flatpkg.payload(tree)))
+    found = {name: mode for name, mode, _owner in flatpkg.listing(flatpkg.payload(tree))}
     assert found["."] == "40755"
     assert found["./Applications/claudia composes.app/Contents/MacOS/claudia-composes"] == "100755"
     assert found["./Library/Application Support/Claudia/VERSION"] == "100644"
@@ -208,10 +214,28 @@ def test_the_bom_list_names_every_path_of_the_payload_also_hidden_ones(tree):
         f"./Library/Application Support/Claudia/runtime/python/bin/python3\t{link.st_mode:o}\t0/0\t{len(target)}"
         f"\t{flatpkg.cksum(target)}\tpython3.14"
     ) in lines
-    assert [line.split("\t")[:2] for line in lines] == [list(entry) for entry in flatpkg.listing(flatpkg.payload(tree))]
+    assert [line.split("\t")[:3] for line in lines] == [list(entry) for entry in flatpkg.listing(flatpkg.payload(tree))]
 
 
 def test_a_link_whose_target_has_whitespace_is_refused_for_the_bom(tree):
     (tree / "Library" / "odd").symlink_to("a target")
     with pytest.raises(ValueError, match="a target"):
         flatpkg.bom_listing(tree)
+
+
+# ----------------------------------------------------------------------------------------------- the Mac's folders
+def test_the_macs_own_folders_keep_their_owners_and_modes(tree):
+    """/Applications is root:admin 0775 on every Mac: a payload that says root:wheel 0755 would take from
+    administrators the right to put apps there. The folders the Mac has already are listed as the Mac has them."""
+    entries = {name: (mode, owner) for name, mode, owner in flatpkg.listing(flatpkg.payload(tree))}
+    assert entries["./Applications"] == ("40775", "0/80")
+    assert entries["./Library"] == ("40755", "0/0")
+    assert entries["./Library/Application Support"] == ("40755", "0/0")
+    assert entries["./Applications/claudia composes.app"] == ("40755", "0/0")
+    bom = {line.split("\t")[0]: tuple(line.split("\t")[1:3]) for line in flatpkg.bom_listing(tree).splitlines()}
+    assert bom["./Applications"] == ("40775", "0/80")
+
+
+def test_installing_does_not_change_the_rights_of_what_is_there_already():
+    info = ET.fromstring(flatpkg.package_info("de.claudia-office.apps", "0.5.0", files=1, kbytes=1, scripts=()))
+    assert info.get("overwrite-permissions") == "false"

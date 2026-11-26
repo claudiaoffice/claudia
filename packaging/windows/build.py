@@ -32,6 +32,7 @@ from shared import (  # noqa: E402  (packaging/shared.py, beside this folder)
     copy_tree,
     development_version,
     download,
+    load_pins,
     parse_version,
     require,
     verify_sha256,
@@ -62,7 +63,8 @@ def icon_from_png(png: bytes) -> bytes:
 
 
 def pins() -> dict:
-    return json.loads((HERE / "third-party.json").read_text(encoding="utf-8"))
+    """What the build downloads, pinned (third-party.json)."""
+    return load_pins(HERE)
 
 
 def fetch_winsw(target: Path) -> Path:

@@ -72,6 +72,6 @@ describe('WINDOWS_HOST', () => {
   })
 
   it('starts the downloaded binary as it is: no bundle, no process name of its own', () => {
-    expect(WINDOWS_HOST.windowBinary('apps/creates', 'C:\\neutralino-win_x64.exe', undefined as never, true)).toEqual({ binary: 'C:\\neutralino-win_x64.exe' })
+    expect(WINDOWS_HOST.windowBinary('apps/creates', 'C:\\neutralino-win_x64.exe', undefined as never)).toEqual({ binary: 'C:\\neutralino-win_x64.exe' })
   })
 })

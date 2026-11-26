@@ -147,8 +147,8 @@ export interface RunDeps {
   findBinary?: (appDir: string, env: Env) => string | null
   /** The operating system's ways (src/platform/host.ts); this build's by default. */
   platform?: HostPlatform
-  /** The binary a window is started from (default: the platform's, a .app bundle on a Mac in a checkout). */
-  windowBinary?: (appDir: string, downloaded: string, identity: AppIdentity, packaged: boolean) => WindowBinary
+  /** The binary a checkout's window is started from (default: the platform's, a .app bundle on a Mac). */
+  windowBinary?: (appDir: string, downloaded: string, identity: AppIdentity) => WindowBinary
   /** The short name of a path for the core's command (default: the platform's; on Windows asked of `cmd`). */
   shortName?: (path: string) => string | null
   /** What the installer says about this client (src/packaged.ts); `readPackaged` by default, `null` in a checkout. */
@@ -208,9 +208,11 @@ export async function run(options: Options, deps: RunDeps = {}): Promise<number>
     err('--prepare is for an installed app on a Mac; a checkout opens its window without it.')
     return 1
   }
+  // An installed app's binary is taken as it is: on a Mac it is inside the app (claudia <app>.app/Contents/MacOS), which
+  // names it (D1626), and nothing is written into an installation.
   let window: WindowBinary
   try {
-    window = (deps.windowBinary ?? platform.windowBinary)(appDir, downloaded, identity, packaged !== null)
+    window = packaged !== null ? { binary: downloaded } : (deps.windowBinary ?? platform.windowBinary)(appDir, downloaded, identity)
   } catch (problem) {
     err(`Could not prepare this app's window binary: ${(problem as Error).message}`)
     return 1

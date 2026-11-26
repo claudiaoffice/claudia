@@ -22,6 +22,10 @@ from pathlib import Path
 import pytest
 from PIL import Image
 
+pytestmark = pytest.mark.skipif(
+    sys.platform == "win32", reason="the macOS package is built on Linux: POSIX file modes, /bin/sh"
+)
+
 ROOT = Path(__file__).resolve().parent.parent
 MACOS = ROOT / "packaging" / "macos"
 SPEC = importlib.util.spec_from_file_location("macos_build", MACOS / "build.py")
@@ -162,7 +166,7 @@ def test_an_app_prepares_its_window_with_the_bundled_node_and_becomes_the_window
     ]
 
 
-def test_an_app_whose_preparing_fails_starts_no_window_and_keeps_the_reason_in_its_log(staged, tmp_path):
+def test_an_app_whose_preparing_fails_starts_no_window_says_why_and_keeps_the_reason_in_its_log(staged, tmp_path):
     runtime = tmp_path / "runtime"
     home = tmp_path / "home"
     program = (
@@ -172,13 +176,22 @@ def test_an_app_whose_preparing_fails_starts_no_window_and_keeps_the_reason_in_i
         program.parent / "tried", program.read_text(encoding="utf-8").replace(f'R="/{RUNTIME}"', f'R="{runtime}"')
     )
     executable(runtime / "node" / "bin" / "node", '#!/bin/sh\necho "No Neutralino binary found" >&2\nexit 1\n')
+    said = tmp_path / "said"
+    executable(tmp_path / "bin" / "osascript", f'#!/bin/sh\nprintf "%s\\n" "$@" >> "{said}"\n')
     done = subprocess.run(
-        [str(tried)], env={"HOME": str(home), "PATH": "/usr/bin:/bin"}, capture_output=True, text=True, check=False
+        [str(tried)],
+        env={"HOME": str(home), "PATH": f"{tmp_path / 'bin'}:/usr/bin:/bin"},
+        capture_output=True,
+        text=True,
+        check=False,
     )
     assert done.returncode == 1
     assert "No Neutralino binary found" in (home / "Library" / "Logs" / "Claudia" / "creates.log").read_text(
         encoding="utf-8"
     )
+    # and she is told, rather than seeing the icon bounce and go
+    shown = said.read_text(encoding="utf-8")
+    assert "claudia creates could not start" in shown and "No Neutralino binary found" in shown
 
 
 def test_the_uninstaller_is_an_app_in_utilities(staged):
@@ -398,6 +411,7 @@ def test_the_suites_own_packages_are_built_as_wheels_and_everything_is_installed
     assert install[install.index("--python-platform") + 1] == "aarch64-apple-darwin"
     assert install[install.index("--python-version") + 1] == "3.14"
     assert install[install.index("--only-binary") + 1] == ":all:"
+    assert "--compile-bytecode" in install  # the runtime is read-only: no server start compiles every module again
     assert install[install.index("--target") + 1] == str(tmp_path / "python" / "lib" / "python3.14" / "site-packages")
     assert install[install.index("--requirement") + 1] == str(tmp_path / "rest.txt")
     assert install[-1] == str(wheel)
@@ -463,7 +477,7 @@ def test_a_parts_payload_and_scripts_are_what_was_staged_and_its_bom_lists_the_s
         in subprocess.run(["bsdtar", "-tf", str(scripts)], capture_output=True, text=True, check=True).stdout
     )
     bom_list = member(package, "service.pkg/Bom").decode().splitlines()
-    assert [line.split("\t")[:2] for line in bom_list] == [list(e) for e in build.flatpkg.listing(payload.read_bytes())]
+    assert [line.split("\t")[:3] for line in bom_list] == [list(e) for e in build.flatpkg.listing(payload.read_bytes())]
 
 
 def test_no_package_is_made_with_a_program_that_is_not_signed(staged, tmp_path):

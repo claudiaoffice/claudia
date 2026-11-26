@@ -17,7 +17,9 @@ creates** in `/Applications`, **uninstall claudia** in `/Applications/Utilities`
 **claudia service** (D1627) is a second part, offered under "Customize" and not chosen unless asked for. A Mac with an
 Intel processor or macOS older than 14 is told "claudia needs a Mac with Apple Silicon and macOS 14 or newer." and gets
 nothing. The installer is in English and German (title, welcome and licence pages, the parts' names). An update
-removes the old runtime and apps first, so no file of an older version stays, and keeps the service running.
+closes the apps that are open (of every person, as the Windows installer does; the welcome page says so), removes the
+old runtime and apps, so no file of an older version stays, and keeps the service running. The Mac's own folders
+(`/Applications` and the rest) keep their owners and modes.
 
 **The package is not signed** (that needs Apple's developer membership, which the owner does not take now, 2026-11-25):
 macOS asks for "Open Anyway" in Privacy & Security for a downloaded one. Apple Silicon runs no code without a signature,

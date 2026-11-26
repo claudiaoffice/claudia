@@ -65,7 +65,7 @@ export const WINDOWS_HOST: HostPlatform = {
   windowSizeInPhysicalPixels: true,
   // No .app bundle: the taskbar and the title bar read the title from the config (notes/e5-11-windows-client.md).
   windowBinary: (_appDir, downloaded) => ({ binary: downloaded }),
-  runFolder: (app, env, home) => join(localAppData(env, home), 'Claudia', 'run', app),
+  runFolder: (app, env, home) => join(WINDOWS_HOST.claudiaFolder(env, home), 'run', app),
   runFolderWithSpace: 'Set LOCALAPPDATA to a folder without spaces and start it again.',
   linkNodeIntoRun: false,
   dialogs: () => windowsDialogs(),

@@ -5,6 +5,7 @@ from a tag or a commit, files pinned by SHA-256, downloads, and the checks that 
 from __future__ import annotations
 
 import hashlib
+import json
 import re
 import shutil
 import urllib.request
@@ -52,7 +53,13 @@ def development_version(base: str, build: int, commit: str) -> Version:
     return Version(text=f"{release.text}-dev.{build}+{commit[:7]}", numeric=release.numeric)
 
 
+def load_pins(folder: Path) -> dict:
+    """The pins of an installer's build: ``third-party.json`` in its folder."""
+    return json.loads((folder / "third-party.json").read_text(encoding="utf-8"))
+
+
 def sha256_of(path: Path) -> str:
+    """The SHA-256 of the file at ``path``, as hex."""
     digest = hashlib.sha256()
     with path.open("rb") as handle:
         for block in iter(lambda: handle.read(1 << 20), b""):
@@ -61,6 +68,7 @@ def sha256_of(path: Path) -> str:
 
 
 def verify_sha256(path: Path, expected: str) -> None:
+    """Refuses the file at ``path`` unless its SHA-256 is ``expected``, and says the one it has."""
     found = sha256_of(path)
     if found != expected.lower():
         raise BuildError(f"{path.name} is not the file that was pinned: its SHA-256 is {found}, not {expected}")
@@ -75,10 +83,12 @@ def download(url: str, target: Path) -> Path:
 
 
 def require(path: Path, step: str) -> Path:
+    """``path``, refused when it is not there with the ``step`` that makes it."""
     if not path.exists():
         raise BuildError(f"{path} is missing. It is made by: {step}")
     return path
 
 
 def copy_tree(source: Path, target: Path) -> None:
+    """``source`` into ``target``, which may be there already."""
     shutil.copytree(source, target, dirs_exist_ok=True)

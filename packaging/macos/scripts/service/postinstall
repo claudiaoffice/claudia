@@ -38,7 +38,10 @@ if ! dscl . -read "/Users/$ACCOUNT" >/dev/null 2>&1; then
 fi
 
 mkdir -p "$C/shared/documents" "$C/shared/state/admin" "$T/Library/Logs/Claudia"
-chown -R "$ACCOUNT:$ACCOUNT" "$C/shared" "$T/Library/Logs/Claudia"
+# Only these folders, never recursively: what is in them is the service's already, and a hard link it made there to a
+# file of the system must not be given to it.
+chown "$ACCOUNT:$ACCOUNT" "$C/shared" "$C/shared/documents" "$C/shared/state" "$C/shared/state/admin" \
+  "$T/Library/Logs/Claudia"
 chmod 750 "$C/shared" "$C/shared/state"
 chmod 700 "$C/shared/state/admin"
 chmod +a "group:admin allow list,search,readattr,readextattr,readsecurity" "$C/shared" "$C/shared/state"

@@ -27,7 +27,18 @@ from pathlib import Path
 
 ROOT_UID = 0
 ROOT_GID = 0  # wheel
+ADMIN_GID = 80
 TRAILER = "TRAILER!!!"
+# The folders every Mac has, with the owners and modes it gives them: listed as they are, so that installing changes
+# none (an /Applications of root:wheel 0755 would take from administrators the right to put apps there).
+MAC_FOLDERS = {
+    ".": (0o755, ROOT_GID),
+    "./Applications": (0o775, ADMIN_GID),
+    "./Applications/Utilities": (0o755, ADMIN_GID),
+    "./Library": (0o755, ROOT_GID),
+    "./Library/Application Support": (0o755, ROOT_GID),
+    "./Library/LaunchDaemons": (0o755, ROOT_GID),
+}
 
 
 def _entries(root: Path) -> list[tuple[str, Path]]:
@@ -36,7 +47,17 @@ def _entries(root: Path) -> list[tuple[str, Path]]:
     return [(".", root), *((f"./{p.relative_to(root).as_posix()}", p) for p in paths)]
 
 
-def _odc_header(name: bytes, mode: int, inode: int, size: int, mtime: int) -> bytes:
+def _kind_mode_gid(name: str, path: Path) -> tuple[int, int, int]:
+    """A path's type, its mode with that type, and its group: the Mac's own for its folders, root's for the rest."""
+    info = path.lstat()
+    if name in MAC_FOLDERS and stat.S_ISDIR(info.st_mode):
+        mode, gid = MAC_FOLDERS[name]
+        return stat.S_IFDIR, stat.S_IFDIR | mode, gid
+    kind = stat.S_IFMT(info.st_mode)
+    return kind, kind | stat.S_IMODE(info.st_mode), ROOT_GID
+
+
+def _odc_header(name: bytes, mode: int, inode: int, size: int, mtime: int, gid: int = ROOT_GID) -> bytes:
     nlink = 2 if stat.S_ISDIR(mode) else 1
     fields = (
         "070707",
@@ -44,7 +65,7 @@ def _odc_header(name: bytes, mode: int, inode: int, size: int, mtime: int) -> by
         f"{inode:06o}",
         f"{mode:06o}",
         f"{ROOT_UID:06o}",
-        f"{ROOT_GID:06o}",
+        f"{gid:06o}",
         f"{nlink:06o}",
         f"{0:06o}",  # rdev
         f"{mtime:011o}",
@@ -58,18 +79,16 @@ def cpio(root: Path, mtime: int = 0) -> bytes:
     """Every folder, file and symbolic link under ``root``, with its mode, owned by root, as an odc cpio archive."""
     out = bytearray()
     for inode, (name, path) in enumerate(_entries(root), start=1):
-        info = path.lstat()
-        if stat.S_ISLNK(info.st_mode):
-            data = os.readlink(path).encode("utf-8")
-            mode = stat.S_IFLNK | stat.S_IMODE(info.st_mode)  # as mkbom records it in the Bom
-        elif stat.S_ISDIR(info.st_mode):
-            data = b""
-            mode = stat.S_IFDIR | stat.S_IMODE(info.st_mode)
-        else:
-            data = path.read_bytes()
-            mode = stat.S_IFREG | stat.S_IMODE(info.st_mode)
+        kind, mode, gid = _kind_mode_gid(name, path)
+        data = (
+            os.readlink(path).encode("utf-8")
+            if kind == stat.S_IFLNK
+            else b""
+            if kind == stat.S_IFDIR
+            else path.read_bytes()
+        )
         encoded = name.encode("utf-8")
-        out += _odc_header(encoded, mode, inode, len(data), mtime) + encoded + b"\0" + data
+        out += _odc_header(encoded, mode, inode, len(data), mtime, gid) + encoded + b"\0" + data
     out += _odc_header(TRAILER.encode("ascii"), 0, 0, 0, 0) + TRAILER.encode("ascii") + b"\0"
     return bytes(out)
 
@@ -79,18 +98,20 @@ def payload(root: Path, mtime: int = 0) -> bytes:
     return gzip.compress(cpio(root, mtime), compresslevel=9, mtime=0)
 
 
-def listing(payload_data: bytes) -> list[tuple[str, str]]:
-    """The paths of a payload with their modes in octal, as bomutils' ``lsbom`` prints a Bom (``./a/f  100644``)."""
+def listing(payload_data: bytes) -> list[tuple[str, str, str]]:
+    """The paths of a payload with their modes in octal and their owners, as bomutils' ``lsbom`` prints a Bom
+    (``./a/f  100644  0/0``)."""
     data = gzip.decompress(payload_data)
     found, offset = [], 0
     while True:
         header = data[offset : offset + 76]
-        mode, name_size, size = int(header[18:24], 8), int(header[59:65], 8), int(header[65:76], 8)
+        mode, uid, gid = int(header[18:24], 8), int(header[24:30], 8), int(header[30:36], 8)
+        name_size, size = int(header[59:65], 8), int(header[65:76], 8)
         name = data[offset + 76 : offset + 76 + name_size - 1].decode("utf-8")
         offset += 76 + name_size + size
         if name == TRAILER:
             return found
-        found.append((name, f"{mode:o}"))
+        found.append((name, f"{mode:o}", f"{uid}/{gid}"))
 
 
 def _crc_table() -> list[int]:
@@ -123,19 +144,18 @@ def bom_listing(root: Path) -> str:
     path, the mode in octal, ``uid/gid``, and for a file or link its size and checksum (and a link's target)."""
     lines = []
     for name, path in _entries(root):
-        info = path.lstat()
-        mode = f"{info.st_mode:o}"
-        if stat.S_ISLNK(info.st_mode):
+        kind, mode, gid = _kind_mode_gid(name, path)
+        line = f"{name}\t{mode:o}\t{ROOT_UID}/{gid}"
+        if kind == stat.S_IFLNK:
             target = os.readlink(path)
             if target != "".join(target.split()):
                 raise ValueError(f"{name} links to '{target}': a Bom's list cannot hold a link target with whitespace")
             data = target.encode("utf-8")
-            lines.append(f"{name}\t{mode}\t{ROOT_UID}/{ROOT_GID}\t{len(data)}\t{cksum(data)}\t{target}")
-        elif stat.S_ISDIR(info.st_mode):
-            lines.append(f"{name}\t{mode}\t{ROOT_UID}/{ROOT_GID}")
-        else:
+            line += f"\t{len(data)}\t{cksum(data)}\t{target}"
+        elif kind != stat.S_IFDIR:
             data = path.read_bytes()
-            lines.append(f"{name}\t{mode}\t{ROOT_UID}/{ROOT_GID}\t{len(data)}\t{cksum(data)}")
+            line += f"\t{len(data)}\t{cksum(data)}"
+        lines.append(line)
     return "".join(f"{line}\n" for line in lines)
 
 
@@ -149,7 +169,8 @@ def count(root: Path) -> tuple[int, int]:
 
 def package_info(identifier: str, version: str, *, files: int, kbytes: int, scripts: tuple[str, ...]) -> bytes:
     """A part's PackageInfo. Not relocatable: an app of the same identifier somewhere else on the Mac must not make
-    the installer put the update there (pkgbuild's default for bundles)."""
+    the installer put the update there (pkgbuild's default for bundles). It does not overwrite the rights of what is
+    there already: the Mac's own folders keep theirs."""
     info = ET.Element(
         "pkg-info",
         {
@@ -159,7 +180,7 @@ def package_info(identifier: str, version: str, *, files: int, kbytes: int, scri
             "install-location": "/",
             "auth": "root",
             "relocatable": "false",
-            "overwrite-permissions": "true",
+            "overwrite-permissions": "false",  # what is there already keeps its rights (MAC_FOLDERS)
             "postinstall-action": "none",
             "generator-version": "claudia packaging/macos/flatpkg.py",
         },

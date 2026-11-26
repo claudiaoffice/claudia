@@ -32,6 +32,9 @@ concurrency:
 permissions:
   contents: read
 
+env:
+  PILLOW: "13.0.0" # as uv.lock has it: the stage makes the apps' icons with it
+
 jobs:
   package:
     name: Build the package
@@ -113,7 +116,7 @@ jobs:
 
       - name: Stage the files of the package
         run: >
-          uv run --no-project --with pillow python packaging/macos/build.py stage
+          uv run --no-project --with "pillow==$PILLOW" python packaging/macos/build.py stage
           --python build/python --node build/node --version "${{ steps.version.outputs.version }}" --out build/macos
 
       - name: Every program and library carries a code signature
@@ -143,7 +146,7 @@ jobs:
           for part in apps service; do
             bsdtar -xOf "$PKG" "$part.pkg/Bom" > "build/$part.bom"
             bsdtar -xOf "$PKG" "$part.pkg/Payload" > "build/$part.payload"
-            build/bomutils/build/bin/lsbom "build/$part.bom" | cut -f1,2 | sort > "build/$part.bom.txt"
+            build/bomutils/build/bin/lsbom "build/$part.bom" | cut -f1,2,3 | sort > "build/$part.bom.txt"
             uv run --no-project python packaging/macos/build.py list-payload "build/$part.payload" | sort > "build/$part.payload.txt"
             diff "build/$part.bom.txt" "build/$part.payload.txt" || { echo "::error::$part.pkg: its Bom and its payload differ"; exit 1; }
             echo "$part.pkg: $(wc -l < "build/$part.bom.txt") paths, the same in its Bom and its payload"

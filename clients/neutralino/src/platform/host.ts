@@ -36,10 +36,9 @@ export interface HostPlatform {
   /** Whether Neutralino takes the window's size in physical pixels, so the config's size must be asked for in logical
    * ones to show the whole page on a scaled display (Windows; macOS sizes windows in points already; D749). */
   readonly windowSizeInPhysicalPixels: boolean
-  /** The binary a window is started from: on macOS in a checkout a small .app bundle around the downloaded one, so the
-   * app's name shows; in an installation (`packaged`) the binary as it is, which is inside the app already and must not
-   * be written next to (E8.5, D1626); on Windows the downloaded binary itself. */
-  windowBinary(appDir: string, downloaded: string, identity: AppIdentity, packaged: boolean): WindowBinary
+  /** The binary a checkout's window is started from: on macOS a small .app bundle around the downloaded one, so the
+   * app's name shows; on Windows the downloaded binary itself. (An installed app's is taken as it is: launch.ts.) */
+  windowBinary(appDir: string, downloaded: string, identity: AppIdentity): WindowBinary
   /** Where a packaged client's window of `app` runs from, a fresh copy at every start (src/packaged.ts). */
   runFolder(app: string, env: Env, home: string): string
   /** What to do when that folder has a space in its path, which the core's command line cannot hold, in words. */

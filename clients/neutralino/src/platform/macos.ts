@@ -30,9 +30,7 @@ export const MACOS_HOST: HostPlatform = {
   neutralinoBinaryName: macNeutralinoBinaryName,
   coreCommandKey: 'commandDarwin',
   windowSizeInPhysicalPixels: false,
-  windowBinary: (appDir, downloaded, identity, packaged) => {
-    // Installed, the binary is inside the app (claudia <app>.app/Contents/MacOS/neutralino), which names it (D1626).
-    if (packaged) return { binary: downloaded }
+  windowBinary: (appDir, downloaded, identity) => {
     const displayName = macProcessName(identity)
     // Running the downloaded binary as it is never gets the application's name applied (macos-app-bundle.ts has the
     // story): the smallest .app bundle around a copy of it does.

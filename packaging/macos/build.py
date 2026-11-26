@@ -46,6 +46,7 @@ from shared import (  # noqa: E402  (packaging/shared.py)
     copy_tree,
     development_version,
     download,
+    load_pins,
     parse_version,
     require,
     verify_sha256,
@@ -60,6 +61,7 @@ SERVICE_LABEL = f"{BUNDLE_PREFIX}.server"
 SERVICE_PORT = 8765
 MINIMUM_MACOS = "14.0"
 LANGUAGES = ("en", "de")
+PARTS = {"apps": ("preinstall", "postinstall"), "service": ("postinstall",)}  # each part of the package, its scripts
 
 CLAUDIA = "/Library/Application Support/Claudia"
 RUNTIME = f"{CLAUDIA}/runtime"
@@ -72,7 +74,8 @@ def package_name(version: Version) -> str:
 
 
 def pins() -> dict:
-    return json.loads((HERE / "third-party.json").read_text(encoding="utf-8"))
+    """What the build downloads, pinned (third-party.json)."""
+    return load_pins(HERE)
 
 
 def check_pin(pin: dict, listing: str) -> None:
@@ -106,6 +109,7 @@ def fetch(name: str, target: Path) -> Path:
 
 # ---------------------------------------------------------------------------------------------------------- server
 def site_packages(python: Path) -> Path:
+    """Where the runtime's Python finds what is installed for it."""
     return python / "lib" / f"python{PYTHON}" / "site-packages"
 
 
@@ -135,12 +139,14 @@ def install_command(python: Path, requirements: Path, wheels: list[Path]) -> lis
     for it, so nothing is compiled -- above all nothing for Linux -- and this runs on Linux (D1625)."""
     return [
         "uv", "pip", "install", "--python-platform", "aarch64-apple-darwin", "--python-version", PYTHON,
-        "--only-binary", ":all:", "--target", str(site_packages(python)), "--requirement", str(requirements),
+        "--only-binary", ":all:", "--compile-bytecode", "--target", str(site_packages(python)),
+        "--requirement", str(requirements),
         *map(str, wheels),
     ]  # fmt: skip
 
 
 def install_server(python: Path, work: Path) -> Path:
+    """The server and what it needs into the runtime's Python (``work``: the lists and wheels on the way)."""
     if work.exists():
         shutil.rmtree(work)
     work.mkdir(parents=True)
@@ -158,6 +164,7 @@ def install_server(python: Path, work: Path) -> Path:
 
 # ------------------------------------------------------------------------------------------------------- the apps
 def info_plist(app: str, version: Version) -> dict:
+    """The Info.plist of ``claudia <app>.app``: its name, identifier, program, icon, version and the Macs it is for."""
     name = f"claudia {app}"
     release = version.numeric.rsplit(".", 1)[0]  # macOS wants at most three numbers
     return {
@@ -179,7 +186,7 @@ def info_plist(app: str, version: Version) -> dict:
 def app_program(app: str) -> str:
     """The program of ``claudia <app>.app`` (D1626): the launcher prepares the window with the bundled node, then this
     process becomes the Neutralino inside the app, so macOS shows one icon with the app's name. What both print is
-    kept in ~/Library/Logs/Claudia/<app>.log."""
+    kept in ~/Library/Logs/Claudia/<app>.log; when preparing fails, she is shown its last lines."""
     return f"""#!/bin/sh
 # The program of claudia {app}.app (E8.5, D1626), written by packaging/macos/build.py.
 R="{RUNTIME}"
@@ -187,7 +194,11 @@ B="$(cd "$(dirname "$0")" && pwd)"
 L="$HOME/Library/Logs/Claudia"
 mkdir -p "$L"
 export CLAUDIA_NEUTRALINO_BIN="$B/neutralino"
-"$R/node/bin/node" "$R/client/dist/launch.js" {app} --prepare >>"$L/{app}.log" 2>&1 || exit 1
+if ! "$R/node/bin/node" "$R/client/dist/launch.js" {app} --prepare >>"$L/{app}.log" 2>&1; then
+  osascript -e 'on run argv' -e 'display alert (item 1 of argv) message (item 2 of argv) as critical' -e 'end run' \
+    "claudia {app} could not start" "$(tail -n 5 "$L/{app}.log")" >/dev/null 2>&1
+  exit 1
+fi
 exec /bin/sh "$HOME/Library/Caches/Claudia/run/{app}/window.sh" >>"$L/{app}.log" 2>&1
 """
 
@@ -209,6 +220,7 @@ def icns(png: bytes) -> bytes:
 
 
 def write(path: Path, data: bytes | str, mode: int = 0o644) -> Path:
+    """``data`` into ``path`` (its folders made), with ``mode``: the payload keeps the modes of the stage."""
     path.parent.mkdir(parents=True, exist_ok=True)
     if isinstance(data, str):
         data = data.encode("utf-8")
@@ -218,6 +230,7 @@ def write(path: Path, data: bytes | str, mode: int = 0o644) -> Path:
 
 
 def app_bundle(applications: Path, app: str, version: Version, neutralino: Path, icon: bytes) -> None:
+    """``claudia <app>.app``: its Info.plist, its program, the Neutralino it becomes, its icon (D1626)."""
     contents = applications / f"claudia {app}.app" / "Contents"
     write(contents / "Info.plist", plistlib.dumps(info_plist(app, version)))
     write(contents / "MacOS" / f"claudia-{app}", app_program(app), 0o755)
@@ -226,6 +239,7 @@ def app_bundle(applications: Path, app: str, version: Version, neutralino: Path,
 
 
 def uninstaller_bundle(applications: Path, version: Version, icon: bytes) -> None:
+    """``Utilities/uninstall claudia.app``, whose program is uninstall-app.sh (D1628)."""
     contents = applications / "Utilities" / "uninstall claudia.app" / "Contents"
     info = info_plist("uninstall", version) | {
         "CFBundleName": "uninstall claudia",
@@ -323,6 +337,7 @@ def distribution(version: Version, kbytes: dict[str, int] | None = None) -> str:
 
 
 def license_page(text: str, language: str) -> str:
+    """The installer's licence page in ``language``: a sentence of its own, then the licence as it is."""
     lead = {
         "en": "claudia is free software. You may use, share and change it under these terms:",
         "de": "claudia ist freie Software. Sie dürfen sie unter diesen Bedingungen nutzen, weitergeben und ändern:",
@@ -387,7 +402,7 @@ def stage(root: Path, out: Path, *, python: Path, node: Path, version: Version) 
         applications, version, require(client / SUITE_ICON, "clients/neutralino/suite-icon.png").read_bytes()
     )
 
-    for component, scripts in (("apps", ("preinstall", "postinstall")), ("service", ("postinstall",))):
+    for component, scripts in PARTS.items():
         for script in scripts:
             text = (HERE / "scripts" / component / script).read_text(encoding="utf-8")
             write(out / component / "scripts" / script, text, 0o755)
@@ -406,9 +421,6 @@ def stage(root: Path, out: Path, *, python: Path, node: Path, version: Version) 
 
 
 # -------------------------------------------------------------------------------------------------------- package
-PARTS = {"apps": ("preinstall", "postinstall"), "service": ("postinstall",)}
-
-
 def check_signatures(stage_dir: Path) -> int:
     """How many Mach-O files the package holds; refused if one has no signature (macho.py, the owner's Q4)."""
     missing = [
@@ -524,8 +536,8 @@ def main(argv: list[str]) -> int:
             )
             print(package_name(result) if arguments.field == "name" else getattr(result, arguments.field))
         elif arguments.command == "list-payload":
-            for name, mode in flatpkg.listing(arguments.payload.read_bytes()):
-                print(f"{name}\t{mode}")
+            for name, mode, owner in flatpkg.listing(arguments.payload.read_bytes()):
+                print(f"{name}\t{mode}\t{owner}")
         elif arguments.command == "check-pins":
             print("pins in their publishers' lists: " + ", ".join(check_pins()))
         elif arguments.command == "fetch":

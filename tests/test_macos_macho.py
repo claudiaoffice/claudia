@@ -44,6 +44,22 @@ def fat(*slices: bytes) -> bytes:
     return (header + entries).ljust(4096, b"\0") + data
 
 
+def thin32(*commands: int, cpu: int = 7) -> bytes:
+    """A 32-bit Mach-O (i386 by default), whose header is 28 bytes."""
+    body = b"".join(struct.pack("<II", command, 16) + bytes(8) for command in commands)
+    return struct.pack("<IiiIIII", 0xFEEDFACE, cpu, 0, 2, len(commands), len(body), 0) + body
+
+
+def fat64(*slices: bytes) -> bytes:
+    """A universal binary with 64-bit offsets (FAT_MAGIC_64)."""
+    header = struct.pack(">II", 0xCAFEBABF, len(slices))
+    entries, data = b"", b""
+    for piece in slices:
+        entries += struct.pack(">iiQQII", CPU_ARM64, 0, 4096 + len(data), len(piece), 12, 0)
+        data += piece + bytes(-len(piece) % 4096)
+    return (header + entries).ljust(4096, b"\0") + data
+
+
 SIGNED = thin(LC_SEGMENT_64, LC_CODE_SIGNATURE)
 UNSIGNED = thin(LC_SEGMENT_64)
 
@@ -58,6 +74,12 @@ UNSIGNED = thin(LC_SEGMENT_64)
         (fat(thin(LC_SEGMENT_64, cpu=CPU_X86_64), SIGNED), True),
         (fat(thin(LC_CODE_SIGNATURE, cpu=CPU_X86_64), UNSIGNED), False),
         (thin(LC_CODE_SIGNATURE, cpu=CPU_X86_64), False),  # no slice for Apple Silicon at all
+        # what the check must not take for "not Mach-O", and so let through
+        (fat(thin32(LC_CODE_SIGNATURE), UNSIGNED), False),
+        (fat(thin32(LC_SEGMENT_64), SIGNED), True),
+        (fat64(UNSIGNED), False),
+        (fat64(SIGNED), True),
+        (thin32(LC_CODE_SIGNATURE, cpu=12), False),  # 32-bit ARM: Apple Silicon does not run it
     ],
 )
 def test_a_mach_o_runs_on_apple_silicon_when_its_arm64_slice_is_signed(data, expected):
@@ -88,3 +110,9 @@ def test_the_unsigned_mach_o_files_of_a_folder_are_found_and_links_are_not_follo
     (tmp_path / "bin" / "dangling").symlink_to("nowhere")
     assert macho.unsigned(tmp_path) == [Path("lib/_speedups.so")]
     assert macho.count(tmp_path) == 2
+
+
+def test_a_file_that_starts_as_mach_o_but_cannot_be_read_is_refused_not_let_through(tmp_path):
+    (tmp_path / "cut.so").write_bytes(fat(SIGNED)[:4100])  # a universal binary cut short, inside its slice
+    (tmp_path / "Example.class").write_bytes(b"\xca\xfe\xba\xbe\x00\x00\x00\x34" + bytes(64))
+    assert macho.unsigned(tmp_path) == [Path("cut.so")]

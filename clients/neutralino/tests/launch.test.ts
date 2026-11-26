@@ -643,7 +643,11 @@ describe('run of a packaged client on a Mac: --prepare (E8.5, D1626)', () => {
   const runFolder = () => join(home, 'Library', 'Caches', 'Claudia', 'run', 'creates')
 
   it('starts no window, and writes the one to start into the run folder in Caches', async () => {
-    const { deps, spawned } = mac()
+    const { deps, spawned } = mac({
+      windowBinary: () => {
+        throw new Error('a bundle would be written into the installation')
+      },
+    })
     expect(await run(creates, deps)).toBe(0)
     expect(spawned).toEqual([])
     const script = readFileSync(join(runFolder(), 'window.sh'), 'utf8')
@@ -653,7 +657,7 @@ describe('run of a packaged client on a Mac: --prepare (E8.5, D1626)', () => {
     )
   })
 
-  it('starts, as the window, the Neutralino inside the app, with what the core needs, quoted for any path', async () => {
+  it.skipIf(process.platform === 'win32')('starts, as the window, the Neutralino inside the app, with what the core needs, quoted for any path', async () => {
     const { deps } = mac({ packaged: () => ({ ...packaged, web: "/Library/Application Support/Claudia/it's web" }) })
     await run(creates, deps)
     const { execFileSync } = await import('node:child_process')
@@ -701,7 +705,7 @@ describe('run of a packaged client on a Mac: --prepare (E8.5, D1626)', () => {
   })
 
   it("says in a Mac's words when the run folder has a space in its path", async () => {
-    const { deps, err } = mac({ runFolder: () => '/Users/Max Muster/Library/Caches/Claudia/run/creates' })
+    const { deps, err } = mac({ runFolder: () => '/Users/Max Muster/Library/Caches/Claudia/run/creates', stage: () => {} })
     expect(await run(creates, deps)).toBe(1)
     expect(err.join('\n')).not.toContain('LOCALAPPDATA')
     expect(err.join('\n')).toContain('home folder')
