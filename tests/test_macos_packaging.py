@@ -469,7 +469,14 @@ def steps(job: str) -> dict[str, str]:
 def test_the_workflow_runs_as_the_windows_installers_does():
     triggers = workflow()["on"]
     assert triggers["push"] == {"branches": ["main"], "tags": ["v*"]}
-    for path in ("packaging/**", "clients/neutralino/**", "web/**", "packages/**", "uv.lock", ".github/workflows/macos.yml"):
+    for path in (
+        "packaging/**",
+        "clients/neutralino/**",
+        "web/**",
+        "packages/**",
+        "uv.lock",
+        ".github/workflows/macos.yml",
+    ):
         assert path in triggers["pull_request"]["paths"], path
     assert "workflow_dispatch" in triggers
 

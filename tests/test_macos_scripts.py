@@ -3,8 +3,8 @@ stands for the Mac's start volume (macOS Installer passes it as ``$3``; ``uninst
 
 The Mac's own commands are stand-ins on PATH that write what they were asked into a log: ``launchctl`` (the service is
 loaded when ``$LOADED`` is set), ``dscl`` (the accounts in ``$ACCOUNTS`` exist; ``$USED`` are the numbers in use),
-``pkill``, ``pkgutil``, ``chown``, and ``chmod`` for ``+a`` (an ACL; a mode is set for real). What only a Mac can tell --
-that launchd starts the server, that the ACL lets an administrator read the setup code -- is test-install.sh's.
+``pkill``, ``pkgutil``, ``chown``, and ``chmod`` for ``+a`` (an ACL; a mode is set for real). What only a Mac can
+tell -- that launchd starts the server, that the ACL lets an administrator read the setup code -- is test-install.sh's.
 """
 
 from __future__ import annotations
@@ -22,8 +22,7 @@ CLAUDIA = "Library/Application Support/Claudia"
 LABEL = "de.claudia-office.server"
 
 STANDINS = {
-    "launchctl": 'echo "launchctl $*" >> "$LOG"\n'
-    'case "$1" in print) [ -n "$LOADED" ] ;; *) exit 0 ;; esac\n',
+    "launchctl": 'echo "launchctl $*" >> "$LOG"\ncase "$1" in print) [ -n "$LOADED" ] ;; *) exit 0 ;; esac\n',
     "dscl": 'echo "dscl $*" >> "$LOG"\n'
     'case "$2" in\n'
     '  -read) for a in $ACCOUNTS; do [ "$3" = "/Users/$a" ] || [ "$3" = "/Groups/$a" ] && exit 0; done; exit 56 ;;\n'
@@ -122,7 +121,9 @@ def test_the_service_gets_a_hidden_account_with_a_free_number_below_500(mac):
 def test_an_account_that_is_there_is_kept(mac):
     volume, run, asked = mac
     make(volume / "Library" / "LaunchDaemons" / f"{LABEL}.plist")
-    assert run(MACOS / "scripts" / "service" / "postinstall", *install_args(volume), ACCOUNTS="_claudia").returncode == 0
+    assert (
+        run(MACOS / "scripts" / "service" / "postinstall", *install_args(volume), ACCOUNTS="_claudia").returncode == 0
+    )
     assert not any("-create" in line for line in asked())
 
 
@@ -160,9 +161,13 @@ LAST_WORDS = (
 def installed(mac):
     volume, run, asked = mac
     paths = {
-        **{app: make(volume / "Applications" / f"claudia {app}.app" / "Contents" / "Info.plist") for app in
-           ("composes", "computes", "creates")},
-        "uninstaller": make(volume / "Applications" / "Utilities" / "uninstall claudia.app" / "Contents" / "Info.plist"),
+        **{
+            app: make(volume / "Applications" / f"claudia {app}.app" / "Contents" / "Info.plist")
+            for app in ("composes", "computes", "creates")
+        },
+        "uninstaller": make(
+            volume / "Applications" / "Utilities" / "uninstall claudia.app" / "Contents" / "Info.plist"
+        ),
         "runtime": make(volume / CLAUDIA / "runtime" / "VERSION"),
         "daemon": make(volume / "Library" / "LaunchDaemons" / f"{LABEL}.plist"),
         "service file": make(volume / CLAUDIA / "service.json"),
@@ -208,7 +213,7 @@ def test_uninstalling_ends_every_process_of_claudia_and_not_itself(installed):
     c = f"{volume}/{CLAUDIA}"
     running = [
         f"{volume}/Applications/claudia computes.app/Contents/MacOS/neutralino --path=/Users/anna/Library/Caches/x",
-        "/Users/anna/Library/Caches/Claudia/run/computes/node /Users/anna/Library/Caches/Claudia/run/computes/ext/core.mjs",
+        "/Users/anna/Library/Caches/Claudia/run/computes/node ext/core.mjs",
         f"{c}/runtime/node/bin/node {c}/runtime/client/dist/launch.js computes --prepare",
         f"{c}/runtime/server/../python/bin/python3 -I -m claudia_server --port 20501",
     ]

@@ -186,7 +186,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
         run: |
-          # The Windows installer's workflow makes the release too: whichever is first, the other adds its file to it.
+          # The Windows installer's and the macOS package's workflows make the release too: whichever is first, the
+          # others add their files to it.
           gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 \
             || gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --generate-notes \
             || gh release view "$GITHUB_REF_NAME" >/dev/null

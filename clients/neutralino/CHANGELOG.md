@@ -5,6 +5,15 @@ two systems had a package each, `clients/macos` and `clients/windows`; their his
 
 ## [0.3.0] - unreleased
 
+### Added (E8.5, D1626): the launcher of an installed macOS app
+- `--prepare` (an installed app on a Mac): does everything up to the window and writes `window.sh` into the run folder,
+  what it changes in the environment and the `exec` of the Neutralino inside the app, quoted for any path; the app's
+  program execs it, so the window is the process macOS launched (`launch.ts`: `windowScript`, `environmentChanges`,
+  `shellQuote`).
+- `HostPlatform.runFolder` (macOS: `~/Library/Caches/Claudia/run/<app>`), `runFolderWithSpace`, `linkNodeIntoRun` (the
+  core is started through a link to the bundled node, whose path has a space), and `windowBinary(…, packaged)`: an
+  installed app's binary is taken as it is.
+
 ### Added (SEC-27): where a picked file is
 - The core's `file_result` `picked` carries `path`, the chosen file's full path, and the shell page hands it to the
   page (contract version 1, an optional field), for Insert ▸ Image's "Don't save the path".
