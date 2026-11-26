@@ -20,7 +20,7 @@ PROC-24 to PROC-27, CODE-58 to CODE-61, SEC-19, UX-44; SEC-15 fixed (see "Round 
 
 ## Index
 
-### Fixed (247)
+### Fixed (248)
 
 By ID. Items closed without a fix (superseded, wontfix) are here too.
 
@@ -126,6 +126,7 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | UX-100 | P3 | UX / composes | Shift+Home over words just typed, not sent yet, selects nothing: Copy, Cut and Name & Describe… are then not offered | **fixed** on `menus` (a selection into the words not sent yet is kept until they are sent) | 2026-11-25 | 2026-11-26 |
 | CODE-112 | P2 | Code / clients | The page told the Windows and macOS shells the states of context-menu entries, which they refused as unknown actions at every report | **fixed** on `menus` (slice 6: the page names only the bar's entries) | 2026-11-26 | 2026-11-26 |
 | PROC-71 | P2 | Process | The Linux client's GTK tests had not run on `menus` since slice 2: seven of them still asked for File ▸ Save and Shift+F10 | **fixed** on `menus` (brought to the definition; run under Xvfb) | 2026-11-26 | 2026-11-26 |
+| PROC-73 | P2 | Process / tests | The scenario "A reference has a context menu of its own" failed on CI: it pressed Enter in the reference picker before the heading was in its list | **fixed** on `menus` (the step waits for the heading to be chosen) | 2026-11-26 | 2026-11-26 |
 | UX-94 | P3 | UX / desktop clients | The list of a place's documents is headed "On {place}", which reads "On Shared on this computer" with the new place names | **fixed** 2026-11-26 (`mac-installer`, E8.5 parts 1 and 2, merged into `main` with the owner's agreement) | 2026-11-25 | 2026-11-26 |
 | CODE-01 | P2 | Code | No coverage, no web lint; Playwright not declared | **fixed** |  |  |
 | CODE-02 | P3 | Code | 26 build files tracked in `web/dist` | fixed |  |  |
@@ -2976,3 +2977,10 @@ read `admin\setup-code` and make herself the first administrator of everybody's 
 the installer takes the inherited rights off the state folder and grants `SYSTEM`, `Administrators` and the service
 only (`claudia.iss`); `tests/test_windows_packaging.py` and the install check of `windows.yml` (the folder has no
 `BUILTIN\Users`). **Fixed** 2026-11-26: merged into `main` with `mac-installer`.
+
+### PROC-73 · The reference scenario pressed Enter before the heading was in the picker · P2 · size 3 · fixed
+**Measured** on CI, 2026-11-26 (run 45853205363, End to end in Chromium, after menus was merged into main):
+`test_a_reference_has_a_context_menu_of_its_own` waited 30 s for the reference and found none. The step typed the
+heading's words into Insert ▸ Cross Reference… and pressed Enter at once; on a slower machine the heading made a moment
+before was not yet in the picker's list, so nothing was chosen and Enter put nothing in. It passed in three full runs
+here. **Fixed** on `menus`, 2026-11-26: the step waits until the heading is the chosen option, then presses Enter.
