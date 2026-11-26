@@ -42,9 +42,11 @@ The tests that need no Mac: `tests/test_macos_packaging.py`, `test_macos_flatpkg
 
 ## Pins
 
-A download is refused unless its SHA-256 is the one in `third-party.json`, and the refusal says which it found. To move
-to a newer CPython or Node: change `version` and `url`, let CI download it once, compare the SHA-256 it prints with the
-publisher's list (python-build-standalone's `SHA256SUMS`, Node's `SHASUMS256.txt`), and put it in.
+A download is refused unless its SHA-256 is the one in `third-party.json`, and the refusal says which it found. Before
+it downloads, CI checks each pin against its publisher's own list (`checksums`: python-build-standalone's `SHA256SUMS`,
+Node's `SHASUMS256.txt`; `build.py check-pins`). To move to a newer CPython or Node: change `version`, `url` and
+`checksums`, let CI download it once, and put the SHA-256 it prints in; the next run checks it against the list.
+bomutils publishes no list (its file is GitHub's archive of the tag): its pin is the first download's.
 
 ## Signatures
 

@@ -29,8 +29,10 @@ import plistlib
 import shutil
 import subprocess
 import sys
+import urllib.request
 from io import BytesIO
 from pathlib import Path
+from urllib.parse import unquote
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
@@ -71,6 +73,27 @@ def package_name(version: Version) -> str:
 
 def pins() -> dict:
     return json.loads((HERE / "third-party.json").read_text(encoding="utf-8"))
+
+
+def check_pin(pin: dict, listing: str) -> None:
+    """Refuses a pin whose SHA-256 is not in its publisher's list (``SHA256SUMS``, ``SHASUMS256.txt``) for the
+    file's own name, so that a pin taken from CI's first download is the file the publisher made."""
+    name = unquote(pin["url"].rsplit("/", 1)[-1])
+    lines = {tuple(line.split()) for line in listing.splitlines() if line.strip()}
+    if (pin["sha256"], name) not in lines and (pin["sha256"], f"*{name}") not in lines:
+        raise BuildError(f"the pin of {name} ({pin['sha256']}) is not in its publisher's list")
+
+
+def check_pins() -> list[str]:
+    """Each pin that names its publisher's list, checked against it; the names of those checked."""
+    checked = []
+    for name, pin in pins().items():
+        if name.startswith("_") or "checksums" not in pin:
+            continue
+        with urllib.request.urlopen(pin["checksums"], timeout=60) as response:  # noqa: S310 (a pinned https url)
+            check_pin(pin, response.read().decode("utf-8"))
+        checked.append(name)
+    return checked
 
 
 def fetch(name: str, target: Path) -> Path:
@@ -452,6 +475,8 @@ def _arguments(argv: list[str]) -> argparse.Namespace:
     version.add_argument("--commit")
     version.add_argument("--field", choices=("text", "numeric", "name"), default="text")
 
+    commands.add_parser("check-pins", help="check the pins against their publishers' lists")
+
     fetched = commands.add_parser("fetch", help="download a pinned file (third-party.json)")
     fetched.add_argument("name", choices=("python", "node", "bomutils"))
     fetched.add_argument("target", type=Path)
@@ -488,6 +513,8 @@ def main(argv: list[str]) -> int:
                 else parse_version(arguments.tag, arguments.build)
             )
             print(package_name(result) if arguments.field == "name" else getattr(result, arguments.field))
+        elif arguments.command == "check-pins":
+            print("pins in their publishers' lists: " + ", ".join(check_pins()))
         elif arguments.command == "fetch":
             print(fetch(arguments.name, arguments.target))
         elif arguments.command == "server":

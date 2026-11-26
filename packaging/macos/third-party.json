@@ -1,21 +1,23 @@
 {
-  "_comment": "What the macOS package's build downloads, pinned (D742): the file is refused if its SHA-256 differs, and the refusal prints the SHA-256 it found. To update: change the version and url, let CI download it once, compare the SHA-256 it prints with the publisher's own list (python-build-standalone's SHA256SUMS, Node's SHASUMS256.txt), and put it here.",
+  "_comment": "What the macOS package's build downloads, pinned (D742): the file is refused if its SHA-256 differs, and the refusal prints the SHA-256 it found. CI checks each pin against the publisher's own list first (`checksums`; build.py check-pins). To update: change the version, url and checksums, let CI download it once, and put the SHA-256 it prints here; CI then checks it against the publisher's list. bomutils publishes no list (its file is GitHub's archive of the tag): its pin is the first download's (2026-11-26).",
   "python": {
     "version": "3.14.6+20260718",
     "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20260718/cpython-3.14.6%2B20260718-aarch64-apple-darwin-install_only_stripped.tar.gz",
-    "sha256": "",
+    "checksums": "https://github.com/astral-sh/python-build-standalone/releases/download/20260718/SHA256SUMS",
+    "sha256": "5e8e0746cb0108d138f510cfbb28c4b031b9ed63bbbe3e43a34c77d4663c4fa1",
     "license": "PSF-2.0 (CPython), MPL-2.0 (python-build-standalone), https://github.com/astral-sh/python-build-standalone"
   },
   "node": {
     "version": "22.22.0",
     "url": "https://nodejs.org/dist/v22.22.0/node-v22.22.0-darwin-arm64.tar.gz",
-    "sha256": "",
+    "checksums": "https://nodejs.org/dist/v22.22.0/SHASUMS256.txt",
+    "sha256": "5ed4db0fcf1eaf84d91ad12462631d73bf4576c1377e192d222e48026a902640",
     "license": "MIT, https://github.com/nodejs/node/blob/main/LICENSE"
   },
   "bomutils": {
     "version": "0.2",
     "url": "https://github.com/hogliux/bomutils/archive/refs/tags/0.2.tar.gz",
-    "sha256": "",
+    "sha256": "fb1f4ae37045eaa034ddd921ef6e16fb961e95f0364e5d76c9867bc8b92eb8a4",
     "license": "GPL-2.0, https://github.com/hogliux/bomutils; only run while building, not put into the package"
   }
 }

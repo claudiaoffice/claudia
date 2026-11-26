@@ -537,3 +537,25 @@ def test_the_pins_are_versioned_urls_of_their_publishers():
             continue
         assert pin["url"].startswith("https://") and pin["version"].split("+")[0] in pin["url"].replace("%2B", "+")
         assert re.fullmatch(r"[0-9a-f]{64}", pin["sha256"]), f"{name} is not pinned yet: let CI download it once"
+
+
+# ------------------------------------------------------------------------------------------- pins and their lists
+def test_a_pin_is_found_in_its_publishers_list_under_the_files_own_name():
+    pin = {"url": "https://example.org/v1/cpython-3.14.6%2B20260718-aarch64-apple-darwin.tar.gz", "sha256": "ab" * 32}
+    listing = f"{'cd' * 32}  other.tar.gz\n{'ab' * 32}  cpython-3.14.6+20260718-aarch64-apple-darwin.tar.gz\n"
+    build.check_pin(pin, listing)
+    with pytest.raises(build.BuildError, match="not in its publisher's list"):
+        build.check_pin(pin | {"sha256": "ef" * 32}, listing)
+    with pytest.raises(build.BuildError, match="not in its publisher's list"):
+        build.check_pin(pin, f"{'ab' * 32}  something-else.tar.gz\n")
+
+
+def test_cpython_and_node_name_their_publishers_lists():
+    pins = build.pins()
+    assert pins["python"]["checksums"].endswith("/SHA256SUMS")
+    assert pins["node"]["checksums"] == f"https://nodejs.org/dist/v{pins['node']['version']}/SHASUMS256.txt"
+
+
+def test_the_workflow_checks_the_pins_against_the_publishers_lists_before_it_downloads():
+    found = "\n".join(steps("package").values())
+    assert found.index("build.py check-pins") < found.index('build.py fetch "$name"')

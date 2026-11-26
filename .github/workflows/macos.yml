@@ -88,6 +88,7 @@ jobs:
 
       - name: Third-party files, pinned (CPython and Node for macOS on Apple Silicon, bomutils)
         run: |
+          uv run --no-project python packaging/macos/build.py check-pins
           mkdir -p build/python build/node build/bomutils
           # each is tried, so that one run says the SHA-256 of every file that does not match its pin
           refused=0
