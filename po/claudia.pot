@@ -1941,11 +1941,15 @@ msgstr ""
 msgid "Documents are encrypted on this server; Claude reads what it is shown in plain text."
 msgstr ""
 
+#: clients/contract/src/claudia_menus/manifest.py
+msgid "Document…"
+msgstr ""
+
 #: web/app/components/ImageImportDialog.vue
 msgid "Don't save the path"
 msgstr ""
 
-#: web/app/components/AcceptOwnershipDialog.vue web/app/components/AssignOwnerDialog.vue web/app/components/DownloadDialog.vue web/app/components/ExportFormatDialog.vue web/app/components/PaletteDialog.vue web/app/components/RedactionDialog.vue web/app/components/RotatePopover.vue web/app/components/ShareDialog.vue
+#: web/app/components/AcceptOwnershipDialog.vue web/app/components/DownloadDialog.vue web/app/components/ExportFormatDialog.vue web/app/components/HandOverDialog.vue web/app/components/PaletteDialog.vue web/app/components/RedactionDialog.vue web/app/components/RotatePopover.vue web/app/components/ShareDialog.vue
 msgid "Done"
 msgstr ""
 
@@ -2127,6 +2131,10 @@ msgstr ""
 
 #: web/app/components/ImageImportDialog.vue
 msgid "Everyone who can open this document sees it."
+msgstr ""
+
+#: web/app/components/ShortcutsDialog.vue
+msgid "Everything"
 msgstr ""
 
 #: web/app/lib/search.ts
@@ -4101,6 +4109,10 @@ msgstr ""
 msgid "Only a chart on a sheet moves to a slide."
 msgstr ""
 
+#: web/app/components/SheetGrid.vue web/app/components/SlideCanvas.vue web/app/components/TextObjectMenu.vue
+msgid "Only a picture can be cut or copied."
+msgstr ""
+
 #: web/app/components/FirstAdminSetup.vue
 msgid "Only an administrator of this computer can name this server's first administrator. Ask one."
 msgstr ""
@@ -5565,7 +5577,7 @@ msgstr ""
 msgid "Shared on this computer"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Share…"
 msgstr ""
 
@@ -8625,7 +8637,7 @@ msgstr ""
 msgid "Your documents are in use by another Claudia server on this computer: most likely your own, of an older version, which is still running."
 msgstr ""
 
-#: web/app/components/AdminLogin.vue web/app/components/DetailsDialog.vue web/app/components/FirstAdminSetup.vue web/app/components/ImportDialog.vue web/app/components/OpenDialog.vue
+#: web/app/components/AdminLogin.vue web/app/components/DeleteFromListDialog.vue web/app/components/DetailsDialog.vue web/app/components/FirstAdminSetup.vue web/app/components/ImportDialog.vue web/app/components/OpenDialog.vue
 msgid "Your name"
 msgstr ""
 

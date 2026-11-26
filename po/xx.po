@@ -1941,11 +1941,15 @@ msgstr "[Dôcûménts àré éncryptéd ôn thîs sérvér. Clàûdé réàds wh
 msgid "Documents are encrypted on this server; Claude reads what it is shown in plain text."
 msgstr "[Dôcûménts àré éncryptéd ôn thîs sérvér; Clàûdé réàds whàt ît îs shôwn în plàîn téxt.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
+#: clients/contract/src/claudia_menus/manifest.py
+msgid "Document…"
+msgstr "[Dôcûmént…~~~~]"
+
 #: web/app/components/ImageImportDialog.vue
 msgid "Don't save the path"
 msgstr "[Dôn't sàvé thé pàth~~~~~~~~]"
 
-#: web/app/components/AcceptOwnershipDialog.vue web/app/components/AssignOwnerDialog.vue web/app/components/DownloadDialog.vue web/app/components/ExportFormatDialog.vue web/app/components/PaletteDialog.vue web/app/components/RedactionDialog.vue web/app/components/RotatePopover.vue web/app/components/ShareDialog.vue
+#: web/app/components/AcceptOwnershipDialog.vue web/app/components/DownloadDialog.vue web/app/components/ExportFormatDialog.vue web/app/components/HandOverDialog.vue web/app/components/PaletteDialog.vue web/app/components/RedactionDialog.vue web/app/components/RotatePopover.vue web/app/components/ShareDialog.vue
 msgid "Done"
 msgstr "[Dôné~~]"
 
@@ -2128,6 +2132,10 @@ msgstr "[Évérybôdy séés thàt yôû rédàctéd sôméthîng, hôw mûch à
 #: web/app/components/ImageImportDialog.vue
 msgid "Everyone who can open this document sees it."
 msgstr "[Évéryôné whô càn ôpén thîs dôcûmént séés ît.~~~~~~~~~~~~~~~~~~]"
+
+#: web/app/components/ShortcutsDialog.vue
+msgid "Everything"
+msgstr "[Évérythîng~~~~]"
 
 #: web/app/lib/search.ts
 msgid "Everything ({count})"
@@ -4101,6 +4109,10 @@ msgstr "[Ôné stép în thé hîstôry. Ûndô pûts évérythîng bàck.~~~~~~
 msgid "Only a chart on a sheet moves to a slide."
 msgstr "[Ônly à chàrt ôn à shéét môvés tô à slîdé.~~~~~~~~~~~~~~~~]"
 
+#: web/app/components/SheetGrid.vue web/app/components/SlideCanvas.vue web/app/components/TextObjectMenu.vue
+msgid "Only a picture can be cut or copied."
+msgstr "[Ônly à pîctûré càn bé cût ôr côpîéd.~~~~~~~~~~~~~~]"
+
 #: web/app/components/FirstAdminSetup.vue
 msgid "Only an administrator of this computer can name this server's first administrator. Ask one."
 msgstr "[Ônly àn àdmînîstràtôr ôf thîs cômpûtér càn nàmé thîs sérvér's fîrst àdmînîstràtôr. Àsk ôné.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
@@ -5565,7 +5577,7 @@ msgstr "[Shàré thîs dôcûmént~~~~~~~~]"
 msgid "Shared on this computer"
 msgstr "[Shàréd ôn thîs cômpûtér~~~~~~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Share…"
 msgstr "[Shàré…~~]"
 
@@ -8625,7 +8637,7 @@ msgstr "[Yôûr chàngés tô thé pàttérn àré drôppéd.~~~~~~~~~~~~~~~~]"
 msgid "Your documents are in use by another Claudia server on this computer: most likely your own, of an older version, which is still running."
 msgstr "[Yôûr dôcûménts àré în ûsé by ànôthér Clàûdîà sérvér ôn thîs cômpûtér: môst lîkély yôûr ôwn, ôf àn ôldér vérsîôn, whîch îs stîll rûnnîng.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/AdminLogin.vue web/app/components/DetailsDialog.vue web/app/components/FirstAdminSetup.vue web/app/components/ImportDialog.vue web/app/components/OpenDialog.vue
+#: web/app/components/AdminLogin.vue web/app/components/DeleteFromListDialog.vue web/app/components/DetailsDialog.vue web/app/components/FirstAdminSetup.vue web/app/components/ImportDialog.vue web/app/components/OpenDialog.vue
 msgid "Your name"
 msgstr "[Yôûr nàmé~~~~]"
 

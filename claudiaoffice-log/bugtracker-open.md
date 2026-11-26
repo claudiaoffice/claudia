@@ -27,7 +27,7 @@ The index is the status of record; a section below keeps the status of the round
 re-checked. **Opened** and **Fixed** are filled from 2026-11-20 on: for older items only where the status already gave
 the date.
 
-### Open (74)
+### Open (76)
 
 By priority (P1, P2, P3, then items that wait for a decision without one), then by ID.
 
@@ -53,6 +53,7 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | UX-91 | P2 | UX / composes / Firefox | In Firefox the down arrow from the paragraph above a new table does not put the caret in its first box (Chromium does) | **new, open** (measured on CI) | 2026-11-25 |  |
 | UX-93 | P2 | UX / a11y | The font banner ("This document uses fonts this server does not have …") is dark text on a dark ground, about 1.1:1 (BITV 1.4.3 asks 4.5:1) | **new, open** (measured) | 2026-11-25 |  |
 | CODE-31 | P2 | Code / i18n | The history speaks English to everybody: command labels and summaries are not translated | **new, open** |  |  |
+| CODE-111 | P2 | Code / i18n | The native menus of the Windows and macOS clients are always in English: the generated listing has the English labels and nothing translates them | **new, open** (read) | 2026-11-26 |  |
 | CODE-107 | P2 | computes I/O | In a kept xlsx, a formula Excel cannot say is written as its value, and no `formula` loss says so | **new, open** (read) | 2026-11-25 |  |
 | CODE-108 | P2 | Code / desktop clients | A desktop window cannot connect to a server of all three apps (`"app": null`), so "Shared on this computer" cannot be opened | **new, open** (measured) | 2026-11-25 |  |
 | PROC-15 | P2 | Process | The tracker and the backlog lag the code: fixed items still "open", 64 stories at a placeholder 50 % | partly fixed 2026-11-25 (batch 1: the index guard); the backlog's placeholder 50 % stays open |  |  |
@@ -107,6 +108,7 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | CODE-110 | P3 | Code / desktop clients | Both desktop shells cut a path longer than 4096 characters without a word; such a picture path would be saved wrong | **new, open** (read) | 2026-11-26 |  |
 | PROC-70 | P3 | Process / tests | `uv run pytest clients/linux/tests` cannot load `test_contract.py`: `jsonschema` is not in the uv environment | **new, open** (measured) | 2026-11-26 |  |
 | SEC-31 | P3 | Security / privacy | A viewer's office export of a document whose imported file was kept still carries that file's own authors and dates (metadata, tracked changes) | **needs decision** (read) | 2026-11-26 |  |
+| PROC-72 | P3 | Process / tests | The composes-computes-creates scenario "The way back stays until I use it or start working" failed once in creates when the machine was busy: the text box on slide 9 was not there to click within 30 s | **new, open** (measured once) | 2026-11-26 |  |
 
 ## Security
 
@@ -701,6 +703,7 @@ which Word writes for nearly every paragraph) is counted as a `formatting` loss,
 not visible in the text. So the import over-counts what it leaves out. **Acceptance:** a docx whose only run properties
 are those of paragraph marks reports no `formatting` loss.
 
+## Found by the menu audit (2026-11-25; branch `menus`)
 ## Found in the architecture review of 2026-11-25
 
 Logged by the owner's word of 2026-11-25 (`/tmp` report "Architecture review · claudia", candidates 1, 3 and 6, and the

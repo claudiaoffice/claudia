@@ -34,7 +34,7 @@ from .connector import Connector, ServerBook, Work, run_threaded
 from .files import Chosen, Dialogs, Failed, Files
 from .i18n import translate as _
 from .identity import AppIdentity
-from .manifest import Action, Kind, Manifest, about_links, for_start, menu_button_id, menu_xml, on_start
+from .menu_xml import WHY_ACTION, menu_button_id, menu_xml
 from .private_server import setup_code_for_page
 from .settings import save_shell_locale
 from .trust import TrustStore

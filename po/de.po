@@ -719,7 +719,7 @@ msgstr "Alle Nummerierungen …"
 
 #: clients/contract/src/claudia_menus/manifest.py web/app/components/StyleMenu.vue
 msgid "All Styles…"
-msgstr "Alle Formatvorlagen…"
+msgstr "Alle Formate…"
 
 #: web/app/lib/grid-a11y.ts
 msgid "All cells selected"
@@ -1941,11 +1941,15 @@ msgstr "Dokumente sind auf diesem Server verschlüsselt. Claude liest im Klartex
 msgid "Documents are encrypted on this server; Claude reads what it is shown in plain text."
 msgstr "Dokumente sind auf diesem Server verschlüsselt; Claude liest im Klartext, was ihm gezeigt wird."
 
+#: clients/contract/src/claudia_menus/manifest.py
+msgid "Document…"
+msgstr "Dokument…"
+
 #: web/app/components/ImageImportDialog.vue
 msgid "Don't save the path"
 msgstr "Pfad nicht speichern"
 
-#: web/app/components/AcceptOwnershipDialog.vue web/app/components/AssignOwnerDialog.vue web/app/components/DownloadDialog.vue web/app/components/ExportFormatDialog.vue web/app/components/PaletteDialog.vue web/app/components/RedactionDialog.vue web/app/components/RotatePopover.vue web/app/components/ShareDialog.vue
+#: web/app/components/AcceptOwnershipDialog.vue web/app/components/DownloadDialog.vue web/app/components/ExportFormatDialog.vue web/app/components/HandOverDialog.vue web/app/components/PaletteDialog.vue web/app/components/RedactionDialog.vue web/app/components/RotatePopover.vue web/app/components/ShareDialog.vue
 msgid "Done"
 msgstr "Fertig"
 
@@ -2128,6 +2132,10 @@ msgstr "Alle sehen, dass Sie etwas geschwärzt haben, wie viel und wann, aber ni
 #: web/app/components/ImageImportDialog.vue
 msgid "Everyone who can open this document sees it."
 msgstr "Alle, die dieses Dokument öffnen können, sehen ihn."
+
+#: web/app/components/ShortcutsDialog.vue
+msgid "Everything"
+msgstr "Alles"
 
 #: web/app/lib/search.ts
 msgid "Everything ({count})"
@@ -4101,6 +4109,10 @@ msgstr "Ein Schritt im Verlauf. Mit „Rückgängig“ ist alles wieder da."
 msgid "Only a chart on a sheet moves to a slide."
 msgstr "Nur ein Diagramm auf einem Blatt lässt sich auf eine Folie verschieben."
 
+#: web/app/components/SheetGrid.vue web/app/components/SlideCanvas.vue web/app/components/TextObjectMenu.vue
+msgid "Only a picture can be cut or copied."
+msgstr "Nur ein Bild kann ausgeschnitten oder kopiert werden."
+
 #: web/app/components/FirstAdminSetup.vue
 msgid "Only an administrator of this computer can name this server's first administrator. Ask one."
 msgstr "Nur ein Administrator dieses Computers kann den ersten Administrator dieses Servers bestimmen. Fragen Sie einen."
@@ -5565,7 +5577,7 @@ msgstr "Dieses Dokument teilen"
 msgid "Shared on this computer"
 msgstr "Geteilt auf diesem Computer"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts
+#: clients/contract/src/claudia_menus/manifest.py
 msgid "Share…"
 msgstr "Teilen…"
 
@@ -5943,7 +5955,7 @@ msgstr "Strich"
 
 #: clients/contract/src/claudia_menus/manifest.py web/app/components/StyleMenu.vue web/app/components/StylePicker.vue
 msgid "Style"
-msgstr "Formatvorlage"
+msgstr "Format"
 
 #: web/app/lib/export-losses.ts
 msgid "Style settings the format cannot hold: {names}"
@@ -5971,7 +5983,7 @@ msgstr "Als Textkörper gespeicherte Formate: {names}"
 
 #: clients/contract/src/claudia_menus/manifest.py
 msgid "Style…"
-msgstr "Formatvorlage…"
+msgstr "Format…"
 
 #: web/app/components/SidePanel.vue
 msgid "Suggest first"
@@ -8625,7 +8637,7 @@ msgstr "Ihre Änderungen am Muster gehen verloren."
 msgid "Your documents are in use by another Claudia server on this computer: most likely your own, of an older version, which is still running."
 msgstr "Ihre Dokumente werden von einem anderen Claudia-Server auf diesem Computer verwendet: höchstwahrscheinlich von Ihrem eigenen in einer älteren Version, der noch läuft."
 
-#: web/app/components/AdminLogin.vue web/app/components/DetailsDialog.vue web/app/components/FirstAdminSetup.vue web/app/components/ImportDialog.vue web/app/components/OpenDialog.vue
+#: web/app/components/AdminLogin.vue web/app/components/DeleteFromListDialog.vue web/app/components/DetailsDialog.vue web/app/components/FirstAdminSetup.vue web/app/components/ImportDialog.vue web/app/components/OpenDialog.vue
 msgid "Your name"
 msgstr "Ihr Name"
 
