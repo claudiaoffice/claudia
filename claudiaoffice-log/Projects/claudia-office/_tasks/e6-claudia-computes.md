@@ -21,7 +21,7 @@ updatedAt: "2026-11-22T12:00:00.000Z"
 Project: [[claudia-office|claudia-office]]
 
 ## Subtasks
-- [ ] [[e6.1-sheet-model-on-the-kernel|E6.1 Sheet model on the kernel]]
+- [x] [[e6.1-sheet-model-on-the-kernel|E6.1 Sheet model on the kernel]]
 - [x] [[e6.2-virtualised-grid-in-gtk-dropped|E6.2 Virtualised grid in GTK — dropped]]
 - [ ] [[e6.3-grid-in-the-frontend|E6.3 Grid in the frontend]]
 - [ ] [[e6.4-numeric-semantics|E6.4 Numeric semantics]]

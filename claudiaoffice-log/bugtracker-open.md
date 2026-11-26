@@ -33,7 +33,7 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 
 | ID | Pri | Category | Title | Status | Opened | Fixed |
 |---|---|---|---|---|---|---|
-| SEC-19 | P2 | Security / Perf | Imports run on the worker pool with no memory cap; `check_package` bounds the input, not the parsed model | **new, open** |  |  |
+| SEC-19 | P1 | Security / Perf | Imports run on the worker pool with no memory cap; `check_package` bounds the input, not the parsed model | **new, open** |  |  |
 | SEC-22 | P2 | Security | Who wrote which stretch (`runs`, E9.10) is part of the content state, so a viewer still receives it: in the `blocks` method, in `text` events, in the snapshot and in her own sealed file, although D1261 says no data should be behind "show who wrote what" for a viewer | **new, open**, needs the owner's decision (mask it live and in the viewer's file, or accept it as content) |  |  |
 | SEC-24 | P2 | Security / privacy | An owner's export writes every chat message into the file, also the private ones between other people that she cannot read in the document | **new, open** (read) | 2026-11-25 |  |
 | SEC-25 | P2 | Security | Through `apply` an editor can send any command the server knows: wipe the document with `Import` (no undo), forge checkpoints, redaction and restore records, also inside a `Batch` | **new, open** (measured; widened 2026-11-25) | 2026-11-25 |  |

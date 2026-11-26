@@ -22,7 +22,7 @@ Project: [[claudia-office|claudia-office]]
 
 ## Subtasks
 - [ ] [[e2.1-container-format|E2.1 Container format]]
-- [ ] [[e2.2-key-slots|E2.2 Key slots]]
+- [x] [[e2.2-key-slots|E2.2 Key slots]]
 - [ ] [[e2.3-users-and-roles-inside-the-document|E2.3 Users and roles inside the document]]
 - [ ] [[e2.4-key-domains-and-visibility|E2.4 Key domains and visibility]]
 - [ ] [[e2.5-command-blocks|E2.5 Command blocks]]

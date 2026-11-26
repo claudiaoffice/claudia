@@ -11,6 +11,7 @@ claude.ai project context.
 | `bugtracker-fixed.md` | Fixed items: the *Fixed* table and the record of every round. Until 2026-11-25 both files were `bugtracker.md`, as older notes call it |
 | `implementation-notes/` | What was built and why it looks the way it does, per feature |
 | `notes/` | Design notes, spike results, mock-ups |
+| `taiga/` | The sync with the Taiga project: `sync.py pull` brings Taiga's changes into the backlog and the tracker |
 
 ## The backlog
 
