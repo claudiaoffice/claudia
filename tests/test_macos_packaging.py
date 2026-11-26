@@ -11,6 +11,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import plistlib
+import re
 import shutil
 import stat
 import subprocess
@@ -450,3 +451,83 @@ def test_no_package_is_made_with_a_program_that_is_not_signed(staged, tmp_path):
     with pytest.raises(build.BuildError, match="_unsigned.so"):
         build.package(staged, fake_mkbom(tmp_path), tmp_path / "dist", VERSION)
     assert not (tmp_path / "dist").exists()
+
+
+# ----------------------------------------------------------------------------------------------------- the workflow
+def workflow() -> dict:
+    import yaml
+
+    data = yaml.safe_load((ROOT / ".github" / "workflows" / "macos.yml").read_text(encoding="utf-8"))
+    data["on"] = data.pop(True, data.get("on"))  # YAML 1.1 reads the key `on` as true
+    return data
+
+
+def steps(job: str) -> dict[str, str]:
+    return {step.get("name", step.get("uses", "")): step.get("run", "") for step in workflow()["jobs"][job]["steps"]}
+
+
+def test_the_workflow_runs_as_the_windows_installers_does():
+    triggers = workflow()["on"]
+    assert triggers["push"] == {"branches": ["main"], "tags": ["v*"]}
+    for path in ("packaging/**", "clients/neutralino/**", "web/**", "packages/**", "uv.lock", ".github/workflows/macos.yml"):
+        assert path in triggers["pull_request"]["paths"], path
+    assert "workflow_dispatch" in triggers
+
+
+def test_the_package_is_built_without_a_mac_and_kept_for_30_days():
+    """GitHub's macOS runners do not come for this repository (the owner, 2026-11-26)."""
+    job = workflow()["jobs"]["package"]
+    assert job["runs-on"].startswith("ubuntu")
+    upload = next(s for s in job["steps"] if s.get("uses", "").startswith("actions/upload-artifact@"))
+    assert upload["with"]["name"] == "claudia-office-macos"
+    assert upload["with"]["path"] == "dist/*.pkg"
+    assert upload["with"]["retention-days"] == 30 and upload["with"]["if-no-files-found"] == "error"
+
+
+def test_the_package_is_made_from_checked_parts_and_read_back_before_it_is_kept():
+    found = "\n".join(steps("package").values())
+    order = [
+        "build.py fetch python",
+        "build.py fetch node",
+        "build.py fetch bomutils",
+        "build.py server",
+        "build.py stage",
+        "build.py check-signatures",
+        "build.py package",
+        "bsdtar",
+    ]
+    positions = [found.index(text) for text in order]
+    assert positions == sorted(positions)
+    assert "neu update" in found and "npm run build:macos" in found
+
+
+def test_a_tag_attaches_the_package_to_its_release_next_to_the_others():
+    job = workflow()["jobs"]["release"]
+    assert job["if"] == "startsWith(github.ref, 'refs/tags/v')"
+    assert "package" in job["needs"]
+    assert job["permissions"] == {"contents": "write"}
+    run = "\n".join(s.get("run", "") for s in job["steps"])
+    assert 'gh release upload "$GITHUB_REF_NAME" dist/*.pkg --clobber' in run
+    assert "gh release create" in run  # whichever of the three workflows is first makes the release
+
+
+def test_the_install_test_on_a_mac_is_written_and_switched_off_until_there_is_a_runner():
+    job = workflow()["jobs"]["install-test"]
+    assert job["if"] is False
+    assert job["runs-on"].startswith("macos")
+    assert "test-install.sh" in "\n".join(s.get("run", "") for s in job["steps"])
+
+
+def test_every_action_is_pinned_by_its_commit():
+    for job in workflow()["jobs"].values():
+        for step in job["steps"]:
+            if "uses" in step:
+                assert re.fullmatch(r"[\w./-]+@[0-9a-f]{40}", step["uses"]), step["uses"]
+
+
+def test_the_pins_are_versioned_urls_of_their_publishers():
+    for name, pin in build.pins().items():
+        if name.startswith("_"):
+            continue
+        assert pin["url"].startswith("https://") and pin["version"].split("+")[0] in pin["url"].replace("%2B", "+")
+        assert re.fullmatch(r"[0-9a-f]{64}", pin["sha256"]), f"{name} is not pinned yet: let CI download it once"
