@@ -3,8 +3,9 @@ signature (E8.5; the owner's Q4, 2026-11-26).
 
 Apple Silicon runs no code without a signature, and an ad-hoc one is enough. Node, CPython, Neutralino and the wheels'
 libraries were built on a Mac and carry one; the package is built on Linux and changes none of them, so it signs none
-and refuses a binary that lacks one (``build.py check-signatures``). Only the presence of ``LC_CODE_SIGNATURE`` is
-looked at: whether a signature is valid only macOS can tell, when it runs the code.
+and refuses a binary that lacks one (``build.py check-signatures``). What counts is the slice Apple Silicon runs, the
+arm64 one: universal wheels (lxml, fontTools, brotli) carry an unsigned Intel slice, which it never runs. Only the
+presence of ``LC_CODE_SIGNATURE`` is looked at: whether a signature is valid only macOS can tell, when it runs the code.
 """
 
 from __future__ import annotations
@@ -15,6 +16,7 @@ from pathlib import Path
 MH_MAGIC_64 = 0xFEEDFACF  # little-endian on disk: cf fa ed fe
 FAT_MAGIC = 0xCAFEBABE  # big-endian on disk
 LC_CODE_SIGNATURE = 0x1D
+CPU_ARM64 = 0x0100000C  # arm64 and arm64e (a subtype of it)
 _HEADER_64 = 32
 _MOST_SLICES = 16  # a Java class file starts with cafebabe too, followed by its version (45 and more)
 
@@ -57,10 +59,10 @@ def _signed(image: bytes) -> bool:
     return False
 
 
-def is_signed(data: bytes) -> bool:
-    """Whether every slice of the Mach-O ``data`` has a code signature."""
-    slices = _slices(data)
-    return slices is not None and all(_signed(image) for image in slices)
+def runs_on_apple_silicon(data: bytes) -> bool:
+    """Whether the Mach-O ``data`` has a slice for Apple Silicon, and each such slice a code signature."""
+    arm = [image for image in _slices(data) or [] if struct.unpack_from("<i", image, 4)[0] == CPU_ARM64]
+    return bool(arm) and all(_signed(image) for image in arm)
 
 
 def _mach_o_files(root: Path) -> list[Path]:
@@ -82,5 +84,5 @@ def count(root: Path) -> int:
 
 
 def unsigned(root: Path) -> list[Path]:
-    """The Mach-O files under ``root`` without a signature, relative to it."""
-    return [path.relative_to(root) for path in _mach_o_files(root) if not is_signed(path.read_bytes())]
+    """The Mach-O files under ``root`` that Apple Silicon would not run: no signed arm64 slice; relative to it."""
+    return [path.relative_to(root) for path in _mach_o_files(root) if not runs_on_apple_silicon(path.read_bytes())]

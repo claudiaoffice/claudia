@@ -418,7 +418,7 @@ def check_signatures(stage_dir: Path) -> int:
     ]
     if missing:
         raise BuildError(
-            "these programs or libraries have no code signature, which Apple Silicon needs to run them: "
+            "these programs or libraries have no signed arm64 slice, which Apple Silicon needs to run them: "
             + ", ".join(missing)
             + ". Sign them ad-hoc (rcodesign sign) or take a build that has one."
         )

@@ -54,12 +54,15 @@ UNSIGNED = thin(LC_SEGMENT_64)
         (SIGNED, True),
         (UNSIGNED, False),
         (fat(SIGNED, thin(LC_CODE_SIGNATURE, cpu=CPU_X86_64)), True),
-        (fat(SIGNED, UNSIGNED), False),  # every slice has to be signed
+        # universal2 wheels (lxml, fontTools, brotli): only the Intel slice is unsigned, which Apple Silicon never runs
+        (fat(thin(LC_SEGMENT_64, cpu=CPU_X86_64), SIGNED), True),
+        (fat(thin(LC_CODE_SIGNATURE, cpu=CPU_X86_64), UNSIGNED), False),
+        (thin(LC_CODE_SIGNATURE, cpu=CPU_X86_64), False),  # no slice for Apple Silicon at all
     ],
 )
-def test_a_mach_o_is_signed_when_every_slice_has_its_code_signature(data, expected):
+def test_a_mach_o_runs_on_apple_silicon_when_its_arm64_slice_is_signed(data, expected):
     assert macho.is_mach_o(data)
-    assert macho.is_signed(data) is expected
+    assert macho.runs_on_apple_silicon(data) is expected
 
 
 @pytest.mark.parametrize(
