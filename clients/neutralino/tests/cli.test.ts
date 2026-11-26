@@ -6,6 +6,10 @@ import { WINDOWS_HOST } from '../src/platform/windows.js'
 const run = (app: string, ...args: string[]) => parseCommand(app, args, '1.2.3')
 
 describe('parseCommand', () => {
+  it('prepares the window instead of opening it with --prepare, for the macOS app (E8.5, D1626)', () => {
+    expect(run('creates', '--prepare')).toEqual({ kind: 'run', options: { app: 'creates', server: null, debug: false, prepare: true } })
+  })
+
   it('starts the app\'s own server when no option is given', () => {
     expect(run('creates')).toEqual({ kind: 'run', options: { app: 'creates', server: null, debug: false } })
   })

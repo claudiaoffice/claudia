@@ -30,13 +30,18 @@ export const MACOS_HOST: HostPlatform = {
   neutralinoBinaryName: macNeutralinoBinaryName,
   coreCommandKey: 'commandDarwin',
   windowSizeInPhysicalPixels: false,
-  windowBinary: (appDir, downloaded, identity) => {
+  windowBinary: (appDir, downloaded, identity, packaged) => {
+    // Installed, the binary is inside the app (claudia <app>.app/Contents/MacOS/neutralino), which names it (D1626).
+    if (packaged) return { binary: downloaded }
     const displayName = macProcessName(identity)
     // Running the downloaded binary as it is never gets the application's name applied (macos-app-bundle.ts has the
     // story): the smallest .app bundle around a copy of it does.
     const binary = ensureAppBundle({ binDir: join(appDir, 'bin'), sourceBinary: downloaded, identity, displayName })
     return { binary, processName: displayName }
   },
+  runFolder: (app, _env, home) => join(home, 'Library', 'Caches', 'Claudia', 'run', app),
+  runFolderWithSpace: 'Your home folder has a space in its path, which the window cannot be started from.',
+  linkNodeIntoRun: true,
   dialogs: (log) => macDialogs(log),
   // No killTree: a detached server is the leader of its own process group, and signals reach it (server.ts sends them).
   // A Mac has no short names; a path with a space in it cannot go on the core's command line.
