@@ -494,9 +494,8 @@ def test_the_package_is_built_without_a_mac_and_kept_for_30_days():
 def test_the_package_is_made_from_checked_parts_and_read_back_before_it_is_kept():
     found = "\n".join(steps("package").values())
     order = [
-        "build.py fetch python",
-        "build.py fetch node",
-        "build.py fetch bomutils",
+        "for name in python node bomutils",
+        'build.py fetch "$name"',
         "build.py server",
         "build.py stage",
         "build.py check-signatures",

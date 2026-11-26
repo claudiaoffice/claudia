@@ -89,9 +89,12 @@ jobs:
       - name: Third-party files, pinned (CPython and Node for macOS on Apple Silicon, bomutils)
         run: |
           mkdir -p build/python build/node build/bomutils
-          uv run --no-project python packaging/macos/build.py fetch python build/python.tar.gz
-          uv run --no-project python packaging/macos/build.py fetch node build/node.tar.gz
-          uv run --no-project python packaging/macos/build.py fetch bomutils build/bomutils.tar.gz
+          # each is tried, so that one run says the SHA-256 of every file that does not match its pin
+          refused=0
+          for name in python node bomutils; do
+            uv run --no-project python packaging/macos/build.py fetch "$name" "build/$name.tar.gz" || refused=1
+          done
+          [ "$refused" = 0 ]
           tar -xzf build/python.tar.gz -C build/python --strip-components=1
           tar -xzf build/node.tar.gz -C build/node --strip-components=1
           tar -xzf build/bomutils.tar.gz -C build/bomutils --strip-components=1
