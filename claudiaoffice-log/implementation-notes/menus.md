@@ -330,8 +330,9 @@ Context menus sheet (Show as ▸, Remove reference; Go to target moved to the se
 (four scenarios) and `web/tests/window-handlers.test.ts`, `web/tests/details.test.ts`.
 - The definition: File ▸ Manage ▸ My Role… (`file.manage.my-role`, Ctrl+Shift+Alt+L, everybody); it left
   `NOT_BUILT_YET`.
-- `MyRoleDialog.vue` says your role and leads to `AssignOwnerDialog`, `AcceptOwnershipDialog` and
-  `LeaveDocumentDialog`, unchanged.
+- `MyRoleDialog.vue` says your role and leads to `HandOverDialog`, `AcceptOwnershipDialog` and `LeaveDocumentDialog`.
+  The first was `AssignOwnerDialog`, titled "Assign a new owner": the glossary avoids "assign owner" for a hand-over,
+  so it is "Hand over this document" now; the other two are unchanged.
 - The front page's list on this server has a Delete button per document; `DeleteFromListDialog.vue` asks for the name
   and password, and `deleteFromServer` in `lib/open.ts` connects, asks and closes, as `saveDetails` does (both now
   `askOnce`). The deleted document leaves Mine and its collections too.
@@ -358,8 +359,9 @@ Context menus sheet (Show as ▸, Remove reference; Go to target moved to the se
 
 **What changed:**
 - Contract v1, additive: `action_state.states[id].visible`, and `action_state.empty`, every menu of the bar with
-  nothing left by its word in lower case ("insert") and the sentence that says why, replacing what the shell knew.
-  An `action_state` must say something: an action, or `empty`. A shell that does not know `visible` greys instead.
+  nothing left by its word (`Menu.word`, "insert") and the sentence that says why, replacing what the shell knew. A
+  report still names at least one action: when only `empty` changed, the page names every action again, so a shell
+  of before reads it as it always did and greys what is left out.
 - The page (`menus/assemble.ts`) tells the shells only of the entries of the bar: they draw nothing else, and a key of
   any other entry reaches the page, which judges it when pressed. Until now it named every action, and the Windows and
   macOS shell answered each report with `unknown_action` for the entries of context menus (CODE-108).
@@ -377,6 +379,8 @@ Context menus sheet (Show as ▸, Remove reference; Go to target moved to the se
   for File ▸ Save and Shift+F10, which the workbook took away. Brought to the definition; all 653 pass under Xvfb.
 
 **Not verified:**
+- On Linux an open menu keeps its entries, but an entry that the page leaves out while it is open is greyed at once
+  (its action is disabled, as before slice 6) and goes when the menu is closed.
 - Neutralino cannot tell whether a native menu is open, so a report that comes while one is open changes it at once
   (D1603 holds on the web and on Linux only).
 - The `@desktop` scenarios have no runner for the native shells; their behaviour is covered by the Linux window tests

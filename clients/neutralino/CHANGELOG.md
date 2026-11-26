@@ -5,6 +5,14 @@ two systems had a package each, `clients/macos` and `clients/windows`; their his
 
 ## [0.3.0] - unreleased
 
+### Changed (E5.23, E5.24, D1643–D1656): the menus are the workbook's, and they show what fits
+- The generated menus follow the owner's workbook (`claudiaoffice-log/notes/claudia-menus.xlsx`): File ▸ Save and the
+  three role entries left, File ▸ Manage ▸ My Role… (Ctrl+Shift+Alt+L) came, and Delete From Server… is on the front
+  page's list (D1608, D1656). Each menu in the listing has its `word` (`insert`).
+- The shell takes `visible` and `empty` from the page's `action_state` (D1645): `drawMenu` leaves out what the page
+  leaves out, collapses the separators by the table in `clients/contract/fixtures/menu-collapse.json`, and puts the
+  greyed line that says why into a menu with nothing left.
+
 ### Added (SEC-12, D1373): the setup code of the desktop's own server
 - The core sends its own server's setup code with `show` (`setupCode`, read in the state folder whenever it shows that
   server); the shell page hands it to the page in `welcome` (`setup_code`), never for another server.

@@ -192,9 +192,8 @@ class Bridge:
         states: dict[str, dict[str, Any]] = message["states"]
         unknown = sorted(name for name in states if name not in known)
         applied = {name: state for name, state in states.items() if name in known}
-        empty: dict[str, str] | None = message.get("empty")
-        if applied or empty is not None:
-            self._on_states(applied, empty)
+        if applied:
+            self._on_states(applied, message.get("empty"))
         if unknown:
             self._reply(contract.error("unknown_action", f"no such action: {', '.join(unknown)}"))
 

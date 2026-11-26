@@ -675,7 +675,7 @@ export class TextSession extends BaseSession<TextState> {
    *  typing): they go out now, and then `anchor` and `focus` are selected, places in the paragraph as it will be with
    *  them (UTF-16 units, as the page counts), instead of the caret going behind them (D1350, UX-97). While they are not
    *  sent the paragraph does not have them, so before and after them are one place in it, and only the page knows. */
-  selectOnceSent(anchor: Pos, focus: Pos = anchor): void {
+  selectOnceSent(anchor: Pos, focus: Pos): void {
     const unwritten = this.state.pending
     if (!unwritten) return
     this.moved++ // the caret was moved since they were typed: the answer does not put it behind them

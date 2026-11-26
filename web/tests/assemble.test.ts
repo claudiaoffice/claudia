@@ -32,6 +32,7 @@ const editors = 'role: editor or owner'
 const APP: AppDef = {
   menus: [
     {
+      id: 'edit',
       label: 'Edit',
       sections: [
         [{ id: 'edit.undo', label: 'Undo', fits: `${editors} · document: something to undo`, kind: 'page' }],
@@ -43,6 +44,7 @@ const APP: AppDef = {
       ],
     },
     {
+      id: 'insert',
       label: 'Insert',
       sections: [
         [{ id: 'insert.container.latex', label: 'LaTeX', fits: `${editors} · server: has the tool for LaTeX`, kind: 'page' }],
@@ -50,6 +52,7 @@ const APP: AppDef = {
       ],
     },
     {
+      id: 'view',
       label: 'View',
       sections: [[{ id: 'view.dark', label: 'Dark Mode', fits: anyone, kind: 'page', checkable: true }]],
     },
@@ -228,7 +231,7 @@ describe('the collapse rule all three draw by (clients/contract/fixtures/menu-co
 
   it.each(fixture.cases.map((c) => [c.name, c] as const))('%s', (_name, c) => {
     const app: AppDef = {
-      menus: [{ label: 'Test', sections: c.sections.map((section) => section.map((e) => (typeof e === 'string' ? action(e) : { label: e.submenu, items: e.items.map(action) }))) }],
+      menus: [{ id: 'test', label: 'Test', sections: c.sections.map((section) => section.map((e) => (typeof e === 'string' ? action(e) : { label: e.submenu, items: e.items.map(action) }))) }],
       contexts: [],
       keysOnly: [],
     }

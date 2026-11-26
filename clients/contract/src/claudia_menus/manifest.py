@@ -49,6 +49,7 @@ __all__ = [
     "Kind",
     "KeyOwner",
     "LANGUAGES",
+    "REFERENCE_SHOWS",
     "Manifest",
     "Menu",
     "Submenu",
@@ -60,6 +61,7 @@ __all__ = [
     "for_start",
     "on_start",
     "about_links",
+    "visible_only",
 ]
 
 
@@ -198,9 +200,15 @@ class Menu:
     sections: tuple[tuple[MenuEntry, ...], ...]
 
     @property
+    def word(self) -> str:
+        """The menu's one word in lower case (``insert``): how the page names it to a shell, as a menu with nothing
+        left (the contract's ``action_state.empty``, D1645)."""
+        return self.label.lower()
+
+    @property
     def id(self) -> str:
         """The id of the menu in the generated XML (``menu-file``)."""
-        return f"menu-{self.label.lower()}"
+        return f"menu-{self.word}"
 
     def all_actions(self) -> Iterator[Action]:
         """Every actionable item of the menu, in order — a :class:`Submenu`'s own ``items``, not the ``Submenu``
@@ -289,7 +297,9 @@ class Manifest:
 
         return {
             "app": self.app,
-            "menus": [{"label": menu.label, "sections": sections(menu.sections)} for menu in self.menus],
+            "menus": [
+                {"word": menu.word, "label": menu.label, "sections": sections(menu.sections)} for menu in self.menus
+            ],
             "header_toggles": [one(a) for a in self.header_toggles],
             "context_menus": [
                 {"id": c.id, "label": c.label, "sections": sections(c.sections)} for c in self.context_menus

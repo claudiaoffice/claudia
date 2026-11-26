@@ -143,8 +143,8 @@ const CHECKS: Record<string, Check> = {
   action_state(message) {
     const states = message.states
     const empty = message.empty
-    if (!isRecord(states) || (Object.keys(states).length === 0 && empty === undefined)) {
-      throw bad("'action_state' needs 'states' with at least one action, or 'empty'")
+    if (!isRecord(states) || Object.keys(states).length === 0) {
+      throw bad("'action_state' needs 'states' with at least one action")
     }
     for (const [name, state] of Object.entries(states)) {
       actionId(name)

@@ -168,13 +168,14 @@ def test_action_states_from_the_page_reach_the_window(rig) -> None:
     assert recorder.states == [{"edit.undo": {"enabled": False}}]
 
 
-def test_the_menus_with_nothing_left_reach_the_window_also_with_no_action_named(rig) -> None:
+def test_the_menus_with_nothing_left_reach_the_window(rig) -> None:
     """Slice 6 of the menu work (D1645): ``empty`` replaces what the window knew."""
     bridge, recorder = rig
     bridge.receive(hello())
     why = "Nothing to insert: you can only look at this document."
-    bridge.receive(json.dumps({"type": "action_state", "states": {}, "empty": {"insert": why}}))
-    assert recorder.states == [{}]
+    states = {"edit.undo": {"enabled": False}}
+    bridge.receive(json.dumps({"type": "action_state", "states": states, "empty": {"insert": why}}))
+    assert recorder.states == [states]
     assert recorder.empty == [{"insert": why}]
 
 

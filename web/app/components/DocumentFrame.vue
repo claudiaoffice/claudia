@@ -162,7 +162,8 @@ defineExpose({
 const shell = createShellBridge(props.app, undefined, (bridge) => reactive(bridge) as typeof bridge, 'document')
 shell.onAction((id, target) => void props.menus.run(id, target === 'on' || target === 'off' ? target : undefined))
 onBeforeUnmount(() => shell.detach())
-watch(() => [props.menus.states, props.menus.empty] as const, ([states, empty]) => shell.reportStates(states, empty), { immediate: true })
+// again once the shell has said welcome: a report before it reaches nobody
+watch(() => [props.menus.states, props.menus.empty, shell.ready] as const, ([states, empty]) => shell.reportStates(states, empty), { immediate: true })
 
 // A notice goes away by itself.
 let timer: ReturnType<typeof setTimeout> | undefined
@@ -210,7 +211,7 @@ const noticeSaid = useNoticeSaid(() => state.notice)
     />
     <ShareDialog v-if="dialog === 'share'" :session="session" @close="dialog = null" />
     <MyRoleDialog v-if="dialog === 'my-role'" :session="session" @close="dialog = null" @choose="(step) => (dialog = step)" />
-    <AssignOwnerDialog v-if="dialog === 'assign-owner'" :session="session" @close="dialog = null" />
+    <HandOverDialog v-if="dialog === 'hand-over'" :session="session" @close="dialog = null" />
     <AcceptOwnershipDialog v-if="dialog === 'accept-owner'" :session="session" @close="dialog = null" />
     <ChangePasswordDialog
       v-if="dialog === 'change-password'"

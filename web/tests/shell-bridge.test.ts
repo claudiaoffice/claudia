@@ -118,7 +118,7 @@ describe('ShellBridge', () => {
     bridge.reportStates({ 'insert.image': { enabled: false, visible: false } }, { insert: 'Nichts einzufügen: Sie dürfen dieses Dokument nur ansehen.' })
     expect(posted.slice(1)).toEqual([
       { type: 'action_state', states: { 'insert.image': { enabled: false, visible: false } }, empty: { insert: 'Nothing to insert: you can only look at this document.' } },
-      { type: 'action_state', states: {}, empty: { insert: 'Nichts einzufügen: Sie dürfen dieses Dokument nur ansehen.' } },
+      { type: 'action_state', states: { 'insert.image': { enabled: false, visible: false } }, empty: { insert: 'Nichts einzufügen: Sie dürfen dieses Dokument nur ansehen.' } },
     ])
   })
 

@@ -206,8 +206,8 @@ def _check_action(message: Message) -> None:
 def _check_action_state(message: Message) -> None:
     states = message.get("states")
     empty = message.get("empty")
-    if not isinstance(states, dict) or (not states and empty is None):
-        raise _bad("'action_state' needs 'states' with at least one action, or 'empty'")
+    if not isinstance(states, dict) or not states:
+        raise _bad("'action_state' needs 'states' with at least one action")
     for name, state in states.items():
         _action_id(name)
         if not isinstance(state, dict):

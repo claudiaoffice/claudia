@@ -14,7 +14,7 @@ export type FrameDialog =
   | 'shortcuts'
   | 'about'
   | 'my-role'
-  | 'assign-owner'
+  | 'hand-over'
   | 'accept-owner'
   | 'leave'
   | 'change-password'

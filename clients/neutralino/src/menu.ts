@@ -25,6 +25,8 @@ export interface ManifestSubmenu {
 export type ManifestEntry = ManifestAction | ManifestSubmenu
 
 export interface ManifestMenu {
+  /** The menu's word in lower case (`insert`), by which the page names a menu with nothing left (D1645). */
+  word: string
   label: string
   sections: ManifestEntry[][]
 }
@@ -81,7 +83,7 @@ export function buildMenus(listing: ManifestListing, buildItem: ItemBuilder, omi
           if (index > 0) items.push(SEPARATOR)
           items.push(...section.map(entry))
         })
-      return { text: menu.label, word: menu.label.toLowerCase(), menuItems: items }
+      return { text: menu.label, word: menu.word, menuItems: items }
     })
     .filter((menu) => menu.menuItems.length > 0)
 }

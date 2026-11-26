@@ -180,7 +180,7 @@ export class Bridge {
       else unknown.push(name)
     }
     const empty = message.empty as Record<string, string> | undefined
-    if (Object.keys(applied).length > 0 || empty !== undefined) this.options.onStates?.(applied, empty)
+    if (Object.keys(applied).length > 0) this.options.onStates?.(applied, empty)
     if (unknown.length > 0) {
       this.reply(contract.error('unknown_action', `no such action: ${unknown.sort().join(', ')}`))
     }

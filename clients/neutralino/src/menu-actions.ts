@@ -73,18 +73,20 @@ export function applyActionStates(
 export function drawMenu(menu: readonly ShellMenuItem[], empty: Readonly<Record<string, string>>): WindowMenuItem[] {
   const drawOne = (item: ShellMenuItem): WindowMenuItem | null => {
     if (item.isHidden) return null
-    const { isHidden: _hidden, word: _word, menuItems, ...plain } = item
-    if (!menuItems) return plain
-    const items = collapse(menuItems.map(drawOne).filter((i): i is WindowMenuItem => i !== null))
-    return items.length ? { ...plain, menuItems: items } : null
+    if (!item.menuItems) return plainOf(item)
+    const items = collapse(item.menuItems.map(drawOne).filter((i): i is WindowMenuItem => i !== null))
+    return items.length ? { ...plainOf(item), menuItems: items } : null
   }
   return menu.map((top) => {
-    const drawn = drawOne(top)
     const why = top.word ? empty[top.word] : undefined
-    if (drawn) return drawn
-    const { isHidden: _hidden, word: _word, menuItems: _items, ...title } = top
-    return { ...title, menuItems: why ? [{ text: why, isDisabled: true }] : [] }
+    return drawOne(top) ?? { ...plainOf(top), menuItems: why ? [{ text: why, isDisabled: true }] : [] }
   })
+}
+
+/** The item as Neutralino takes it: without the shell's notes on it and without its items. */
+function plainOf(item: ShellMenuItem): WindowMenuItem {
+  const { isHidden: _hidden, word: _word, menuItems: _items, ...plain } = item
+  return plain
 }
 
 /** No separator first, last or right after another. */

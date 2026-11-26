@@ -57,7 +57,7 @@ def _menu_tree(manifest: Manifest, translate: Translate, empty: Mapping[str, str
     interface = ET.Element("interface")
     for menu in manifest.menus:
         menu_element = ET.SubElement(interface, "menu", id=menu.id)
-        why = empty.get(menu.label.lower())
+        why = empty.get(menu.word)
         if not menu.sections and why:
             _why_element(menu_element, why)
         for section in menu.sections:

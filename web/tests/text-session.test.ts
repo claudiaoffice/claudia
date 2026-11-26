@@ -142,7 +142,7 @@ describe('typing', () => {
   it('a caret put into the words that are not sent yet stays there once they are sent', async () => {
     const { session } = await opened('')
     for (const c of 'First') session.type(c)
-    session.selectOnceSent(at(0)) // Home: in front of the "First" that is drawn over the text
+    session.selectOnceSent(at(0), at(0)) // Home: in front of the "First" that is drawn over the text
     await session.flush()
     expect(text(session)).toEqual(['First'])
     expect(session.state.selection?.focus).toEqual(at(0))
@@ -154,7 +154,7 @@ describe('typing', () => {
   it('a caret in the middle of the unsent words stays in the middle', async () => {
     const { session } = await opened('')
     for (const c of 'abcd') session.type(c)
-    session.selectOnceSent(at(2))
+    session.selectOnceSent(at(2), at(2))
     await session.flush()
     expect(session.state.selection?.focus).toEqual(at(2))
   })

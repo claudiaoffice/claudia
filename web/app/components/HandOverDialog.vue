@@ -32,7 +32,7 @@ async function propose() {
 </script>
 
 <template>
-  <Modal :title="t('Assign a new owner')" @close="emit('close')">
+  <Modal :title="t('Hand over this document')" @close="emit('close')">
     <TransText v-if="proposed" tag="p" class="lead" :text="t('{who} has been asked to take over {doc}. Until they accept, you are still the owner. You will become an editor the moment they do.')">
       <template #who><b>{{ proposed }}</b></template>
       <template #doc><b>{{ session.state.doc }}</b></template>

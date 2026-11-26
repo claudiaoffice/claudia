@@ -178,7 +178,7 @@ export function assembleMenus(input: MenuInput): AssembledMenus {
     const why = made.why as Judged | null
     if (made.items.length || !why || why.enabled) return { label: word(menu.label), items: made.items }
     const line = emptyLine(menu.label, why.why, t, input.locale)
-    empty[menu.label.toLowerCase()] = line
+    empty[menu.id] = line
     return { label: word(menu.label), items: [{ label: line, disabled: true }] }
   })
 
@@ -232,7 +232,7 @@ export function assembleMenus(input: MenuInput): AssembledMenus {
       )
     const groups = definition.menus.map((menu) => ({ title: word(menu.label), rows: rows(menu) }))
     for (const menu of definition.contexts) groups.push({ title: t('Context menu: {menu}', { menu: word(menu.label) }), rows: rows(menu) })
-    groups.push({ title: t('Keys without an entry'), rows: rows({ label: '', sections: [definition.keysOnly] }) })
+    groups.push({ title: t('Keys without an entry'), rows: rows({ id: 'keys-only', label: '', sections: [definition.keysOnly] }) })
     return groups.filter((group) => group.rows.length)
   }
 

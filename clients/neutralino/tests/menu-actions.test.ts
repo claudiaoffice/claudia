@@ -105,7 +105,7 @@ describe('drawMenu', () => {
 
   it.each(fixture.cases.map((c) => [c.name, c] as const))('%s', (_name, c) => {
     const sections = c.sections.map((section) => section.map((e) => (typeof e === 'string' ? action(e) : { label: e.submenu, items: e.items.map(action) as never })))
-    const whole = buildMenus({ app: 'test', menus: [{ label: 'Test', sections }], header_toggles: [] }, item)
+    const whole = buildMenus({ app: 'test', menus: [{ word: 'test', label: 'Test', sections }], header_toggles: [] }, item)
     const hidden = c.sections.flat().flatMap((e) => (typeof e === 'string' ? [e] : e.items)).filter((l) => l.startsWith('~'))
     const states = Object.fromEntries(hidden.map((l) => [`test.${l.slice(1)}`, { visible: false }]))
     const drawn = drawMenu(applyActionStates(whole, states), {})
@@ -113,13 +113,13 @@ describe('drawMenu', () => {
   })
 
   it('puts the greyed line that says why into a menu with nothing left, and keeps its title (D1603)', () => {
-    const whole = buildMenus({ app: 'test', menus: [{ label: 'Insert', sections: [[action('Image…')]] }], header_toggles: [] }, item)
+    const whole = buildMenus({ app: 'test', menus: [{ word: 'insert', label: 'Insert', sections: [[action('Image…')]] }], header_toggles: [] }, item)
     const drawn = drawMenu(applyActionStates(whole, { 'test.Image…': { visible: false } }), { insert: 'Nothing to insert: you can only look at this document.' })
     expect(drawn).toEqual([{ text: 'Insert', menuItems: [{ text: 'Nothing to insert: you can only look at this document.', isDisabled: true }] }])
   })
 
   it('shows an entry again that the page puts back', () => {
-    const whole = buildMenus({ app: 'test', menus: [{ label: 'Insert', sections: [[action('Image…')]] }], header_toggles: [] }, item)
+    const whole = buildMenus({ app: 'test', menus: [{ word: 'insert', label: 'Insert', sections: [[action('Image…')]] }], header_toggles: [] }, item)
     const back = applyActionStates(applyActionStates(whole, { 'test.Image…': { visible: false } }), { 'test.Image…': { visible: true } })
     expect(drawMenu(back, {})).toEqual([{ text: 'Insert', menuItems: [{ id: 'test.Image…', text: 'Image…' }] }])
   })

@@ -147,9 +147,10 @@ def render() -> str:
         "",
         "export type PlacedDef = EntryDef | SubmenuDef",
         "",
-        "/** A menu of the bar or a context menu (`id` for a context menu): its groups, a line drawn between them. */",
+        "/** A menu of the bar or a context menu: its groups, a line drawn between them. `id`: a context menu's thing",
+        " * (`object`), or a menu of the bar's word (`insert`), by which the page names it to a shell (D1645). */",
         "export interface MenuDef {",
-        "  id?: string",
+        "  id: string",
         "  label: string",
         "  sections: readonly (readonly PlacedDef[])[]",
         "}",
@@ -194,7 +195,9 @@ def _entry(action) -> str:
 
 def _menu(menu, indent: str, manifest) -> str:
     """A menu or a context menu, one line per entry."""
-    head = (f"id: {_ts(menu.id)}, " if isinstance(menu, manifest.ContextMenu) else "") + f"label: {_ts(menu.label)}"
+    # a context menu's id names its thing; a menu of the bar is named by its word, as the page tells the shells
+    named = menu.id if isinstance(menu, manifest.ContextMenu) else menu.word
+    head = f"id: {_ts(named)}, label: {_ts(menu.label)}"
     out = [f"{indent}{{ {head}, sections: ["]
     for section in menu.sections:
         out.append(f"{indent}  [")

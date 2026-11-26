@@ -29,7 +29,7 @@ const role = computed(() => {
         <template #doc><b>{{ session.state.doc }}</b></template>
       </TransText>
       <div v-if="owner" class="step">
-        <button class="btn" type="button" @click="emit('choose', 'assign-owner')">{{ t('Hand Over…') }}</button>
+        <button class="btn" type="button" @click="emit('choose', 'hand-over')">{{ t('Hand Over…') }}</button>
         <p class="hint">{{ t('Make somebody who edits it the owner; you become an editor once they accept.') }}</p>
       </div>
       <div v-else class="step">

@@ -975,7 +975,8 @@
             "start": true
           }
         ]
-      ]
+      ],
+      "word": "file"
     },
     {
       "label": "Edit",
@@ -1136,7 +1137,8 @@
             "label": "Remove"
           }
         ]
-      ]
+      ],
+      "word": "edit"
     },
     {
       "label": "Insert",
@@ -1295,7 +1297,8 @@
             "label": "Row or Column"
           }
         ]
-      ]
+      ],
+      "word": "insert"
     },
     {
       "label": "Format",
@@ -1494,7 +1497,8 @@
             "start": false
           }
         ]
-      ]
+      ],
+      "word": "format"
     },
     {
       "label": "View",
@@ -1571,7 +1575,8 @@
             "start": true
           }
         ]
-      ]
+      ],
+      "word": "view"
     },
     {
       "label": "Tools",
@@ -1724,7 +1729,8 @@
             "start": false
           }
         ]
-      ]
+      ],
+      "word": "tools"
     },
     {
       "label": "Preferences",
@@ -1788,7 +1794,8 @@
             "label": "App Language"
           }
         ]
-      ]
+      ],
+      "word": "preferences"
     },
     {
       "label": "Help",
@@ -1851,7 +1858,8 @@
             "start": true
           }
         ]
-      ]
+      ],
+      "word": "help"
     }
   ]
 }

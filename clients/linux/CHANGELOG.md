@@ -4,6 +4,17 @@ Newest first. The shell contract has its own version (`clients/contract/`); this
 
 ## [0.1.0] - unreleased
 
+### Changed (E5.23, E5.24, D1643–D1656): the menus are the workbook's, and they show what fits
+- The menu definition moved to `clients/contract` (`claudia_menus.manifest`, D1643) and is the owner's workbook
+  `claudiaoffice-log/notes/claudia-menus.xlsx`: entries, places, keys and when each fits (D1605). File ▸ Save, Assign
+  New Owner…, Accept Ownership…, Leave Document… and Delete From Server… left the menus; File ▸ Manage ▸ My Role…
+  (Ctrl+Shift+Alt+L) leads to the three role steps, and a document is deleted from the front page's list (D1656).
+  Shift+F10 is no longer the shell's own key.
+- The shell contract's `action_state` may carry `visible` per action and `empty`, the menus of the bar with nothing
+  left and the sentence that says why (both optional, so version 1 stays, D1645). The shell leaves out what the page
+  leaves out (`manifest.visible_only`, which `for_start` now uses), puts the greyed line into a menu with nothing
+  left, and keeps an open menu as it opened until it is closed (D1603).
+
 ### Added (SEC-12, D1373): the setup code of the desktop's own server
 - The shell contract's `welcome` may carry `setup_code` (optional, so version 1 stays): the setup code of the shell's
   own server while it has no administrator, read in its state folder at every `hello`, and only for a page of that

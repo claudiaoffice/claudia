@@ -133,9 +133,10 @@ export interface SubmenuDef {
 
 export type PlacedDef = EntryDef | SubmenuDef
 
-/** A menu of the bar or a context menu (`id` for a context menu): its groups, a line drawn between them. */
+/** A menu of the bar or a context menu: its groups, a line drawn between them. `id`: a context menu's thing
+ * (`object`), or a menu of the bar's word (`insert`), by which the page names it to a shell (D1645). */
 export interface MenuDef {
-  id?: string
+  id: string
   label: string
   sections: readonly (readonly PlacedDef[])[]
 }
@@ -152,7 +153,7 @@ export type AppName = 'composes' | 'computes' | 'creates'
 export const DEFINITIONS: Readonly<Record<AppName, AppDef>> = {
   composes: {
     menus: [
-      { label: 'File', sections: [
+      { id: 'file', label: 'File', sections: [
         [
           { id: 'file.new', label: 'New', fits: 'role: anyone', kind: 'page' },
           { label: 'Open', items: [{ id: 'file.open', label: 'Document…', fits: 'role: anyone', kind: 'page' }, { id: 'file.open-file', label: 'Import from Disk…', fits: 'role: anyone', kind: 'page' }] },
@@ -174,7 +175,7 @@ export const DEFINITIONS: Readonly<Record<AppName, AppDef>> = {
           { id: 'file.quit', label: 'Quit', fits: 'client: desktop only', kind: 'shell' },
         ],
       ] },
-      { label: 'Edit', sections: [
+      { id: 'edit', label: 'Edit', sections: [
         [
           { id: 'edit.undo', label: 'Undo', fits: 'role: editor or owner · document: something to undo', kind: 'page' },
           { id: 'edit.redo', label: 'Redo', fits: 'role: editor or owner · document: something to redo', kind: 'page' },
@@ -189,7 +190,7 @@ export const DEFINITIONS: Readonly<Record<AppName, AppDef>> = {
           { id: 'format.describe', label: 'Name & Describe…', fits: 'role: editor or owner · selection: something', kind: 'page' },
         ],
       ] },
-      { label: 'Insert', sections: [
+      { id: 'insert', label: 'Insert', sections: [
         [
           { id: 'insert.contents', label: 'Table of Contents', fits: 'role: editor or owner', kind: 'page' },
           { id: 'insert.cross-reference', label: 'Cross Reference…', fits: 'role: editor or owner · document: has something to refer to', kind: 'page' },
@@ -204,14 +205,14 @@ export const DEFINITIONS: Readonly<Record<AppName, AppDef>> = {
           { label: 'Container', items: [{ id: 'insert.container.latex', label: 'LaTeX', fits: 'role: editor or owner · server: has the tool for LaTeX', kind: 'page' }, { id: 'insert.container.mermaid', label: 'Mermaid', fits: 'role: editor or owner · server: has the tool for Mermaid', kind: 'page' }, { id: 'insert.container.typst', label: 'Typst', fits: 'role: editor or owner · server: has the tool for Typst', kind: 'page' }] },
         ],
       ] },
-      { label: 'Format', sections: [
+      { id: 'format', label: 'Format', sections: [
         [
           { label: 'Style', items: [{ id: 'format.apply-style', label: 'Apply…', fits: 'role: editor or owner · selection: something, or the cursor in a text', kind: 'page' }, { id: 'format.look', label: 'Edit…', fits: 'role: editor or owner · selection: something, or the cursor in a text', kind: 'page' }, { id: 'format.all-styles', label: 'All Styles…', fits: 'role: editor or owner', kind: 'page' }] },
           { label: 'List', items: [{ id: 'format.bulleted-list', label: 'Bulleted List', fits: 'role: editor or owner · selection: text', kind: 'page', checkable: true }, { id: 'format.numbered-list', label: 'Numbered List', fits: 'role: editor or owner · selection: text', kind: 'page', checkable: true }, { id: 'format.list-continue', label: 'Continue Previous List', fits: 'role: editor or owner · selection: a list item', kind: 'page' }, { id: 'format.list-start', label: 'Start At…', fits: 'role: editor or owner · selection: a list item', kind: 'page' }, { id: 'format.list-indent', label: 'Indent', fits: 'role: editor or owner · selection: a list item', kind: 'page' }, { id: 'format.list-outdent', label: 'Outdent', fits: 'role: editor or owner · selection: a list item', kind: 'page' }, { id: 'format.number-headings', label: 'Number Headings', fits: 'role: editor or owner', kind: 'page', checkable: true }, { id: 'format.all-numbering', label: 'All Numbering…', fits: 'role: editor or owner', kind: 'page' }] },
           { id: 'format.colours', label: 'Palette…', fits: 'role: editor or owner', kind: 'page' },
         ],
       ] },
-      { label: 'View', sections: [
+      { id: 'view', label: 'View', sections: [
         [
           { id: 'view.authors', label: 'Who Wrote What', fits: 'role: editor or owner', kind: 'page', checkable: true },
           { id: 'view.panel', label: 'History & Chat', fits: 'role: anyone', kind: 'page', checkable: true },
@@ -221,20 +222,20 @@ export const DEFINITIONS: Readonly<Record<AppName, AppDef>> = {
           { id: 'view.page', label: 'Page View', fits: 'role: anyone', kind: 'page', checkable: true },
         ],
       ] },
-      { label: 'Tools', sections: [
+      { id: 'tools', label: 'Tools', sections: [
         [
           { id: 'tools.ask', label: 'Ask ai…', fits: 'role: anyone · ai: the ai can really answer', kind: 'page' },
           { id: 'edit.search-replace', label: 'Search and Replace…', fits: 'role: anyone', kind: 'page' },
         ],
       ] },
-      { label: 'Preferences', sections: [
+      { id: 'preferences', label: 'Preferences', sections: [
         [
           { id: 'config.shortcuts', label: 'Shortcuts', fits: 'role: anyone', kind: 'page' },
           { id: 'config.ai', label: 'AI…', fits: 'role: anyone', kind: 'page' },
           { label: 'App Language', items: [{ id: 'config.language.en', label: 'English', fits: 'role: anyone', kind: 'page', checkable: true }, { id: 'config.language.de', label: 'Deutsch', fits: 'role: anyone', kind: 'page', checkable: true }] },
         ],
       ] },
-      { label: 'Help', sections: [
+      { id: 'help', label: 'Help', sections: [
         [
           { id: 'tools.ask', label: 'Ask ai…', fits: 'ai: the ai can really answer', kind: 'page' },
           { id: 'help.how-to', label: 'How Do I…?', fits: 'role: anyone', kind: 'page' },
@@ -325,7 +326,7 @@ export const DEFINITIONS: Readonly<Record<AppName, AppDef>> = {
   },
   computes: {
     menus: [
-      { label: 'File', sections: [
+      { id: 'file', label: 'File', sections: [
         [
           { id: 'file.new', label: 'New', fits: 'role: anyone', kind: 'page' },
           { label: 'Open', items: [{ id: 'file.open', label: 'Document…', fits: 'role: anyone', kind: 'page' }, { id: 'file.open-file', label: 'Import from Disk…', fits: 'role: anyone', kind: 'page' }] },
@@ -347,7 +348,7 @@ export const DEFINITIONS: Readonly<Record<AppName, AppDef>> = {
           { id: 'file.quit', label: 'Quit', fits: 'client: desktop only', kind: 'shell' },
         ],
       ] },
-      { label: 'Edit', sections: [
+      { id: 'edit', label: 'Edit', sections: [
         [
           { id: 'edit.undo', label: 'Undo', fits: 'role: editor or owner · document: something to undo', kind: 'page' },
           { id: 'edit.redo', label: 'Redo', fits: 'role: editor or owner · document: something to redo', kind: 'page' },
@@ -364,7 +365,7 @@ export const DEFINITIONS: Readonly<Record<AppName, AppDef>> = {
           { label: 'Remove', items: [{ id: 'edit.row-delete', label: 'Row', fits: 'role: editor or owner · selection: a cell or range', kind: 'page' }, { id: 'edit.column-delete', label: 'Column', fits: 'role: editor or owner · selection: a cell or range', kind: 'page' }] },
         ],
       ] },
-      { label: 'Insert', sections: [
+      { id: 'insert', label: 'Insert', sections: [
         [
           { id: 'edit.image', label: 'Image…', fits: 'role: editor or owner', kind: 'page' },
           { label: 'Container', items: [{ id: 'insert.container.latex', label: 'LaTeX', fits: 'role: editor or owner · server: has the tool for LaTeX', kind: 'page' }, { id: 'insert.container.mermaid', label: 'Mermaid', fits: 'role: editor or owner · server: has the tool for Mermaid', kind: 'page' }, { id: 'insert.container.typst', label: 'Typst', fits: 'role: editor or owner · server: has the tool for Typst', kind: 'page' }] },
@@ -375,14 +376,14 @@ export const DEFINITIONS: Readonly<Record<AppName, AppDef>> = {
           { label: 'Row or Column', items: [{ id: 'edit.row-insert-above', label: 'Row Above', fits: 'role: editor or owner · selection: a cell or range', kind: 'page' }, { id: 'edit.row-insert-below', label: 'Row Below', fits: 'role: editor or owner · selection: a cell or range', kind: 'page' }, { id: 'edit.column-insert-left', label: 'Column Left', fits: 'role: editor or owner · selection: a cell or range', kind: 'page' }, { id: 'edit.column-insert-right', label: 'Column Right', fits: 'role: editor or owner · selection: a cell or range', kind: 'page' }] },
         ],
       ] },
-      { label: 'Format', sections: [
+      { id: 'format', label: 'Format', sections: [
         [
           { label: 'Style', items: [{ id: 'format.apply-style', label: 'Apply…', fits: 'role: editor or owner · selection: something, or the cursor in a text', kind: 'page' }, { id: 'format.look', label: 'Edit…', fits: 'role: editor or owner · selection: something, or the cursor in a text', kind: 'page' }, { id: 'format.clear-cell-style', label: 'Clear', fits: 'role: editor or owner · selection: a cell or range', kind: 'page' }, { id: 'format.all-styles', label: 'All Styles…', fits: 'role: editor or owner', kind: 'page' }] },
           { label: 'List', items: [{ id: 'format.bulleted-list', label: 'Bulleted List', fits: 'role: editor or owner · selection: text', kind: 'page', checkable: true }, { id: 'format.numbered-list', label: 'Numbered List', fits: 'role: editor or owner · selection: text', kind: 'page', checkable: true }, { id: 'format.list-continue', label: 'Continue Previous List', fits: 'role: editor or owner · selection: a list item', kind: 'page' }, { id: 'format.list-start', label: 'Start At…', fits: 'role: editor or owner · selection: a list item', kind: 'page' }, { id: 'format.list-indent', label: 'Indent', fits: 'role: editor or owner · selection: a list item', kind: 'page' }, { id: 'format.list-outdent', label: 'Outdent', fits: 'role: editor or owner · selection: a list item', kind: 'page' }, { id: 'format.number-headings', label: 'Number Headings', fits: 'role: editor or owner', kind: 'page', checkable: true }, { id: 'format.all-numbering', label: 'All Numbering…', fits: 'role: editor or owner', kind: 'page' }] },
           { id: 'format.colours', label: 'Palette…', fits: 'role: editor or owner', kind: 'page' },
         ],
       ] },
-      { label: 'View', sections: [
+      { id: 'view', label: 'View', sections: [
         [
           { id: 'view.authors', label: 'Who Wrote What', fits: 'role: editor or owner', kind: 'page', checkable: true },
           { id: 'view.panel', label: 'History & Chat', fits: 'role: anyone', kind: 'page', checkable: true },
@@ -391,7 +392,7 @@ export const DEFINITIONS: Readonly<Record<AppName, AppDef>> = {
           { id: 'view.dark', label: 'Dark Mode', fits: 'role: anyone', kind: 'page', checkable: true },
         ],
       ] },
-      { label: 'Tools', sections: [
+      { id: 'tools', label: 'Tools', sections: [
         [
           { id: 'tools.ask', label: 'Ask ai…', fits: 'role: anyone · ai: the ai can really answer', kind: 'page' },
           { id: 'edit.search-replace', label: 'Search and Replace…', fits: 'role: anyone', kind: 'page' },
@@ -412,14 +413,14 @@ export const DEFINITIONS: Readonly<Record<AppName, AppDef>> = {
           { id: 'tools.sql', label: 'SQL…', fits: 'role: editor or owner', kind: 'page' },
         ],
       ] },
-      { label: 'Preferences', sections: [
+      { id: 'preferences', label: 'Preferences', sections: [
         [
           { id: 'config.shortcuts', label: 'Shortcuts', fits: 'role: anyone', kind: 'page' },
           { id: 'config.ai', label: 'AI…', fits: 'role: anyone', kind: 'page' },
           { label: 'App Language', items: [{ id: 'config.language.en', label: 'English', fits: 'role: anyone', kind: 'page', checkable: true }, { id: 'config.language.de', label: 'Deutsch', fits: 'role: anyone', kind: 'page', checkable: true }] },
         ],
       ] },
-      { label: 'Help', sections: [
+      { id: 'help', label: 'Help', sections: [
         [
           { id: 'tools.ask', label: 'Ask ai…', fits: 'ai: the ai can really answer', kind: 'page' },
           { id: 'help.how-to', label: 'How Do I…?', fits: 'role: anyone', kind: 'page' },
@@ -531,7 +532,7 @@ export const DEFINITIONS: Readonly<Record<AppName, AppDef>> = {
   },
   creates: {
     menus: [
-      { label: 'File', sections: [
+      { id: 'file', label: 'File', sections: [
         [
           { id: 'file.new', label: 'New', fits: 'role: anyone', kind: 'page' },
           { label: 'Open', items: [{ id: 'file.open', label: 'Document…', fits: 'role: anyone', kind: 'page' }, { id: 'file.open-file', label: 'Import from Disk…', fits: 'role: anyone', kind: 'page' }] },
@@ -553,7 +554,7 @@ export const DEFINITIONS: Readonly<Record<AppName, AppDef>> = {
           { id: 'file.quit', label: 'Quit', fits: 'client: desktop only', kind: 'shell' },
         ],
       ] },
-      { label: 'Edit', sections: [
+      { id: 'edit', label: 'Edit', sections: [
         [
           { id: 'edit.undo', label: 'Undo', fits: 'role: editor or owner · document: something to undo', kind: 'page' },
           { id: 'edit.redo', label: 'Redo', fits: 'role: editor or owner · document: something to redo', kind: 'page' },
@@ -569,7 +570,7 @@ export const DEFINITIONS: Readonly<Record<AppName, AppDef>> = {
           { id: 'edit.rename-slide', label: 'Rename Slide…', fits: 'role: editor or owner', kind: 'page' },
         ],
       ] },
-      { label: 'Insert', sections: [
+      { id: 'insert', label: 'Insert', sections: [
         [
           { id: 'insert.cross-reference', label: 'Cross Reference…', fits: 'role: editor or owner · document: has something to refer to', kind: 'page' },
           { id: 'insert.contents', label: 'Agenda', fits: 'role: editor or owner', kind: 'page' },
@@ -584,14 +585,14 @@ export const DEFINITIONS: Readonly<Record<AppName, AppDef>> = {
           { id: 'edit.new-slide', label: 'New Slide', fits: 'role: editor or owner', kind: 'page' },
         ],
       ] },
-      { label: 'Format', sections: [
+      { id: 'format', label: 'Format', sections: [
         [
           { label: 'Style', items: [{ id: 'format.apply-style', label: 'Apply…', fits: 'role: editor or owner · selection: something, or the cursor in a text', kind: 'page' }, { id: 'format.look', label: 'Edit…', fits: 'role: editor or owner · selection: something, or the cursor in a text', kind: 'page' }, { id: 'format.all-styles', label: 'All Styles…', fits: 'role: editor or owner', kind: 'page' }] },
           { label: 'List', items: [{ id: 'format.bulleted-list', label: 'Bulleted List', fits: 'role: editor or owner · selection: text', kind: 'page', checkable: true }, { id: 'format.numbered-list', label: 'Numbered List', fits: 'role: editor or owner · selection: text', kind: 'page', checkable: true }, { id: 'format.list-continue', label: 'Continue Previous List', fits: 'role: editor or owner · selection: a list item', kind: 'page' }, { id: 'format.list-start', label: 'Start At…', fits: 'role: editor or owner · selection: a list item', kind: 'page' }, { id: 'format.list-indent', label: 'Indent', fits: 'role: editor or owner · selection: a list item', kind: 'page' }, { id: 'format.list-outdent', label: 'Outdent', fits: 'role: editor or owner · selection: a list item', kind: 'page' }, { id: 'format.number-headings', label: 'Number All Slide Titles', fits: 'role: editor or owner · document: has more than one slide', kind: 'page', checkable: true }, { id: 'format.all-numbering', label: 'All Numbering…', fits: 'role: editor or owner', kind: 'page' }] },
           { id: 'format.colours', label: 'Palette…', fits: 'role: editor or owner', kind: 'page' },
         ],
       ] },
-      { label: 'View', sections: [
+      { id: 'view', label: 'View', sections: [
         [
           { id: 'view.authors', label: 'Who Wrote What', fits: 'role: editor or owner', kind: 'page', checkable: true },
           { id: 'view.panel', label: 'History & Chat', fits: 'role: anyone', kind: 'page', checkable: true },
@@ -602,7 +603,7 @@ export const DEFINITIONS: Readonly<Record<AppName, AppDef>> = {
           { id: 'view.speaker-notes', label: 'Speaker Notes', fits: 'role: anyone', kind: 'page', checkable: true },
         ],
       ] },
-      { label: 'Tools', sections: [
+      { id: 'tools', label: 'Tools', sections: [
         [
           { id: 'tools.ask', label: 'Ask ai…', fits: 'role: anyone · ai: the ai can really answer', kind: 'page' },
           { id: 'edit.search-replace', label: 'Search and Replace…', fits: 'role: anyone', kind: 'page' },
@@ -612,14 +613,14 @@ export const DEFINITIONS: Readonly<Record<AppName, AppDef>> = {
           { id: 'edit.slide-time', label: 'Plan Time for Slide…', fits: 'role: editor or owner', kind: 'page' },
         ],
       ] },
-      { label: 'Preferences', sections: [
+      { id: 'preferences', label: 'Preferences', sections: [
         [
           { id: 'config.shortcuts', label: 'Shortcuts', fits: 'role: anyone', kind: 'page' },
           { id: 'config.ai', label: 'AI…', fits: 'role: anyone', kind: 'page' },
           { label: 'App Language', items: [{ id: 'config.language.en', label: 'English', fits: 'role: anyone', kind: 'page', checkable: true }, { id: 'config.language.de', label: 'Deutsch', fits: 'role: anyone', kind: 'page', checkable: true }] },
         ],
       ] },
-      { label: 'Help', sections: [
+      { id: 'help', label: 'Help', sections: [
         [
           { id: 'tools.ask', label: 'Ask ai…', fits: 'ai: the ai can really answer', kind: 'page' },
           { id: 'help.how-to', label: 'How Do I…?', fits: 'role: anyone', kind: 'page' },

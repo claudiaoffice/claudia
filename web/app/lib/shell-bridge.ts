@@ -370,7 +370,7 @@ export class ShellBridge {
   }
 
   /** Tells the shell which actions are enabled, ticked, relabelled or left out right now, and which menus have nothing
-   *  left (`empty`, D1645). Only what changed is sent; `empty` whole, whenever it changed. */
+   *  left (`empty`, D1645). Only what changed is sent; `empty` whole, whenever it changed, with an action at least. */
   reportStates(states: Record<string, ActionState>, empty?: Record<string, string>): void {
     if (!this.ready) return
     const changed: Record<string, ActionState> = {}
@@ -385,7 +385,9 @@ export class ShellBridge {
     const emptyChanged = emptyNow !== this.lastEmpty
     this.lastEmpty = emptyNow
     if (!Object.keys(changed).length && !emptyChanged) return
-    this.sink.post({ type: 'action_state', states: changed, ...(emptyChanged ? { empty } : {}) })
+    // a report names an action (contract v1, as every shell knows it): when only `empty` changed, every one again
+    const named = Object.keys(changed).length ? changed : states
+    this.sink.post({ type: 'action_state', states: named, ...(emptyChanged ? { empty } : {}) })
   }
 }
 

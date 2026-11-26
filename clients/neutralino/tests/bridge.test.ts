@@ -142,11 +142,11 @@ describe('after hello', () => {
     expect(sent.at(-1)).toMatchObject({ type: 'error', code: 'unknown_action', message: 'no such action: file.nope' })
   })
 
-  it('passes on which menus have nothing left, also with no action named (D1645)', () => {
+  it('passes on which menus have nothing left (D1645)', () => {
     const { say, hello, calls, sent } = make()
     hello()
-    say({ type: 'action_state', states: {}, empty: { insert: 'Nothing to insert: you can only look at this document.' } })
-    expect(calls.states).toEqual([{}])
+    say({ type: 'action_state', states: { 'file.new': { enabled: true } }, empty: { insert: 'Nothing to insert: you can only look at this document.' } })
+    expect(calls.states).toEqual([{ 'file.new': { enabled: true } }])
     expect(calls.empty).toEqual([{ insert: 'Nothing to insert: you can only look at this document.' }])
     expect(sent).toHaveLength(1) // only the welcome: nothing was wrong
   })
