@@ -2,12 +2,11 @@
 
 import asyncio
 import threading
-import time
 
 import pytest
 
 from claudia_ai import ModelError, ModelRunner, ModelTimeout, Request
-from claudia_ai.testing import FakeModel
+from claudia_ai.testing import FakeModel, FakeTime
 
 
 def ask(runner, text="hi"):
@@ -25,20 +24,20 @@ def test_the_answer_is_read_into_a_turn():
 
 
 def test_generating_does_not_block_the_event_loop():
-    model = FakeModel(delay=0.3)
+    model = FakeModel()
+    model.hold()
     runner = ModelRunner(model)
 
     async def main():
-        ticks = 0
         task = asyncio.create_task(ask(runner))
-        while not task.done():
-            await asyncio.sleep(0.01)
-            ticks += 1
-        return ticks, model.threads
+        await model.begun()
+        working = not task.done()  # the loop runs this while the model is held: it was not blocked
+        model.let_go()
+        await task
+        return working
 
-    ticks, threads = run(main())
-    assert ticks > 5, "the loop kept running while the model worked"
-    assert threads and threading.current_thread() not in threads, "the model works on its own thread"
+    assert run(main()), "the loop kept running while the model worked"
+    assert model.threads and threading.current_thread() not in model.threads, "the model works on its own thread"
     runner.close()
 
 
@@ -56,20 +55,26 @@ def test_questions_are_answered_one_at_a_time_in_order():
 
 
 def test_an_answer_that_takes_too_long_is_stopped_and_reported():
-    model = FakeModel(delay=5)
-    runner = ModelRunner(model, timeout=0.1)
-    started = time.monotonic()
+    clock = FakeTime()
+    model = FakeModel(delay=5, clock=clock)
+    runner = ModelRunner(model, timeout=0.1, clock=clock)
     with pytest.raises(ModelError, match="took longer than 0.1 seconds"):
         run(ask(runner))
-    assert time.monotonic() - started < 2 and model.stopped_early
+    assert model.stopped_early and clock.now < 0.2, "stopped at the limit, not when the model was done"
     runner.close()
 
 
 def test_the_time_limit_counts_from_when_the_model_starts_not_from_when_it_was_asked():
-    runner = ModelRunner(FakeModel(delay=0.15), timeout=0.4)
+    clock = FakeTime()
+    model = FakeModel(delay=0.15, clock=clock)
+    model.hold()  # all three are asked before the first is answered
+    runner = ModelRunner(model, timeout=0.4, clock=clock)
 
     async def main():
-        return await asyncio.gather(ask(runner), ask(runner), ask(runner))
+        answers = asyncio.gather(ask(runner), ask(runner), ask(runner))
+        await model.begun()
+        model.let_go()
+        return await answers
 
     assert len(run(main())) == 3  # the third waited 0.3 s and still had its full 0.4 s
     runner.close()
@@ -90,12 +95,13 @@ def test_an_unexpected_failure_is_reported_in_words():
 
 
 def test_cancelling_the_question_stops_the_generation():
-    model = FakeModel(delay=5)
+    model = FakeModel()
+    model.hold()
     runner = ModelRunner(model)
 
     async def main():
         task = asyncio.create_task(ask(runner))
-        await asyncio.sleep(0.1)
+        await model.begun()
         task.cancel()
         with pytest.raises(asyncio.CancelledError):
             await task
@@ -106,12 +112,13 @@ def test_cancelling_the_question_stops_the_generation():
 
 
 def test_closing_stops_a_running_generation_and_refuses_new_questions():
-    model = FakeModel(delay=5)
+    model = FakeModel()
+    model.hold()
     runner = ModelRunner(model)
 
     async def main():
         task = asyncio.create_task(ask(runner))
-        await asyncio.sleep(0.1)
+        await model.begun()
         await asyncio.to_thread(runner.close)
         with pytest.raises(ModelError):
             await task

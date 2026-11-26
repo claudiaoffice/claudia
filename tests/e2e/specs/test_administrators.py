@@ -478,7 +478,7 @@ def says_exposed(visit):
 @then("I see no setup code field")
 def no_field(visit):
     visit.page.wait_for_selector("text=Create administrator")
-    time.sleep(0.5)  # the welcome and the check of its code have come by now
+    time.sleep(0.5)  # must not happen: the field would have come with the welcome; late, it only goes unseen
     assert visit.page.locator("[data-testid=setup-code]").count() == 0
 
 

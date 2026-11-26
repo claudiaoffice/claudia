@@ -83,7 +83,7 @@ def alive(pid: int) -> bool:
         return False
     try:  # a zombie is dead for our purposes
         return Path(f"/proc/{pid}/stat").read_text().split()[2] != "Z"
-    except FileNotFoundError:
+    except (FileNotFoundError, ProcessLookupError):  # gone, or going as we read: /proc says ESRCH then (PROC-66)
         return False
 
 
@@ -224,7 +224,7 @@ def test_a_server_that_outlives_the_shell_survives_its_death(tmp_path: Path) -> 
         server_pid = int(line.split()[1])
         os.kill(shell.pid, signal.SIGKILL)  # type: ignore[attr-defined] # POSIX only, not on Windows
         shell.wait(timeout=5)
-        time.sleep(0.3)
+        time.sleep(0.3)  # must not happen: a dying server would be gone by now; a slow one only goes unseen
         assert alive(server_pid), "the shared server died with the shell"
     finally:
         if shell.poll() is None:

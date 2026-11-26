@@ -7,6 +7,10 @@ without any spreadsheet, text or slide code.
 
 from __future__ import annotations
 
+import gc
+import sys
+import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import ClassVar, Self
@@ -31,6 +35,64 @@ def body_before_ref(data: dict, *without: str) -> dict:
     for pointer in ("shape", "image", "diagram", "rendered", "table"):
         old[pointer] = data["ref"] if pointer == data["kind"] else None
     return {name: value for name, value in old.items() if name not in without}
+
+
+def work_of(fn: Callable[[], object]) -> int:
+    """How much Python ``fn`` runs: the lines it starts and the turns of its loops, a one-line comprehension's too.
+
+    The same on every machine and on every run, however busy the machine is or how big its caches are: what a
+    performance guard compares when the cost is spent in Python (PROC-61, D1661). It does not see work done inside C
+    (``x in a_list``, a list shifted by ``del``, ``max`` of a dict): a guard against that measures time
+    (:func:`best_of`)."""
+    monitoring = sys.monitoring
+    tool = next(tool for tool in range(6) if monitoring.get_tool(tool) is None)  # (coverage may hold one)
+    monitoring.use_tool_id(tool, "work_of")
+    count = 0
+
+    def counted(*_event: object) -> None:
+        nonlocal count
+        count += 1
+
+    try:
+        monitoring.register_callback(tool, monitoring.events.LINE, counted)
+        monitoring.register_callback(tool, monitoring.events.JUMP, counted)
+        monitoring.set_events(tool, monitoring.events.LINE | monitoring.events.JUMP)
+        fn()
+    finally:
+        monitoring.set_events(tool, 0)
+        monitoring.free_tool_id(tool)
+    return count
+
+
+BATCH_SECONDS = 0.2
+"""How much processor time one measurement of :func:`best_of` gathers at least: a fast ``fn`` is run that many times,
+so that the coarse processor clock of Windows (15.6 ms) is a small part of it."""
+
+
+def best_of(repeat: int, fn: Callable[[], object]) -> float:
+    """What one run of ``fn`` costs, in seconds of *processor* time, the least of ``repeat`` measurements, with the
+    cyclic garbage collector held off: for a guard whose cost is spent in C, which :func:`work_of` cannot see.
+
+    Processor time, not the wall clock: what other programs do with the machine meanwhile is not counted, so a busy
+    runner does not make a linear cost look quadratic (it did: 61x to 71x for a 10x linear step under load, PERF-14).
+    A collection is triggered by how much has been allocated, not by the work being measured, so it lands in the large
+    case far more often than in the small one and reads as super-linear cost (reopening 8,000 formulas measured 20-25x
+    the time of 800 with it on, 11x with it off). ``timeit`` turns it off for the same reason."""
+    gc.collect()
+    was_enabled = gc.isenabled()
+    gc.disable()
+    try:
+        best = float("inf")
+        for _ in range(repeat):
+            runs, started = 0, time.process_time()
+            while (spent := time.process_time() - started) < BATCH_SECONDS or runs == 0:
+                fn()
+                runs += 1
+            best = min(best, spent / runs)
+        return best
+    finally:
+        if was_enabled:
+            gc.enable()
 
 
 class FakeClock:

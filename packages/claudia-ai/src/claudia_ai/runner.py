@@ -11,6 +11,7 @@ from __future__ import annotations
 import asyncio
 import threading
 import time
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from typing import Protocol
 
@@ -43,7 +44,8 @@ class ModelRunner:
     """Asks the model one question at a time on a worker thread.
 
     ``timeout`` is how many seconds one answer may take once the model has started on it (not counting the wait in
-    the queue); ``max_new_tokens`` is the longest answer. ``close`` stops the running generation and the worker."""
+    the queue), read on ``clock``; ``max_new_tokens`` is the longest answer. ``close`` stops the running generation
+    and the worker."""
 
     def __init__(
         self,
@@ -52,6 +54,7 @@ class ModelRunner:
         *,
         max_new_tokens: int = 512,
         timeout: float = 180.0,
+        clock: Callable[[], float] = time.monotonic,
     ):
         if max_new_tokens < 1 or timeout <= 0:
             raise ValueError("max_new_tokens and timeout must be positive")
@@ -59,6 +62,7 @@ class ModelRunner:
         self.agent = agent or Agent()
         self.max_new_tokens = max_new_tokens
         self.timeout = timeout
+        self._clock = clock
         self._closing = threading.Event()
         self._executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="claudia-ai")
 
@@ -97,10 +101,10 @@ class ModelRunner:
 
     def _generate(self, job: _Job, request: Request) -> Turn:
         """On the worker thread."""
-        deadline = time.monotonic() + self.timeout
+        deadline = self._clock() + self.timeout
 
         def stop() -> bool:
-            if time.monotonic() > deadline:
+            if self._clock() > deadline:
                 job.timed_out = True
             if self._closing.is_set():
                 job.cancelled = True

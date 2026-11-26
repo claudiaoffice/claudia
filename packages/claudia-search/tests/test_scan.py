@@ -9,6 +9,7 @@ import time
 import pytest
 
 from claudia_search import Query, SearchError, Text, location_key, plan, scan
+from claudia_search.testing import STOPPED_IN_TIME
 
 
 def search(text, replace=None, **options):
@@ -86,7 +87,7 @@ def test_a_search_that_runs_out_of_time_says_so_and_keeps_what_it_found():
     started = time.monotonic()
     found = scan(items, slow, deadline=started + 0.2)
     assert found.timed_out
-    assert time.monotonic() - started < 0.6
+    assert time.monotonic() - started < STOPPED_IN_TIME
     assert [m.at for m in found.matches] == []  # (the first text had no match, the second ran out of time)
 
 

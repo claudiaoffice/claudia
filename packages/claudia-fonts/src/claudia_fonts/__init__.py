@@ -22,7 +22,7 @@ from .collection import COLLECTION_FILE, MAY_GO, Collection, CollectionRecord, M
 from .font import Axis, FontFile, FontProblem, read_font
 from .fontconfig import JobFonts, write_fontconfig
 from .starter import LockedCollection, LockedFile, builtin_folder, collection_folders, fetch, read_lock
-from .webfonts import NotServable, WebFontCache, font_face_css
+from .webfonts import NotServable, WebFontCache, font_face_css, to_woff2
 
 __all__ = [
     "CLOSENESS",
@@ -60,5 +60,6 @@ __all__ = [
     "read_lock",
     "remove_collection",
     "rename_collection",
+    "to_woff2",
     "write_fontconfig",
 ]

@@ -75,7 +75,7 @@
   "class": [
    "object"
   ],
-  "init": "(model: 'LanguageModel', agent: 'Agent | None' = None, *, max_new_tokens: 'int' = 512, timeout: 'float' = 180.0)",
+  "init": "(model: 'LanguageModel', agent: 'Agent | None' = None, *, max_new_tokens: 'int' = 512, timeout: 'float' = 180.0, clock: 'Callable[[], float]' = <built-in function monotonic>)",
   "methods": {
    "answer": "(self, request: 'Request') -> 'Turn'",
    "close": "(self) -> 'None'"

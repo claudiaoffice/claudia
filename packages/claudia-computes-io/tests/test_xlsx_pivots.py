@@ -447,7 +447,7 @@ def test_the_source_of_a_kept_pivot_edited_gives_the_new_numbers_and_asks_the_ca
     data = changed(exported(), CACHE, lambda cache: cache.attrib.pop("refreshOnLoad"))
     baseline, current = xlsx_to_workbook(data), xlsx_to_workbook(data)
     current.sheet("s1").cells[(1, 2)] = {"t": "int", "v": 1000}  # North, Q1: 100 -> 1000
-    current._calculate_loaded()
+    current.calculate_loaded()
     assert xlsx_unwritten_changes(current, baseline) == ()  # (the definition is as it was; the numbers are written)
     out = apply_edits_to_xlsx(data, baseline, current)
     assert read_parts(out)[TABLE] == read_parts(data)[TABLE]
@@ -464,7 +464,7 @@ def test_a_pivot_changed_in_a_kept_file_is_said_not_written():
     entry = current.pivots.get("P")
     assert entry is not None
     current.pivots.put("P", replace(entry, definition=replace(entry.definition, total_row=False)))
-    current._calculate_loaded()
+    current.calculate_loaded()
     assert kinds(xlsx_unwritten_changes(current, baseline)) == {"pivot-table": 1}
 
 

@@ -93,7 +93,7 @@ def edited(data: bytes, *changes: tuple[str, int, int, dict | None]) -> tuple[Wo
             sheet.cells.pop((r, c), None)
         else:
             sheet.cells[(r, c)] = content
-    current._calculate_loaded()
+    current.calculate_loaded()
     return baseline, current
 
 
@@ -387,7 +387,7 @@ def a_workbook() -> WorkbookModel:
         }
     )
     second.cells[(0, 0)] = {"t": "int", "v": 21}
-    model._calculate_loaded()
+    model.calculate_loaded()
     return model
 
 

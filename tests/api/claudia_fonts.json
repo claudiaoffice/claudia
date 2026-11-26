@@ -182,7 +182,7 @@
   "class": [
    "object"
   ],
-  "init": "(directory: 'str | Path') -> 'None'",
+  "init": "(directory: 'str | Path', *, compress: 'Callable[[bytes], bytes]' = <function to_woff2>) -> 'None'",
   "methods": {
    "get": "(self, font: 'FontFile', *, local: 'bool' = False) -> 'Path'"
   },
@@ -217,6 +217,9 @@
  },
  "rename_collection": {
   "function": "(folder: 'str | Path', name: 'str') -> 'None'"
+ },
+ "to_woff2": {
+  "function": "(data: 'bytes') -> 'bytes'"
  },
  "write_fontconfig": {
   "function": "(catalogue: 'Catalogue', directory: 'str | Path', cache_directory: 'str | Path') -> 'JobFonts'"

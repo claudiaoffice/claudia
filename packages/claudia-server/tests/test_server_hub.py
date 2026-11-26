@@ -357,15 +357,25 @@ def test_idle_documents_are_unloaded_but_busy_ones_are_not(make_hub, clock):
     assert not hub.is_loaded("busy")
 
 
-def test_start_and_stop_run_the_housekeeping(make_hub):
+def test_start_and_stop_run_the_housekeeping(make_hub, clock):
+    """The running hub sweeps by itself: an idle document is let go without anybody calling ``sweep``. (It slept
+    30 ms and checked nothing; PROC-66.)"""
+
     async def scenario():
-        hub = make_hub(sweep_interval=0.01)
+        hub = make_hub(sweep_interval=0.01, idle_unload=60)
+        await hub.open("quiet", create=True)
+        clock.advance(61)
         await hub.start()
-        await asyncio.sleep(0.03)
+        for _ in range(1000):  # polls for at most ten seconds; a running sweep needs one interval
+            if not hub.is_loaded("quiet"):
+                break
+            await asyncio.sleep(0.01)
+        swept = not hub.is_loaded("quiet")  # before stop, which lets go of everything anyway
         await hub.stop()
         await hub.stop()  # twice is harmless
+        return swept
 
-    asyncio.run(scenario())
+    assert asyncio.run(scenario()), "the housekeeping let go of the idle document"
 
 
 def test_the_worker_pool_is_reachable_and_stopped_with_the_hub(make_hub):

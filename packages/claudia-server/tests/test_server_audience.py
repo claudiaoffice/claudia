@@ -286,7 +286,7 @@ def test_a_viewer_still_reads_the_content_and_the_names(room):
 def test_looking_back_reads_the_history():
     """``as_of`` shows the document as it was after a step, which is what the history paragraphs hold."""
     tables = [table for table in _METHODS.values() if "as_of" in table.names()]
-    assert tables and all(table._methods["as_of"].reads == "history" for table in tables)
+    assert tables and all(table.describe()["methods"]["as_of"]["reads"] == "history" for table in tables)
 
 
 # ---------------------------------------------------- nothing can be added to the protocol unclassified
@@ -296,8 +296,8 @@ GOLDEN = Path(__file__).with_name("method_reads.json")
 def _all_methods():
     seen = {}
     for table in (core_methods, *_METHODS.values()):
-        for name, method in table._methods.items():
-            seen.setdefault(name, method.reads)
+        for name, method in table.describe()["methods"].items():  # what /api/protocol says
+            seen.setdefault(name, method["reads"])
     return seen
 
 

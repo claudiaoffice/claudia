@@ -255,8 +255,8 @@ def test_an_edit_in_flight_during_a_restore_is_refused_over_the_wire(provider, d
         ann.request("save_checkpoint", {"label": "good"})
         ann.request("apply", {"command": INSERT})
         seen = ann.request("ping")["result"]["revision"]
-        hub = app.state.hub
-        hosted = hub._documents["plan"]  # the server-side act; the wire method waits for the rules of a live session
+        hosted = c.portal.call(app.state.hub.open, "plan")  # the one already open
+        # the server-side act; the wire method waits for the rules of a live session
         c.portal.call(lambda: hosted.document.restore_checkpoint(1, author="ann"))
         reply = ann.request("apply", {"command": INSERT, "base": seen})
         assert reply["error"]["code"] == "stale"
