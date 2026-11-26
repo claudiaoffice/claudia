@@ -13,6 +13,9 @@ Windows menus from it, and `scripts/generate_menus.py` writes the web app's key 
 Linux client (`clients/linux/tests/test_manifest.py`), which also checks it against that client's contract module and
 app identities.
 
+`fixtures/menu-collapse.json` is how a menu is drawn once the entries that do not fit are left out: one table of cases
+that the page, the Windows and macOS shell and the Linux shell each run (slice 6 of the menu work, D1645).
+
 ## Messages
 
 All messages are JSON objects with a `type`. A message is at most 64 KiB. A receiver **ignores** types it does not know.
@@ -22,7 +25,7 @@ All messages are JSON objects with a `type`. A message is at most 64 KiB. A rece
 | `hello` | page | The page is there: `contract` (the highest version it speaks, a whole number), `app` (`composes`, `computes`, `creates`; left out by a page that does not know yet which app its server runs, in which case the shell takes it to be its own), and `view` (`start` for the front page, which gets the shell's short menu, or `document`; left out by an older page, which gets the whole menu, D447). May also list the versions it speaks (`supported`). |
 | `welcome` | shell | Answer to `hello`: the `contract` version both will use, the shell's version and its `capabilities` (`native-menu`, `actions`; `connect` and `servers` when the shell can connect the window to another server and keeps the list of servers; `files` when it chooses and saves the page's files with its own dialogs, D501), `app`, the window's own app (D444), and `setup_code`, the setup code of the shell's own server while it has no administrator (D1373), only to a page of that server. |
 | `action` | shell | Carry out the menu action `action` (an id such as `file.save`). `target` (`on` or `off`) is given for choices that are ticked or not: asking for the state that is there already does nothing. |
-| `action_state` | page | Which actions are `enabled`, `checked` or relabelled now. Only the actions named change. |
+| `action_state` | page | Which actions are `enabled`, `checked`, relabelled or left out (`visible`) now; only the actions named change, and the page names only the entries of the bar. `empty` (D1645): every menu of the bar with nothing left, by its word in lower case (`insert`), with the greyed line that says why; it replaces what the shell knew. A message names an action or carries `empty`. A shell that does not know `visible` greys what is left out. |
 | `connect` | page | Show the server at `address` (as a person typed it, or an origin from the list) in this window. The shell checks it and either loads that server's page or answers `connect_failed`. Only sent when the shell offers `connect`. |
 | `connect_failed` | shell | The connection asked for was not made: `code` (`bad_address`, `insecure`, `unreachable`, `not_claudia`, `wrong_app`, `certificate_expired`, `certificate_invalid`, `not_trusted`) and a `message` fit to show to the person. |
 | `servers` | shell, page | The list of servers of this window's app: entries of `origin`, `label`, `custom` (the person named it) and `local` (the server on this computer, which only the shell lists). The shell sends it after `welcome`; the page sends it back when the person changes it (renames, say) and never before it has received the shell's. Only exchanged when the shell offers `servers`. |

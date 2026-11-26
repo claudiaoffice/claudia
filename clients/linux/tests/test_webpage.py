@@ -39,7 +39,7 @@ let ready = false
 let lastReported = null
 
 function specOf(id) {
-  if (id === 'file.save') return {label: 'Save'}
+  if (id === 'file.save-as') return {label: 'Save Checkpoint…'}
   if (id === 'edit.undo') return {label: state.canUndo ? 'Undo typing' : 'Undo', disabled: !state.canUndo}
   if (id === 'edit.redo') return {label: 'Redo', disabled: true}
   if (id === 'view.page') return {label: 'Page', checked: state.view === 'page'}
@@ -54,7 +54,7 @@ function post(message) {
 function report() {
   if (!ready) return
   const states = {}
-  for (const id of ['file.save', 'edit.undo', 'edit.redo', 'view.page', 'view.authors']) {
+  for (const id of ['file.save-as', 'edit.undo', 'edit.redo', 'view.page', 'view.authors']) {
     const spec = specOf(id)
     const s = {enabled: !spec.disabled}
     if (spec.checked !== undefined) s.checked = spec.checked
@@ -150,7 +150,7 @@ class Rig:
             manifest.composes(),
             lambda raw: self.page.send(raw),  # noqa: PLW0108 (self.page exists only after the bridge)
             shell_version="test",
-            on_states=self.states.update,
+            on_states=lambda states, _empty: self.states.update(states),
         )
 
         def on_message(raw: str) -> None:
@@ -210,7 +210,7 @@ def test_the_page_says_hello_and_is_welcomed(rig: Rig) -> None:
 
 def test_the_states_of_the_web_menu_reach_the_shell(rig: Rig) -> None:
     pump(lambda: "view.page" in rig.states and "edit.undo" in rig.states, what="the first states")
-    assert rig.states["file.save"] == {"enabled": True}
+    assert rig.states["file.save-as"] == {"enabled": True}
     assert rig.states["edit.undo"] == {"enabled": False}
     assert rig.states["view.page"] == {"enabled": True, "checked": False}
     assert rig.states["view.authors"] == {"enabled": True, "checked": False}
@@ -224,8 +224,8 @@ def test_the_states_change_when_the_page_changes(rig: Rig) -> None:
 
 def test_an_action_is_carried_out_through_the_pages_own_script(rig: Rig) -> None:
     pump(lambda: rig.bridge.ready)
-    rig.bridge.send_action("file.save")
-    pump(lambda: rig.clicked() == ["Save"], what="the click")
+    rig.bridge.send_action("file.save-as")
+    pump(lambda: rig.clicked() == ["Save Checkpoint…"], what="the click")
 
 
 def test_a_prefixed_item_like_undo_typing_is_found(rig: Rig) -> None:

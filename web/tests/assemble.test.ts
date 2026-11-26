@@ -1,6 +1,8 @@
 // The menus assembled from the definition (D1644): the definition's entries × the workspace's handlers × the verdicts
 // of `fits/`. Hidden entries are left out, greyed ones are `disabled`, lines and empty submenus collapse, an empty menu
 // says why (D1603), and every action has its handler (the seam agreed for slice 4 of the menu work).
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { describe, expect, it, vi } from 'vitest'
 import type { MenuItem } from '~/components/MenuBar.vue'
 import type { Facts } from '~/lib/fits/facts'
@@ -139,7 +141,7 @@ describe('the menu bar, assembled from the definition (D1644)', () => {
     const own = handlers({ 'edit.search-replace': { run: vi.fn(), notNow: () => 'Not while the history replays.' } })
     const menus = assemble({}, DEFAULT_POLICY, own)
     expect(shown(menus.bar[0]!.items).at(-1)).toBe('Search and Replace… (off)')
-    expect(menus.states['edit.search-replace']).toEqual({ enabled: false })
+    expect(menus.states['edit.search-replace']).toEqual({ enabled: false, visible: true })
   })
 })
 
@@ -193,11 +195,49 @@ describe('choosing an entry', () => {
 })
 
 describe('what the shell is told (D1645)', () => {
-  it('says every action’s state, also of an entry that is left out', () => {
+  it('says every action’s state, also of an entry that is left out, and whether it is left out (slice 6)', () => {
     const states = assemble({ role: 'viewer' }).states
-    expect(states['insert.container.latex']).toEqual({ enabled: false })
-    expect(states['edit.search-replace']).toEqual({ enabled: true })
-    expect(states['view.dark']).toEqual({ enabled: true, checked: false })
+    expect(states['insert.container.latex']).toEqual({ enabled: false, visible: false })
+    expect(states['edit.search-replace']).toEqual({ enabled: true, visible: true })
+    expect(states['view.dark']).toEqual({ enabled: true, visible: true, checked: false })
+  })
+
+  it('says a greyed entry stays', () => {
+    const states = assemble({ role: 'viewer' }, policyFromAddress('?fits=role:grey')).states
+    expect(states['insert.container.latex']).toEqual({ enabled: false, visible: true })
+  })
+
+  it('names only what stands in the menu bar: the shells draw nothing else, and a key of the rest reaches the page', () => {
+    const states = assemble().states
+    expect(states['edit.delete']).toBeUndefined()
+    expect(states['edit.nonbreaking-hyphen']).toBeUndefined()
+  })
+
+  it('names the menus with nothing left, with the line that says why (D1603)', () => {
+    expect(assemble({ role: 'viewer' }).empty).toEqual({ insert: 'Nothing to insert: you can only look at this document.' })
+    expect(assemble().empty).toEqual({})
+  })
+})
+
+describe('the collapse rule all three draw by (clients/contract/fixtures/menu-collapse.json)', () => {
+  type Spec = string | { submenu: string; items: string[] }
+  const fixture = JSON.parse(readFileSync(resolve(__dirname, '../../clients/contract/fixtures/menu-collapse.json'), 'utf8')) as {
+    cases: { name: string; sections: Spec[][]; drawn: Spec[] }[]
+  }
+  const action = (label: string) => ({ id: `test.${label.replace('~', '')}`, label, fits: label.startsWith('~') ? 'role: owner' : anyone, kind: 'page' as const })
+
+  it.each(fixture.cases.map((c) => [c.name, c] as const))('%s', (_name, c) => {
+    const app: AppDef = {
+      menus: [{ label: 'Test', sections: c.sections.map((section) => section.map((e) => (typeof e === 'string' ? action(e) : { label: e.submenu, items: e.items.map(action) }))) }],
+      contexts: [],
+      keysOnly: [],
+    }
+    const own = Object.fromEntries(c.sections.flat().flatMap((e) => (typeof e === 'string' ? [e] : e.items)).map((l) => [action(l).id, { run: vi.fn() }]))
+    const menus = assembleMenus({ definition: app, handlers: own, facts: () => facts({ role: 'viewer' }), policy: DEFAULT_POLICY, t, notice: vi.fn(), locale: 'en' })
+    const drawn = menus.bar[0]!.items.filter((item) => !(item.disabled && !item.id)).map((item): Spec =>
+      item.separator ? '-' : item.items ? { submenu: item.label, items: item.items.map((sub) => sub.label) } : item.label,
+    )
+    expect(drawn).toEqual(c.drawn)
   })
 })
 

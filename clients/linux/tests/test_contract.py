@@ -29,6 +29,7 @@ def text(**message: object) -> str:
 
 HELLO = {"type": "hello", "contract": 1, "app": "composes", "frontend": "0.1.0"}
 ACTION = {"type": "action", "action": "file.save"}
+UNDO_ON = {"edit.undo": {"enabled": True}}
 STATE = {"type": "action_state", "states": {"edit.undo": {"enabled": False}, "view.page": {"checked": True}}}
 WELCOME = {
     "type": "welcome",
@@ -49,6 +50,9 @@ VALID = [
     {**ACTION, "target": "page"},
     STATE,
     {"type": "action_state", "states": {"edit.undo": {"label": "Undo typing"}}},
+    # (slice 6 of the menu work, D1645) an entry left out, and a menu with nothing left and why
+    {"type": "action_state", "states": {"insert.image": {"visible": False}}, "empty": {"insert": "x"}},
+    {"type": "action_state", "states": {}, "empty": {}},  # only the menus with nothing left changed: none now
     {"type": "error", "code": "unsupported_contract", "message": "no", "supported": [1]},
     {**WELCOME, "locale": "de"},  # (E5.7) shell -> page too, but the schema does not care which side sends what
     {**WELCOME, "locale": "de-DE"},
@@ -89,6 +93,10 @@ INVALID = [
     {"type": "action", "action": "Save"},  # ids are namespaced and lower case
     {"type": "action", "action": "file.save", "target": 3},
     {"type": "action_state", "states": {}},  # says nothing
+    {"type": "action_state", "states": {"edit.undo": {"visible": "no"}}},
+    {"type": "action_state", "states": UNDO_ON, "empty": {"Insert!": "x"}},  # a menu is named by its word in lower case
+    {"type": "action_state", "states": UNDO_ON, "empty": {"insert": 3}},
+    {"type": "action_state", "states": UNDO_ON, "empty": {"insert": "x" * 257}},
     {"type": "action_state", "states": {"edit.undo": {"enabled": "no"}}},
     {"type": "action_state", "states": {"Undo": {"enabled": True}}},
     {"type": "action_state"},

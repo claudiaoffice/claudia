@@ -43,6 +43,8 @@ export interface ActionState {
   enabled?: boolean
   checked?: boolean
   label?: string
+  /** False: left out of the shell's menu, not greyed (D1645). */
+  visible?: boolean
 }
 type ActionHandler = (id: string, target?: string) => void
 type ConnectFailedHandler = (code: string, message: string) => void
@@ -175,6 +177,8 @@ export class ShellBridge {
   private offerHandlers = new Set<(file: File) => void>()
   private failureHandlers = new Set<ConnectFailedHandler>()
   private lastReported: Record<string, string> = {}
+  /** The menus with nothing left as last reported, as JSON; `undefined` before the first report. */
+  private lastEmpty: string | undefined = undefined
 
   /** `view` (sheet 11): the front page gets the shell's short menu, a document the whole one. */
   constructor(app: App | undefined, sink: MessageSink = NULL_SINK, view?: ShellView) {
@@ -365,8 +369,9 @@ export class ShellBridge {
     this.sink.post({ type: 'servers', servers })
   }
 
-  /** Tells the shell which actions are enabled, ticked or relabelled right now. Only what changed is sent. */
-  reportStates(states: Record<string, ActionState>): void {
+  /** Tells the shell which actions are enabled, ticked, relabelled or left out right now, and which menus have nothing
+   *  left (`empty`, D1645). Only what changed is sent; `empty` whole, whenever it changed. */
+  reportStates(states: Record<string, ActionState>, empty?: Record<string, string>): void {
     if (!this.ready) return
     const changed: Record<string, ActionState> = {}
     for (const [id, state] of Object.entries(states)) {
@@ -376,7 +381,11 @@ export class ShellBridge {
         this.lastReported[id] = key
       }
     }
-    if (Object.keys(changed).length) this.sink.post({ type: 'action_state', states: changed })
+    const emptyNow = empty === undefined ? this.lastEmpty : JSON.stringify(empty)
+    const emptyChanged = emptyNow !== this.lastEmpty
+    this.lastEmpty = emptyNow
+    if (!Object.keys(changed).length && !emptyChanged) return
+    this.sink.post({ type: 'action_state', states: changed, ...(emptyChanged ? { empty } : {}) })
   }
 }
 

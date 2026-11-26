@@ -95,9 +95,9 @@ def test_every_action_of_the_manifest_is_a_window_action(window) -> None:
 
 def test_page_actions_are_disabled_until_the_page_has_said_hello(window) -> None:
     window.show_page("http://127.0.0.1:1")
-    assert not window.lookup_action("file.save").get_enabled()
+    assert not window.lookup_action("file.save-as").get_enabled()
     window.fake_pages[0].says(hello())
-    assert window.lookup_action("file.save").get_enabled()
+    assert window.lookup_action("file.save-as").get_enabled()
     assert window.fake_pages[0].sent[0]["type"] == "welcome"
 
 
@@ -118,11 +118,11 @@ def test_the_front_page_gets_the_short_menu_and_a_document_the_whole_one(window)
     page.says({**hello(), "view": "start"})
     assert visible_menus(window) == ["File", "View", "Preferences", "Help"]
     assert window.lookup_action("file.open-file").get_enabled()
-    assert not window.lookup_action("file.save").get_enabled()  # nor by its key
+    assert not window.lookup_action("file.save-as").get_enabled()  # nor by its key
     assert window.menu_file.get_menu_model().get_n_items() == 2  # New, Open ▸ (Document…, Import from Disk…) · Quit
     page.says({**hello(), "view": "document"})
     assert visible_menus(window) == ["File", "Edit", "Insert", "Format", "View", "Tools", "Preferences", "Help"]
-    assert window.lookup_action("file.save").get_enabled()
+    assert window.lookup_action("file.save-as").get_enabled()
     page.says({**hello(), "view": "start"})  # File ▸ Close Document: the front page again
     assert visible_menus(window) == ["File", "View", "Preferences", "Help"]
     assert not window.lookup_action("edit.undo").get_enabled()
@@ -155,8 +155,8 @@ def test_activating_a_menu_action_sends_it_to_the_page(window) -> None:
     window.show_page("http://127.0.0.1:1")
     page = window.fake_pages[0]
     page.says(hello())
-    window.lookup_action("file.save").activate(None)
-    assert page.sent[-1] == {"type": "action", "action": "file.save"}
+    window.lookup_action("file.save-as").activate(None)
+    assert page.sent[-1] == {"type": "action", "action": "file.save-as"}
 
 
 def test_ticking_a_checkable_action_asks_the_page_for_the_new_state_and_waits_for_its_answer(window) -> None:
@@ -182,6 +182,62 @@ def test_states_from_the_page_enable_and_disable_actions(window) -> None:
     assert not window.lookup_action("edit.undo").get_enabled()
     page.says({"type": "action_state", "states": {"edit.undo": {"enabled": True}}})
     assert window.lookup_action("edit.undo").get_enabled()
+
+
+def labels(model) -> list[str]:
+    """The labels of a menu model, section by section, without what is inside a submenu."""
+    found = []
+    for i in range(model.get_n_items()):
+        section = model.get_item_link(i, "section")
+        found += [section.get_item_attribute_value(j, "label", None).get_string() for j in range(section.get_n_items())]
+    return found
+
+
+INSERT = [a.id for a in manifest.composes().menu("Insert").all_actions()]
+WHY = "Nothing to insert: you can only look at this document."
+
+
+def test_what_the_page_leaves_out_is_not_drawn_and_an_empty_menu_says_why(window) -> None:
+    """Slice 6 of the menu work (D1645, D1603): the title stays, its one line is the page's sentence, greyed."""
+    window.show_page("http://127.0.0.1:1")
+    page = window.fake_pages[0]
+    page.says(hello())
+    page.says(
+        {
+            "type": "action_state",
+            "states": {i: {"enabled": False, "visible": False} for i in INSERT},
+            "empty": {"insert": WHY},
+        }
+    )
+    assert window.menu_insert.get_visible()
+    assert labels(window.menu_insert.get_menu_model()) == [WHY]
+    assert not window.lookup_action("menu-why").get_enabled()
+    page.says({"type": "action_state", "states": {"edit.image": {"enabled": True, "visible": True}}, "empty": {}})
+    assert labels(window.menu_insert.get_menu_model()) == ["Image…"]
+
+
+def test_an_open_menu_stays_as_it_opened_until_it_is_closed(window) -> None:
+    """D1603: a menu does not change under the person's hand."""
+    window.show_page("http://127.0.0.1:1")
+    page = window.fake_pages[0]
+    page.says(hello())
+    before = labels(window.menu_insert.get_menu_model())
+    window.menu_insert.set_active(True)
+    page.says({"type": "action_state", "states": {"edit.image": {"enabled": False, "visible": False}}})
+    assert labels(window.menu_insert.get_menu_model()) == before
+    window.menu_insert.set_active(False)
+    assert "Image…" not in labels(window.menu_insert.get_menu_model())
+
+
+def test_a_page_that_loads_again_starts_from_the_whole_menu(window) -> None:
+    window.show_page("http://127.0.0.1:1")
+    page = window.fake_pages[0]
+    page.says(hello())
+    whole = labels(window.menu_insert.get_menu_model())
+    page.says({"type": "action_state", "states": {"edit.image": {"visible": False}}})
+    page.callbacks["on_reset"]()  # the page loads again
+    page.says(hello())
+    assert labels(window.menu_insert.get_menu_model()) == whole
 
 
 def test_the_pages_dark_mode_choice_is_applied_to_the_native_chrome_too(window) -> None:
@@ -235,7 +291,7 @@ def test_a_page_that_loads_again_disables_the_page_actions_until_it_says_hello_a
     page = window.fake_pages[0]
     page.says(hello())
     page.callbacks["on_reset"]()
-    assert not window.lookup_action("file.save").get_enabled()
+    assert not window.lookup_action("file.save-as").get_enabled()
 
 
 def test_editing_actions_go_to_the_web_views_editing_commands(window) -> None:

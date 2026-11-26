@@ -52,7 +52,7 @@ class Bridge:
         *,
         shell_version: str,
         locale: str | None = None,
-        on_states: Callable[[dict[str, dict[str, Any]]], None] | None = None,
+        on_states: Callable[[dict[str, dict[str, Any]], dict[str, str] | None], None] | None = None,
         on_ready: Callable[[], None] | None = None,
         on_connect: Callable[[str], None] | None = None,
         on_servers: Callable[[list[dict[str, Any]]], None] | None = None,
@@ -64,7 +64,7 @@ class Bridge:
         self._send = send
         self._shell_version = shell_version
         self._locale = locale  # (E5.7) the shell's best guess at the person's locale; passed on in `welcome`
-        self._on_states = on_states or (lambda _states: None)
+        self._on_states = on_states or (lambda _states, _empty: None)
         self._on_ready = on_ready or (lambda: None)
         self._on_connect = on_connect
         self._on_servers = on_servers
@@ -192,8 +192,9 @@ class Bridge:
         states: dict[str, dict[str, Any]] = message["states"]
         unknown = sorted(name for name in states if name not in known)
         applied = {name: state for name, state in states.items() if name in known}
-        if applied:
-            self._on_states(applied)
+        empty: dict[str, str] | None = message.get("empty")
+        if applied or empty is not None:
+            self._on_states(applied, empty)
         if unknown:
             self._reply(contract.error("unknown_action", f"no such action: {', '.join(unknown)}"))
 

@@ -21,13 +21,16 @@ class Recorder:
     def __init__(self) -> None:
         self.sent: list[dict] = []
         self.states: list[dict] = []
+        self.empty: list[dict] = []
         self.ready = 0
 
     def send(self, raw: str) -> None:
         self.sent.append(json.loads(raw))
 
-    def on_states(self, states: dict) -> None:
+    def on_states(self, states: dict, empty: dict | None = None) -> None:
         self.states.append(states)
+        if empty is not None:
+            self.empty.append(empty)
 
     def on_ready(self) -> None:
         self.ready += 1
@@ -163,6 +166,16 @@ def test_action_states_from_the_page_reach_the_window(rig) -> None:
     bridge.receive(hello())
     bridge.receive(json.dumps({"type": "action_state", "states": {"edit.undo": {"enabled": False}}}))
     assert recorder.states == [{"edit.undo": {"enabled": False}}]
+
+
+def test_the_menus_with_nothing_left_reach_the_window_also_with_no_action_named(rig) -> None:
+    """Slice 6 of the menu work (D1645): ``empty`` replaces what the window knew."""
+    bridge, recorder = rig
+    bridge.receive(hello())
+    why = "Nothing to insert: you can only look at this document."
+    bridge.receive(json.dumps({"type": "action_state", "states": {}, "empty": {"insert": why}}))
+    assert recorder.states == [{}]
+    assert recorder.empty == [{"insert": why}]
 
 
 def test_states_for_unknown_actions_are_reported_and_only_the_known_ones_applied(rig) -> None:

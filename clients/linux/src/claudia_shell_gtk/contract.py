@@ -58,6 +58,7 @@ Message = dict[str, Any]
 
 _ACTION_ID = re.compile(r"^[a-z]+(\.[a-z][a-z0-9-]*)+$")
 _TOKEN = re.compile(r"^[a-z][a-z0-9-]*$")
+_MENU_WORD = re.compile(r"^[a-z]{1,32}$")  # a menu of the bar in 'empty': its word in the definition, lower case
 _LOCALE = re.compile(r"^[A-Za-z]{2,8}(-[A-Za-z0-9]{1,8})*$")  # a BCP-47-ish tag (E5.7); loose on purpose
 _ERROR_CODES = ("bad_json", "bad_message", "unsupported_contract", "unknown_action", "internal")
 CONNECT_FAILED_CODES = (
@@ -204,16 +205,25 @@ def _check_action(message: Message) -> None:
 
 def _check_action_state(message: Message) -> None:
     states = message.get("states")
-    if not isinstance(states, dict) or not states:
-        raise _bad("'action_state' needs 'states' with at least one action")
+    empty = message.get("empty")
+    if not isinstance(states, dict) or (not states and empty is None):
+        raise _bad("'action_state' needs 'states' with at least one action, or 'empty'")
     for name, state in states.items():
         _action_id(name)
         if not isinstance(state, dict):
             raise _bad(f"the state of {name} is an object")
-        for flag in ("enabled", "checked"):
+        for flag in ("enabled", "checked", "visible"):
             if flag in state and not isinstance(state[flag], bool):
                 raise _bad(f"'{flag}' of {name} is true or false")
         _text(state, "label", limit=128)
+    if empty is not None:
+        if not isinstance(empty, dict):
+            raise _bad("'empty' names menus")
+        for menu, why in empty.items():
+            if not _MENU_WORD.fullmatch(menu):
+                raise _bad(f"'{menu}' in 'empty' is a menu's word in lower case")
+            if not isinstance(why, str) or len(why) > 256:
+                raise _bad(f"why '{menu}' is empty is text of at most 256 characters")
 
 
 def _check_error(message: Message) -> None:

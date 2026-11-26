@@ -7,10 +7,11 @@ The definition itself is ``claudia_menus.manifest`` in ``clients/contract`` (D16
 from __future__ import annotations
 
 import xml.etree.ElementTree as ET
+from collections.abc import Mapping
 
 from claudia_menus.manifest import Action, Manifest, Submenu, Translate
 
-__all__ = ["menu_button_id", "menu_elements", "menu_xml"]
+__all__ = ["WHY_ACTION", "menu_button_id", "menu_elements", "menu_xml"]
 
 
 def _translatable(action: Action) -> bool:
@@ -41,10 +42,24 @@ def _submenu_element(parent: ET.Element, submenu: Submenu, translate: Translate)
         _item_element(section, action, translate)
 
 
-def _menu_tree(manifest: Manifest, translate: Translate) -> ET.Element:
+#: The window action of the line that says why a menu has nothing left (D1603): never enabled, so GTK greys the line.
+WHY_ACTION = "menu-why"
+
+
+def _why_element(menu_element: ET.Element, why: str) -> None:
+    """The one greyed line of a menu with nothing left: the page's own sentence, already in the person's language."""
+    item = ET.SubElement(ET.SubElement(menu_element, "section"), "item")
+    ET.SubElement(item, "attribute", name="label").text = why
+    ET.SubElement(item, "attribute", name="action").text = f"win.{WHY_ACTION}"
+
+
+def _menu_tree(manifest: Manifest, translate: Translate, empty: Mapping[str, str]) -> ET.Element:
     interface = ET.Element("interface")
     for menu in manifest.menus:
         menu_element = ET.SubElement(interface, "menu", id=menu.id)
+        why = empty.get(menu.label.lower())
+        if not menu.sections and why:
+            _why_element(menu_element, why)
         for section in menu.sections:
             section_element = ET.SubElement(menu_element, "section")
             for entry in section:
@@ -61,7 +76,9 @@ def menu_button_id(menu_id: str) -> str:
     return menu_id.replace("-", "_")
 
 
-def menu_elements(manifest: Manifest, *, translate: Translate = lambda text: text) -> str:
+def menu_elements(
+    manifest: Manifest, *, translate: Translate = lambda text: text, empty: Mapping[str, str] | None = None
+) -> str:
     """Only the ``<menu>`` elements, to be merged into the layout file of a window (see ``window.ui``).
 
     ``translate`` is applied here, while the XML is built, rather than through GtkBuilder's own translation-domain
@@ -69,16 +86,22 @@ def menu_elements(manifest: Manifest, *, translate: Translate = lambda text: tex
     ``_()``), and calling ``translate`` directly reuses it instead of also wiring ``Gtk.Builder.set_translation_domain``
     and glibc's ``bindtextdomain`` for a second, parallel one. Left at the default identity function, this (and
     everything it calls) needs no locale installed at all — which is what every test below does.
+
+    ``empty``: the menus with nothing left, by their word in lower case, and the page's sentence that says why
+    (slice 6 of the menu work, D1645); such a menu holds that one greyed line.
     """
-    return "\n  ".join(ET.tostring(menu, encoding="unicode").strip() for menu in _menu_tree(manifest, translate))
+    tree = _menu_tree(manifest, translate, empty or {})
+    return "\n  ".join(ET.tostring(menu, encoding="unicode").strip() for menu in tree)
 
 
-def menu_xml(manifest: Manifest, *, translate: Translate = lambda text: text) -> str:
+def menu_xml(
+    manifest: Manifest, *, translate: Translate = lambda text: text, empty: Mapping[str, str] | None = None
+) -> str:
     """GtkBuilder XML for the menus of ``manifest``: one ``<menu id="menu-file">`` and so on.
 
     Every item calls the window action ``win.<id>``; ``translatable="yes"`` on its label is a GtkBuilder hint for
     any future tooling (xgettext and the like) that reads this XML directly; translation itself has already
     happened by the time this text is written, under ``menu_elements``'s own ``translate`` parameter above (E5.7).
     """
-    elements = menu_elements(manifest, translate=translate)
+    elements = menu_elements(manifest, translate=translate, empty=empty)
     return f'<?xml version="1.0" encoding="UTF-8"?>\n<interface>\n  {elements}\n</interface>\n'

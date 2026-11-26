@@ -55,6 +55,8 @@ export interface AssembledMenus {
   context: (id: string, own?: Handlers) => MenuItem[]
   /** Every action's state, for a native shell's menus: one left out is not enabled. */
   states: Record<string, ActionState>
+  /** The menus of the bar with nothing left, by their word in the definition ("insert"), and the line that says why. */
+  empty: Record<string, string>
   /** Every action the page runs, once, in the person's words: what has a key, and what Preferences ▸ Shortcuts lists. */
   actions: { id: string; label: string }[]
   /** Every action for Preferences ▸ Shortcuts (D1604): the menu bar's by menu, then what only a context menu has. */
@@ -168,11 +170,16 @@ export function assembleMenus(input: MenuInput): AssembledMenus {
     return { items: out, why }
   }
 
+  /** The menus of the bar with nothing left, by their word in the definition ("insert"), with the line that says why:
+   *  what a shell draws in them (D1603, contract `action_state.empty`). */
+  const empty: Record<string, string> = {}
   const bar = definition.menus.map((menu): Menu => {
     const made = items(menu)
     const why = made.why as Judged | null
     if (made.items.length || !why || why.enabled) return { label: word(menu.label), items: made.items }
-    return { label: word(menu.label), items: [{ label: emptyLine(menu.label, why.why, t, input.locale), disabled: true }] }
+    const line = emptyLine(menu.label, why.why, t, input.locale)
+    empty[menu.label.toLowerCase()] = line
+    return { label: word(menu.label), items: [{ label: line, disabled: true }] }
   })
 
   function context(id: string, own: Handlers = {}): MenuItem[] {
@@ -188,13 +195,16 @@ export function assembleMenus(input: MenuInput): AssembledMenus {
 
   const first = new Map<string, EntryDef>()
   for (const entry of entriesOf(definition)) if (!first.has(entry.id)) first.set(entry.id, entry)
+  const inTheBar = new Set([...entriesOf({ ...definition, contexts: [], keysOnly: [] })].map((entry) => entry.id))
 
   const states: Record<string, ActionState> = {}
   const actions: { id: string; label: string }[] = []
   for (const [id, entry] of first) {
     if (handlers[id]) actions.push({ id, label: handlers[id].label?.() ?? word(entry.label) })
-    if (entry.kind === 'shell' && !handlers[id]) continue
-    const state: ActionState = { enabled: judged(entry, facts).enabled }
+    // the shells draw the bar only (D1645); a key of anything else reaches the page, which judges it when pressed
+    if (!inTheBar.has(id) || (entry.kind === 'shell' && !handlers[id])) continue
+    const verdict = judged(entry, facts)
+    const state: ActionState = { enabled: verdict.enabled, visible: verdict.shown }
     if (entry.checkable) state.checked = handlers[id]?.checked?.() ?? false
     states[id] = state
   }
@@ -230,6 +240,7 @@ export function assembleMenus(input: MenuInput): AssembledMenus {
     bar,
     context,
     states,
+    empty,
     actions,
     listing,
     run: (id, target) => {

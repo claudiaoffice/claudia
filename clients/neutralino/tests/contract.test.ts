@@ -25,6 +25,8 @@ const VALID: Array<[string, unknown]> = [
   ['action', { type: 'action', action: 'file.save' }],
   ['action with a target', { type: 'action', action: 'view.panel', target: 'on' }],
   ['action_state', { type: 'action_state', states: { 'file.save': { enabled: false }, 'view.panel': { checked: true, label: 'Panel' } } }],
+  ['action_state with an entry left out and an empty menu (D1645)', { type: 'action_state', states: { 'insert.image': { enabled: false, visible: false } }, empty: { insert: 'x' } }],
+  ['action_state that only says no menu is empty now', { type: 'action_state', states: {}, empty: {} }],
   ['error', { type: 'error', code: 'bad_message', message: 'no' }],
   ['error with the versions', { type: 'error', code: 'unsupported_contract', message: 'no', supported: [1] }],
   ['connect', { type: 'connect', address: 'demo.example.org:8420' }],
@@ -42,6 +44,8 @@ const VALID: Array<[string, unknown]> = [
   ['file_result failed', { type: 'file_result', request: 'f2', outcome: 'failed', message: 'The disk is full.' }],
   ['offer_file (D505)', { type: 'offer_file', request: 'd1', name: 'Budget.xlsx', size: 1234 }],
 ]
+
+const UNDO_ON = { 'edit.undo': { enabled: true } }
 
 const INVALID: Array<[string, unknown]> = [
   ['hello without a version', { type: 'hello' }],
@@ -61,6 +65,10 @@ const INVALID: Array<[string, unknown]> = [
   ['action with a long target', { type: 'action', action: 'view.panel', target: 'x'.repeat(257) }],
   ['action_state without states', { type: 'action_state' }],
   ['action_state with no action', { type: 'action_state', states: {} }],
+  ['action_state with visible that is text', { type: 'action_state', states: { 'file.save': { visible: 'no' } } }],
+  ['action_state with a menu that is not a word', { type: 'action_state', states: UNDO_ON, empty: { 'Insert!': 'x' } }],
+  ['action_state with a why that is not text', { type: 'action_state', states: UNDO_ON, empty: { insert: 3 } }],
+  ['action_state with a long why', { type: 'action_state', states: UNDO_ON, empty: { insert: 'x'.repeat(257) } }],
   ['action_state with a bad name', { type: 'action_state', states: { save: { enabled: true } } }],
   ['action_state with a flag that is text', { type: 'action_state', states: { 'file.save': { enabled: 'yes' } } }],
   ['error with an unknown code', { type: 'error', code: 'oops', message: 'x' }],

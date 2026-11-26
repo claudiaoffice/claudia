@@ -23,7 +23,7 @@ from importlib import resources
 from pathlib import Path
 from typing import Any, Protocol
 
-from claudia_menus.manifest import Action, Kind, Manifest, about_links, for_start, on_start
+from claudia_menus.manifest import Action, Kind, Manifest, about_links, for_start, on_start, visible_only
 
 from ._gi import Adw, Gdk, Gio, GLib, Gtk
 from ._version import __version__
@@ -35,7 +35,7 @@ from .desktop_server import setup_code_for_page
 from .files import Chosen, Dialogs, Failed, Files
 from .i18n import translate as _
 from .identity import AppIdentity
-from .menu_xml import menu_button_id, menu_xml
+from .menu_xml import WHY_ACTION, menu_button_id, menu_xml
 from .settings import save_shell_locale
 from .trust import TrustStore
 
@@ -254,9 +254,17 @@ class ClaudiaWindow(Adw.ApplicationWindow):
         self.set_icon_name(identity.application_id)
         self.show_starting(_("Starting {app}…").format(app=identity.title))
         self._menu_models: dict[str, dict[str, Any]] = {}
+        # What the page leaves out and which menus it says have nothing left (slice 6 of the menu work, D1645)
+        self._hidden: set[str] = set()
+        self._empty: dict[str, str] = {}
+        self._view = "start"
+        self._waiting: dict[str, Any] = {}  # a menu's new model, kept until the menu that is open now is closed
         self._attach_menus()
         for action in manifest.actions:
             self._add_action(action)
+        why = Gio.SimpleAction.new(WHY_ACTION, None)  # the line that says why a menu is empty: never enabled
+        why.set_enabled(False)
+        self.add_action(why)
         self._show_view("start")  # the front page comes first
         self._install_file_drop()
 
@@ -267,18 +275,44 @@ class ClaudiaWindow(Adw.ApplicationWindow):
             builder = Gtk.Builder.new_from_string(menu_xml(spec, translate=_), -1)
             self._menu_models[view] = {menu.id: builder.get_object(menu.id) for menu in spec.menus}
         for menu in self._manifest.menus:
-            getattr(self, menu_button_id(menu.id)).set_menu_model(self._menu_models["document"][menu.id])
+            button = getattr(self, menu_button_id(menu.id))
+            button.set_menu_model(self._menu_models["document"][menu.id])
+            button.connect("notify::active", self._on_menu_open_or_closed, menu.id)
 
     def _show_view(self, view: str) -> None:
         """The front page's short menu (``start``) or the whole one (``document``): a menu with nothing in it for the
         view is not shown at all, rather than greyed out."""
-        models = self._menu_models["start" if view == "start" else "document"]
+        self._view = "start" if view == "start" else "document"
+        models = self._menu_models[self._view]
         for menu in self._manifest.menus:
             button = getattr(self, menu_button_id(menu.id))
             model = models.get(menu.id)
             button.set_visible(model is not None)
             if model is not None:
-                button.set_menu_model(model)
+                self._put_model(menu.id, model)
+
+    def _draw_document_menus(self) -> None:
+        """The document's menus again, without what the page leaves out and with the line that says why in a menu
+        with nothing left (D1645, D1603). The titles stay: :func:`visible_only` keeps every menu."""
+        shown = visible_only(self._manifest, lambda action_id: action_id not in self._hidden)
+        builder = Gtk.Builder.new_from_string(menu_xml(shown, translate=_, empty=self._empty), -1)
+        self._menu_models["document"] = {menu.id: builder.get_object(menu.id) for menu in shown.menus}
+        if self._view == "document":
+            for menu_id, model in self._menu_models["document"].items():
+                self._put_model(menu_id, model)
+
+    def _put_model(self, menu_id: str, model: Any) -> None:
+        """A menu that is open now stays as it opened (D1603): its new model waits until it is closed."""
+        button = getattr(self, menu_button_id(menu_id))
+        if button.get_active():
+            self._waiting[menu_id] = model
+        else:
+            self._waiting.pop(menu_id, None)
+            button.set_menu_model(model)
+
+    def _on_menu_open_or_closed(self, button: Any, _spec: Any, menu_id: str) -> None:
+        if not button.get_active() and menu_id in self._waiting:
+            button.set_menu_model(self._waiting.pop(menu_id))
 
     # ------------------------------------------------------------------------------------------------ what is shown
 
@@ -394,8 +428,17 @@ class ClaudiaWindow(Adw.ApplicationWindow):
         """The person ticked or unticked a choice: ask the page for it. The state changes when the page confirms."""
         self._bridge.send_action(action.get_name(), "on" if value.get_boolean() else "off")
 
-    def set_action_states(self, states: dict[str, dict[str, Any]]) -> None:
-        """Apply the ``enabled`` and ``checked`` states that the page reported."""
+    def set_action_states(self, states: dict[str, dict[str, Any]], empty: dict[str, str] | None = None) -> None:
+        """Apply the ``enabled``, ``checked`` and ``visible`` states that the page reported, and which menus it says
+        have nothing left (``empty``, which replaces what was known)."""
+        hidden = {name for name, state in states.items() if state.get("visible") is False}
+        shown = {name for name, state in states.items() if state.get("visible") is True}
+        redraw = bool(hidden - self._hidden or shown & self._hidden) or (empty is not None and empty != self._empty)
+        self._hidden = (self._hidden | hidden) - shown
+        if empty is not None:
+            self._empty = dict(empty)
+        if redraw:
+            self._draw_document_menus()
         for name, state in states.items():
             action = self.lookup_action(name)
             if action is None:
@@ -442,6 +485,9 @@ class ClaudiaWindow(Adw.ApplicationWindow):
     def _page_is_reloading(self) -> None:
         self._bridge.reset()
         self._set_page_actions_enabled(False)
+        if self._hidden or self._empty:  # the next page says again what it leaves out
+            self._hidden, self._empty = set(), {}
+            self._draw_document_menus()
 
     def _on_close_request(self, _window: Any) -> bool:
         self.release_page()

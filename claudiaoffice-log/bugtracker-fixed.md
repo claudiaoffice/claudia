@@ -20,7 +20,7 @@ PROC-24 to PROC-27, CODE-58 to CODE-61, SEC-19, UX-44; SEC-15 fixed (see "Round 
 
 ## Index
 
-### Fixed (241)
+### Fixed (243)
 
 By ID. Items closed without a fix (superseded, wontfix) are here too.
 
@@ -123,6 +123,8 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | UX-95 | P2 | UX / clients | Assign New Owner…, Accept Ownership…, Leave Document… and Delete From Server… are in no menu of any client: their places, File ▸ Manage ▸ My Role… and the front page (D1608), are not built | **fixed** on `menus` (File ▸ Manage ▸ My Role…, and Delete in the list of the front page; D1656) | 2026-11-25 | 2026-11-26 |
 | UX-96 | P3 | UX / menus | The workbook's context menus lack what the web's have: a reference's Show As and Remove Reference, an object's wrap Gap…, computes' purpose of a table's column | **fixed** on `menus` (a reference's Show As ▸ and Remove Reference in the workbook and the definition; D1655, for the owner to confirm) | 2026-11-25 | 2026-11-26 |
 | UX-97 | P3 | UX / composes | Shift+Home over words just typed, not sent yet, selects nothing: Copy, Cut and Name & Describe… are then not offered | **fixed** on `menus` (a selection into the words not sent yet is kept until they are sent) | 2026-11-25 | 2026-11-26 |
+| CODE-108 | P2 | Code / clients | The page told the Windows and macOS shells the states of context-menu entries, which they refused as unknown actions at every report | **fixed** on `menus` (slice 6: the page names only the bar's entries) | 2026-11-26 | 2026-11-26 |
+| PROC-70 | P2 | Process | The Linux client's GTK tests had not run on `menus` since slice 2: seven of them still asked for File ▸ Save and Shift+F10 | **fixed** on `menus` (brought to the definition; run under Xvfb) | 2026-11-26 | 2026-11-26 |
 | CODE-01 | P2 | Code | No coverage, no web lint; Playwright not declared | **fixed** |  |  |
 | CODE-02 | P3 | Code | 26 build files tracked in `web/dist` | fixed |  |  |
 | CODE-05 | P3 | Code | Dead branch in `Gateway.admit`; stale docstring in `state.py` | **fixed** (the branch was not dead: comment corrected) |  |  |
@@ -2916,3 +2918,17 @@ After the word is sent (a space), Shift+Home selects it. The words not yet sent 
 and selects it with Shift+Home at once, and the Edit menu offers Copy.
 
 **Fixed** on `menus`, 2026-11-26: the page's selection is taken as places in the paragraph once the words not sent yet are in it, and selected when they are (`selectOnceSent`); the caret is drawn collapsed behind those words, no longer as a selection over them. The menus spec's step selects at once now.
+
+### CODE-108 · The Windows and macOS shells refused the states of context-menu entries · P2 · size 3 · fixed
+**Measured** while building slice 6 of the menu work (branch `menus`): since slice 4 the page named every action of the
+definition in `action_state`, context menus and keys without an entry included, and `clients/neutralino/src/bridge.ts`
+answered each report with `unknown_action` for those, which the page logged as a warning. Only the bar's entries are
+the shells' (D1645). **Fixed** on `menus`, 2026-11-26: the page names only the entries of the bar
+(`web/tests/assemble.test.ts`, "names only what stands in the menu bar").
+
+### PROC-70 · The Linux client's GTK tests did not run on the branch · P2 · size 3 · fixed
+**Measured** on `menus`, 2026-11-26: the environment of the menu work had no GTK 4, so `clients/linux`'s tests ran
+without their 64 GTK tests from slice 2 on. Once GTK, libadwaita and WebKitGTK were installed, seven failed: they
+still used File ▸ Save (gone in the workbook; File ▸ Save Checkpoint… is `file.save-as`) and Shift+F10 as the
+shell's key (Edit Style… left it). **Fixed** on `menus`, 2026-11-26: all 653 pass
+under Xvfb; the done report says when they could not be run.

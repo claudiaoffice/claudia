@@ -2,6 +2,7 @@
 // and source checked), the core's messages, and the order in which things start.
 import { describe, expect, it } from 'vitest'
 import { startListing, type ManifestListing } from '../src/menu.js'
+import { drawMenu } from '../src/menu-actions.js'
 import { MACOS_PAGE, WINDOWS_PAGE, type PagePlatform } from '../src/platform/page.js'
 import { ShellPage, knownActions, type PageEnv } from '../src/shell-page.js'
 import { CORE_ID, FROM_CORE, TO_CORE } from '../src/core-protocol.js'
@@ -14,6 +15,9 @@ const startOf = (platform: PagePlatform) =>
   platform.buildMainMenu(startListing(listing as ManifestListing, platform.keepAtStart), 'Claudia Creates')
 const MENU = menuOf(MACOS_PAGE)
 const START = startOf(MACOS_PAGE)
+/** What Neutralino is given: the menus as drawn, without the shell's own notes on them. */
+const DRAWN = drawMenu(MENU, {})
+const DRAWN_START = drawMenu(START, {})
 const tick = () => new Promise((resolve) => setTimeout(resolve, 0))
 const tops = (menu: unknown) => (menu as Array<{ text: string }>).map((m) => m.text)
 
@@ -132,7 +136,7 @@ describe('start', () => {
     await t.page.start()
     expect(t.calls.slice(0, 2)).toEqual(['init', 'menu'])
     expect(Object.keys(t.listeners).sort()).toEqual([FROM_CORE, 'mainMenuItemClicked', 'windowClose'].sort())
-    expect(t.menus[0]).toEqual(MENU)
+    expect(t.menus[0]).toEqual(DRAWN)
     expect(t.dispatched).toEqual([{ id: CORE_ID, event: TO_CORE, data: { kind: 'start' } }])
     expect(t.statuses[0]).toEqual({ title: 'Starting…', error: false })
   })
@@ -380,6 +384,21 @@ describe('messages from the frame', () => {
     expect(items.find((i) => i.id === 'file.new').isDisabled).toBe(true)
     expect(items.find((i) => i.id === 'file.close').text).toBe('Close the deck')
   })
+
+  it('leaves out what the page leaves out, and says why a menu has nothing left (D1645, D1603)', async () => {
+    const t = setup()
+    await t.open()
+    const insert = knownActions(MENU.filter((m) => m.text === 'Insert')).map((a) => a.id)
+    t.menus.length = 0
+    t.fromFrame({
+      type: 'action_state',
+      states: Object.fromEntries(insert.map((id) => [id, { enabled: false, visible: false }])),
+      empty: { insert: 'Nothing to insert: you can only look at this document.' },
+    })
+    await tick()
+    const drawn = (t.menus.at(-1) as any[]).find((m) => m.text === 'Insert')
+    expect(drawn.menuItems).toEqual([{ text: 'Nothing to insert: you can only look at this document.', isDisabled: true }])
+  })
 })
 
 describe('the native menu', () => {
@@ -506,14 +525,14 @@ describe('the front page and a document (sheet 11)', () => {
   it('shows the short menu first, the whole one when a document says hello, and the short one again on the front page', async () => {
     const t = setup({ startMenu: true })
     await t.page.start()
-    expect(t.menus.at(-1)).toEqual(START)
+    expect(t.menus.at(-1)).toEqual(DRAWN_START)
     t.core({ kind: 'show', origin: 'https://demo.example.org' })
     t.fromFrame({ type: 'hello', contract: 1, view: 'start' })
     await tick()
-    expect(t.menus.at(-1)).toEqual(START)
+    expect(t.menus.at(-1)).toEqual(DRAWN_START)
     t.fromFrame({ type: 'hello', contract: 1, app: 'creates', view: 'document' })
     await tick()
-    expect(t.menus.at(-1)).toEqual(MENU)
+    expect(t.menus.at(-1)).toEqual(DRAWN)
     t.fromFrame({ type: 'hello', contract: 1, view: 'start' })
     await tick()
     expect(tops(t.menus.at(-1))).toEqual(tops(START))
@@ -524,7 +543,7 @@ describe('the front page and a document (sheet 11)', () => {
     t.core({ kind: 'show', origin: 'https://demo.example.org' })
     t.hello()
     await tick()
-    expect(t.menus.at(-1)).toEqual(MENU)
+    expect(t.menus.at(-1)).toEqual(DRAWN)
   })
   it('has no Edit, Format or Tools on the front page', () => {
     expect(tops(START)).toEqual(['Claudia Creates', 'File', 'Edit', 'View', 'Preferences'])

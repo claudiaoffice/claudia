@@ -162,7 +162,7 @@ defineExpose({
 const shell = createShellBridge(props.app, undefined, (bridge) => reactive(bridge) as typeof bridge, 'document')
 shell.onAction((id, target) => void props.menus.run(id, target === 'on' || target === 'off' ? target : undefined))
 onBeforeUnmount(() => shell.detach())
-watch(() => props.menus.states, (states) => shell.reportStates(states), { immediate: true })
+watch(() => [props.menus.states, props.menus.empty] as const, ([states, empty]) => shell.reportStates(states, empty), { immediate: true })
 
 // A notice goes away by itself.
 let timer: ReturnType<typeof setTimeout> | undefined

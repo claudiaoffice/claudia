@@ -307,29 +307,31 @@ def on_start(action_id: str) -> bool:
     return action_id in _START_ACTIONS or action_id.startswith("config.language.")
 
 
-def for_start(manifest: Manifest) -> Manifest:
-    """The short menu of the front page (sheet 11): only the actions :func:`on_start` keeps, and no empty section,
-    flyout or menu — Edit, Format and Tools disappear rather than show greyed-out entries. The shells show it while
-    the page has said ``hello`` with ``view: "start"``, and the whole manifest for a document."""
+def visible_only(manifest: Manifest, keep: Callable[[str], bool]) -> Manifest:
+    """The menus of ``manifest`` with only the actions ``keep`` keeps (slice 6 of the menu work, D1645): no empty
+    section or flyout, so no separator comes first, last or twice (``clients/contract/fixtures/menu-collapse.json``).
+    A menu with nothing left stays, with no sections: its title never goes (D1603), and the shell shows why."""
 
-    def keep(entry: MenuEntry) -> MenuEntry | None:
+    def kept(entry: MenuEntry) -> MenuEntry | None:
         if isinstance(entry, Submenu):
-            items = tuple(a for a in entry.items if on_start(a.id))
+            items = tuple(a for a in entry.items if keep(a.id))
             return replace(entry, items=items) if items else None
-        return entry if on_start(entry.id) else None
+        return entry if keep(entry.id) else None
 
-    menus = []
-    for menu in manifest.menus:
-        sections = tuple(
-            kept
-            for kept in (
-                tuple(e for e in (keep(entry) for entry in section) if e is not None) for section in menu.sections
-            )
-            if kept
-        )
-        if sections:
-            menus.append(replace(menu, sections=sections))
-    return replace(manifest, menus=tuple(menus), header_toggles=(), context_menus=(), keys_only=())
+    def sections(menu: Menu) -> tuple[tuple[MenuEntry, ...], ...]:
+        cut = (tuple(e for e in (kept(entry) for entry in section) if e is not None) for section in menu.sections)
+        return tuple(section for section in cut if section)
+
+    return replace(manifest, menus=tuple(replace(menu, sections=sections(menu)) for menu in manifest.menus))
+
+
+def for_start(manifest: Manifest) -> Manifest:
+    """The short menu of the front page (sheet 11): only the actions :func:`on_start` keeps, and no menu with nothing
+    in it — Edit, Format and Tools disappear rather than show greyed-out entries. The shells show it while the page
+    has said ``hello`` with ``view: "start"``, and the whole manifest for a document."""
+    shown = visible_only(manifest, on_start)
+    menus = tuple(menu for menu in shown.menus if menu.sections)
+    return replace(shown, menus=menus, header_toggles=(), context_menus=(), keys_only=())
 
 
 def _page(

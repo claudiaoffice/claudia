@@ -185,7 +185,7 @@ app by app:
    where the workbook moved entries. Then the trial's default, hide.~~ Done (D1654); the keys of every entry came with
    it, judged when pressed.
 5. ~~**Keys and the Shortcuts dialog** (D1604, D1642).~~ Done; macOS's own keys on the web on a Mac (D1648).
-6. **The shells:** contract fields, Neutralino, GTK.
+6. ~~**The shells:** contract fields, Neutralino, GTK.~~ Done; the page tells the shells only of the bar's entries.
 7. **The copy guard and Paste As ▸ Plain text** (D1640, D1641).
 8. **I18N:** every new text (the notices, the "why" lines, the tags, `plain`) in `po/`; the German menus with
    "Formatvorlage" (D1618).

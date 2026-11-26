@@ -341,3 +341,43 @@ Context menus sheet (Show as ▸, Remove reference; Go to target moved to the se
 - Accept Ownership… is offered to everybody but an owner, and Leave the Document… to everybody: the server says no
   where it does not apply, as before.
 - Delete is offered in the list on this server only, not in Mine, which lists documents of other servers too.
+
+## Slice 6 · The shells draw what fits (D1645), 2026-11-26
+
+**Test first** (the seams of §4):
+- `clients/contract/fixtures/menu-collapse.json`: one table of cases (an entry, a section or a submenu left out; nothing
+  left), run by `tests/test_menu_collapse.py` (`visible_only`, the Linux shell), `clients/neutralino/tests/
+  menu-actions.test.ts` (`drawMenu`) and `web/tests/assemble.test.ts` (the page).
+- The contract: `clients/linux/tests/test_contract.py` (schema and parser together) and
+  `clients/neutralino/tests/contract.test.ts`: `visible`, `empty`, and an `action_state` that names no action but
+  `empty`.
+- `web/tests/assemble.test.ts` and `web/tests/shell-bridge.test.ts`: what the page tells the shells.
+- `clients/linux/tests/test_manifest.py` (the "why" line in the menu XML), `test_bridge.py`, `test_window.py` (an
+  entry left out, the "why" line, an open menu kept until it is closed, a page that loads again);
+  `clients/neutralino/tests/bridge.test.ts`, `shell-page.test.ts`.
+
+**What changed:**
+- Contract v1, additive: `action_state.states[id].visible`, and `action_state.empty`, every menu of the bar with
+  nothing left by its word in lower case ("insert") and the sentence that says why, replacing what the shell knew.
+  An `action_state` must say something: an action, or `empty`. A shell that does not know `visible` greys instead.
+- The page (`menus/assemble.ts`) tells the shells only of the entries of the bar: they draw nothing else, and a key of
+  any other entry reaches the page, which judges it when pressed. Until now it named every action, and the Windows and
+  macOS shell answered each report with `unknown_action` for the entries of context menus (CODE-108).
+  `shell-bridge.ts` sends `empty` whole whenever it changed.
+- The definition: `visible_only(manifest, keep)`; `for_start` is that filter with `on_start`, and drops the menus with
+  nothing left, which the document's menus keep (D1603).
+- Linux (`window.py`): the document's menus are drawn again from `visible_only` when what is left out or `empty`
+  changes; a menu with nothing left holds one item on `win.menu-why`, an action that is never enabled. A menu that is
+  open keeps its model until it is closed (`notify::active`). A page that loads again starts from the whole menu.
+- Windows and macOS (`menu-actions.ts`, `shell-page.ts`): the kept menu notes what is left out (`isHidden`) and each
+  menu's word; `drawMenu` makes what Neutralino is given.
+
+**Found on the way:**
+- The Linux client's GTK tests had not run on this branch since slice 2 (no GTK here until now): they still asked
+  for File ▸ Save and Shift+F10, which the workbook took away. Brought to the definition; all 653 pass under Xvfb.
+
+**Not verified:**
+- Neutralino cannot tell whether a native menu is open, so a report that comes while one is open changes it at once
+  (D1603 holds on the web and on Linux only).
+- The `@desktop` scenarios have no runner for the native shells; their behaviour is covered by the Linux window tests
+  and the Neutralino shell page's tests with a fake Neutralino.

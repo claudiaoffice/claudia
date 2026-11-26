@@ -98,23 +98,33 @@
       }
     },
     "action_state": {
-      "description": "Page to shell: which actions are enabled, ticked or relabelled right now (Undo is only enabled when there is something to undo). Only the actions named change.",
+      "description": "Page to shell: which actions are enabled, ticked, relabelled or left out right now (Undo is only enabled when there is something to undo), and which menus of the bar have nothing left. Only the actions named change. It says something: an action, or 'empty'. 'visible' and 'empty' came with the menus that show what fits (D1645); a shell that does not know them greys what is left out, which is safe.",
       "type": "object",
       "required": ["type", "states"],
+      "anyOf": [
+        { "properties": { "states": { "minProperties": 1 } } },
+        { "required": ["empty"] }
+      ],
       "properties": {
         "type": { "const": "action_state" },
         "states": {
           "type": "object",
-          "minProperties": 1,
           "propertyNames": { "$ref": "#/$defs/actionId" },
           "additionalProperties": {
             "type": "object",
             "properties": {
               "enabled": { "type": "boolean" },
               "checked": { "type": "boolean" },
-              "label": { "type": "string", "maxLength": 128 }
+              "label": { "type": "string", "maxLength": 128 },
+              "visible": { "description": "False: the entry is left out of the menus, not greyed (D1600). Its key still reaches the page, which says why.", "type": "boolean" }
             }
           }
+        },
+        "empty": {
+          "description": "Every menu of the bar that has nothing left now, by its word in the definition in lower case ('insert'), with the greyed line that says why, in the person's language (D1603). It replaces what the shell knew: a menu not named has entries.",
+          "type": "object",
+          "propertyNames": { "type": "string", "pattern": "^[a-z]+$", "maxLength": 32 },
+          "additionalProperties": { "type": "string", "maxLength": 256 }
         }
       }
     },
