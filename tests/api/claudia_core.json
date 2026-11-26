@@ -377,6 +377,7 @@
   "methods": {
    "class_of": "(self, kind: 'str') -> 'type[Command]'",
    "decode": "(self, envelope: 'dict') -> 'Command'",
+   "for_persons": "(self) -> 'CommandRegistry'",
    "known": "(self, kind: 'str') -> 'bool'",
    "merged": "(self, other: 'CommandRegistry') -> 'CommandRegistry'",
    "register": "(self, cls: 'type[Command]') -> 'type[Command]'",
@@ -639,6 +640,7 @@
    "lock": "(self, owner: 'str', regions: 'Iterable[Region]', ttl: 'float') -> 'Ephemeral'",
    "manifest": "(self) -> 'Manifest'",
    "materialize": "(self, rev: 'Revision | None') -> 'DocumentModel'",
+   "now": "(self) -> 'str'",
    "on_purge": "(self, hook: 'Callable[[tuple[Revision, ...]], None]') -> 'None'",
    "open": "(model_cls: 'type[DocumentModel]', log: 'CommandLog', *, snapshot: 'Snapshot | None' = None, branch: 'str | None' = None, **options) -> 'Document'",
    "peek_branch": "(self, branch: 'str') -> 'DocumentModel'",
@@ -974,7 +976,6 @@
   "methods": {
    "blanked": "(self) -> 'ImageImport'",
    "from_data": "(data: 'dict') -> 'ImageImport'",
-   "masked": "(self, viewer: 'str') -> 'ImageImport'",
    "to_data": "(self) -> 'dict'"
   },
   "properties": []
@@ -1317,8 +1318,7 @@
   "init": "(id: 'str', kind: 'str', w: 'int', h: 'int', style: 'str', paragraph: 'Paragraph | None' = None, ref: 'str | None' = None, imported: 'ImageImport | None' = None, rotation: 'int' = 0, snap: 'bool' = True, description: 'str' = '', decorative: 'bool' = False, name: 'str' = '') -> None",
   "methods": {
    "from_data": "(data: 'dict') -> 'ObjectBody'",
-   "to_data": "(self) -> 'dict'",
-   "to_data_for": "(self, viewer: 'str') -> 'dict'"
+   "to_data": "(self) -> 'dict'"
   },
   "properties": [
    "chart",
@@ -1434,8 +1434,7 @@
   ],
   "init": "(holder: 'str', changed: 'tuple[VisualObject, ...]', removed: 'tuple[str, ...]', order: 'tuple[str, ...]') -> None",
   "methods": {
-   "to_data": "(self) -> 'dict'",
-   "to_data_for": "(self, viewer: 'str') -> 'dict'"
+   "to_data": "(self) -> 'dict'"
   },
   "properties": []
  },
@@ -2054,6 +2053,14 @@
   "methods": {
    "to_data": "(self) -> 'dict'"
   },
+  "properties": []
+ },
+ "ServerOnly": {
+  "class": [
+   "KernelError"
+  ],
+  "init": "(kind: 'str')",
+  "methods": {},
   "properties": []
  },
  "SetColumn": {
@@ -2853,7 +2860,6 @@
   "methods": {
    "from_data": "(data: 'dict', read_anchor: 'ReadAnchor[A]') -> 'VisualObject[A]'",
    "to_data": "(self) -> 'dict'",
-   "to_data_for": "(self, viewer: 'str') -> 'dict'",
    "with_body": "(self, **changes: 'Any') -> 'Self'"
   },
   "properties": [

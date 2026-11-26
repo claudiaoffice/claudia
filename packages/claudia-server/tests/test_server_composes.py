@@ -1,6 +1,8 @@
 """The methods a text view needs: the paragraphs, editing a range, styles, cursors and zones, suggestions (composes)."""
 
 import base64
+import re
+from itertools import chain, repeat
 
 import pytest
 
@@ -587,8 +589,11 @@ def test_export_office_rejects_an_unknown_format(paper):
 # ---------------------------------------------------------------- tracked changes and dates in an export (D411)
 @pytest.fixture
 def dated_paper():
-    """A text with known times: typed 2026-01-02, a suggestion 2026-03-04, typed again 2026-11-11."""
-    times = iter(["2026-01-02T03:04:05Z", "2026-03-04T05:06:07Z", "2026-11-11T17:13:05Z"])
+    """A text with known times: typed 2026-01-02, a suggestion 2026-03-04, typed again 2026-11-11; from then on its
+    clock says 2026-11-25 (an export dated by it)."""
+    times = chain(
+        ["2026-01-02T03:04:05Z", "2026-03-04T05:06:07Z", "2026-11-11T17:13:05Z"], repeat("2026-11-25T08:09:10Z")
+    )
     doc = Document(TextModel(), store=MemoryStore(), clock=lambda: next(times))
     type_(doc, "Hello there")
     call(doc, "suggest", {"paragraph": "b1", "start": 0, "end": 5, "reason": "greeting", "replacement": "Hi"}, AI)
@@ -626,6 +631,37 @@ def test_a_docx_says_when_it_was_made_and_last_changed_and_by_whom_and_not_what_
     assert "2026-01-02T03:04:05Z" in core and "2026-11-11T17:13:05Z" in core
     assert f">{ANN.user}</dc:creator>" in core and f">{ANN.user}</cp:lastModifiedBy>" in core
     assert "python-docx" not in core and "2013" not in core
+
+
+def test_a_viewer_receives_who_wrote_which_words_as_part_of_the_content(paper):
+    """SEC-22, decided (D1261, note of 2026-11-25): who wrote which stretch is content, as on paper where a viewer sees
+    the handwriting, so a viewer receives the runs; this guards the decision, it is not a leak."""
+    type_(paper, "Hello there")
+    paragraph = call(paper, "paragraphs", {}, VERA)["paragraphs"][0]
+    assert {run[1] for run in paragraph["runs"]} == {ANN.user}  # [length, author, …]
+
+
+def test_a_viewers_odt_and_docx_say_nothing_the_history_holds(dated_paper):
+    """SEC-26 (D2008): a viewer cannot read the history, so her export says neither who made or changed the text nor
+    when; her open suggestions keep who made them (who wrote what is content, SEC-22) but are dated with the export."""
+    from lxml import etree
+
+    from claudia_odf_io import NS, read_info
+
+    odt = base64.b64decode(call(dated_paper, "export_office", {"format": "odt", "tracked_changes": True}, VERA)["data"])
+    info = read_info(read_parts(odt)["meta.xml"])
+    assert (info.creator, info.created, info.modifier, info.modified) == (None, None, None, None)
+    content = etree.fromstring(read_parts(odt)["content.xml"])
+    dates = {d.text for d in content.iterfind(".//office:change-info/dc:date", NS)}
+    assert dates == {"2026-11-25T08:09:10Z"}  # the time of the export, by the document's clock
+    assert {a.text for a in content.iterfind(".//office:change-info/dc:creator", NS)} == {AI.user}
+    docx = read_parts(
+        base64.b64decode(call(dated_paper, "export_office", {"format": "docx", "tracked_changes": True}, VERA)["data"])
+    )
+    core = docx["docProps/core.xml"].decode()
+    assert ANN.user not in core and "2026-01-02" not in core and "2026-11-11" not in core
+    changes = re.findall(r'w:date="([^"]+)"', docx["word/document.xml"].decode())
+    assert changes and set(changes) == {"2026-11-25T08:09:10Z"}
 
 
 def test_tracked_changes_in_an_odt_leave_no_suggestion_loss(dated_paper):

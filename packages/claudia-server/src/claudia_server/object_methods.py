@@ -150,8 +150,9 @@ def add_object_methods(
                 "Import a picture from disk and place it: `data` is the file's bytes, base64. `alt` is a "
                 "short, required description of what it shows — unless the picture is only `decorative` (a "
                 "flourish, a divider), when it has none and `alt` is empty. `source_name` is the file name as the "
-                "client has it; `source_path` is its full path if the client could supply one (a plain web browser "
-                "cannot, for its own security — send `null`). Returns the new object's id and the revision. The "
+                "client has it; `source_path` is its full path if the client knows it and the person wants it saved "
+                '(everyone who can open the document reads it), otherwise `null` or `""` (a plain web browser '
+                "never knows it, for its own security). Returns the new object's id and the revision. The "
                 "image keeps its own proportions. With `fit`, `w` and `h` are only the most it may take: it is "
                 "shown at its own size within them, but at least as tall as the body text's letters and no wider "
                 "than the room it has, with its proportions (D1332); without, it is shown at `w` × `h`.",

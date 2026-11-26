@@ -2,10 +2,10 @@
 
 One class serves every app (``identity.AppIdentity`` says which). There are two ways to start:
 
-* **the local server** (the default): the window appears at once with a "starting" page; the one local server of the
-  three apps is found or started (``desktop_server``, D445) without waiting for it, and the main loop asks now and
-  then whether it answers (a window must never block, E0.2). When the application ends, the server is only let go of:
-  it is shared, and stops by itself ten minutes after nothing is connected;
+* **the local server** (the default): the window appears at once with a "starting" page; her private server, one
+  for her three apps, is found or started (``private_server``, D445, E8.5) without waiting for it, and the main loop
+  asks now and then whether it answers (a window must never block, E0.2). When the application ends, the server is
+  only let go of: it is shared, and stops by itself ten minutes after nothing is connected;
 * **a given server** (``--server URL``): no server is started. The window connects to it like it does when the person
   types the address into the page, with the same checks — https, the right app, a certificate someone vouches for —
   and the address is remembered in the server list of this app.
@@ -38,7 +38,7 @@ POLL_MS = 100
 
 
 class Server(Protocol):
-    """What the application needs from the local server (see ``desktop_server.DesktopServer``)."""
+    """What the application needs from the local server (see ``private_server.PrivateServer``)."""
 
     @property
     def url(self) -> str: ...
@@ -167,7 +167,7 @@ class ClaudiaApp(Adw.Application):
             window.show_error(_("{app} could not start its server").format(app=self._identity.title), str(problem))
             return False
         self._poll_source = 0  # the source ends itself by returning False
-        window.book.local_origin = server.url  # "This computer" in the page's list, from now on
+        window.book.local_origin = server.url  # "Private on this computer" in the page's list, from now on
         window.local_setup_code = server.setup_code  # for its settings pages while it has no administrator (D1373)
         window.show_page(server.url)
         return False

@@ -266,7 +266,7 @@ def _slide(ctx, *, slide):
     workbook = _workbook(ctx)
     if slide not in workbook.slides:
         raise RequestError("command_error", msg("unknown slide {slide!r}", slide=slide))
-    objects = [obj.to_data_for(ctx.user) for obj in workbook.objects_on(slide)]
+    objects = [obj.to_data() for obj in workbook.objects_on(slide)]
     return {"revision": current_revision(ctx), "slide": slide, "objects": objects}
 
 
@@ -282,7 +282,7 @@ def _export_office(ctx, *, format):
     if format not in ("xlsx", "ods"):
         raise RequestError("bad_request", msg('export_office: format must be "xlsx" or "ods"'))
     book = _workbook(ctx)
-    info = document_info(ctx.document.log, ctx.document.branch)
+    info = document_info(ctx.reader.log(ctx.document), ctx.document.branch)  # none from a history she cannot read
     draw = None if ctx.renderings is None else ctx.renderings.rasteriser  # draws an SVG picture as a PNG (D464)
     if format == "xlsx":
         return export_with_original(
@@ -661,12 +661,12 @@ def _objects(ctx, *, sheet):
     """The floating objects of a sheet, the one in front last, as `{revision, sheet, objects}`. An object is
     `{id, sheet, kind, row, col, w, h, image, imported}`, anchored to the cell at (`row`, `col`) with a pixel
     size that never changes on its own: inserting, deleting or resizing rows/columns never moves or resizes it,
-    only `move_object` does. `imported`'s `source_path` is only sent to the person who imported that image
-    (everyone else sees `null` there, not the path)."""
+    only `move_object` does. `imported`'s `source_path` is the picture's full path if it was saved on import (`null`
+    if not), the same for everyone who can open the document."""
     workbook = _workbook(ctx)
     if sheet not in workbook.sheets:
         raise RequestError("command_error", msg("unknown sheet {sheet!r}", sheet=sheet))
-    objects = [obj.to_data_for(ctx.user) for obj in workbook.objects_on(sheet)]
+    objects = [obj.to_data() for obj in workbook.objects_on(sheet)]
     return {"revision": current_revision(ctx), "sheet": sheet, "objects": objects}
 
 

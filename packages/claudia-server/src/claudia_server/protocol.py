@@ -47,6 +47,7 @@ from claudia_core import (
     RegionHeld,
     Revision,
     SchemaTooNew,
+    ServerOnly,
     StaleEdit,
     UndoConflict,
     UnknownCommand,
@@ -55,7 +56,7 @@ from claudia_document_file import AuditRecord, Part, clean_details, write_export
 
 from .ai_consent import AiConsent, ConsentBook, ConsentNotKept, consent_view
 from .ai_mode import parse_mode
-from .audience import may_read
+from .audience import Reader, may_read
 from .auth import (
     WRITE_ROLES,
     Account,
@@ -331,6 +332,11 @@ class Context:
     def user(self) -> str:
         """The author of what this request changes."""
         return self.account.user
+
+    @property
+    def reader(self) -> Reader:
+        """Who asks, as what she may read of the document (D2008)."""
+        return Reader(self.account.user, self.account.role)
 
     def record_leaving(self, kind: str, fmt: str, parts: tuple[str, ...], pages: int | None = None) -> None:
         """Record that the person asking took ``parts`` of the document out in ``fmt`` (D1271): an export, a print or
@@ -820,7 +826,7 @@ def _redaction_request(ctx, revisions, chat, parts) -> dict:
             "bad_request", msg('redaction: revisions like "main:12", chat numbers, parts by revision')
         ) from None
     me = ctx.user.casefold()
-    readable = {r.number: r for r in ctx.document.chat if not r.to or me in (r.author.casefold(), r.to.casefold())}
+    readable = {r.number: r for r in ctx.reader.chat(ctx.document.chat)}
     if not set(numbers) <= set(readable):
         raise RequestError("command_error", msg("there is no chat message of that number for you"))
     if ctx.account.role != "owner":
@@ -996,13 +1002,7 @@ def _chat_log(ctx, limit):
     The newest `limit` (1 to 5000), each as in the `chat` event."""
     if not 1 <= limit <= MAX_LOG:
         raise RequestError("bad_request", msg("chat_log: limit must be from 1 to {limit}", limit=MAX_LOG))
-    me = ctx.user.casefold()
-    readable = [
-        record.to_data()
-        for record in ctx.document.chat
-        if not record.to or me in (record.author.casefold(), record.to.casefold())
-    ]
-    return readable[-limit:]
+    return [record.to_data() for record in ctx.reader.chat(ctx.document.chat)[-limit:]]
 
 
 @core_methods.method("history", reads="history")
@@ -1032,11 +1032,17 @@ def _apply(ctx, command, base):
     colleague holds the part it touches; `command_error` if the command itself is rejected. Nothing changes on any
     error. Refused with `forbidden` for the assistant (SEC-10): a raw command would walk around the checks an app's
     own methods make against it (a place that is not there, a picture without words, the page set up by people),
-    whatever `apply` itself is allowed to call."""
+    whatever `apply` itself is allowed to call. Refused with `forbidden` for anybody, also inside a batch, for a change
+    only the server makes through its own methods and their checks (SEC-25, D2007): an import, a document's setup, a
+    checkpoint, a redaction, a restore, a switch of line."""
     if ctx.account.system:
         raise RequestError("forbidden", msg("the assistant cannot apply a raw command; use the app's own methods"))
     try:
-        parsed = ctx.document.model.registry.decode(command)
+        parsed = ctx.document.model.registry.for_persons().decode(command)
+    except ServerOnly as exc:
+        raise RequestError(
+            "forbidden", msg("{kind} is made by the server only, through its own methods", kind=exc.kind)
+        ) from exc
     except (UnknownCommand, SchemaTooNew) as exc:
         raise RequestError("bad_request", message_of(exc)) from exc
     except (KeyError, TypeError, ValueError, AttributeError) as exc:
@@ -1324,7 +1330,8 @@ def _export_content(ctx):
 def _export_claudia(ctx, include_history):
     """File ▸ Export… ▸ Claudia, unencrypted (D1270): one zip anybody can read, with the document's content as
     `content.json` and, if an owner asks for it with `include_history`, the history (hidden side lines included) and
-    the chat as `history.jsonl` and `chat.jsonl`. No keys, no password hashes, no people. It is recorded in the
+    the chat as `history.jsonl` and `chat.jsonl`: the chat she may read, not the private messages between other people
+    (SEC-24, D2008). No keys, no password hashes, no people. It is recorded in the
     document (D1271) as an export by you. Returns `{format: "claudia-unencrypted", filename, content_type, data
     (base64), parts}`; `forbidden` if `include_history` is asked by anybody but an owner. The AI may not export."""
     if ctx.account.system:
@@ -1340,7 +1347,7 @@ def _export_claudia(ctx, include_history):
         )
 
         history = history_payloads(ctx.document.log)
-        chat = chat_payloads(ctx.document.chat)
+        chat = chat_payloads(ctx.reader.chat(ctx.document.chat))  # what she may read of it (SEC-24, D2008)
     data = write_export(
         model.app,
         model.state_schema,

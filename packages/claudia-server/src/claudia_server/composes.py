@@ -84,6 +84,7 @@ from claudia_core import (
 )
 from claudia_creates import ShapeLibrary
 
+from .audience import HISTORY
 from .composes_annotations import export_annotations
 from .composes_contents import add_contents_methods
 from .composes_search import add_search_methods
@@ -238,7 +239,9 @@ def _export_office(ctx, *, format, tracked_changes, description_comments):
     if format not in ("docx", "odt"):
         raise RequestError("bad_request", msg('export_office: format must be "docx" or "odt"'))
     model = _text(ctx)
-    info, times = export_info(ctx.document.log, ctx.document.branch)
+    info, times = export_info(ctx.reader.log(ctx.document), ctx.document.branch)
+    if not ctx.reader.holds(HISTORY):  # a history she cannot read dates nothing: her export does (SEC-26, D2008)
+        times = dict.fromkeys(model.suggestions, ctx.document.now())
     draw = None if ctx.renderings is None else ctx.renderings.rasteriser  # draws an SVG picture as a PNG (D464)
     notes = export_annotations(model, ctx.user, comments=description_comments)
     # the file an import kept cannot be patched with comments: a new one is written, and the answer says so
@@ -476,10 +479,10 @@ def _objects(ctx):
     three apps share (`{id, kind, w, h, style, paragraph, ref, imported, rotation, snap, anchor}`;
     `ref` is the id of the definition the kind shows: a picture, a container or a table, see `images`,
     `containers` and `tables`), with `anchor` `{kind: "paragraph", container: <paragraph id>, offset}`: the character it
-    hangs from. `w` and `h` are CSS pixels. `imported`'s `source_path` is only sent to the person who imported that
-    image."""
+    hangs from. `w` and `h` are CSS pixels. `imported`'s `source_path` is the picture's full path if it was saved on
+    import (`null` if not), the same for everyone who can open the document."""
     model = _text(ctx)
-    objects = [obj.to_data_for(ctx.user) for paragraph in model.paragraphs for obj in model.objects_on(paragraph.id)]
+    objects = [obj.to_data() for paragraph in model.paragraphs for obj in model.objects_on(paragraph.id)]
     return {"revision": current_revision(ctx), "objects": objects}
 
 

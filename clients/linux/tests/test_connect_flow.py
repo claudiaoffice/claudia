@@ -189,9 +189,9 @@ def connect(shell: Shell, address: str) -> None:
     shell.pump()
 
 
-def test_the_start_page_lists_this_computer_first(shell: Shell) -> None:
+def test_the_start_page_lists_her_private_place_first(shell: Shell) -> None:
     names = shell.server_names()
-    assert names[0].startswith("This computer")
+    assert names[0].startswith("Private on this computer")
     assert len(names) == 1
 
 
@@ -236,7 +236,7 @@ def test_a_server_with_an_unknown_certificate_connects_only_once_the_person_trus
     assert [e["origin"] for e in settings.load_servers("computes", config)] == [remote]
     assert settings.load_servers("composes", config) == []
     names = shell.server_names()
-    assert names[0].startswith("This computer")
+    assert names[0].startswith("Private on this computer")
     assert any("127.0.0.1" in n for n in names[1:])
 
     # ... and back to this computer, from the list on that server's page
@@ -244,7 +244,7 @@ def test_a_server_with_an_unknown_certificate_connects_only_once_the_person_trus
     shell.pump()
     shell.page.wait_for_url(f"{servers['local']}/**")
     shell.pump()
-    assert shell.server_names()[0].startswith("This computer")
+    assert shell.server_names()[0].startswith("Private on this computer")
 
 
 def test_declining_the_certificate_connects_nowhere(shell: Shell, servers: dict[str, str]) -> None:

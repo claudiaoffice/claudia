@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { fileToBase64, formatByteSize, imageByteSize, imageDataUrl, NEW_OBJECT_CAP, pictureSize } from '~/lib/images'
+import { fileToBase64, formatByteSize, imageByteSize, imageDataUrl, NEW_OBJECT_CAP, offersPathChoice, pictureSize, sourcePathToSend } from '~/lib/images'
 
 describe('fileToBase64', () => {
   it('encodes a small file exactly as the bytes it holds', async () => {
@@ -87,5 +87,19 @@ describe('pictureSize with the picture\'s own size (the owner, 2026-11-19: no bi
     const flat = pictureSize(10, 240, 420, { width: 30, height: 3 })
     expect(flat.h).toBeGreaterThanOrEqual(20)
     expect(Math.abs(flat.w - 10 * flat.h)).toBeLessThanOrEqual(1)
+  })
+})
+
+describe("Insert ▸ Image's \"Don't save the path\" (SEC-27)", () => {
+  it('is offered only when the path of the picked file is known', () => {
+    expect(offersPathChoice('/home/ann/Pictures/chart.png')).toBe(true)
+    expect(offersPathChoice(null)).toBe(false) // a plain browser never knows it
+    expect(offersPathChoice('')).toBe(false)
+  })
+
+  it('sends the path when the box is left unticked, an empty one when it is ticked', () => {
+    expect(sourcePathToSend('/home/ann/Pictures/chart.png', false)).toBe('/home/ann/Pictures/chart.png')
+    expect(sourcePathToSend('/home/ann/Pictures/chart.png', true)).toBe('')
+    expect(sourcePathToSend(null, false)).toBeNull()
   })
 })

@@ -10,26 +10,17 @@ import { join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { MACOS_HOST } from '../src/platform/macos.js'
 import { WINDOWS_HOST } from '../src/platform/windows.js'
-import { LocalServer, ServerStartError, buildServerCommand, defaultSpawn, freePort, serverProgramCommand } from '../src/server.js'
-
-describe('freePort', () => {
-  it('returns a port nobody is listening on yet, and two calls do not collide', async () => {
-    const a = await freePort()
-    const b = await freePort()
-    expect(a).toBeGreaterThan(0)
-    expect(b).toBeGreaterThan(0)
-    expect(a).not.toBe(b) // the OS does not hand out the same ephemeral port twice back to back
-  })
-})
+import { LocalServer, ServerStartError, buildServerCommand, defaultSpawn, serverProgramCommand } from '../src/server.js'
 
 describe('buildServerCommand', () => {
-  it('is the command of the one server of the suite (D445): all apps, loopback, and stopping by itself when nobody uses it', () => {
+  it('is the command of her private server (D445, E8.5): all apps, loopback, stopping by itself when nobody uses it, with her key', () => {
     const command = buildServerCommand('/usr/bin/python3.14', {
       port: 41233,
       documents: '/docs',
       web: '/frontend',
       state: '/state',
       idleSeconds: 600,
+      ownerKeyFile: '/state/owner.key',
     })
     expect(command).toEqual([
       '/usr/bin/python3.14',
@@ -48,6 +39,8 @@ describe('buildServerCommand', () => {
       '/frontend',
       '--exit-when-idle',
       '600',
+      '--owner-key-file',
+      '/state/owner.key',
     ])
   })
 })
@@ -56,7 +49,7 @@ describe('a self-contained server (D740)', () => {
   it('is started as the program itself, with no `-m claudia_server` in front of its options', () => {
     expect(serverProgramCommand({ exe: 'C:\\Claudia\\server\\claudia-server.exe' })).toEqual(['C:\\Claudia\\server\\claudia-server.exe'])
     expect(serverProgramCommand('/usr/bin/python3.14')).toEqual(['/usr/bin/python3.14', '-m', 'claudia_server'])
-    const command = buildServerCommand({ exe: '/opt/claudia-server' }, { port: 1, documents: '/d', web: '/w', state: '/s', idleSeconds: 5 })
+    const command = buildServerCommand({ exe: '/opt/claudia-server' }, { port: 1, documents: '/d', web: '/w', state: '/s', idleSeconds: 5, ownerKeyFile: '/s/owner.key' })
     expect(command.slice(0, 3)).toEqual(['/opt/claudia-server', '--host', '127.0.0.1'])
     expect(command).not.toContain('-m')
   })

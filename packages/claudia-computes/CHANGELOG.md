@@ -5,7 +5,13 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+### Security
+- `ApplyCalculated` is a change only the server makes (`sender = "server"`, SEC-25, D2007): a heavy formula's result
+  comes from the server's own worker, so a person cannot send one through `apply`.
+
 ### Changed
+- **Breaking** — `SheetObject.to_data_for` and `ObjectsChanged.to_data_for` are gone with claudia-core's per-person mask of a picture's
+  path (SEC-27): `to_data()` is what everyone is sent.
 - `WorkbookModel.calculate_loaded()` is public (it was `_calculate_loaded`): the importers fill a model's contents
   directly and then calculate it, and they and their tests called it by a private name (CODE-106).
 

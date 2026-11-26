@@ -5,6 +5,7 @@
 
 import type { Dialogs } from '../files.js'
 import type { AppIdentity } from '../identity.js'
+import type { Account } from '../private-port.js'
 import { platformId, type PlatformId } from './id.js'
 import { MACOS_HOST } from './macos.js'
 import { WINDOWS_HOST } from './windows.js'
@@ -47,6 +48,11 @@ export interface HostPlatform {
   shortPath(path: string): string | null
   /** How a person stops a server that will not go, in words. */
   readonly endTheServer: string
+  /** Who she is on this computer, which her private server's port follows (private-port.ts, E8.5, D1621): her account
+   * number on a Mac, her profile folder (`home`) on Windows, which has no account numbers. */
+  account(home: string): Account
+  /** Where the installer of the computer's service writes the service file (shared-service.ts, E8.5, D1622). */
+  sharedServiceFile(env: Env): string
 }
 
 /** The host platform of this build (src/platform/id.ts). */

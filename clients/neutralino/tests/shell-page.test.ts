@@ -271,6 +271,11 @@ describe('the core shows a server', () => {
     t.core({ kind: 'show', origin: 'https://demo.example.org' })
     t.hello()
     expect(t.toFrame()[0]).not.toHaveProperty('setup_code')
+    t.posted.length = 0
+    t.core({ kind: 'show', origin: 'https://demo.example.org', askAdministrator: true }) // as for the shared service (D1624)
+    t.hello()
+    expect(t.toFrame()).toMatchObject([{ type: 'welcome', ask_administrator: true }])
+    expect(t.toFrame()[0]).not.toHaveProperty('setup_code')
   })
 
   it('loads it into the frame and accepts messages from that origin only', async () => {
@@ -557,11 +562,11 @@ describe('files (D501, D502)', () => {
     t.fromFrame({ type: 'pick_file', request: 'f1-x', accept: ['docx'], title: 'Open a File' })
     await tick()
     expect(t.dispatched.map((d) => d.data)).toEqual([{ kind: 'pick_file', request: 'f1-x', accept: ['docx'], title: 'Open a File' }])
-    t.core({ kind: 'file_result', request: 'f1-x', outcome: 'picked', name: 'a.docx', size: 2 })
+    t.core({ kind: 'file_result', request: 'f1-x', outcome: 'picked', name: 'a.docx', size: 2, path: '/Users/ann/a.docx' })
     t.core({ kind: 'file_chunk', request: 'f1-x', index: 0, data: 'aGk=' })
     t.core({ kind: 'file_done', request: 'f1-x', chunks: 1 })
     expect(t.toFrame()).toEqual([
-      { type: 'file_result', request: 'f1-x', outcome: 'picked', name: 'a.docx', size: 2 },
+      { type: 'file_result', request: 'f1-x', outcome: 'picked', name: 'a.docx', size: 2, path: '/Users/ann/a.docx' },
       { type: 'file_chunk', request: 'f1-x', index: 0, data: 'aGk=' },
       { type: 'file_done', request: 'f1-x', chunks: 1 },
     ])

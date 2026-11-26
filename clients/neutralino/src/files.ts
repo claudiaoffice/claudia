@@ -111,7 +111,7 @@ export class Files {
     }
     this.lastFolder = dirname(path)
     const { send } = this.options
-    send({ kind: 'file_result', request, outcome: 'picked', name: basename(path), size: bytes.length })
+    send({ kind: 'file_result', request, outcome: 'picked', name: basename(path), size: bytes.length, path })
     let index = 0
     for (let at = 0; at < bytes.length; at += FILE_CHUNK_BYTES) {
       send({ kind: 'file_chunk', request, index, data: bytes.subarray(at, at + FILE_CHUNK_BYTES).toString('base64') })

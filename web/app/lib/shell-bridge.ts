@@ -8,9 +8,9 @@
 //    `postMessage` (`detectParentSink`): this page posts to its parent window and hears only the parent.
 // Neither exists in a plain browser tab, so `ShellBridge` works there too: it just never becomes `ready` and
 // `nativeMenu` stays `false`.
-import { rememberSetupCode } from './setup-code'
+import { rememberAskAdministrator, rememberSetupCode } from './setup-code'
 import type { WireData } from './protocol'
-import { isBookmark, type Bookmark } from './server-bookmarks'
+import { isBookmark, named, type Bookmark } from './server-bookmarks'
 
 
 export const SHELL_CONTRACT_VERSION = 1
@@ -89,13 +89,22 @@ function fromBase64(data: string): Uint8Array {
   return bytes
 }
 
+/** A file the person chose with the shell's Open dialog (D501), and its full path on this computer when the shell says
+ * it (SEC-27: Insert ▸ Image offers to save it with the picture); `null` from a shell that does not. */
+export interface PickedFile {
+  file: File
+  path: string | null
+}
+
 /** A file on its way from the shell to the page, or from the page to the shell. */
 interface Transfer {
-  /** `pick`: chunks arrive and the promise gets a `File`; `save`: the shell answers with where it went; `offer`: a
+  /** `pick`: chunks arrive and the promise gets a `PickedFile`; `save`: the shell answers with where it went; `offer`: a
    * file the person dropped on the window, which the shell sends unasked (D505). */
   kind: 'pick' | 'save' | 'offer'
   name: string
   size: number
+  /** Where a picked file is on this computer, if the shell said. */
+  path?: string
   chunks: Uint8Array[]
   resolve: (value: never) => void
   reject: (problem: Error) => void
@@ -216,9 +225,9 @@ export class ShellBridge {
 
   /** Ask the shell for a file of this computer, with its own Open dialog showing the `extensions` (D501). `null` when
    * the person cancelled; an `Error` with a message for the person when the shell could not read it. */
-  pickFile(extensions: readonly string[], title?: string): Promise<File | null> {
+  pickFile(extensions: readonly string[], title?: string): Promise<PickedFile | null> {
     const request = this.nextRequest()
-    return new Promise<File | null>((resolve, reject) => {
+    return new Promise<PickedFile | null>((resolve, reject) => {
       this.transfers.set(request, { kind: 'pick', name: '', size: 0, chunks: [], resolve: resolve as (value: never) => void, reject })
       this.sink.post({ type: 'pick_file', request, accept: [...extensions], ...(title ? { title } : {}) })
     })
@@ -291,6 +300,7 @@ export class ShellBridge {
       } else if (message.outcome === 'picked' && transfer.kind === 'pick') {
         transfer.name = typeof message.name === 'string' ? message.name : 'file'
         transfer.size = typeof message.size === 'number' ? message.size : 0
+        if (typeof message.path === 'string' && message.path) transfer.path = message.path
         if (transfer.size > MAX_FILE_BYTES) fail(`the file is larger than ${MAX_FILE_BYTES / 1024 / 1024} MB`)
       }
     } else if (message.type === 'file_chunk' && transfer.kind !== 'save' && typeof message.data === 'string') {
@@ -304,7 +314,7 @@ export class ShellBridge {
       this.transfers.delete(request)
       const file = new File(transfer.chunks as BlobPart[], transfer.name)
       if (file.size !== transfer.size) return transfer.reject(new Error('the file did not arrive whole'))
-      transfer.resolve(file as never)
+      transfer.resolve((transfer.kind === 'pick' ? { file, path: transfer.path ?? null } : file) as never)
     }
   }
 
@@ -322,10 +332,12 @@ export class ShellBridge {
       this.windowApp = typeof message.app === 'string' && isApp(message.app) ? message.app : null
       // the setup code of the desktop app's own server, for its settings pages (D1373); never sent for another server
       if (typeof message.setup_code === 'string') rememberSetupCode(message.setup_code, 'app')
+      // the computer's shared service, which she may not set up herself: "ask an administrator" (E8.5, D1624)
+      rememberAskAdministrator(message.ask_administrator === true)
     } else if (message.type === 'action' && typeof message.action === 'string') {
       for (const handler of this.handlers) handler(message.action, message.target)
     } else if (message.type === 'servers' && Array.isArray(message.servers)) {
-      this.servers = message.servers.filter(isBookmark)
+      this.servers = message.servers.filter(isBookmark).map((bookmark: Bookmark) => named(bookmark))
     } else if (message.type === 'connect_failed' && typeof message.message === 'string') {
       for (const handler of this.failureHandlers) handler(String(message.code), message.message)
     } else if (['file_result', 'file_chunk', 'file_done', 'offer_file'].includes(String(message.type))) {

@@ -249,10 +249,6 @@ msgstr ""
 msgid "A Claudia export."
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/desktop_server.py
-msgid "A Claudia server of another version ({running}, this app belongs to {own}) is running on this computer (port {port})."
-msgstr ""
-
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "A Roman numeral as a number (capitals or not; a leading minus sign is kept)."
 msgstr ""
@@ -1945,11 +1941,11 @@ msgstr ""
 msgid "Documents are encrypted on this server; Claude reads what it is shown in plain text."
 msgstr ""
 
-#: clients/contract/src/claudia_menus/manifest.py
-msgid "Document…"
+#: web/app/components/ImageImportDialog.vue
+msgid "Don't save the path"
 msgstr ""
 
-#: web/app/components/AcceptOwnershipDialog.vue web/app/components/DownloadDialog.vue web/app/components/ExportFormatDialog.vue web/app/components/HandOverDialog.vue web/app/components/PaletteDialog.vue web/app/components/RedactionDialog.vue web/app/components/RotatePopover.vue web/app/components/ShareDialog.vue
+#: web/app/components/AcceptOwnershipDialog.vue web/app/components/AssignOwnerDialog.vue web/app/components/DownloadDialog.vue web/app/components/ExportFormatDialog.vue web/app/components/PaletteDialog.vue web/app/components/RedactionDialog.vue web/app/components/RotatePopover.vue web/app/components/ShareDialog.vue
 msgid "Done"
 msgstr ""
 
@@ -2129,8 +2125,8 @@ msgstr ""
 msgid "Everybody sees that you redacted something, how much and when, never what it held. How long each piece was stays visible."
 msgstr ""
 
-#: web/app/components/ShortcutsDialog.vue
-msgid "Everything"
+#: web/app/components/ImageImportDialog.vue
+msgid "Everyone who can open this document sees it."
 msgstr ""
 
 #: web/app/lib/search.ts
@@ -3033,7 +3029,7 @@ msgstr ""
 msgid "It shows {code}: {detail}"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/desktop_server.py
+#: clients/linux/src/claudia_shell_gtk/private_server.py
 msgid "It stops by itself ten minutes after its last window has closed. Or end its python process (System Monitor). Then start again."
 msgstr ""
 
@@ -3761,6 +3757,10 @@ msgstr ""
 msgid "No notes for this slide."
 msgstr ""
 
+#: clients/linux/src/claudia_shell_gtk/private_server.py
+msgid "No port from {first} to {last} is free for your Claudia server on this computer."
+msgstr ""
+
 #: web/app/components/AdminTypesetting.vue
 msgid "No shell access, no network, no files outside the job — always on, whichever installation you point to."
 msgstr ""
@@ -4085,10 +4085,6 @@ msgstr ""
 msgid "On this slide"
 msgstr ""
 
-#: web/app/components/OpenDialog.vue
-msgid "On {place} · {count}"
-msgstr ""
-
 #: web/app/lib/search.ts
 msgid "One match"
 msgstr ""
@@ -4105,8 +4101,8 @@ msgstr ""
 msgid "Only a chart on a sheet moves to a slide."
 msgstr ""
 
-#: web/app/components/SheetGrid.vue web/app/components/SlideCanvas.vue web/app/components/TextObjectMenu.vue
-msgid "Only a picture can be cut or copied."
+#: web/app/components/FirstAdminSetup.vue
+msgid "Only an administrator of this computer can name this server's first administrator. Ask one."
 msgstr ""
 
 #: web/app/components/DetailsDialog.vue
@@ -4679,6 +4675,10 @@ msgstr ""
 
 #: clients/contract/src/claudia_menus/manifest.py web/app/components/PrintPreview.vue
 msgid "Print…"
+msgstr ""
+
+#: clients/linux/src/claudia_shell_gtk/window.py web/app/lib/server-bookmarks.ts
+msgid "Private on this computer"
 msgstr ""
 
 #: web/app/components/AdminAi.vue
@@ -5561,7 +5561,11 @@ msgstr ""
 msgid "Share this document"
 msgstr ""
 
-#: clients/contract/src/claudia_menus/manifest.py
+#: web/app/lib/server-bookmarks.ts
+msgid "Shared on this computer"
+msgstr ""
+
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts
 msgid "Share…"
 msgstr ""
 
@@ -6251,10 +6255,6 @@ msgstr ""
 
 #: web/app/lib/base-session.ts
 msgid "That was deleted. This is the last moment it was there."
-msgstr ""
-
-#: clients/linux/src/claudia_shell_gtk/desktop_server.py
-msgid "The Claudia server on this computer (port {port}) does not serve {app}; it serves {apps}."
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
@@ -7701,10 +7701,6 @@ msgstr ""
 msgid "This colour is not in the palette, so a palette change will leave it behind."
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/window.py web/app/lib/server-bookmarks.ts
-msgid "This computer"
-msgstr ""
-
 #: web/app/components/DocumentFrame.vue
 msgid "This document"
 msgstr ""
@@ -8605,6 +8601,14 @@ msgstr ""
 msgid "You will no longer be able to open {doc}, unless somebody adds you again. Confirm it is you with your own current password."
 msgstr ""
 
+#: clients/linux/src/claudia_shell_gtk/private_server.py
+msgid "Your Claudia server of another version ({running}, this app belongs to {own}) is still running on this computer (port {port})."
+msgstr ""
+
+#: clients/linux/src/claudia_shell_gtk/private_server.py
+msgid "Your Claudia server on this computer (port {port}) does not serve {app}; it serves {apps}."
+msgstr ""
+
 #: web/app/components/RecoveryKeyDialog.vue
 msgid "Your browser would not copy it: select the key and copy it yourself."
 msgstr ""
@@ -8617,7 +8621,11 @@ msgstr ""
 msgid "Your changes to the pattern are dropped."
 msgstr ""
 
-#: web/app/components/AdminLogin.vue web/app/components/DeleteFromListDialog.vue web/app/components/DetailsDialog.vue web/app/components/FirstAdminSetup.vue web/app/components/ImportDialog.vue web/app/components/OpenDialog.vue
+#: clients/linux/src/claudia_shell_gtk/private_server.py
+msgid "Your documents are in use by another Claudia server on this computer: most likely your own, of an older version, which is still running."
+msgstr ""
+
+#: web/app/components/AdminLogin.vue web/app/components/DetailsDialog.vue web/app/components/FirstAdminSetup.vue web/app/components/ImportDialog.vue web/app/components/OpenDialog.vue
 msgid "Your name"
 msgstr ""
 
@@ -9921,7 +9929,7 @@ msgstr ""
 msgid "no answer was made"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/desktop_server.py
+#: clients/linux/src/claudia_shell_gtk/private_server.py
 msgid "no app"
 msgstr ""
 
@@ -11921,6 +11929,10 @@ msgstr ""
 msgid "{kind} (no description)"
 msgstr ""
 
+#: packages/claudia-server/src/claudia_server/protocol.py
+msgid "{kind} is made by the server only, through its own methods"
+msgstr ""
+
 #: web/app/lib/descriptions.ts
 msgid "{kind}: {words}"
 msgstr ""
@@ -12247,6 +12259,10 @@ msgstr ""
 
 #: web/app/components/ImportDialog.vue
 msgid "{place} already holds this document, as {id}. It cannot be added a second time: open the one that is here."
+msgstr ""
+
+#: web/app/components/OpenDialog.vue
+msgid "{place} · {count}"
 msgstr ""
 
 #: packages/claudia-server/src/claudia_server/computes.py

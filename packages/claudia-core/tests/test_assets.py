@@ -402,20 +402,10 @@ def test_image_import_round_trips_through_plain_data():
     assert ImageImport.from_data(record.to_data()) == record
 
 
-def test_image_import_masks_the_source_path_from_everyone_but_the_importer():
-    record = make_import()
-    for_colleague = record.masked("ben")
-    assert for_colleague.source_path is None
-    assert for_colleague.source == "disk"  # that it came from disk is not hidden, only where on disk
-    assert for_colleague.source_name == record.source_name
-    assert for_colleague.imported_by == "sofia"  # who imported it is not hidden either
-
-    assert record.masked("sofia") == record  # the importer still sees their own path
-
-
-def test_image_import_masking_is_a_no_op_when_there_is_no_path_to_hide():
-    record = make_import(source_path=None)
-    assert record.masked("ben") == record
+def test_an_empty_source_path_is_no_path():
+    """The person asked not to save the path (SEC-27): the client sends an empty one, and nothing is kept of it."""
+    data = make_import().to_data() | {"source_path": ""}
+    assert ImageImport.from_data(data).source_path is None
 
 
 @pytest.mark.parametrize(

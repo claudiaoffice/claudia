@@ -3,12 +3,13 @@
 // all (WKWebView in Neutralino has none), and none opens from a menu item, which is no click in the page.
 import { acceptedExtensions, currentShell } from './shell-bridge'
 
-/** Let the person choose a file of the kinds `input` accepts. `take` gets it; `problem` gets a message for the person
- * when the shell could not read it. A cancelled dialog calls neither. In a browser tab this clicks `input`, whose own
- * `change` handler takes the file as before. */
+/** Let the person choose a file of the kinds `input` accepts. `take` gets it, and its full path when the shell says it
+ * (SEC-27); `problem` gets a message for the person when the shell could not read it. A cancelled dialog calls neither.
+ * In a browser tab this clicks `input`, whose own `change` handler takes the file as before: a browser never tells its
+ * path. */
 export async function chooseLocalFile(
   input: HTMLInputElement | null,
-  take: (file: File) => void,
+  take: (file: File, path: string | null) => void,
   problem: (message: string) => void = () => {},
 ): Promise<void> {
   const shell = currentShell()
@@ -17,8 +18,8 @@ export async function chooseLocalFile(
     return
   }
   try {
-    const file = await shell.pickFile(acceptedExtensions(input?.accept ?? ''))
-    if (file) take(file)
+    const picked = await shell.pickFile(acceptedExtensions(input?.accept ?? ''))
+    if (picked) take(picked.file, picked.path)
   } catch (e) {
     problem((e as Error).message)
   }

@@ -1,6 +1,7 @@
 // macOS, for the native side (src/platform/host.ts): ~/Library/Application Support, a .app bundle around Neutralino's
 // binary so the app's name shows, AppKit's panels through osascript, and process groups and signals for stopping.
 
+import { userInfo } from 'node:os'
 import { join } from 'node:path'
 import type { HostPlatform } from './host.js'
 import { ensureAppBundle } from './macos-app-bundle.js'
@@ -41,4 +42,6 @@ export const MACOS_HOST: HostPlatform = {
   // A Mac has no short names; a path with a space in it cannot go on the core's command line.
   shortPath: () => null,
   endTheServer: 'Or quit its Python process in Activity Monitor.',
+  account: () => ({ uid: userInfo().uid }),
+  sharedServiceFile: () => '/Library/Application Support/Claudia/service.json',
 }

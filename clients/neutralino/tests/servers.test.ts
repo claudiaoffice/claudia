@@ -128,6 +128,39 @@ describe('forPage and remember', () => {
     expect(forPage(saved, { localOrigin: null, localLabel: 'This computer' })).toEqual(saved)
   })
 
+  describe("with the computer's shared service (E8.5, D1622)", () => {
+    const places = { localOrigin: 'http://127.0.0.1:20501', localLabel: 'Private on this computer', sharedOrigin: 'http://127.0.0.1:8765' }
+
+    it('lists it after her private place, before the remembered ones', () => {
+      expect(forPage(saved, places)).toEqual([
+        { origin: 'http://127.0.0.1:20501', label: 'Private on this computer', custom: true, local: true },
+        { origin: 'http://127.0.0.1:8765', label: 'Shared on this computer', custom: false, shared: true },
+        ...saved,
+      ])
+    })
+
+    it('keeps the name a person gave it, and shows it once', () => {
+      const renamed = [...saved, { origin: 'http://127.0.0.1:8765', label: 'Family', custom: true }]
+      expect(forPage(renamed, places).slice(1)).toEqual([
+        { origin: 'http://127.0.0.1:8765', label: 'Family', custom: true, shared: true },
+        ...saved,
+      ])
+    })
+
+    it('is kept by its origin only once a person named it, so it never outlives the service under its own name', () => {
+      const fromPage = [
+        { origin: 'http://127.0.0.1:8765', label: 'Geteilt auf diesem Computer', custom: false, shared: true },
+        { origin: 'http://127.0.0.1:8766', label: 'Family', custom: true, shared: true },
+      ]
+      expect(sanitize(fromPage)).toEqual([{ origin: 'http://127.0.0.1:8766', label: 'Family', custom: true }])
+    })
+
+    it('shows a name a person gave it as a remembered server once the service is gone', () => {
+      const renamed = [{ origin: 'http://127.0.0.1:8765', label: 'Family', custom: true }]
+      expect(forPage(renamed, { ...places, sharedOrigin: null }).slice(1)).toEqual(renamed)
+    })
+  })
+
   it('remembers a new server and keeps the name a person gave an old one', () => {
     expect(remember(saved, 'b.example:8420').map((e) => e.origin)).toEqual(['https://a.example', 'https://b.example:8420'])
     expect(remember(saved, 'https://A.example')).toEqual(saved)

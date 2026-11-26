@@ -31,11 +31,11 @@ from .bridge import Bridge
 from .connection import Outcome
 from .connection import check as default_check
 from .connector import Connector, ServerBook, Work, run_threaded
-from .desktop_server import setup_code_for_page
 from .files import Chosen, Dialogs, Failed, Files
 from .i18n import translate as _
 from .identity import AppIdentity
-from .menu_xml import WHY_ACTION, menu_button_id, menu_xml
+from .manifest import Action, Kind, Manifest, about_links, for_start, menu_button_id, menu_xml, on_start
+from .private_server import setup_code_for_page
 from .settings import save_shell_locale
 from .trust import TrustStore
 
@@ -217,7 +217,7 @@ class ClaudiaWindow(Adw.ApplicationWindow):
         self._page: Page | None = None
         self.about_dialog: Adw.Dialog | None = None
         self.last_toast = ""
-        self.book = book or ServerBook(identity.name, local_origin=None, local_label=_("This computer"))
+        self.book = book or ServerBook(identity.name, local_origin=None, local_label=_("Private on this computer"))
         self._trust = trust or TrustStore()
         self.connector = Connector(
             identity.name,
@@ -231,7 +231,7 @@ class ClaudiaWindow(Adw.ApplicationWindow):
         # D501, D502: the page's files go through the shell's own dialogs; the answers go back through the bridge.
         self.files = Files(dialogs or GtkDialogs(self), self, documents=documents_dir())
         self.local_setup_code: Callable[[], str | None] = lambda: None
-        """The setup code of the shell's own server (``DesktopServer.setup_code``, set by the application), D1373."""
+        """The setup code of the shell's own server (``PrivateServer.setup_code``, set by the application), D1373."""
         self._shown: str | None = None  # the origin of the server the page shows
         self._bridge = Bridge(
             manifest,

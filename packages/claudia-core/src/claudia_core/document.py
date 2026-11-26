@@ -202,6 +202,11 @@ class Document:
         return doc
 
     # ------------------------------------------------------------------ state
+    def now(self) -> str:
+        """The time as this document's clock says it (the one its log is dated by), for what is dated outside the log:
+        an export by somebody who may not read the history is dated with it (SEC-26, D2008)."""
+        return self._clock()
+
     @property
     def revision(self) -> Revision | None:
         """The newest revision of this document's branch (``None``: nothing happened yet)."""

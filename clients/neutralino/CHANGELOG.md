@@ -5,13 +5,25 @@ two systems had a package each, `clients/macos` and `clients/windows`; their his
 
 ## [0.3.0] - unreleased
 
-### Changed (E5.23, E5.24, D1643–D1656): the menus are the workbook's, and they show what fits
-- The generated menus follow the owner's workbook (`claudiaoffice-log/notes/claudia-menus.xlsx`): File ▸ Save and the
-  three role entries left, File ▸ Manage ▸ My Role… (Ctrl+Shift+Alt+L) came, and Delete From Server… is on the front
-  page's list (D1608, D1656). Each menu in the listing has its `word` (`insert`).
-- The shell takes `visible` and `empty` from the page's `action_state` (D1645): `drawMenu` leaves out what the page
-  leaves out, collapses the separators by the table in `clients/contract/fixtures/menu-collapse.json`, and puts the
-  greyed line that says why into a menu with nothing left.
+### Added (SEC-27): where a picked file is
+- The core's `file_result` `picked` carries `path`, the chosen file's full path, and the shell page hands it to the
+  page (contract version 1, an optional field), for Insert ▸ Image's "Don't save the path".
+
+### Added (E8.5, D1622, D1624): Shared on this computer
+- The computer's claudia service is listed after her private place as a `shared` entry, found by its installer's marker
+  (`shared-service.ts`; `HostPlatform.sharedServiceFile`: `/Library/Application Support/Claudia/service.json`,
+  `%ProgramData%\Claudia\service.json`). Only a name a person gives it is remembered; opening it does not remember it.
+- Its page gets the service's setup code when she may read it, else `ask_administrator` in `welcome`
+  (`Core.show`, `Bridge` option `setup`, which replaces `setupCode`).
+
+### Changed (E8.5, D1620, D1621, D1623; CODE-99, CODE-100): her private server
+- The desktop's one shared server is now a person's private server, "Private on this computer":
+  `desktop-server.ts`/`DesktopServer` became `private-server.ts`/`PrivateServer`. It is on a port of her account
+  (20000–29999, `private-port.ts`; `CLAUDIA_SERVER_PORT` still takes its place), started with `--owner-key-file`
+  (`owner-key.ts`), and used only when it proves to be hers. While something else holds her port it goes to the next
+  free port of her range, written down as `{"instead": N}` in `desktop-server.json` (older files are not read).
+- `SERVER_PORT`, `readPort`, `writePort` and `freePort` are gone. The shell's own label for the entry is "Private on
+  this computer"; the page names it in her language.
 
 ### Added (SEC-12, D1373): the setup code of the desktop's own server
 - The core sends its own server's setup code with `show` (`setupCode`, read in the state folder whenever it shows that

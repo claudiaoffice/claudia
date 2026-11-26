@@ -93,6 +93,7 @@ from .i18n import localized, message_of, msg, translate
 from .idle import IdleMiddleware, IdleWatch
 from .login_throttle import LoginThrottle
 from .original_history import original_lines
+from .owner_proof import owner_router
 from .protocol import DEFAULT_LOCALE, RequestError, normalize_locale, parse_request
 from .security_headers import SecurityHeaders, WebScriptHashes
 from .suite import Module, Suite
@@ -716,6 +717,7 @@ def create_app(
     hyphenation: HyphenationService | None = None,
     idle: IdleWatch | None = None,
     api_docs: bool = False,
+    owner_key: bytes | None = None,
 ) -> FastAPI:
     """The server for the apps of ``hub``: a ``Suite`` (one server, several apps, D430), or one ``Hub`` with the users
     of each of its documents in ``directory`` (a server of one app, as every server was before).
@@ -746,7 +748,10 @@ def create_app(
 
     With ``admin`` (``admin_api.AdminContext``), the server also serves ``/api/admin/*``: the settings pages, signed
     in to separately from any document (``admin.py``). Without it — the default, and every use before this existed
-    — none of those routes exist at all, which keeps every other caller of this function unaffected."""
+    — none of those routes exist at all, which keeps every other caller of this function unaffected.
+
+    With ``owner_key``, the server is a person's private server and proves it to her apps at ``/api/owner``
+    (``owner_proof.py``, E8.5, D1620); without it, that route does not exist."""
     suite = _as_suite(hub, directory)
     allowed = {o.rstrip("/") for o in allowed_origins}
     hosts = AllowedHosts(allowed_hosts)
@@ -802,6 +807,8 @@ def create_app(
     async def health(request: Request):
         return health_answer(suite, request)
 
+    if owner_key is not None:
+        app.include_router(owner_router(owner_key, LOOPBACK_CLIENTS))
     _fixed_routes(app, suite, gateway, presence, list_documents)
     if admin is not None:
         app.include_router(

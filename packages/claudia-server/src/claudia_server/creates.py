@@ -195,14 +195,14 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
         notes in Markdown (`""` if none, D342) and its planned time in seconds (`null` if none, D343). An object is
         `{id, kind, w, h, style, text, shape, image, imported, rotation, snap, anchor}` — the same shape in all
         three apps except for `anchor`, which here is `{kind: "slide", holder: <slide>, x, y}` (E10.16).
-        `imported`'s `source_path` is only sent to the person who imported that image (everyone else sees `null`
-        there, not the path). `snap` is whether the object holds to the grid, a helper the view draws and is free
-        to show or hide on its own — `snap` is unaffected by that and is the document's own state, set with
-        `set_snap`."""
+        `imported`'s `source_path` is the picture's full path if it was saved on import (`null` if not), the same
+        for everyone who can open the document. `snap` is whether the object holds to the grid, a helper the view
+        draws and is free to show or hide on its own — `snap` is unaffected by that and is the document's own state,
+        set with `set_snap`."""
         deck = _deck(ctx)
         if slide not in deck.order:
             raise RequestError("command_error", msg("unknown slide {slide!r}", slide=slide))
-        objects = [obj.to_data_for(ctx.user) for obj in deck.objects_on(slide)]
+        objects = [obj.to_data() for obj in deck.objects_on(slide)]
         return {
             "revision": current_revision(ctx),
             "slide": slide,
@@ -222,7 +222,7 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
             raise RequestError("bad_request", msg('export_office: format must be "pptx" or "odp"'))
         deck = _deck(ctx)
         draw = None if ctx.renderings is None else ctx.renderings.rasteriser
-        info = document_info(ctx.document.log, ctx.document.branch)
+        info = document_info(ctx.reader.log(ctx.document), ctx.document.branch)  # none from a history she cannot read
         if format == "pptx":
             return export_with_original(
                 ctx,

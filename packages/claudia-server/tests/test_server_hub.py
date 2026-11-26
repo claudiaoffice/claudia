@@ -411,43 +411,65 @@ def test_a_non_workbook_document_gets_no_heavy_dispatcher(hosted):
     assert hosted.heavy_dispatch is None
 
 
-# ------------------------------------------------------------------------------------------ per-viewer masking (E10.8)
-def test_an_events_to_data_for_is_used_per_connection_when_the_app_offers_it():
-    """``_on_event`` calls an event's own ``to_data_for(viewer)`` when it has one (creates' ``ObjectsChanged``,
-    which masks an imported image's source path), instead of the one shared ``to_data()`` every other event uses."""
+# ------------------------------------------------------------------------------------ a picture's path (E10.8, SEC-27)
+def _picture_everyone_reads(source_path):
+    """Ann imports a picture with ``source_path``; what Ann (owner), Ben (editor) and Vera (viewer) are each given of
+    it: the import record in the pushed ``objects`` event and in the ``slide`` answer, and as JSON text the
+    ``snapshot``'s state and an export's content, and for Ann the history of an owner's export."""
     import base64
     import struct
 
     from claudia_creates import SlideModel
+    from claudia_document_file import read_export
     from claudia_server.creates import creates_methods
 
-    def tiny_gif() -> str:
-        header = b"GIF89a" + struct.pack("<HHBBB", 20, 10, 0, 0, 0)
-        frame = b"\x2c" + struct.pack("<HHHH", 0, 0, 20, 10) + b"\x00" + b"\x02\x01\x00\x00"
-        return base64.b64encode(header + frame + b"\x3b").decode("ascii")
-
+    header = b"GIF89a" + struct.pack("<HHBBB", 20, 10, 0, 0, 0)
+    frame = b"\x2c" + struct.pack("<HHHH", 0, 0, 20, 10) + b"\x00" + b"\x02\x01\x00\x00"
+    gif = base64.b64encode(header + frame + b"\x3b").decode("ascii")
     hub = Hub(MemoryProvider(SlideModel), methods=creates_methods)
     hosted = asyncio.run(hub.open("talk", create=True))
-    ann, ben = Client(hosted, Account("ann", "owner")), Client(hosted, Account("ben", "editor"))
-    ann.forget(), ben.forget()
+    people = {
+        "ann": Client(hosted, Account("ann", "owner")),
+        "ben": Client(hosted, Account("ben", "editor")),
+        "vera": Client(hosted, Account("vera", "viewer")),
+    }
+    picture = {"slide": "s1", "x": 0, "y": 0, "w": 400, "h": 200, "data": gif, "alt": "a chart"}
+    people["ann"].request("add_image", picture | {"source_name": "chart.gif", "source_path": source_path})
 
-    ann.request(
-        "add_image",
-        {
-            "slide": "s1",
-            "x": 0,
-            "y": 0,
-            "w": 400,
-            "h": 200,
-            "data": tiny_gif(),
-            "alt": "a chart",
-            "source_name": "chart.gif",
-            "source_path": "/Users/ann/Documents/chart.gif",
-        },
-    )
+    def exported(client, **params):
+        return read_export(base64.b64decode(client.request("export_claudia", params)["result"]["data"]))
 
-    (seen_by_ann,) = ann.events("objects")[-1]["changed"]
-    (seen_by_ben,) = ben.events("objects")[-1]["changed"]
-    assert seen_by_ann["imported"]["source_path"] == "/Users/ann/Documents/chart.gif"
-    assert seen_by_ben["imported"]["source_path"] is None
-    assert seen_by_ben["imported"]["source"] == "disk" and seen_by_ben["imported"]["imported_by"] == "ann"
+    seen = {}
+    for name, client in people.items():
+        (pushed,) = client.events("objects")[-1]["changed"]
+        (answered,) = client.request("slide", {"slide": "s1"})["result"]["objects"]
+        state = client.request("snapshot")["result"]["state"]
+        seen[name] = {
+            "event": pushed["imported"],
+            "slide": answered["imported"],
+            "snapshot": json.dumps(state),
+            "export": json.dumps(exported(client).state),
+        }
+    seen["ann"]["history"] = b"".join(exported(people["ann"], include_history=True).history or []).decode()
+    return seen
+
+
+def test_a_saved_picture_path_is_the_same_for_everyone_who_can_open_the_document():
+    path = "/Users/ann/Documents/chart.gif"
+    seen = _picture_everyone_reads(path)
+    for name, parts in seen.items():
+        assert parts["event"]["source_path"] == path, name
+        assert parts["slide"]["source_path"] == path, name
+        assert json.dumps(path) in parts["snapshot"], name
+        assert json.dumps(path) in parts["export"], name
+
+
+def test_a_picture_imported_without_its_path_has_no_path_anywhere():
+    seen = _picture_everyone_reads("")
+    for name, parts in seen.items():
+        assert parts["event"]["source_path"] is None, name
+        assert parts["slide"]["source_path"] is None, name
+        for where, part in parts.items():
+            text = (part if isinstance(part, str) else json.dumps(part)).replace(" ", "")
+            assert '"source_path":""' not in text, (name, where)
+    assert "source_path" in seen["ann"]["history"], "the history does hold the picture's import record"

@@ -69,7 +69,7 @@ def hand_over(files: Files, request: str, name: str, data: bytes, purpose: str =
     files.done(request, len(pieces))
 
 
-def test_the_chosen_file_goes_to_the_page_in_pieces_after_its_name_and_size(tmp_path: Path) -> None:
+def test_the_chosen_file_goes_to_the_page_in_pieces_after_its_name_size_and_path(tmp_path: Path) -> None:
     path = tmp_path / "Budget.docx"
     data = bytes(range(256)) * (contract.FILE_CHUNK_BYTES // 256 + 1)
     path.write_bytes(data)
@@ -77,7 +77,8 @@ def test_the_chosen_file_goes_to_the_page_in_pieces_after_its_name_and_size(tmp_
     files, reply = desk(tmp_path, dialogs)
     files.pick("f1", ["docx", "odt"], None)
     assert dialogs.asked == [("open", "Open a File", ["docx", "odt"], None)]
-    assert reply.sent[0] == ("result", "f1", "picked", {"name": "Budget.docx", "size": len(data)})
+    # the path, for Insert ▸ Image's "Don't save the path" (SEC-27)
+    assert reply.sent[0] == ("result", "f1", "picked", {"name": "Budget.docx", "size": len(data), "path": str(path)})
     chunks = [m for m in reply.sent if m[0] == "chunk"]
     assert [m[2] for m in chunks] == [0, 1]
     assert b"".join(base64.b64decode(m[3]) for m in chunks) == data

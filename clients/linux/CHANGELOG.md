@@ -4,16 +4,23 @@ Newest first. The shell contract has its own version (`clients/contract/`); this
 
 ## [0.1.0] - unreleased
 
-### Changed (E5.23, E5.24, D1643–D1656): the menus are the workbook's, and they show what fits
-- The menu definition moved to `clients/contract` (`claudia_menus.manifest`, D1643) and is the owner's workbook
-  `claudiaoffice-log/notes/claudia-menus.xlsx`: entries, places, keys and when each fits (D1605). File ▸ Save, Assign
-  New Owner…, Accept Ownership…, Leave Document… and Delete From Server… left the menus; File ▸ Manage ▸ My Role…
-  (Ctrl+Shift+Alt+L) leads to the three role steps, and a document is deleted from the front page's list (D1656).
-  Shift+F10 is no longer the shell's own key.
-- The shell contract's `action_state` may carry `visible` per action and `empty`, the menus of the bar with nothing
-  left and the sentence that says why (both optional, so version 1 stays, D1645). The shell leaves out what the page
-  leaves out (`manifest.visible_only`, which `for_start` now uses), puts the greyed line into a menu with nothing
-  left, and keeps an open menu as it opened until it is closed (D1603).
+### Added (SEC-27): where a picked file is
+- The shell contract's `file_result` `picked` carries `path`, the chosen file's full path (optional, so version 1
+  stays), for Insert ▸ Image's "Don't save the path". `Files.pick` sends it.
+
+### Added (E8.5, D1622, D1624): the shell contract knows the shared service
+- Contract v1, additive: a server entry's optional `shared` and `welcome`'s optional `ask_administrator`. The Linux
+  client has no service (E8.5, Q21) and sets neither; `servers.sanitize` keeps a shared entry only once a person named it,
+  as on macOS and Windows.
+
+### Changed (E8.5, D1620, D1621, D1623; CODE-99, CODE-100): her private server
+- The desktop's one shared server is now a person's private server, "Private on this computer":
+  `desktop_server.py`/`DesktopServer` became `private_server.py`/`PrivateServer`. It is on a port of her account
+  (20000–29999, `private_port.py`; `CLAUDIA_SERVER_PORT` still takes its place), started with `--owner-key-file`
+  (`owner_key.py`), and used only when it proves to be hers. While something else holds her port it goes to the next
+  free port of her range, written down as `{"instead": N}` in `desktop-server.json` (older files are not read).
+- `SERVER_PORT`, `read_port`, `write_port` and `server.free_port` are gone. The shell's own label for the entry is
+  "Private on this computer" (translated); the page names it in her language.
 
 ### Added (SEC-12, D1373): the setup code of the desktop's own server
 - The shell contract's `welcome` may carry `setup_code` (optional, so version 1 stays): the setup code of the shell's

@@ -27,7 +27,7 @@ The index is the status of record; a section below keeps the status of the round
 re-checked. **Opened** and **Fixed** are filled from 2026-11-20 on: for older items only where the status already gave
 the date.
 
-### Open (65)
+### Open (74)
 
 By priority (P1, P2, P3, then items that wait for a decision without one), then by ID.
 
@@ -36,9 +36,14 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | SEC-19 | P2 | Security / Perf | Imports run on the worker pool with no memory cap; `check_package` bounds the input, not the parsed model | **new, open** |  |  |
 | SEC-22 | P2 | Security | Who wrote which stretch (`runs`, E9.10) is part of the content state, so a viewer still receives it: in the `blocks` method, in `text` events, in the snapshot and in her own sealed file, although D1261 says no data should be behind "show who wrote what" for a viewer | **new, open**, needs the owner's decision (mask it live and in the viewer's file, or accept it as content) |  |  |
 | SEC-24 | P2 | Security / privacy | An owner's export writes every chat message into the file, also the private ones between other people that she cannot read in the document | **new, open** (read) | 2026-11-25 |  |
-| SEC-25 | P2 | Security | An editor can send a whole `Import` command through `apply` and so replace the document (or write a forged "History of the original") | **new, open** (read) | 2026-11-25 |  |
+| SEC-25 | P2 | Security | Through `apply` an editor can send any command the server knows: wipe the document with `Import` (no undo), forge checkpoints, redaction and restore records, also inside a `Batch` | **new, open** (measured; widened 2026-11-25) | 2026-11-25 |  |
+| SEC-26 | P2 | Security | A viewer's office export (odt, docx) says who made and last changed the document and when, and dates the open suggestions, all from the history her role may not read | **new, open** (measured) | 2026-11-25 |  |
+| SEC-27 | P2 | Security / privacy | A picture's local path (`source_path`) is stored in the document's content, so every key holder reads it (snapshot, sealed file, export), although only the importer was meant to see it | **new, open** (measured; no app sends a path today) | 2026-11-25 |  |
+| SEC-30 | P2 | Security | A person's raw `core.DefineAsset` / `UpdateAsset` skips what `add_image` does to a picture: an SVG is not sanitised when an asset is read from its data | **new, open** (read) | 2026-11-26 |  |
+| SEC-28 | P2 | Security / desktop clients | On Windows anyone can make everyone's apps list her own server as "Shared on this computer" (the service file in `%ProgramData%` is writable by every account) | **new, open** (read) | 2026-11-25 |  |
 | PERF-02 | P2 | Performance | Journal `fsync` on the event loop for every edit | verified open (2026-11-12; see CODE-13) |  |  |
 | PERF-10 | P2 | Performance | What-if outcomes are recalculated on the event loop: 9 s per edit in a 1,000-cell model | **new, open** |  |  |
+| PERF-15 | P2 | Performance | Exporting a kept workbook (xlsx, ods) recalculates the whole live model on the event loop | **new, open** (read) | 2026-11-25 |  |
 | UX-22 | P2 | UX | The history speaks three dialects: one per app | **new, open** |  |  |
 | UX-42 | P2 | UX / all | A document cannot be renamed: its name is sealed into the file, which the uid was meant to avoid | **decided, open** (D536, E5.21) |  |  |
 | UX-51 | P2 | UX / composes | The words go round the unturned frame of a turned object, not its bounding box (D1226 decides the box); turning is on screen in composes since D1232 | **new, open** (read) |  |  |
@@ -48,10 +53,8 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | UX-91 | P2 | UX / composes / Firefox | In Firefox the down arrow from the paragraph above a new table does not put the caret in its first box (Chromium does) | **new, open** (measured on CI) | 2026-11-25 |  |
 | UX-93 | P2 | UX / a11y | The font banner ("This document uses fonts this server does not have …") is dark text on a dark ground, about 1.1:1 (BITV 1.4.3 asks 4.5:1) | **new, open** (measured) | 2026-11-25 |  |
 | CODE-31 | P2 | Code / i18n | The history speaks English to everybody: command labels and summaries are not translated | **new, open** |  |  |
-| CODE-111 | P2 | Code / i18n | The native menus of the Windows and macOS clients are always in English: the generated listing has the English labels and nothing translates them | **new, open** (read) | 2026-11-26 |  |
-| PROC-72 | P3 | Process / tests | The composes-computes-creates scenario "The way back stays until I use it or start working" failed once in creates when the machine was busy: the text box on slide 9 was not there to click within 30 s | **new, open** (measured once) | 2026-11-26 |  |
-| CODE-99 | P2 | Code / desktop clients | A person's apps use any Claudia server on port 8765 of the computer as their own, also another person's or a service's: with two people logged in, the second one's documents are saved in the first one's home folder | **new, open** (read); fix on the macOS installer branch (E8.5) | 2026-11-25 |  |
-| CODE-100 | P2 | Code / desktop clients | Next to a service of another version, the apps refuse to start and say it stops after ten minutes, which a service never does | **new, open** (read); fix on the macOS installer branch (E8.5) | 2026-11-25 |  |
+| CODE-107 | P2 | computes I/O | In a kept xlsx, a formula Excel cannot say is written as its value, and no `formula` loss says so | **new, open** (read) | 2026-11-25 |  |
+| CODE-108 | P2 | Code / desktop clients | A desktop window cannot connect to a server of all three apps (`"app": null`), so "Shared on this computer" cannot be opened | **new, open** (measured) | 2026-11-25 |  |
 | PROC-15 | P2 | Process | The tracker and the backlog lag the code: fixed items still "open", 64 stories at a placeholder 50 % | partly fixed 2026-11-25 (batch 1: the index guard); the backlog's placeholder 50 % stays open |  |  |
 | PROC-30 | P2 | Process / desktop clients | The Neutralino (Windows, macOS) tests and the GTK client were not run for `object-interaction`: the generated menus were rebuilt and the manifest unit tests pass, nothing more | **new, open** |  |  |
 | UX-64 | P2 | UX / all apps | Dark mode: a part of the sidebar (History & Chat / Help) is not readable or has too little contrast; the exact symptom was not written down when it was seen (see entry) | **needs decision** (symptom to be re-stated; size 2) | 2026-11-22 |  |
@@ -93,11 +96,17 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | CODE-68 | P3 | computes | Computes cannot make a text box or a shape, though a model can hold one (a file from another app) and an export reports it as `object` | **new, open** |  |  |
 | CODE-74 | P3 | Code | `export_content` still answers `{format: "claudia-export 1", ...}`, a JSON that is neither the zip of D1270 nor documented anywhere; it is recorded as an export and the panel says "exported as claudia-export 1"; no window calls it | **new, open** (size 3; remove it or make it the zip) |  |  |
 | UX-92 | P3 | UX / i18n | History & Chat says "undo" and "redo" in English before a step, and the "History of the original" copies it | **new, open** (read) | 2026-11-25 |  |
+| UX-95 | P3 | UX / Windows | With User Account Control on, an administrator of the PC is told to ask an administrator for the service's setup code | **new, open** (read) | 2026-11-25 |  |
+| UX-96 | P3 | UX / desktop clients | A page reloaded after its server restarted gets the old setup code, and the code field appears | **new, open** (read) | 2026-11-25 |  |
 | CODE-101 | P3 | Code / Import | A pptx placeholder's inherited size and alignment (a title's 44 pt, centred) are neither read nor reported | **new, open** (read) | 2026-11-25 |  |
 | CODE-102 | P3 | Code / Import | A pptx box with several bulleted paragraphs comes in with one bullet (one paragraph per box), and no loss says so | **new, open** (measured) | 2026-11-25 |  |
 | CODE-103 | P3 | computes I/O | The ods chart patch: a chart in a cell that is moved and described in one export makes overlapping edits, so the kept file is written anew | **new, open** (read) | 2026-11-25 |  |
 | CODE-104 | P3 | computes I/O | The pictures of an xlsx that LibreOffice wrote are not read in, nor the turned ones of such an ods | **new, open** (measured) | 2026-11-25 |  |
 | CODE-105 | P3 | composes I/O | docx: a paragraph mark's own run properties count as a `formatting` loss, though nothing is lost | **new, open** (measured) | 2026-11-25 |  |
+| CODE-109 | P3 | composes I/O | The patch of a kept odt reports losses (`style`, `removed-…`) that the server never passes on: they are not in the Export dialog | **new, open** (read) | 2026-11-25 |  |
+| CODE-110 | P3 | Code / desktop clients | Both desktop shells cut a path longer than 4096 characters without a word; such a picture path would be saved wrong | **new, open** (read) | 2026-11-26 |  |
+| PROC-70 | P3 | Process / tests | `uv run pytest clients/linux/tests` cannot load `test_contract.py`: `jsonschema` is not in the uv environment | **new, open** (measured) | 2026-11-26 |  |
+| SEC-31 | P3 | Security / privacy | A viewer's office export of a document whose imported file was kept still carries that file's own authors and dates (metadata, tracked changes) | **needs decision** (read) | 2026-11-26 |  |
 
 ## Security
 
@@ -368,16 +377,19 @@ three hand-written ids. **Acceptance.** A new text's Format ▸ Styles menu has 
 ### CODE-62 · A window that revives the shared server while the old one still holds the port starts it on a random port · P3 · new, open
 **Measured** (found while fixing the `deb.yml` job on 2026-11-17, reported to the owner as a size 3 bug): D445 says
 every app of the suite talks to one shared local server on the same port. When the server is gone, a shell window
-revives it (`_keep_presence` in `clients/linux/src/claudia_shell_gtk/desktop_server.py`). If the old server process
+revives it (`_keep_presence` in `clients/linux/src/claudia_shell_gtk/private_server.py`, then `desktop_server.py`). If the old server process
 is still shutting down and holds the port, `free_port` chooses a random one, so the revived server lives on a port
 nobody has remembered and `desktop-server.json` and `CLAUDIA_SERVER_PORT` no longer agree with it. The CI job showed
 it: the window was ended after the server, revived it on a random port, and the new server then found the folder lock
-of the old one ("another Claudia server uses …/documents"). The Neutralino twin, `clients/neutralino/src/desktop-server.ts`,
+of the old one ("another Claudia server uses …/documents"). The Neutralino twin, `clients/neutralino/src/private-server.ts` (then `desktop-server.ts`),
 is built the same way and is likely affected (**read**, not run).
 **Acceptance:** a test in which the first server still holds the port while a window revives it: the revived server
 waits for the port (a bounded time) and starts on the same one; only when the port stays taken does it say so, instead
 of silently using another.
 **Worked around** in `deb.yml` (the window is ended first, then the server is waited for); the cause is not fixed.
+**Since E8.5 part 1 (2026-11-25, `mac-installer`):** a revived server is started again on the port its page is on when
+that is free; when it is held, on the next port of her range (D1621), written down as `instead`, so her apps agree on
+it. The bounded wait the acceptance asks for is not built.
 
 ### SEC-19 · Imports have no memory cap · P2 · open
 Imports run on `hub.workers`; `check_package` refuses bombs by declared size, but a 512 MiB package may still build a
@@ -479,6 +491,8 @@ viewer's "show who wrote what" should have no data behind it. **Options.** (a) M
 file (a viewer's snapshot would be written without them: a second snapshot); (b) accept the authorship as content and say
 so in D1261. **Proposal:** (b) until the owner says otherwise, because masking in the snapshot means the content is stored
 twice. Not built either way.
+**Decided** 2026-11-25 by the owner, option (b): who wrote which stretch is content (note of that day in D1261).
+**Guard** on `batch-5`: `test_a_viewer_receives_who_wrote_which_words_as_part_of_the_content`.
 
 ### CODE-74 · `export_content` is a third kind of export nobody asked for · P3 · new, open
 `export_content` (a JSON object with `format: "claudia-export 1"`) predates D1270 and is not called by any window. It is
@@ -544,24 +558,48 @@ workbook's Body text, 13 px for the cells of a sheet, which on a slide of 1600 �
 needed:** whether a workbook's slides get text styles of their own (as creates has), or the slide is drawn at another
 scale. Until then a person makes the text larger with a style of her own.
 
-## Reported 2026-11-25, while designing the macOS installer (E8.5)
+## Reported while building the macOS installer (E8.5; branch `mac-installer`, 2026-11-25)
 
-### CODE-99 · Another person's server is taken for one's own · P2 · size 2 · open
-**Read:** `DesktopServer.ensure()` takes any Claudia server that answers on 8765 (or the remembered port) and serves the
-window's app at the same version as this computer's server, "whoever started it". On a computer with two people logged in
-(fast user switching on macOS and Windows, two sessions on Linux), the second person's windows use the first person's
-server: her new documents are written into the first person's home folder, as the first person's files, and she sees the
-list of the first person's documents. When the first person logs out, the server goes, the second person's apps start her
-own, and her earlier documents seem lost. With a service running (D743, Windows) every person's apps use the service's
-documents instead of their own. **Acceptance:** a scenario with two people on one computer, each with her own documents,
-where neither sees the other's list and each finds her own documents again after the other has logged out.
+CODE-99, CODE-100 and UX-94 were fixed by parts 1 and 2 and moved to `bugtracker-fixed.md` (2026-11-26). Found in the
+code review and the use-it run of part 2 (`implementation-notes/e8-5-shared-place.md`), logged at the owner's request:
 
-### CODE-100 · A service of another version locks the apps out · P2 · size 2 · open
-**Read:** `checkIsOurs` refuses a Claudia server of another version and tells the person that it "stops by itself ten
-minutes after its last window has closed". A service never does. Windows: an install "only for me" that is newer than an
-all-users install with the service; macOS: `./start-mac-client.sh` next to an installed service. The apps cannot start
-until someone stops the service. **Acceptance:** a scenario with a service of another version on the computer, where the
-person's apps start her own server and open.
+### SEC-28 · On Windows anyone can make everyone's apps list her own server as "Shared on this computer" · P2 · size 1 · open
+**Read** (the spec review of E8.5 part 2): the apps find the computer's service through
+`%ProgramData%\Claudia\service.json` (D1622). By default every account of a Windows PC may create files and folders in
+`%ProgramData%`, and the installer changes the rights only of the service's state folder. On a PC without the service
+(or after it was removed), one person can write a `service.json` naming a claudia server of her own on 127.0.0.1;
+every other person's apps then list it as "Shared on this computer", and they sign in there with their own passwords.
+macOS is not affected: `/Library/Application Support` is writable by root only. D1622 refused to find the service by
+probing 8765 for the same reason. **Proposed fix:** on Windows, the installer writes the service's address and state
+folder to `HKLM\Software\Claudia\Service` (writable by administrators only) and the apps read it there; or the apps
+trust the file only when its owner is `Administrators` or `SYSTEM`. Either changes D1622 for Windows: a new decision.
+**Acceptance:** a test where a `service.json` written by an ordinary account is not listed.
+
+### CODE-108 · A desktop window cannot connect to a server of all three apps · P2 · size 1 · open
+**Measured** (use-it run of E8.5 part 2, 2026-11-25): the connect check of both shells (`connection.ts` /
+`connection.py` `interpret`) wants `app` in `/api/docs`; a server of several apps (D430), like the computer's service
+or a demo server of all three apps, answers `"app": null, "apps": ["composes", "computes", "creates"]`, and the window
+says "That does not look like a Claudia server". So "Shared on this computer" is listed but cannot be opened in the
+apps. Older than `mac-installer` (no window connected to the service before part 2). **Proposed fix:** a server whose
+`apps` holds the window's app is reached as that app; one whose `apps` does not hold it is `wrong_app`; in both twins.
+**Acceptance:** `connection.test.ts` and `test_connection.py` with a listing of three apps.
+
+### UX-95 · With User Account Control, an administrator is told to ask an administrator · P3 · size 2 · open
+**Read** (D1624, known limit): the Windows installer opens the service's state folder, with its setup code, only to
+`Administrators`, `SYSTEM` and the service. With User Account Control on, an administrator's apps run without the rights
+of the `Administrators` group, so they cannot read the code and her setup page says "Only an administrator of this
+computer can name this server's first administrator. Ask one." She can read
+`%ProgramData%\Claudia\state\admin\setup-code` in Explorer (which asks for her consent) and type it. macOS has no such
+split. **Proposed fix:** the installer also gives read access to the account that ran it (`{username}`); or the page
+names where an administrator finds the code. **Acceptance:** CI's Windows install check reads the code as the installing
+account without elevation.
+
+### UX-96 · A page reloaded after its server restarted gets the old setup code · P3 · size 3 · open
+**Read** (the spec review of E8.5 part 2): the shell reads the setup code when it shows a server (`Core.show`), and a
+reloaded page gets the code kept from then. If the server started again meanwhile (a new code), the page sends the old
+one, the server refuses it, and the code field appears with the usual hint. The same holds for her own server since
+D1373. **Proposed fix:** the core reads the code anew at every hello of the page (the bridge asks the core instead of
+keeping it). **Acceptance:** a core test where the code changes between two hellos.
 
 ## Found in batch 3 of the bug eater (2026-11-25; branch `batch-3`)
 
@@ -590,6 +628,9 @@ cannot read in the document, and anybody she gives the file to can. (D2005 alrea
 note an imported export brings; this is the export itself.) Found by a helper (PROC-37), confirmed by reading.
 **Acceptance:** an export of a document in which Ben wrote privately to Cleo holds no such message when Ann exports it;
 one Ann wrote or received privately, the owner decides (keep, or leave out too).
+**Fix** on `batch-5` (D2008): `audience.Reader` decides what a person may read of the chat; the export with history,
+the chat log, the redaction numbers and the live push ask it. **Test:** Ann's export holds "for everybody", her own
+private message and Ben's to her, not the messages between Ben and Cleo (red: both were in it).
 
 ### SEC-25 · An editor can replace the document with a raw `Import` · P2 · size 2 · open
 **Read:** `apply` (`_apply` in `protocol.py`) decodes any command the registry knows and executes it as the editor; it
@@ -598,8 +639,16 @@ since D2005 also give it a forged `original` ("History of the original" with wor
 path is an owner's upload. Found by a helper (PROC-37), confirmed by reading. **Acceptance:** `apply` with an `Import`
 from an editor is refused (`forbidden`), and the history is unchanged; the owner says whether any other command is
 for the server's own use only.
+**Fix** on `batch-5` (D2007): every kind of change says who may send it (`Command.sender`); `apply` decodes with
+`registry.for_persons()`, which refuses `Import`, `Setup`, `Checkpoint`, `Redaction`, `Redacted`, `Restore`, `Switch`
+and computes' `ApplyCalculated` with `forbidden`, at any depth. `tests/command_senders.json` lists all 91 kinds. **Test:** an editor's `apply` of each
+of the seven, alone and inside a `Batch`, is refused and the history unchanged (red: all seven accepted).
 
 ### UX-93 · The font banner cannot be read · P2 · size 2 · open
+**Re-checked** (triage of 2026-11-25, computed from the CSS): 1.13:1. The same slip elsewhere: `--ink-soft` is used
+without a fallback and defined nowhere (`NumberingDialog.vue`, `ContentsDialog.vue`), and `--panel` and `--border` are
+not defined either. The fix should come with a guard: every `var(--x)` the web uses is defined in the tokens or set at
+run time.
 **Measured** in Chromium (batch 4, opening a pptx in creates): `[data-testid=font-banner]` has the background
 `rgb(42, 35, 66)` (the fallback of `--panel-2`, which is not defined) and the text `rgb(31, 26, 51)` (`--ink`): a
 contrast of about 1.1:1. BITV 1.4.3 asks 4.5:1, so this is a divergence from the standard. `FontReportBanner.vue` was
@@ -639,6 +688,12 @@ and the export falls back to a fresh file (`not-patched`), losing what the kept 
 without any of its pictures; such an ods loses the turned ones. Files we write, fresh or patched, are read back with
 their pictures. The cause was not found. **Acceptance:** a picture (and a turned one) of an xlsx and an ods that
 LibreOffice saved comes in at its place.
+**Re-measured** (triage of 2026-11-25, LibreOffice 24.2): our own fresh xlsx and ods, with a turned picture, survive
+LibreOffice in all four directions. What fails is an ods we patched, saved by LibreOffice as xlsx: 0 of 2 pictures.
+Cause: `xlsx_pictures.py` takes a `twoCellAnchor`'s size from its cells (36×20), `keeps_proportions`
+(`file_pictures.py`) rejects that against the 40×20 picture, and the anchor's own `a:xfrm/a:ext` is not read. The turned
+ods case was not reproduced. **First test:** a `twoCellAnchor editAs="absolute"` whose cells differ from its `a:ext`
+comes in at its size.
 
 ### CODE-105 · docx: a paragraph mark's run properties count as a loss · P3 · size 3 · open
 **Measured** by a helper (CODE-47 analysis): a docx paragraph whose mark has run properties of its own (`w:pPr/w:rPr`,
@@ -646,4 +701,105 @@ which Word writes for nearly every paragraph) is counted as a `formatting` loss,
 not visible in the text. So the import over-counts what it leaves out. **Acceptance:** a docx whose only run properties
 are those of paragraph marks reports no `formatting` loss.
 
-## Found by the menu audit (2026-11-25; branch `menus`)
+## Found in the architecture review of 2026-11-25
+
+Logged by the owner's word of 2026-11-25 (`/tmp` report "Architecture review · claudia", candidates 1, 3 and 6, and the
+triage that went with it). SEC-25 was widened by the same triage. CODE-109 and PERF-15 were logged on `batch-5` as
+CODE-106 and PERF-14, numbers the `test-quality` branch had taken meanwhile; renumbered 2026-11-26.
+
+### SEC-25, widened (2026-11-25, measured)
+Not only `Import`: `_apply` (`protocol.py`) decodes every command the registry knows and refuses only the assistant. As
+an editor the triage sent `core.Import` (the document wiped, no undo, a forged "History of the original" taken),
+`core.Checkpoint` (listed by `checkpoints` as "Approved by legal"), `core.Redaction` (a record that 1 change and 1
+message were redacted, when nothing was) and `core.Restore`; all were accepted. `Switch` and `Setup` are of the same
+kind. A check of the top-level command alone is not enough: `Batch.from_data` decodes nested commands. No client sends
+raw commands (only the server's tests use `apply`). **Batch 5** (owner, 2026-11-25): every command kind says whether a
+person may send it, kept in a golden file; `apply` checks every nested command.
+
+### SEC-26 · A viewer's office export carries who and when from the history · P2 · size 3 · open
+**Measured** (triage of 2026-11-25): a viewer's `log` is refused, but her odt from `export_office` carries
+`meta:initial-creator`, `meta:creation-date`, `dc:creator` and `dc:date`, and her docx `dc:creator`, `lastModifiedBy`,
+`created` and `modified`: `export_info(ctx.document.log, …)` (`claudia_composes_io/_history.py`, used by
+`composes.py`'s `_export_office`; computes and creates the same, by reading). With tracked changes, each open suggestion
+is dated from the history too. **Batch 5** (owner, 2026-11-25): for a person whose role does not hold the history, the
+export says neither who made or changed the document nor when; a suggestion keeps its author (who wrote what is
+content, SEC-22) and is dated with the time of the export. **First test:** a viewer's odt and docx carry no creator,
+changer or date from the history.
+**Fix** on `batch-5` (D2008): the office exports of the three apps take the history from `Reader.log`, empty for a
+role without its key; a viewer's open suggestions are dated with the export. **Test:** a viewer's odt, docx, xlsx, ods,
+pptx and odp carry no creator, changer or date from the history (red in all three apps).
+
+### SEC-27 · A picture's local path is readable by everyone who can open the document · P2 · size 2 · open
+**Measured** (triage of 2026-11-25): `add_image` takes a `source_path`; it is stored in the picture's `ImageImport`
+(`claudia_core/assets.py`), in the content state and in the command in the history. `objects` and the pushed events
+mask it for everybody but the importer (`ImageImport.masked`), but `model.serialize()` does not: a viewer's `snapshot`
+and her `export_claudia` `content.json` hold e.g. `/home/ann/Private/medical/red.gif`, and so does the content part of
+the document file, which every key holder can open. No app sends a path today (a browser cannot know it; the desktop
+shells pick the file but pass only its name, D501), so only a caller of the protocol has stored one. **Batch 5**
+(owner, 2026-11-25): on a single desktop install it is useful to know where a picture came from, so the path is kept
+when the person asks for it on import ("save the path"), and then readable by everyone who can open the document;
+otherwise it is not stored at all.
+**Fix** on `batch-5` (D2009): Insert ▸ Image has "Don't save the path", unticked, with the hint "Everyone who can open
+this document sees it.", shown only when a desktop shell says where the picked file is (GTK and Neutralino now send
+`path` with `picked`; a browser never knows it). Ticked, an empty path goes and none is stored (`ImageImport.from_data`).
+The per-person mask (`ImageImport.masked`, `to_data_for`) is gone: a kept path is the same for everyone. **Tests:**
+server (everyone sees the same path; an empty one is nowhere), core, web (`images`, `shell-bridge`, `local-files`),
+both shells' `picked`; each seen red first.
+
+### CODE-109 · The patch of a kept odt drops the losses it reports · P3 · size 3 · open
+**Read** (architecture review of 2026-11-25): `apply_edits_to_odt` takes a `losses` log and adds `style` and
+`removed-<kind>` losses to it (`odt.py`), but the server's patch lambda in `composes.py` (`_export_office`, the odt
+branch of `export_with_original`) ignores the log it is given (`_`), so these losses never reach the Export dialog.
+`apply_edits_to_pptx` takes no log at all. **First test:** a kept odt whose edit removes a part with a comment says
+`removed-comment` in `export_office`'s `losses`.
+
+### CODE-107 · A kept xlsx loses formulas without a word · P2 · size 2 · open
+**Read** (architecture review of 2026-11-25): in the patch of a kept xlsx, `written()` (`xlsx_patch.py`) returns the
+cell's value and `lost` for a formula Excel cannot say, but `_write_sheet` (`xlsx.py`) never looks at `lost`, so the
+formula is written as its value and no `formula` loss is reported; a fresh export reports it (`xlsx_export_losses`).
+The same holds for `authorship`, `notes-…`, `agenda` and `reference` on every kept file: a patched export never calls
+`*_export_losses`. **First test:** a kept xlsx with a formula Excel cannot say reports `formula` in `export_office`.
+
+### PERF-15 · Exporting a kept workbook recalculates the live model on the event loop · P2 · size 2 · open
+**Read** (architecture review of 2026-11-25): `export_office` runs synchronously in `dispatch`; the patch path hands the
+live model to the xlsx and ods patches, which both call `current.calc.recalculate_all()` (`xlsx.py`, `ods.py`): a full
+recalculation on the loop for every export of a kept workbook, while everybody else's edits wait. The loss walk
+translates every formula a second time. Not timed. Belongs with A1 (the execution model). **First test:** another
+person's `ping` is answered within 50 ms while a kept 10,000-formula workbook is exported.
+
+## Found in batch 5 of the bug eater (2026-11-26)
+
+Logged by the owner's word of 2026-11-26. Found while fixing SEC-25 and SEC-27 and in the code review of batch 5
+(`implementation-notes/bug-eater-batch-5.md`, where they were proposed as SEC-28, CODE-108 and PROC-67: numbers other
+branches had taken meanwhile).
+
+### SEC-30 · A raw asset skips the picture checks of add_image · P2 · size 2 · open
+**Read** (batch 5, reviewing the list of who may send which change, D2007): `add_image` decodes a picture, checks it and
+sanitises an SVG before it becomes an asset; a person who sends `core.DefineAsset` or `core.UpdateAsset` through `apply`
+gives the asset's data directly, and `ImageAsset.from_data` checks its size and format but does not sanitise an SVG.
+Claudia's own pages show pictures only through `<img>`, where an SVG's scripts never run, so the editor is not attacked;
+but an export (odt, docx, pptx, odp, xlsx, ods) or a downloaded picture carries the SVG as it was given to programs that
+may run it. **Acceptance:** an SVG with a script sent as a raw `DefineAsset` is refused or stored sanitised, the same as
+through `add_image`; the decision is whether the asset kinds become changes only the server makes (D2007) or whether
+`from_data` sanitises wherever an asset comes in (also a document file or an import).
+
+### CODE-110 · The desktop shells cut a long path without a word · P3 · size 3 · open
+**Read** by the helper of batch 5 (SEC-27): the GTK shell's `file_result` and the Neutralino core's `fileResult` cut a
+path to 4096 characters, so a picture whose path is longer would be kept with a wrong path ("Don't save the path"
+unticked, D2009). **Acceptance:** a path the shell cannot pass whole is not passed (the dialog then offers no path), or
+the limit is the contract's and refused with a word.
+
+### PROC-70 · The Linux client's tests do not load in the uv environment · P3 · size 3 · open
+**Measured** by the helper of batch 5: `uv run pytest clients/linux/tests` stops at collecting `test_contract.py`
+because `jsonschema` is not in the uv environment; the Linux README says to run the tests with the system `python3`,
+which has it. CI runs them its own way. **Acceptance:** one documented command runs all of the Linux client's tests
+that need no display, in the uv environment, or the README and `check_debt.py` say the same one.
+
+### SEC-31 · A viewer's export of a kept file carries that file's own who and when · P3 · needs decision
+**Read** in the spec review of batch 5: when a document's imported file was kept, `export_office` patches that file.
+`apply_edits_to_docx` and `apply_edits_to_xlsx` get no document info, so the kept `docProps/core.xml` (creator, created,
+lastModifiedBy, modified) passes through; for odt, `update_meta` with an empty info keeps `initial-creator`,
+`creation-date`, `dc:creator` and `dc:date`; the file's own tracked changes keep their authors and dates. This is the
+original file's metadata, not Claudia's history, so SEC-26 (D2008) does not cover it. **Decision** (owner): does a
+viewer's export of a kept file keep the original's own who and when, or say none of it, as for a document made here?
+

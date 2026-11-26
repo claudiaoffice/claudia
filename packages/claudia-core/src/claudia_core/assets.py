@@ -12,9 +12,7 @@ An asset carries no opinion about where it sits on a page or a slide, exactly as
 business. :class:`ImageImport` is the separate, small record of how one copy of an asset entered one
 document: who, when, and from where. It is kept apart from :class:`ImageAsset` so that an app's object (a
 ``SlideObject``, a sheet's picture, a composes anchor, ...) can carry one import record without re-deciding
-what that record looks like, and so that :meth:`ImageImport.masked` can hide where it came from from
-everyone but the importer (the product decision that a colleague sees "imported from disk", not the
-importer's own filesystem path) without touching the asset at all.
+what that record looks like.
 
 Decoding is pure Python and dependency-free, matching the kernel's own ``dependencies = []``: just enough of
 each format is read to find its pixel dimensions and, for an animated GIF, to count its frames and slice out
@@ -157,8 +155,9 @@ class ImageImport:
     """How one copy of an :class:`ImageAsset` entered one document: who, when, with what alt text, and from
     where. ``source`` is ``"disk"`` today (``"clipboard"`` is a later addition, per the product decision to
     build it last); ``source_name`` is the file name as the browser or client exposed it, and ``source_path``
-    is the full path *if the client could supply one* — a plain web browser cannot, for its own security
-    (``file.name`` only, never a filesystem path), so it is commonly ``None`` even for a disk import.
+    is the full path *if the client could supply one and the person did not ask not to save it* — a plain web
+    browser cannot, for its own security (``file.name`` only, never a filesystem path), so it is commonly ``None``
+    even for a disk import. A saved path is part of the document: everyone who can open it reads it (SEC-27).
 
     ``imported_by`` and ``imported_at`` are final values, set once by the server when the import happens
     (never recomputed on replay), exactly as every other command carries final values rather than working
@@ -173,7 +172,7 @@ class ImageImport:
     source_path: str | None = None
 
     def to_data(self) -> dict:
-        """The plain-data form: what a command and the log store. Carries the full record, unmasked."""
+        """The plain-data form: what a command, the log and every reader of the document get."""
         return {
             "asset": self.asset,
             "alt": self.alt,
@@ -186,7 +185,8 @@ class ImageImport:
 
     @classmethod
     def from_data(cls, data: dict) -> ImageImport:
-        """Inverse of :meth:`to_data`; raises :class:`ImageError` naming the first thing that is wrong."""
+        """Inverse of :meth:`to_data`; raises :class:`ImageError` naming the first thing that is wrong. An empty
+        ``source_path`` is no path (the person asked not to save it, SEC-27), so it is kept as ``None``."""
         if not isinstance(data, dict):
             raise ImageError("an image import record is one JSON object")
         fields = ("asset", "alt", "imported_by", "imported_at", "source", "source_name", "source_path")
@@ -202,20 +202,12 @@ class ImageImport:
             raise ImageError("source: 'disk' or 'clipboard'")
         if data["source_path"] is not None and not isinstance(data["source_path"], str):
             raise ImageError("source_path: text, or null when the client could not supply one")
-        return cls(**data)
+        return cls(**{**data, "source_path": data["source_path"] or None})
 
     def blanked(self) -> ImageImport:
         """The record with everything a person wrote or picked gone (redaction, D720): the alternative text and the
         file's name and path. Who imported it, when and how stay, like the author and time of any redacted step."""
         return replace(self, alt="", source_name="", source_path=None)
-
-    def masked(self, viewer: str) -> ImageImport:
-        """This record as ``viewer`` may see it: ``source_path`` only to the person who imported it (D… the
-        product decision that a colleague sees "imported from disk", not the importer's own filesystem path),
-        everything else — including that it *was* imported from disk, and by whom — the same for everyone."""
-        if viewer == self.imported_by or self.source_path is None:
-            return self
-        return replace(self, source_path=None)
 
 
 def decode_image(data: bytes, *, checked_drawing: bool = False) -> ImageAsset:

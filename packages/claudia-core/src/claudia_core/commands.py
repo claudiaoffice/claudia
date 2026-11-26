@@ -20,15 +20,18 @@ import re
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, ClassVar
+from typing import TYPE_CHECKING, ClassVar, Literal
 
-from .errors import MissingUpcaster, SchemaTooNew, UnknownCommand
+from .errors import MissingUpcaster, SchemaTooNew, ServerOnly, UnknownCommand
 from .revision import Revision
 
 if TYPE_CHECKING:
     from .context import Context
     from .model import DocumentModel
     from .region import Region
+
+#: Who may send a command kind, as :attr:`Command.sender` says it (D2007).
+Sender = Literal["person", "server"]
 
 _KIND = re.compile(r"[a-z][a-z0-9_]*\.[A-Za-z][A-Za-z0-9_.]*")
 
@@ -44,6 +47,9 @@ class Command(ABC):
     schema: ClassVar[int] = 1
     undoable = True  # False for commands that are nobody's undo step (chat-like, checkpoints, ...)
     meta: ClassVar[bool] = False  # True: changes no model state, only the log (checkpoint, redaction)
+    #: Who may send this command (D2007). ``"person"``, the default, is the app or a script; ``"server"`` makes it only
+    #: through its own methods and their checks, and :meth:`CommandRegistry.for_persons` refuses it.
+    sender: ClassVar[Sender] = "person"
 
     @property
     def label(self) -> str:
@@ -135,6 +141,7 @@ class CommandRegistry:
     def __init__(self):
         self._classes: dict[str, type[Command]] = {}
         self._upcasters: dict[tuple[str, int], Callable[[dict], dict]] = {}
+        self._persons_only = False
 
     def register(self, cls: type[Command]) -> type[Command]:
         """Class decorator. Extensions (UserFunction/plugin commands) register the same way."""
@@ -164,11 +171,23 @@ class CommandRegistry:
         return {kind: cls.schema for kind, cls in self._classes.items()}
 
     def class_of(self, kind: str) -> type[Command]:
-        """The class registered for ``kind``; raises ``UnknownCommand``."""
+        """The class registered for ``kind``; raises ``UnknownCommand``, or ``ServerOnly`` in a registry
+        :meth:`for_persons` for a kind only the server makes."""
         try:
-            return self._classes[kind]
+            cls = self._classes[kind]
         except KeyError:
             raise UnknownCommand(kind) from None
+        if self._persons_only and cls.sender != "person":
+            raise ServerOnly(kind)
+        return cls
+
+    def for_persons(self) -> CommandRegistry:
+        """This registry as it decodes what a person sends (SEC-25, D2007): a command only the server makes is refused
+        with ``ServerOnly``, at any depth, since a command that holds commands decodes them through the same
+        registry."""
+        persons = CommandRegistry()
+        persons._classes, persons._upcasters, persons._persons_only = dict(self._classes), dict(self._upcasters), True
+        return persons
 
     def decode(self, envelope: dict) -> Command:
         """Turn a stored envelope into a command, upcasting old schemas; ``SchemaTooNew`` if it is from the future."""
@@ -264,6 +283,7 @@ class Setup(Batch):
     step: a person's first Ctrl+Z must not take away the first sheet of a workbook or the language of a text."""
 
     kind: ClassVar[str] = "core.Setup"
+    sender: ClassVar[Sender] = "server"
 
     @property
     def label(self) -> str:
@@ -317,6 +337,7 @@ class Import(Command):
     either."""
 
     kind: ClassVar[str] = "core.Import"
+    sender: ClassVar[Sender] = "server"
     undoable = False
     name: str  # the file's name, as the person's computer called it
     fmt: str  # "docx", "odt", "xlsx", "ods", "pptx" or "odp"
@@ -377,6 +398,7 @@ class Redacted(Command):
     """What a command becomes when it is redacted: kind and ids stay, the content is gone. Applies as a no-op."""
 
     kind: ClassVar[str] = "core.Redacted"
+    sender: ClassVar[Sender] = "server"
     undoable = False
     meta: ClassVar[bool] = False  # not meta: its place in the order still counts as a state revision
     original_kind: str
@@ -407,6 +429,7 @@ class Checkpoint(Command):
     """A label on a revision (File > Save). Changes no state; ``marks`` is the state revision it labels."""
 
     kind: ClassVar[str] = "core.Checkpoint"
+    sender: ClassVar[Sender] = "server"
     undoable = False
     meta: ClassVar[bool] = True
     label_text: str
@@ -439,6 +462,7 @@ class Redaction(Command):
     none, and one that names none is written without it, so the older form reads and writes the same."""
 
     kind: ClassVar[str] = "core.Redaction"
+    sender: ClassVar[Sender] = "server"
     undoable = False
     meta: ClassVar[bool] = True
     targets: tuple[Revision, ...]
@@ -478,6 +502,7 @@ class Restore(Command):
     """First entry of the line a checkpoint restore starts: who went back to which state, and from which line."""
 
     kind: ClassVar[str] = "core.Restore"
+    sender: ClassVar[Sender] = "server"
     undoable = False
     meta: ClassVar[bool] = True
     label_text: str
@@ -508,6 +533,7 @@ class Switch(Command):
     """First entry after the document moved to an existing line (the way back after a restore): who, and from where."""
 
     kind: ClassVar[str] = "core.Switch"
+    sender: ClassVar[Sender] = "server"
     undoable = False
     meta: ClassVar[bool] = True
     from_branch: str

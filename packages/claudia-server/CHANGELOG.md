@@ -3,7 +3,28 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
-## [Unreleased]
+## [0.46.0] - 2026-11-25
+
+### Added
+- A person's private server (E8.5, D1620; CODE-99): `create_app(owner_key=...)` and `--owner-key-file FILE` make the
+  server answer `GET /api/owner?challenge=<64 lower-case hex digits>` to this computer with an HMAC of the challenge
+  and the port it listens on (`owner_proof.py`), so that her desktop apps use it only when it proves to be hers.
+
+### Security
+- What a person may read of the chat and the history is decided in one place, `audience.Reader` (D2008), which every
+  way out asks. An owner's export with history no longer carries the private messages between other people (SEC-24).
+  An office export (odt, docx, xlsx, ods, pptx, odp) made by somebody whose role does not hold the history says
+  neither who made or changed the document nor when; her open suggestions are dated with the export (SEC-26).
+- `apply` refuses with `forbidden` a change only the server makes (SEC-25, D2007), also inside a batch: an editor could
+  replace the document with a raw `core.Import` and write checkpoint, redaction and restore records that skip their
+  methods' checks. `tests/command_senders.json` lists who may send each kind of change, so a new kind is reviewed.
+- A picture's path is saved only when the person wants it, and then everyone who can open the document reads it
+  (SEC-27, D2009). `add_image` with an empty `source_path` stores no path (not in the state, the history or an export). A
+  saved one is the same in `slide`, `objects`, the `objects` event, `snapshot` and the exports; before, the event and
+  `objects` hid it from all but the importer while `snapshot` and the exports did not. The hub sends every event's
+  `to_data()` to everyone again (no per-person `to_data_for`). In the web app, Insert ▸ Image has "Don't save the
+  path" (unticked) with the hint "Everyone who can open this document sees it." when a desktop shell said where the
+  picked file is; a browser never knows it and shows no box.
 
 ### Added
 - `HeavyDispatcher.idle()`: returns when every heavy call sent to the workers so far is answered (PROC-69).

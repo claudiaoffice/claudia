@@ -19,7 +19,7 @@ describe('ServerBook', () => {
     settings.saveServers('creates', [{ origin: 'https://a.example', label: 'A', custom: true }])
     const book = new ServerBook('creates', settings, { localOrigin: 'http://127.0.0.1:5000' })
     expect(book.entries().map((e) => [e.origin, e.label, e.local ?? false])).toEqual([
-      ['http://127.0.0.1:5000', 'This computer', true],
+      ['http://127.0.0.1:5000', 'Private on this computer', true],
       ['https://a.example', 'A', false],
     ])
   })

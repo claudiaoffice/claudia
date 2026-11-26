@@ -67,8 +67,10 @@ VALID = [
         "servers": [
             {"origin": "http://127.0.0.1:41233", "label": "This computer", "custom": True, "local": True},
             {"origin": "https://demo.example.org:8420", "label": "demo", "custom": False},
+            {"origin": "http://127.0.0.1:8765", "label": "Shared", "custom": False, "shared": True},  # E8.5, D1622
         ],
     },
+    {**WELCOME, "ask_administrator": True},  # (D1624) a page of the shared service that she may not set up
     # (D501, D502) files through the shell's own dialogs, in pieces
     {"type": "pick_file", "request": "f1-abc", "accept": ["docx", "odt"], "title": "Open a File"},
     {"type": "pick_file", "request": "f1", "accept": []},
@@ -77,6 +79,14 @@ VALID = [
     {"type": "file_chunk", "request": "f2", "index": 0, "data": "aGVsbG8="},
     {"type": "file_done", "request": "f2", "chunks": 1},
     {"type": "file_result", "request": "f1", "outcome": "picked", "name": "a.docx", "size": 5},
+    {
+        "type": "file_result",
+        "request": "f1",
+        "outcome": "picked",
+        "name": "a.docx",
+        "size": 5,
+        "path": "/home/ann/a.docx",
+    },
     {"type": "file_result", "request": "f2", "outcome": "saved", "path": "/home/ann/Documents/Budget 2027.xlsx"},
     {"type": "file_result", "request": "f3", "outcome": "opened", "path": "/tmp/claudia-print/pages.pdf"},
     {"type": "file_result", "request": "f2", "outcome": "failed", "message": "The disk is full."},
@@ -120,6 +130,9 @@ INVALID = [
     {"type": "servers", "servers": [{"origin": "https://a.example.org", "label": "x" * 200, "custom": False}]},
     {"type": "servers", "servers": [{"origin": "https://a.example.org", "label": "x", "custom": "yes"}]},
     {"type": "servers", "servers": [{"origin": "https://a.example.org", "label": "x", "custom": False, "local": 1}]},
+    {"type": "servers", "servers": [{"origin": "https://a.example.org", "label": "x", "custom": False, "shared": 1}]},
+    {**WELCOME, "ask_administrator": "yes"},
+    {**WELCOME, "setup_code": "K7QM-4TXR-92HB", "ask_administrator": True},  # (D1624) one or the other
     {"type": "servers", "servers": [{"origin": "https://a.example.org", "label": "x", "custom": False}] * 65},
     {"type": "pick_file", "accept": []},  # (D501) no request
     {"type": "pick_file", "request": "f1", "accept": [".docx"]},

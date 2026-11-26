@@ -9,7 +9,8 @@
 //    whose port changes with every start -- is never written down (`forPage` adds it fresh each time).
 //
 // An entry has the shape of the web app's own bookmark (`web/app/lib/server-bookmarks.ts`): `origin`, `label` and
-// `custom` (true once a person has named it), plus `local` for this computer's own server.
+// `custom` (true once a person has named it), plus `local` for her own server on this computer and `shared` for the
+// computer's service (E8.5, D1622). The page names both in her language unless a person renamed the shared one.
 
 import { isIP } from 'node:net'
 
@@ -17,7 +18,7 @@ export const MAX_SERVERS = 64
 export const MAX_LABEL = 128
 export const MAX_ADDRESS = 255
 
-export type Entry = { origin: string; label: string; custom: boolean; local?: boolean }
+export type Entry = { origin: string; label: string; custom: boolean; local?: boolean; shared?: boolean }
 
 export class AddressRefused extends Error {
   constructor(
@@ -133,8 +134,8 @@ export function defaultLabel(origin: string): string {
 /** What may be remembered of `raw` -- a list from the settings file or one that the page sent.
  *
  * Entries that are not a valid origin are dropped, origins are made canonical, a server stays in the list once (the
- * first wins), a missing or unusable label becomes the default one, a long one is cut, this computer's own entry
- * is never kept, and the list is cut at `MAX_SERVERS`. Anything that is not a list is no list at all. */
+ * first wins), a missing or unusable label becomes the default one, a long one is cut, her own server's entry is
+ * never kept, nor the shared service's unless a person named it, and the list is cut at `MAX_SERVERS`. Anything that is not a list is no list at all. */
 export function sanitize(raw: unknown): Entry[] {
   if (!Array.isArray(raw)) return []
   const kept: Entry[] = []
@@ -143,6 +144,7 @@ export function sanitize(raw: unknown): Entry[] {
     if (typeof item !== 'object' || item === null || Array.isArray(item)) continue
     const entry = item as Record<string, unknown>
     if (entry.local === true || typeof entry.origin !== 'string') continue
+    if (entry.shared === true && entry.custom !== true) continue // the shell lists the service while it is installed
     if (!entry.origin.includes('://')) continue // a stored origin names its scheme; only what a person types may be bare
     let origin: string
     try {
@@ -160,15 +162,25 @@ export function sanitize(raw: unknown): Entry[] {
   return kept
 }
 
-/** The list the page shows: this computer's server first (when there is one), then the remembered ones. The local
- * entry is named by the shell and never by the page (`custom`), and a remembered entry at the same address -- left
- * over from an earlier start that happened to get the same port -- is not shown a second time. */
-export function forPage(saved: readonly Entry[], options: { localOrigin: string | null; localLabel: string }): Entry[] {
+const SHARED_LABEL = 'Shared on this computer' // the page names it in her language (named, D1623)
+
+/** The list the page shows: her own server first (when there is one), then the computer's shared service (when it is
+ * installed), then the remembered ones. The private entry is named by the shell and never by the page (`custom`); the
+ * shared one keeps the name a person gave it (remembered under its origin), and a remembered entry at either address
+ * -- for the private one left over from an earlier start -- is not shown a second time. */
+export function forPage(
+  saved: readonly Entry[],
+  options: { localOrigin: string | null; localLabel: string; sharedOrigin?: string | null },
+): Entry[] {
+  const { localOrigin } = options
+  const sharedOrigin = options.sharedOrigin !== localOrigin ? (options.sharedOrigin ?? null) : null
   const shown: Entry[] = []
-  if (options.localOrigin !== null) {
-    shown.push({ origin: options.localOrigin, label: options.localLabel, custom: true, local: true })
+  if (localOrigin !== null) shown.push({ origin: localOrigin, label: options.localLabel, custom: true, local: true })
+  if (sharedOrigin !== null) {
+    const named = saved.find((entry) => entry.origin === sharedOrigin && entry.custom)
+    shown.push({ origin: sharedOrigin, label: named?.label ?? SHARED_LABEL, custom: named !== undefined, shared: true })
   }
-  for (const entry of saved) if (entry.origin !== options.localOrigin) shown.push({ ...entry })
+  for (const entry of saved) if (entry.origin !== localOrigin && entry.origin !== sharedOrigin) shown.push({ ...entry })
   return shown
 }
 

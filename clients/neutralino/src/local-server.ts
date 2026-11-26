@@ -1,6 +1,6 @@
-// Putting the local server together for an app's window, or saying plainly what is missing. Since D445 it is one
-// server for the three apps, found or started by desktop-server.ts; this module checks what it needs (the Python 3.14
-// that runs it, the built web frontend), makes its folders and hands over a `DesktopServer` that is not started yet.
+// Putting the local server together for an app's window, or saying plainly what is missing. It is her private server,
+// one for her three apps (D445, E8.5), found or started by private-server.ts; this module checks what it needs (the
+// Python 3.14 that runs it, the built web frontend), makes its folders and hands over a `PrivateServer` not started yet.
 // No Neutralino import.
 //
 // A shell needs two things from outside itself: the Python 3.14 that runs the server and the built web frontend.
@@ -8,8 +8,9 @@
 // instead of an empty window.
 
 import { mkdir } from 'node:fs/promises'
+import { homedir } from 'node:os'
 import { env as processEnv } from 'node:process'
-import { DesktopServer, type DesktopServerOptions } from './desktop-server.js'
+import { PrivateServer, type PrivateServerOptions } from './private-server.js'
 import { getIdentity } from './identity.js'
 import { claudiaFolder, findFrontend, findServerProgram, serverDocumentsDir, serverStateDir, type Env } from './paths.js'
 import { hostPlatform, type HostPlatform } from './platform/host.js'
@@ -26,11 +27,11 @@ export interface PrepareServerOptions {
   platform?: HostPlatform
   log?: (message: string) => void
   /** What the tests replace in the server (health check, start, ports, presence). */
-  seams?: Partial<DesktopServerOptions>
+  seams?: Partial<PrivateServerOptions>
 }
 
-/** The shared local server for `app`'s window, not started yet. */
-export async function prepareServer(app: string, options: PrepareServerOptions = {}): Promise<DesktopServer> {
+/** Her private server for `app`'s window, not started yet. */
+export async function prepareServer(app: string, options: PrepareServerOptions = {}): Promise<PrivateServer> {
   const env = options.env ?? processEnv
   const identity = getIdentity(app)
   const platform = options.platform ?? hostPlatform()
@@ -52,14 +53,16 @@ export async function prepareServer(app: string, options: PrepareServerOptions =
         : "The web frontend has not been built.\nBuild it ('npm run build' in the web folder) or set CLAUDIA_WEB_DIR to a folder that holds it.",
     )
   }
-  const folder = claudiaFolder(platform, env, options.home)
+  const home = options.home ?? homedir()
+  const folder = claudiaFolder(platform, env, home)
   const documents = serverDocumentsDir(folder)
   const state = serverStateDir(folder)
   await mkdir(documents, { recursive: true })
   await mkdir(state, { recursive: true })
-  // CLAUDIA_SERVER_PORT: another port than 8765 (D504), for a person who needs 8765 for something else, and for tests.
+  // CLAUDIA_SERVER_PORT: another port than the one of her account (D1621), for a person who needs it for something
+  // else, and for tests.
   const port = Number.parseInt(env.CLAUDIA_SERVER_PORT ?? '', 10)
-  return new DesktopServer({
+  return new PrivateServer({
     app: identity.name,
     program,
     web,
@@ -67,6 +70,7 @@ export async function prepareServer(app: string, options: PrepareServerOptions =
     state,
     log: options.log,
     endTheServer: platform.endTheServer,
+    account: platform.account(home),
     ...(port > 0 && port < 65536 ? { port } : {}),
     ...options.seams,
   })

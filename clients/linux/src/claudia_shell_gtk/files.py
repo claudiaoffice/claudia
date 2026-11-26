@@ -152,7 +152,7 @@ class Files:
             if data is None:
                 return
             self._last_folder = path.parent
-            self._reply.send_file_result(request, "picked", name=path.name, size=len(data))
+            self._reply.send_file_result(request, "picked", name=path.name, size=len(data), path=str(path))
             self._send_pieces(request, data)
 
         self._dialogs.open(

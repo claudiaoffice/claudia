@@ -4,14 +4,19 @@ Ported from the demo's protocol tests and rewritten for the kernel: one generic 
 edits carry the revision they were made against, and the errors of the kernel have their own codes.
 """
 
+import base64
 import json
+from pathlib import Path
 
 import pytest
 
 from claudia_composes import TextModel
 from claudia_computes import WorkbookModel
 from claudia_core import Document, MemoryStore, Revision
+from claudia_core.commands import Batch, Checkpoint, Import, Redacted, Redaction, Restore, Setup, Switch, encode
 from claudia_core.testing import Insert, Interval, Remove
+from claudia_creates import SlideModel
+from claudia_document_file import read_export
 from claudia_server.auth import Account
 from claudia_server.composes import composes_methods
 from claudia_server.computes import computes_methods
@@ -243,6 +248,62 @@ def test_the_assistant_cannot_apply_a_raw_command_even_if_apply_were_in_its_allo
     assert doc.model.items == []
 
 
+# SEC-25 (D2007): the changes only the server makes, through its own methods and their checks (who may restore, redact,
+# mark a checkpoint, import). Sent raw, by anybody, they are refused, also inside a batch, and nothing changes.
+SERVER_ONLY = {
+    "core.Import": Import(name="other.odt", fmt="odt", state={"items": []}, sha256=None),
+    "core.Setup": Setup((Insert(0, 1),), "Set up the document"),
+    "core.Checkpoint": Checkpoint("Approved by legal", Revision("main", 1)),
+    "core.Redaction": Redaction((Revision("main", 1),), (1,)),
+    "core.Redacted": Redacted("list.Insert", {}),
+    "core.Restore": Restore("Before the edits", Revision("main", 1), "main"),
+    "core.Switch": Switch("main"),
+}
+
+
+@pytest.mark.parametrize("kind", sorted(SERVER_ONLY))
+def test_an_editor_cannot_send_a_change_only_the_server_makes(doc, ann, kind):
+    call(doc, ann, "apply", {"command": INSERT})
+
+    def log_now():
+        return call(doc, ann, "branches"), call(doc, ann, "checkpoints"), call(doc, ann, "ping")
+
+    before = log_now()
+    for sent in (SERVER_ONLY[kind], Batch((Insert(0, 2), SERVER_ONLY[kind]), "Two changes")):
+        with pytest.raises(RequestError) as caught:
+            call(doc, ann, "apply", {"command": encode(sent)})
+        assert caught.value.code == "forbidden", kind
+        assert log_now() == before
+        assert doc.model.items == [5]
+
+
+SENDERS = Path(__file__).with_name("command_senders.json")
+
+
+def test_every_kind_of_change_is_in_the_reviewed_list_with_who_may_send_it():
+    """D2007: a new kind of change cannot come in unreviewed: it is added to tests/command_senders.json as "person" (an
+    app or a script may send it through `apply`) or "server" (made only through the server's own methods)."""
+    reviewed = json.loads(SENDERS.read_text(encoding="utf-8"))
+    actual = {}
+    for model in (TextModel, WorkbookModel, SlideModel):
+        for kind in model.registry.schemas():
+            actual[kind] = model.registry.class_of(kind).sender
+    assert set(actual) - set(reviewed) == set(), (
+        "a new kind of change: say who may send it in tests/command_senders.json"
+    )
+    assert set(reviewed) - set(actual) == set(), (
+        "a kind of change was removed: remove it from tests/command_senders.json"
+    )
+    assert {kind: sender for kind, sender in actual.items() if sender != reviewed[kind]} == {}, (
+        "declared and reviewed differ"
+    )
+
+
+def test_an_editor_may_still_send_a_batch_of_her_own_changes(doc, ann):
+    call(doc, ann, "apply", {"command": encode(Batch((Insert(0, 1), Insert(1, 2)), "Two numbers"))})
+    assert doc.model.items == [1, 2]
+
+
 # --------------------------------------------------------------------------------------- undo / redo
 def test_undo_and_redo_are_per_account(doc, ann, ben):
     call(doc, ann, "apply", {"command": INSERT})
@@ -312,6 +373,24 @@ def test_a_lock_is_taken_held_and_released(doc, ann, ben):
 
 
 # --------------------------------------------------------------------------------------------- chat
+def test_an_owners_export_holds_the_chat_she_may_read_and_no_other_private_message(doc, ann):
+    """SEC-24 (D2008): an export with history holds the messages for everybody and the private ones its exporter sent
+    or received, not the private messages between other people, which she cannot read in the document either."""
+    people = ("ann", "ben", "cleo")
+    ben, cleo = Account("ben", "editor"), Account("cleo", "editor")
+    call(doc, ann, "chat", {"text": "for everybody"}, users=people)
+    call(doc, ann, "chat", {"text": "@ben from ann"}, users=people)
+    call(doc, ben, "chat", {"text": "@ann from ben"}, users=people)
+    call(doc, ben, "chat", {"text": "@cleo between ben and cleo"}, users=people)
+    call(doc, cleo, "chat", {"text": "@ben between cleo and ben"}, users=people)
+    data = base64.b64decode(call(doc, ann, "export_claudia", {"include_history": True})["data"])
+    exported = [
+        json.loads(line)["d"]["text"] for line in read_export(data).chat or [] if json.loads(line)["t"] == "chat"
+    ]
+    assert exported == ["for everybody", "from ann", "from ben"]
+    assert [m["text"] for m in call(doc, ann, "chat_log")] == exported  # what she reads in the document
+
+
 def test_chat_is_posted_with_the_connected_users_for_addressing(doc, ann):
     result = call(doc, ann, "chat", {"text": "@ben please check 3"}, users=("ann", "ben"))
     assert result["to"] == "ben" and result["text"] == "please check 3" and doc.chat[0].author == "ann"

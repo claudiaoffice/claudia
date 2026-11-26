@@ -42,13 +42,19 @@ describe('hello', () => {
     expect(calls.ready).toBe(1)
   })
 
-  it('carries the setup code the window gives it, asked at every hello (D1373)', () => {
-    const codes = ['K7QM-4TXR-92HB', undefined]
-    const { sent, hello } = make({ setupCode: () => codes.shift() })
+  it('carries the setup code the window gives it, or "ask an administrator", asked at every hello (D1373, D1624)', () => {
+    const setups = [{ setupCode: 'K7QM-4TXR-92HB' }, { askAdministrator: true as const }, {}]
+    const { sent, hello } = make({ setup: () => setups.shift() ?? {} })
     hello()
     hello()
-    expect(sent.map((message) => message.setup_code)).toEqual(['K7QM-4TXR-92HB', undefined])
-    expect(Object.keys(sent[1]!)).not.toContain('setup_code')
+    hello()
+    expect(sent.map((message) => [message.setup_code, message.ask_administrator])).toEqual([
+      ['K7QM-4TXR-92HB', undefined],
+      [undefined, true],
+      [undefined, undefined],
+    ])
+    expect(Object.keys(sent[2]!)).not.toContain('setup_code')
+    expect(Object.keys(sent[2]!)).not.toContain('ask_administrator')
   })
 
   it('offers connect and servers only when the shell can do them', () => {

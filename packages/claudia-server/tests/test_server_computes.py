@@ -281,6 +281,21 @@ def test_export_office_returns_an_ods_that_round_trips_with_its_values_and_says_
     assert answer["losses"] == []
 
 
+def test_a_viewers_xlsx_and_ods_say_nothing_the_history_holds(book):
+    """SEC-26 (D2008): a viewer cannot read the history, so her export says neither who made or changed the workbook
+    nor when."""
+    from claudia_odf_io import read_info
+    from claudia_opc_io import read_parts
+
+    call(book, "add_sheet", {"name": "Costs"})
+    typed(book, "s1", [(0, 0, "2")])
+    xlsx = read_parts(base64.b64decode(call(book, "export_office", {"format": "xlsx"}, VERA)["data"]))
+    assert b">ann<" not in xlsx["docProps/core.xml"] and b"<dcterms:created" not in xlsx["docProps/core.xml"]
+    ods = read_parts(base64.b64decode(call(book, "export_office", {"format": "ods"}, VERA)["data"]))
+    info = read_info(ods["meta.xml"])
+    assert (info.creator, info.created, info.modifier, info.modified) == (None, None, None, None)
+
+
 def test_export_office_to_xlsx_lists_what_excel_cannot_hold(book):
     call(book, "add_sheet", {"name": "Costs"})
     assert call(book, "export_office", {"format": "xlsx"})["losses"] == []
@@ -527,17 +542,12 @@ def test_resizing_rows_or_columns_never_resizes_an_object(book):
     assert (obj["w"], obj["h"]) == (400, 200)
 
 
-def test_the_source_path_is_sent_only_to_the_person_who_imported_the_image(book):
+def test_a_saved_source_path_is_the_same_for_everyone(book):
     call(book, "add_sheet", {"name": "S"})
-    box = add_image(book, source_path="/Users/ann/Documents/chart.gif")  # imported by ANN
-    (seen_by_importer,) = objects(book, account=ANN)
-    assert seen_by_importer["imported"]["source_path"] == "/Users/ann/Documents/chart.gif"
-
-    (seen_by_colleague,) = objects(book, account=BEN)
-    assert seen_by_colleague["imported"]["source_path"] is None
-    assert seen_by_colleague["imported"]["source"] == "disk"  # not hidden: only the path is
-    assert seen_by_colleague["imported"]["imported_by"] == "ann"  # not hidden either
-    assert seen_by_colleague["id"] == box
+    add_image(book, source_path="/Users/ann/Documents/chart.gif")  # imported by ANN
+    for account in (ANN, BEN, VERA):
+        (seen,) = objects(book, account=account)
+        assert seen["imported"]["source_path"] == "/Users/ann/Documents/chart.gif", account.user
 
 
 def test_viewers_may_look_at_images_but_not_add_one(book):
@@ -1441,3 +1451,15 @@ def test_a_chart_does_not_turn(book):
         call(book, "rotate_object", {"id": added["object"], "rotation": 90})
     assert caught.value.code == "command_error"
     assert objects(book)[0]["rotation"] == 0
+
+
+def test_an_editor_cannot_land_a_result_only_the_server_works_out(book):
+    """SEC-25 (D2007): a heavy formula's result comes from the server's own worker (``ApplyCalculated``, written as the
+    assistant's); sent raw by a person it would put any value on the waiting cell under that name. It is refused."""
+    from claudia_computes import ApplyCalculated
+    from claudia_core.commands import encode
+
+    call(book, "add_sheet", {"name": "Costs"})
+    with pytest.raises(RequestError) as caught:
+        call(book, "apply", {"command": encode(ApplyCalculated("s1", 0, 0, 42))}, BEN)
+    assert caught.value.code == "forbidden"

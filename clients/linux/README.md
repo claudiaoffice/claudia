@@ -18,7 +18,9 @@ clients/
       contract.py      parse and build contract messages              (no GTK)
       manifest.py      the menus: one list of actions per app          (no GTK)
       bridge.py        the conversation with the page                  (no GTK)
-      desktop_server.py  the one local server of the three apps (D445) (no GTK)
+      private_server.py  her private server, for her three apps (D445, E8.5) (no GTK)
+      private_port.py    its port, from her account number (E8.5)  (no GTK)
+      owner_key.py       the key that proves it is hers (E8.5)     (no GTK)
       server.py        start, wait for and stop one server process     (no GTK)
       files.py         the page's files: dialogs, pieces, print (D501)  (no GTK)
       launch.py        which server, which frontend, or what is missing (no GTK)
@@ -98,7 +100,7 @@ explanation, and nothing is trusted unasked.
 | --- | --- |
 | `CLAUDIA_SERVER_PYTHON` | The Python 3.14 that runs the server. Default: `.venv/bin/python` of the checkout. |
 | `CLAUDIA_WEB_DIR` | The built web frontend. Default: the one shipped in the package, else `web/.output/public`. If set, it is the only candidate: a wrong path is reported, not replaced. |
-| `CLAUDIA_SERVER_PORT` | The port of the local server. Default: 8765, the port of `./start.sh` (D504); a Claudia server already there is used. |
+| `CLAUDIA_SERVER_PORT` | The port of her private server. Default: a port of her account, 20000–29999 (D1621); a Claudia server there is used only when it proves to be hers (D1620). |
 | `CLAUDIA_DEBUG` | `--debug` sets it: more logging, the web inspector, the page's console on stdout. |
 | `CLAUDIA_CLIENT_PYTHON` | For `scripts/check_debt.py`: the interpreter that runs this client's tests. |
 

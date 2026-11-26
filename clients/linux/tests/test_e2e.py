@@ -14,8 +14,9 @@ import pytest
 from support import evaluate, pump, pump_for
 
 from claudia_shell_gtk import identity
-from claudia_shell_gtk.desktop_server import STATE_FILE, probe_health, read_port
 from claudia_shell_gtk.launch import find_frontend, find_server_python
+from claudia_shell_gtk.owner_key import is_owned_by, owner_key
+from claudia_shell_gtk.private_server import probe_health
 
 pytestmark = [pytest.mark.gtk, pytest.mark.e2e]
 
@@ -111,11 +112,14 @@ def test_composes_starts_its_server_shows_the_page_and_the_native_menu_drives_it
     pump(lambda: view.get_uri() is not None, timeout=15, what="the page to start loading")
     assert view.get_uri().startswith("http://127.0.0.1:")
 
-    # The suite's one server (D445): its port is remembered, and it serves all three apps.
+    # Her private server (D445, E8.5): on her port, serving all three apps, and proving to be hers with the key in her
+    # state folder (D1620) -- the real server against the real client.
     origin = window.book.local_origin
-    port = read_port(tmp_path / "state" / "claudia" / "server" / STATE_FILE)
+    port = int(os.environ["CLAUDIA_SERVER_PORT"])
     assert origin == f"http://127.0.0.1:{port}"
     assert set(probe_health(origin).apps) == {"composes", "computes", "creates"}
+    assert is_owned_by(port, owner_key(tmp_path / "state" / "claudia" / "server").key)
+    assert not is_owned_by(port, bytes(32))
 
     # The front page says hello as the front page (sheet 11): the short menu, and nothing of a document's to do.
     pump(lambda: bridge.ready and bridge.view == "start", timeout=30, what="the front page to say hello")

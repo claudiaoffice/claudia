@@ -199,8 +199,7 @@
   "init": "(id: 'str', kind: 'str', w: 'int', h: 'int', style: 'str', paragraph: 'Paragraph | None' = None, ref: 'str | None' = None, imported: 'ImageImport | None' = None, rotation: 'int' = 0, snap: 'bool' = True, description: 'str' = '', decorative: 'bool' = False, name: 'str' = '') -> None",
   "methods": {
    "from_data": "(data: 'dict') -> 'ObjectBody'",
-   "to_data": "(self) -> 'dict'",
-   "to_data_for": "(self, viewer: 'str') -> 'dict'"
+   "to_data": "(self) -> 'dict'"
   },
   "properties": [
    "chart",
@@ -667,7 +666,6 @@
   "methods": {
    "from_data": "(data: 'dict', read_anchor: 'ReadAnchor[A]') -> 'VisualObject[A]'",
    "to_data": "(self) -> 'dict'",
-   "to_data_for": "(self, viewer: 'str') -> 'dict'",
    "with_body": "(self, **changes: 'Any') -> 'Self'"
   },
   "properties": [

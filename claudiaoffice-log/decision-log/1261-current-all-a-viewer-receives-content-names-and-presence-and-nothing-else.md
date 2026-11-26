@@ -34,3 +34,8 @@ superseded-by: []
 
 **Notes.** Closes SEC-17 and the live half of E2.4, and with it the "weaker than it reads" part of E7.4. Whether a viewer
 may see the document's public chat was a product question; the owner accepted "no", the same as the file.
+
+**2026-11-25 (SEC-22, owner):** who wrote which stretch of a text (the `runs` of a paragraph) is content, not history: a
+viewer receives it live and in her own file, as a reader of a paper sees the handwriting. What she does not receive is
+when anybody wrote it, or who changed the document when; an office export a viewer makes says neither (SEC-26, D2008).
+Guarded by `test_a_viewer_receives_who_wrote_which_words_as_part_of_the_content`.
