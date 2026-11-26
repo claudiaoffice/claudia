@@ -245,7 +245,7 @@ yet agreed) when written; they followed from what was seen and decided nothing a
 against D157–D159. D159 is no longer a proposal: the owner answered it explicitly (`AskUserQuestion`). D157 and D158
 gained evidence from what was actually built but are not themselves confirmed by the owner, so they keep their
 "Proposal" tag; what changed is appended to each entry's Notes. D158's `role` field also did, for the first time,
-touch the *shared* manifest (`clients/linux/src/claudia_shell_gtk/manifest.py`) rather than staying confined to a
+touch the *shared* manifest (`clients/contract/src/claudia_menus/manifest.py`) rather than staying confined to a
 macOS-only file — additive, and GTK ignores the field, but the preamble above no longer holds literally.
 
 Decisions: D156, D157, D158, D159, D161, D216

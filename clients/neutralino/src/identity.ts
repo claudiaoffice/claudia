@@ -1,5 +1,5 @@
 // Which Claudia app this shell can show: its bundle id, display title, and the server model behind it. No
-// Neutralino import here, the same discipline clients/linux/src/claudia_shell_gtk/manifest.py holds for GTK, so
+// Neutralino import here, the same discipline clients/contract/src/claudia_menus/manifest.py holds for GTK, so
 // this stays testable without a window.
 //
 // Kept in step with clients/linux/src/claudia_shell_gtk/identity.py's `_APPS` table by hand: there is no shared

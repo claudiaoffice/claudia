@@ -17,7 +17,7 @@ import { useNameAndDescribe } from '~/lib/use-name-and-describe'
 import { canTurn, degreesText, moveTurned, quarterTurn, stepTurn, SHIFT_STEP } from '~/lib/turning'
 import { imageDataUrl } from '~/lib/images'
 import { cssOf as computedCss, pointer, slideFrame, wordsCssOf, wordsOf } from '~/lib/objects'
-import { contextMenuItems } from '~/lib/object-menu'
+import type { ContextMenuOf } from '~/lib/menus/assemble'
 import { objectStyleHost } from '~/lib/object-style-host'
 import { colorOf } from '~/lib/people'
 import { facetCss, scaleCss } from '~/lib/slide-style'
@@ -34,7 +34,13 @@ const { t } = useI18n()
 // `showGrid` is the View menu's own preference (`lib/grid.ts`'s `useGrid`, held by SlideWorkspace.vue so the
 // menu item and this canvas share the one choice) — whether the lines are drawn. It never gates snapping: an
 // object snaps or not by its own `snap` field, grid lines shown or not (E10.15).
-const props = defineProps<{ session: SlideHost; showGrid: boolean; marks?: SlideMark[] }>()
+const props = defineProps<{
+  session: SlideHost
+  showGrid: boolean
+  marks?: SlideMark[]
+  /** The window's context menus, by the definition (D1644): an object's, and the slide's. */
+  menuOf: ContextMenuOf
+}>()
 /** `styles` asks the workspace to open the all-styles dialog, which owns the modal layer. */
 const emit = defineEmits<{ styles: []; agenda: [id: string] }>()
 const session = props.session
@@ -359,39 +365,30 @@ async function onSlideDown(event: PointerEvent) {
 
 // ------------------------------------------------------------------------------ right-click context menu
 /** The object a right click opened the menu for, and where — not necessarily `selected`'s object once a second
- * right click lands on a different one while the first's menu is still fading, so this is tracked on its own. */
+ * right click lands on a different one while the first's menu is still fading, so this is tracked on its own. An
+ * empty id is the slide itself, pressed away from any object (D1619). */
 const contextMenu = ref<{ x: number; y: number; id: string } | null>(null)
 const contextItems = computed<MenuItem[]>(() => {
-  const o = slideObject(contextMenu.value?.id) ?? null
+  const at = contextMenu.value
+  if (!at) return []
+  if (!at.id) return props.menuOf('slide', { 'format.describe': { run: () => void nameDialog.open(state.activeSlide) } })
+  const o = slideObject(at.id) ?? null
   if (!o) return []
-  // The list is `lib/object-menu.ts`'s, one for all three apps (D1225); creates has the grid and no wrap.
-  return contextMenuItems(
-    o,
-    readonly.value,
-    {
-      describe: () => {
-        contextMenu.value = null
-        openDescribe(o.id)
-      },
-      edit: () => beginEdit(o.id),
-      style: () => {
-        const at = contextMenu.value
-        contextMenu.value = null
-        styleMenu.value = at ? { x: at.x, y: at.y } : { x: 120, y: 160 }
-      },
-      rotateBy: () => {
-        const at = contextMenu.value
-        contextMenu.value = null
-        openRotateBy(o.id, at ? { x: at.x, y: at.y } : undefined)
-      },
-      remove: () => session.removeObject(o.id),
-      cut: () => void clip.cut(),
-      copy: () => void clip.copy(),
-      setSnap: (snap) => void session.setSnap?.(o.id, snap),
-    },
-    { grid: session.setSnap !== undefined },
-  )
+  return props.menuOf('object', {
+    'format.describe': { run: () => openDescribe(o.id) },
+    'edit.edit-text': { run: () => void beginEdit(o.id) },
+    'format.apply-style': { run: () => (styleMenu.value = { x: at.x, y: at.y }) },
+    'format.rotate-by': { run: () => openRotateBy(o.id, { x: at.x, y: at.y }) },
+    'edit.delete': { run: () => void session.removeObject(o.id) },
+    // only a picture goes onto the clipboard (D1229): the workbook's rule does not say so, so the canvas does
+    'edit.cut': { run: () => void clip.cut(), notNow: () => pictureOnly(o.kind) },
+    'edit.copy': { run: () => void clip.copy(), notNow: () => pictureOnly(o.kind) },
+    'edit.release-from-grid': { run: () => void session.setSnap?.(o.id, false) },
+  })
 })
+function pictureOnly(kind: string): string | null {
+  return kind === 'image' ? null : t('Only a picture can be cut or copied.')
+}
 
 // ------------------------------------------------------------------------------ the style menu (E9.7, D203)
 /** Where the style menu is open, if it is. The menu itself is the one every app uses; what it styles is whatever
@@ -469,8 +466,16 @@ function openDescribe(id: string | null = state.selected) {
 function onObjectContext(event: MouseEvent, o: SlideObject) {
   if (event.shiftKey || editing.value?.id === o.id) return
   event.preventDefault()
+  event.stopPropagation()
   session.select(o.id)
   contextMenu.value = { x: event.clientX, y: event.clientY, id: o.id }
+}
+/** A right press on the slide away from any object: the slide's own menu, as its tab's (D1619). */
+function onSlideContext(event: MouseEvent) {
+  if (event.shiftKey || editing.value) return
+  event.preventDefault()
+  session.select(null)
+  contextMenu.value = { x: event.clientX, y: event.clientY, id: '' }
 }
 
 // ------------------------------------------------------------------------------ editing text
@@ -567,7 +572,7 @@ async function onKey(event: KeyboardEvent) {
   }
 }
 
-defineExpose({ paste: () => clip.paste(), focus: () => area.value?.focus(), beginEdit, openStyleMenu, openDescribe, quarter, openRotateBy, referencePlace })
+defineExpose({ describeSlide: () => void nameDialog.open(state.activeSlide), paste: () => clip.paste(), focus: () => area.value?.focus(), beginEdit, openStyleMenu, openDescribe, quarter, openRotateBy, referencePlace })
 
 </script>
 
@@ -591,6 +596,7 @@ defineExpose({ paste: () => clip.paste(), focus: () => area.value?.focus(), begi
       :data-slide="state.activeSlide"
       :style="{ width: px(SLIDE_W), height: px(SLIDE_H), ...gridStyle }"
       @pointerdown="onSlideDown"
+      @contextmenu="onSlideContext"
     >
       <div
         v-for="o in objects"
@@ -660,7 +666,7 @@ defineExpose({ paste: () => clip.paste(), focus: () => area.value?.focus(), begi
 
     <p class="sr" role="status" aria-live="polite">{{ turnSaid }}</p>
     <RotatePopover v-if="rotating && rotatePreview" :x="rotating.x" :y="rotating.y" :rotation="rotatePreview.from" @preview="previewTurn" @done="doneRotateBy" @cancel="cancelRotateBy" />
-    <ContextMenu v-if="contextMenu" :x="contextMenu.x" :y="contextMenu.y" :items="contextItems" :label="t('Object menu')" @close="closeContextMenu" />
+    <ContextMenu v-if="contextMenu" :x="contextMenu.x" :y="contextMenu.y" :items="contextItems" :label="contextMenu.id ? t('Object menu') : t('Slide menu')" @close="closeContextMenu" />
     <StyleMenu v-if="styleMenu" :host="styleHost" :x="styleMenu.x" :y="styleMenu.y" :mode="styleMenu.mode" :properties="pictureProperties" @close="styleMenu = null" @styles="((styleMenu = null), emit('styles'))" />
     <NameAndDescribeDialog v-if="nameDialog.details.value" :details="nameDialog.details.value" @save="nameDialog.save" @close="nameDialog.close" />
     <ImagePropertiesDialog v-if="propertiesObject" :session="session" :object="propertiesObject" @close="propertiesFor = null" />

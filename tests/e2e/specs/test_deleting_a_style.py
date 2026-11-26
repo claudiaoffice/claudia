@@ -65,7 +65,7 @@ def give_own_style(page, words: str, name: str, button: str) -> None:
     document's own for it, and give that style the name it asks for."""
     target = paragraph(page, words)
     target.click()
-    target.click(button="right")
+    page.keyboard.press("Control+Shift+Alt+h")  # Format ▸ Style ▸ Edit… (a right press opens the paragraph's menu)
     page.wait_for_selector("[data-testid=style-menu]")
     page.click(f"[data-testid={button}]")
     page.wait_for_selector("[data-testid=name-invitation]")
@@ -98,7 +98,8 @@ def look(page, words: str) -> dict:
 def all_styles(page) -> None:
     close_dialogs(page)
     page.click('.menus .title:text-is("Format")')
-    page.click('.menus .drop [role=menuitem]:has-text("All Styles")')
+    page.hover('.menus .drop [role=menuitem]:has-text("Style")')
+    page.click('.menus .drop.sub [role=menuitem]:has-text("All Styles")')
     page.wait_for_selector(LIST)
 
 

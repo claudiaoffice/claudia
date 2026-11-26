@@ -3,7 +3,7 @@
 // that the shell page's bundle can hold it (the core's side is src/platform/host.ts).
 
 import type { App } from '../identity.js'
-import type { ManifestAction, ManifestListing, WindowMenuItem } from '../menu.js'
+import type { ManifestAction, ManifestListing, ShellMenuItem } from '../menu.js'
 import { platformId, type PlatformId } from './id.js'
 import { buildMacMenu, keptOnMacFrontPage } from './macos-menu.js'
 import { buildWindowsMenu, keptOnWindowsFrontPage } from './windows-menu.js'
@@ -11,7 +11,7 @@ import { buildWindowsMenu, keptOnWindowsFrontPage } from './windows-menu.js'
 export interface PagePlatform {
   readonly id: PlatformId
   /** The native menu of one app from its manifest; `appTitle` names the application menu where there is one. */
-  buildMainMenu(listing: ManifestListing, appTitle: string): WindowMenuItem[]
+  buildMainMenu(listing: ManifestListing, appTitle: string): ShellMenuItem[]
   /** What the front page's short menu keeps besides the actions the manifest marks `start`. */
   keepAtStart(action: ManifestAction): boolean
   /** Where the logs are, in words, for a window whose core does not answer. */

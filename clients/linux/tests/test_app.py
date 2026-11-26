@@ -170,7 +170,7 @@ def test_the_accelerators_come_from_the_manifest() -> None:
 
     # Only the shell's own keys are bound (UX-35): GTK would take any other before the page, which listens for it
     assert keys("win.file.quit") == [Gtk.accelerator_parse("<Primary>q")]
-    assert keys("win.format.look") == [Gtk.accelerator_parse("<Shift>F10")]
+    assert keys("win.help.about") == [Gtk.accelerator_parse("<Primary><Shift>F1")]
     assert app.get_accels_for_action("win.file.open") == []  # the page listens for Ctrl+O, as in every client
-    assert app.get_accels_for_action("win.file.save") == []
+    assert app.get_accels_for_action("win.file.save-as") == []
     app.shutdown_for_test()

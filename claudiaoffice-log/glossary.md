@@ -361,6 +361,24 @@ _avoid_: link, field, cross-reference, tag
 The @ in a chat message that addresses it to one user.
 _avoid_: ping, address
 
+### Menus
+
+**Menu entry**
+One line of a menu or a context menu that carries out an action.
+_avoid_: menu item, command, option
+
+**Context menu**
+The menu a right press (or the menu key) opens on one thing, with the actions that concern that thing.
+_avoid_: right-click menu, popup menu, pop-up
+
+**Shortcut**
+The keys that carry out an action without opening a menu.
+_avoid_: key (alone: a key opens a document, see Key slot), hotkey, accelerator, key binding
+
+**Greyed**
+Said of a menu entry that is shown but cannot be used right now.
+_avoid_: disabled, inactive, insensitive
+
 ### The ai at work
 
 **Action**

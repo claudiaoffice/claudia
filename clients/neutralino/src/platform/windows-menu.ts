@@ -21,7 +21,7 @@
 //    macOS's `gtkAccelToMacShortcut`, it is allowed to cover more than one shape precisely because getting one
 //    wrong here is cosmetic, not functional.
 
-import { buildMenus, type ManifestAction, type ManifestListing, type WindowMenuItem } from '../menu.js'
+import { buildMenus, type ManifestAction, type ManifestListing, type ShellMenuItem, type WindowMenuItem } from '../menu.js'
 
 const MODIFIER = /<(Primary|Shift|Alt)>/g
 const KEY_NAMES: Readonly<Record<string, string>> = {
@@ -72,7 +72,7 @@ function buildItem(action: ManifestAction): WindowMenuItem {
 
 /** The full native window menu for one app: the manifest's own menus, in their order (nothing is relocated into an
  * application menu, this module's top comment). */
-export function buildWindowsMenu(listing: ManifestListing): WindowMenuItem[] {
+export function buildWindowsMenu(listing: ManifestListing): ShellMenuItem[] {
   return buildMenus(listing, buildItem)
 }
 

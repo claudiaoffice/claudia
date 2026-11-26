@@ -6,6 +6,7 @@
 import { ref } from 'vue'
 import type { MenuItem } from './MenuBar.vue'
 import { useI18n } from '~/lib/i18n'
+import { hintOf } from '~/lib/shortcuts'
 
 const { t } = useI18n()
 
@@ -43,7 +44,7 @@ function choose(item: MenuItem, index?: number) {
             @click="choose(item, i)"
           >
             <span><span class="tick" aria-hidden="true">{{ item.checked ? '✓' : '' }}</span>{{ item.label }}<span v-if="item.items" aria-hidden="true"> ▸</span></span>
-            <kbd v-if="item.hint">{{ item.hint }}</kbd>
+            <kbd v-if="hintOf(item.id) ?? item.hint">{{ hintOf(item.id) ?? item.hint }}</kbd>
           </button>
           <ul v-if="item.items && open === i" class="sub" role="menu" :aria-label="item.label">
             <template v-for="(sub, j) in item.items" :key="j">
@@ -51,7 +52,7 @@ function choose(item: MenuItem, index?: number) {
               <li v-else role="none">
                 <button type="button" :role="sub.checked !== undefined ? 'menuitemradio' : 'menuitem'" :aria-checked="sub.checked" :disabled="sub.disabled" @click="choose(sub)">
                   <span><span class="tick" aria-hidden="true">{{ sub.checked ? '✓' : '' }}</span>{{ sub.label }}</span>
-                  <kbd v-if="sub.hint">{{ sub.hint }}</kbd>
+                  <kbd v-if="hintOf(sub.id) ?? sub.hint">{{ hintOf(sub.id) ?? sub.hint }}</kbd>
                 </button>
               </li>
             </template>

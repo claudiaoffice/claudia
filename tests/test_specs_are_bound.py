@@ -24,7 +24,7 @@ TASKS = ROOT / "claudiaoffice-log" / "Projects" / "claudia-office" / "_tasks"
 TEST_TAGS = ("@unit:", "@io:", "@e2e:")
 #: Approved files that cannot be bound yet, each with the story or bug that binds it. Only ever shrinks: the test below
 #: fails when an entry is no longer needed. Adding an entry is a decision for the owner, not a way to get CI green.
-NOT_BOUND_YET = {
+NOT_BOUND_YET: dict[str, str] = {
     "desktop/macos-installer.feature": "E8.5 macOS installer (part 3, the package)",
 }
 HOW_TO_FIX = (

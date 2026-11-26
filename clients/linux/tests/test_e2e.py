@@ -124,7 +124,7 @@ def test_composes_starts_its_server_shows_the_page_and_the_native_menu_drives_it
     # The front page says hello as the front page (sheet 11): the short menu, and nothing of a document's to do.
     pump(lambda: bridge.ready and bridge.view == "start", timeout=30, what="the front page to say hello")
     pump(lambda: window.lookup_action("file.open-file").get_enabled(), what="the front page's own entries")
-    assert not window.lookup_action("file.save").get_enabled()
+    assert not window.lookup_action("file.save-as").get_enabled()
     assert not window.menu_edit.get_visible()
 
     # D503: File ▸ New and Open… on the front page do something the person sees.
@@ -146,7 +146,7 @@ def test_composes_starts_its_server_shows_the_page_and_the_native_menu_drives_it
     pump(lambda: evaluate(view, CONFIRM_RECOVERY_KEY) == "confirmed", timeout=30, what="the recovery key dialog")
     pump(lambda: bridge.view == "document", timeout=30, what="the now-open document's workspace to say hello")
     assert window.menu_edit.get_visible()
-    pump(lambda: window.lookup_action("file.save").get_enabled(), timeout=30, what="the document to open")
+    pump(lambda: window.lookup_action("file.save-as").get_enabled(), timeout=30, what="the document to open")
     pump(lambda: window.lookup_action("view.page").get_state() is not None)
 
     # The web menu bar is hidden but still has its place in the layout.

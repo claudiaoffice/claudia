@@ -1,23 +1,28 @@
 <script setup lang="ts">
 // The menu of a floating object or a table in a text, and what its entries open (D1225, D1224): the context menu, the
-// description dialog, the Rotate By… popover, the style menu of the object and the gap of the wrap. The list is
-// `lib/object-menu.ts`'s, the one all three apps use; this is only composes' callbacks for it. It stays mounted, so a
-// dialog goes on after the menu has closed, and the parent only says where a menu is to open.
+// description dialog, the Rotate By… popover, the style menu of the object and the gap of the wrap. The entries are the
+// definition's `object` and `table` context menus (D1644); this is only what they do here, on the thing pressed. It
+// stays mounted, so a dialog goes on after the menu has closed, and the parent only says where a menu is to open.
 import { computed, ref, watch } from 'vue'
 import { useNameAndDescribe } from '~/lib/use-name-and-describe'
-import { contextMenuItems } from '~/lib/object-menu'
+import type { ContextMenuOf } from '~/lib/menus/assemble'
 import { objectStyleHost, type ObjectStyling } from '~/lib/object-style-host'
-import { tableContextItems, type TableMenuHost } from '~/lib/table-menu'
 import type { TextSession } from '~/lib/text-session'
 import { pointer } from '~/lib/objects'
 import { besideRect } from '~/lib/geometry'
 import { canTurn, degreesText, quarterTurn } from '~/lib/turning'
-import { wrapOf, MAX_WRAP_GAP, DEFAULT_WRAP_GAP, type Wrap } from '~/lib/wrap'
+import { wrapLabel, wrapOf, MAX_WRAP_GAP, DEFAULT_WRAP_GAP, WRAPS } from '~/lib/wrap'
 import { useI18n } from '~/lib/i18n'
 import type { MenuItem } from './MenuBar.vue'
 
 const { t } = useI18n()
-const props = defineProps<{ session: TextSession; menu: { id: string; x: number; y: number } | null; tableHost: TableMenuHost; clipboard: { cut: () => unknown; copy: () => unknown } }>()
+const props = defineProps<{
+  session: TextSession
+  menu: { id: string; x: number; y: number } | null
+  clipboard: { cut: () => unknown; copy: () => unknown }
+  /** The window's context menus, by the definition (D1644). */
+  menuOf: ContextMenuOf
+}>()
 const emit = defineEmits<{
   close: []
   /** A turn being tried from Rotate By… (`null`: none), for the page to draw. */
@@ -43,47 +48,42 @@ const items = computed<MenuItem[]>(() => {
   const at = shown.value
   const o = at ? objectOf(at.id) : null
   if (!at || !o) return []
-  const describe = () => {
-    shown.value = null
-    void nameDialog.open(o.id)
-  }
+  const describe = { run: () => void nameDialog.open(o.id) }
   if (o.kind === 'table') {
     const id = pointer(o, 'table')
     const table = id ? state.tables[id] : undefined
-    return tableContextItems({ t }, props.tableHost, { describe, remove: () => void (table && session.removeTable(table.id)) })
+    return props.menuOf('table', { 'format.describe': describe, 'edit.delete': { run: () => void (table && session.removeTable(table.id)) } })
   }
   const wrap = wrapOf(o.anchor).wrap
-  return contextMenuItems(
-    o,
-    readonly.value,
-    {
-      describe,
-      edit: () => {
+  return props.menuOf('object', {
+    'format.describe': describe,
+    'edit.edit-text': {
+      run: () => {
         session.selectObject(o.id)
         state.editingObject = o.id
       },
-      style: () => {
-        shown.value = null
-        styling.value = { x: at.x, y: at.y }
-      },
-      rotateBy: () => {
-        shown.value = null
-        rotating.value = { id: o.id, from: o.rotation, x: at.x, y: at.y }
-      },
-      remove: () => void session.removeObject(o.id),
-      cut: () => void props.clipboard.cut(),
-      copy: () => void props.clipboard.copy(),
-      setSnap: () => undefined, // composes has no grid
-      setWrap: (mode: Wrap) => void session.setWrap(o.id, mode),
-      setGap: () => {
-        shown.value = null
-        gapping.value = o.id
-      },
     },
-    // a picture and a chart carry no words (D1232: the words of a box or a shape are written with `write_words`)
-    { wrap, edit: o.kind !== 'image' && o.kind !== 'chart' },
-  )
+    'format.apply-style': { run: () => (styling.value = { x: at.x, y: at.y }) },
+    'format.rotate-by': { run: () => (rotating.value = { id: o.id, from: o.rotation, x: at.x, y: at.y }) },
+    // the four modes of D1061 and the gap, as the workbook asks: a submenu here, the key goes on to the next mode
+    'format.wrap-text': {
+      run: () => void session.cycleWrap(o.id),
+      label: () => t('Wrap Text…'),
+      items: () => [
+        ...WRAPS.map((mode): MenuItem => ({ label: wrapLabel(mode), checked: mode === wrap, action: () => void session.setWrap(o.id, mode) })),
+        { label: '', separator: true },
+        { label: t('Gap…'), action: () => (gapping.value = o.id) },
+      ],
+    },
+    'edit.delete': { run: () => void session.removeObject(o.id) },
+    // only a picture goes onto the clipboard (D1229): the workbook's rule does not say so, so the menu does
+    'edit.cut': { run: () => void props.clipboard.cut(), notNow: () => pictureOnly(o.kind) },
+    'edit.copy': { run: () => void props.clipboard.copy(), notNow: () => pictureOnly(o.kind) },
+  })
 })
+function pictureOnly(kind: string): string | null {
+  return kind === 'image' ? null : t('Only a picture can be cut or copied.')
+}
 
 // ------------------------------------------------------------------------------ describing (BITV 1.1.1)
 const nameDialog = useNameAndDescribe(session)

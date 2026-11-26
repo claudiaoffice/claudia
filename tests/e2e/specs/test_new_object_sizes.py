@@ -89,8 +89,8 @@ def _container_in_line(world):
 
 
 MAKERS = {
-    "text box": ("Edit", "Text Box"),
-    "rectangle": ("Edit", "Rectangle"),
+    "text box": ("Insert", "Text Box"),
+    "rectangle": ("Insert", "Shape", "Rectangle"),
 }
 
 
