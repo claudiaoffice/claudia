@@ -46,8 +46,8 @@ D1624 (the computer's administrators read the service's setup code; anyone else 
   leaving made "Shared on this computer" her own name for it, untranslated and outliving the service.
 * **"Service file", not "marker", in code**: the glossary's *Marker* is a list's bullet. The decisions keep the word
   as plain English.
-* The tests of the two key risks (the service listed; the code given only to whom may read it) carry a
-  `// must not break` comment, the new rule of `coding-standards.md`.
+* The tests of the two key risks (the service listed; the code given only to whom may read it) are marked
+  `[must not break: E8.5]` in their titles (`core.test.ts`), the form of D1663 that came with `main`.
 
 ## Assumptions (say if they are wrong)
 
@@ -56,7 +56,6 @@ D1624 (the computer's administrators read the service's setup code; anyone else 
 * A changed service port (someone edits `claudia-service.xml`) needs the marker changed by hand; the installer writes
   8765, as the configuration it installs.
 * The setup page keeps the code field when she has to ask: an administrator may tell her the code.
-* "Must not break" is marked by a comment above the test until the test-quality branch (D1660–D1679) sets a form.
 * Reinstalling without the service component leaves an earlier service's marker until the uninstall (as it leaves the
   service itself: Inno Setup does not remove a component that is no longer chosen).
 
@@ -76,7 +75,7 @@ documents folders, `admin/` 0700 as the server makes it), with a real service fi
 The run found that **a desktop window cannot connect to a server of all three apps**: the connect check of both shells
 (`connection.ts` / `connection.py` `interpret`) wants `app` in `/api/docs`, and a server of several apps (D430), like the
 service, says `"app": null, "apps": [...]` -- "That does not look like a Claudia server". Older than this branch (the
-service was never connected to before; a demo server of all three apps has the same fate); reported with part 2, not
+service was never connected to before; a demo server of all three apps has the same fate); logged as CODE-108, not
 fixed yet. The run went on with the check stood in.
 
 ## What could not be run here, and where it ran instead
@@ -90,3 +89,9 @@ fixed yet. The run went on with the check stood in.
 * Firefox (cannot be installed here): CI's "End to end (Firefox)" job (run 45697350344).
 * Two real accounts on one Mac or PC, and an administrator with User Account Control on: the browser scenarios stand a
   loopback server in for the service; the use-it run used two Linux accounts.
+
+## Bugs logged (2026-11-26, at the owner's request)
+
+SEC-28 (Windows: anyone can write the service file, size 1), CODE-108 (no window connects to a server of all three
+apps, size 1), UX-95 (User Account Control hides the code from administrators, size 2), UX-96 (a reloaded page gets an
+old setup code, size 3), all open; SEC-29 (the service's state was open to every account) fixed by D1624.

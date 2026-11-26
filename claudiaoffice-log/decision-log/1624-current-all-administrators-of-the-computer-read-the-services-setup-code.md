@@ -36,4 +36,4 @@ for every server.
 **Known limit (Windows).** With User Account Control on, an administrator's apps run without the rights of the
 `Administrators` group, so they cannot read the code either and say to ask an administrator; she reads
 `%ProgramData%\Claudia\state\admin\setup-code` herself (Explorer asks for her administrator's consent) and types it.
-Reported as a bug with E8.5 part 2; macOS has no such split.
+UX-95; macOS has no such split. That the folder was open to every account before is SEC-29 (fixed by this decision).
