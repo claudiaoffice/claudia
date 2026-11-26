@@ -505,6 +505,14 @@ def test_the_package_is_made_from_checked_parts_and_read_back_before_it_is_kept(
     positions = [found.index(text) for text in order]
     assert positions == sorted(positions)
     assert "neu update" in found and "npm run build:macos" in found
+    assert found.index("bomutils-mkbom.patch") < found.index("build/bin/mkbom") < found.index("build.py package")
+    assert found.index('build/bin/lsbom "build/') > found.index("build.py package") and "list-payload" in found
+
+
+def test_the_patch_of_mkbom_is_for_its_own_source():
+    patch = (MACOS / "bomutils-mkbom.patch").read_text(encoding="utf-8")
+    assert patch.startswith("--- a/src/mkbom.cpp\n+++ b/src/mkbom.cpp\n")
+    assert "-        strcpy( info2->linkName" in patch and "+        memcpy( info2->linkName" in patch
 
 
 def test_a_tag_attaches_the_package_to_its_release_next_to_the_others():

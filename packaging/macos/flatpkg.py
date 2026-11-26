@@ -59,7 +59,7 @@ def cpio(root: Path, mtime: int = 0) -> bytes:
         info = path.lstat()
         if stat.S_ISLNK(info.st_mode):
             data = os.readlink(path).encode("utf-8")
-            mode = stat.S_IFLNK | 0o755
+            mode = stat.S_IFLNK | stat.S_IMODE(info.st_mode)  # as mkbom records it in the Bom
         elif stat.S_ISDIR(info.st_mode):
             data = b""
             mode = stat.S_IFDIR | stat.S_IMODE(info.st_mode)
@@ -75,6 +75,20 @@ def cpio(root: Path, mtime: int = 0) -> bytes:
 def payload(root: Path, mtime: int = 0) -> bytes:
     """A part's Payload (or Scripts): the cpio archive of ``root``, gzipped without a time of its own."""
     return gzip.compress(cpio(root, mtime), compresslevel=9, mtime=0)
+
+
+def listing(payload_data: bytes) -> list[tuple[str, str]]:
+    """The paths of a payload with their modes in octal, as bomutils' ``lsbom`` prints a Bom (``./a/f  100644``)."""
+    data = gzip.decompress(payload_data)
+    found, offset = [], 0
+    while True:
+        header = data[offset : offset + 76]
+        mode, name_size, size = int(header[18:24], 8), int(header[59:65], 8), int(header[65:76], 8)
+        name = data[offset + 76 : offset + 76 + name_size - 1].decode("utf-8")
+        offset += 76 + name_size + size
+        if name == TRAILER:
+            return found
+        found.append((name, f"{mode:o}"))
 
 
 def count(root: Path) -> tuple[int, int]:

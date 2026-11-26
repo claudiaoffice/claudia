@@ -477,6 +477,9 @@ def _arguments(argv: list[str]) -> argparse.Namespace:
 
     commands.add_parser("check-pins", help="check the pins against their publishers' lists")
 
+    listed = commands.add_parser("list-payload", help="print a part's payload as lsbom prints its Bom")
+    listed.add_argument("payload", type=Path)
+
     fetched = commands.add_parser("fetch", help="download a pinned file (third-party.json)")
     fetched.add_argument("name", choices=("python", "node", "bomutils"))
     fetched.add_argument("target", type=Path)
@@ -513,6 +516,9 @@ def main(argv: list[str]) -> int:
                 else parse_version(arguments.tag, arguments.build)
             )
             print(package_name(result) if arguments.field == "name" else getattr(result, arguments.field))
+        elif arguments.command == "list-payload":
+            for name, mode in flatpkg.listing(arguments.payload.read_bytes()):
+                print(f"{name}\t{mode}")
         elif arguments.command == "check-pins":
             print("pins in their publishers' lists: " + ", ".join(check_pins()))
         elif arguments.command == "fetch":

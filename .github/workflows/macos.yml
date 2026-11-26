@@ -100,10 +100,13 @@ jobs:
           tar -xzf build/node.tar.gz -C build/node --strip-components=1
           tar -xzf build/bomutils.tar.gz -C build/bomutils --strip-components=1
 
-      - name: bomutils' mkbom, which writes the Bom of each part
+      # mkbom writes the Bom of each part; lsbom reads it back below. bomutils 0.2 needs two things on today's compilers:
+      # a fix of mkbom's copy of a link name (packaging/macos/bomutils-mkbom.patch), and C++14 for lsbom.
+      - name: bomutils' mkbom and lsbom
         run: |
-          make -C build/bomutils
-          test -x build/bomutils/build/bin/mkbom
+          patch -d build/bomutils -p1 < packaging/macos/bomutils-mkbom.patch
+          make -C build/bomutils build/bin/mkbom
+          make -C build/bomutils build/bin/lsbom CXXFLAGS="-Wall -std=gnu++14"
 
       - name: The server and what it needs, for macOS, into the runtime's Python
         run: uv run --no-project python packaging/macos/build.py server --python build/python
@@ -136,8 +139,14 @@ jobs:
             grep -qx "$member" build/members.txt || { echo "::error::$member is missing"; exit 1; }
           done
           bsdtar -xOf "$PKG" Distribution | grep -q "<title>claudia ${{ steps.version.outputs.version }}</title>"
+          # what the Bom says is installed (macOS keeps it as the receipt) is what the payload installs, with its mode
           for part in apps service; do
-            bsdtar -xOf "$PKG" "$part.pkg/Bom" | head -c 8 | grep -q BOMStore || { echo "::error::$part.pkg/Bom is no Bom"; exit 1; }
+            bsdtar -xOf "$PKG" "$part.pkg/Bom" > "build/$part.bom"
+            bsdtar -xOf "$PKG" "$part.pkg/Payload" > "build/$part.payload"
+            build/bomutils/build/bin/lsbom "build/$part.bom" | cut -f1,2 | sort > "build/$part.bom.txt"
+            uv run --no-project python packaging/macos/build.py list-payload "build/$part.payload" | sort > "build/$part.payload.txt"
+            diff "build/$part.bom.txt" "build/$part.payload.txt" || { echo "::error::$part.pkg: its Bom and its payload differ"; exit 1; }
+            echo "$part.pkg: $(wc -l < "build/$part.bom.txt") paths, the same in its Bom and its payload"
           done
           bsdtar -xOf "$PKG" apps.pkg/Payload | bsdtar -tvf - > build/apps.txt
           for file in "./Applications/claudia composes.app/Contents/MacOS/neutralino" \

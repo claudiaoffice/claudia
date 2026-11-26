@@ -173,3 +173,14 @@ def test_package_info_names_the_part_its_scripts_and_its_size():
     assert info.find("payload").get("numberOfFiles") == "12" and info.find("payload").get("installKBytes") == "3400"
     assert [s.get("file") for s in info.find("scripts")] == ["./preinstall", "./postinstall"]
     assert [s.tag for s in info.find("scripts")] == ["preinstall", "postinstall"]
+
+
+def test_a_payload_is_listed_with_paths_and_modes_as_lsbom_lists_a_bom(tree):
+    """CI compares the two: what the Bom says macOS installed is what the payload installs."""
+    found = dict(flatpkg.listing(flatpkg.payload(tree)))
+    assert found["."] == "40755"
+    assert found["./Applications/claudia composes.app/Contents/MacOS/claudia-composes"] == "100755"
+    assert found["./Library/Application Support/Claudia/VERSION"] == "100644"
+    link = (tree / "Library" / "Application Support" / "Claudia" / "runtime" / "python" / "bin" / "python3").lstat()
+    assert found["./Library/Application Support/Claudia/runtime/python/bin/python3"] == f"{link.st_mode:o}"
+    assert len(found) == len(list(tree.rglob("*"))) + 1
