@@ -271,9 +271,11 @@ def _text_with_reference(world, title):
     make_heading(ann, 0)
     ann.page.keyboard.press("Control+End")
     ann.menu("Insert", "Cross Reference")
-    search = ann.page.locator("[data-testid=reference-picker] input[type=search]")
-    search.fill(title)
-    search.press("Enter")
+    picker = ann.page.locator("[data-testid=reference-picker]")
+    picker.locator("input[type=search]").fill(title)
+    # the heading reaches the list once the server has it (slow on CI): Enter puts in only what is chosen
+    picker.locator("[role=option][aria-selected=true]", has_text=title).wait_for()
+    picker.locator("input[type=search]").press("Enter")
     ann.page.wait_for_selector(REFERENCE)
 
 
