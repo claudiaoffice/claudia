@@ -5,7 +5,7 @@ Claudia has three kinds of public interface. Each has its own version and its ow
 | Interface | Where it is defined | Version | Record of changes |
 |---|---|---|---|
 | Python API of a package (`claudia_core`, `claudia_server`, `claudia_fonts`, ...) | `__all__` in the package's `__init__.py` | `__version__` in `_version.py`, semantic versioning | the package's `CHANGELOG.md`, and a snapshot test (`tests/api/<package>.json`) |
-| Network API (E3) | the protocol module of `claudia-server` | `PROTOCOL_VERSION` (now 2), named in `/api/protocol` | the server page of the documentation |
+| Network API (E3) | the protocol module of `claudia-server` | `PROTOCOL_VERSION` (now 3), named in `/api/protocol` | the server page of the documentation |
 | Document format (log, commands) | command `schema` numbers, `Manifest.format` | per command kind; upcasters bring old data up to date | `CHANGELOG.md` and the upcaster tests with fixture logs |
 
 ## Python API
