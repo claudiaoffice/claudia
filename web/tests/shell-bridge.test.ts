@@ -118,6 +118,19 @@ describe('ShellBridge', () => {
     expect(posted[2]).toEqual({ type: 'action_state', states: { 'edit.undo': { enabled: true } } })
   })
 
+  it('reportStates says which menus have nothing left, and again only when that changed (D1645)', () => {
+    const { sink, posted } = fakeSink()
+    const bridge = new ShellBridge('computes', sink)
+    bridge.receive(JSON.stringify({ type: 'welcome', contract: 1, shell: { name: 'gtk', platform: 'linux', version: '1' }, capabilities: [] }))
+    bridge.reportStates({ 'insert.image': { enabled: false, visible: false } }, { insert: 'Nothing to insert: you can only look at this document.' })
+    bridge.reportStates({ 'insert.image': { enabled: false, visible: false } }, { insert: 'Nothing to insert: you can only look at this document.' })
+    bridge.reportStates({ 'insert.image': { enabled: false, visible: false } }, { insert: 'Nichts einzufügen: Sie dürfen dieses Dokument nur ansehen.' })
+    expect(posted.slice(1)).toEqual([
+      { type: 'action_state', states: { 'insert.image': { enabled: false, visible: false } }, empty: { insert: 'Nothing to insert: you can only look at this document.' } },
+      { type: 'action_state', states: { 'insert.image': { enabled: false, visible: false } }, empty: { insert: 'Nichts einzufügen: Sie dürfen dieses Dokument nur ansehen.' } },
+    ])
+  })
+
   it('reportStates sends nothing, and posts nothing, when nothing changed', () => {
     const { sink, posted } = fakeSink()
     const bridge = new ShellBridge('composes', sink)

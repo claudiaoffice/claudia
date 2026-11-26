@@ -12,6 +12,7 @@ const FIXTURE: ManifestListing = {
   header_toggles: [],
   menus: [
     {
+      word: 'file',
       label: 'File',
       sections: [
         [
@@ -24,6 +25,7 @@ const FIXTURE: ManifestListing = {
       ],
     },
     {
+      word: 'edit',
       label: 'Edit',
       sections: [
         [
@@ -49,12 +51,14 @@ const FIXTURE: ManifestListing = {
       ],
     },
     {
+      word: 'view',
       label: 'View',
       sections: [
         [{ id: 'view.panel', label: 'History and Chat', kind: 'page', checkable: true, accelerators: [], role: null }],
       ],
     },
     {
+      word: 'preferences',
       label: 'Preferences',
       sections: [
         [
@@ -70,6 +74,7 @@ const FIXTURE: ManifestListing = {
       ],
     },
     {
+      word: 'help',
       label: 'Help',
       sections: [
         [

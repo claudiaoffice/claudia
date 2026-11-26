@@ -183,8 +183,10 @@ async function menu(page, title, ...path) {
     const note = (await ann.locator('.toast').count()) ? await ann.locator('.toast').textContent() : ''
     log('ann undo ->', note || '(worked)')
 
-    // ---- a checkpoint
+    // ---- a checkpoint: Ctrl+S is File ▸ Save Checkpoint… (the menu workbook), which asks for a name first
     await ann.keyboard.press('Control+s')
+    await ann.waitForSelector('.modal:has-text("Save new checkpoint")')
+    await ann.click('.modal button:has-text("Save")')
     await waitFor(ann, () => document.querySelector('.mark'), null, 'checkpoint marker')
     log('checkpoint:', (await ann.locator('.mark').first().textContent()).trim())
 

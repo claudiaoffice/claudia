@@ -14,7 +14,7 @@ const props = defineProps<{
   /** How many cells of the computation being followed each sheet has (E6.23): a marker on the tab of the others. */
   marks?: Record<string, number>
 }>()
-defineEmits<{ pick: [id: string, kind: 'sheet' | 'slide']; add: []; rename: [id: string] }>()
+defineEmits<{ pick: [id: string, kind: 'sheet' | 'slide']; add: []; rename: [id: string]; menu: [id: string, kind: 'sheet' | 'slide', at: { x: number; y: number }] }>()
 
 /** Is this sheet or slide the tab on show? A slide is shown in place of the sheet (`state.activeSlide`, E6.31). */
 const isShown = (tab: TabInfo) => (tab.kind === 'slide' ? tab.id === props.state.activeSlide : !props.state.activeSlide && tab.id === props.state.activeSheet)
@@ -40,6 +40,7 @@ const shownAverage = computed(() => (props.summary.average === null ? '' : show(
           :title="canAdd ? t('Double-click to rename') : undefined"
           @click="$emit('pick', s.id, s.kind)"
           @dblclick="canAdd && $emit('rename', s.id)"
+          @contextmenu.prevent="$emit('menu', s.id, s.kind, { x: $event.clientX, y: $event.clientY })"
         >
           {{ s.name }}
           <span v-if="marks?.[s.id]" class="mark" :title="`${marks[s.id]}`" :aria-label="`${marks[s.id]} connected cells on this sheet`">◆ {{ marks[s.id] }}</span>

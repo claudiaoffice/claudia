@@ -16,13 +16,13 @@ Feature: Slides in computes (E6.31)
   # ================================================================ a chart as a slide
 
   @core @firefox
-  Rule: Edit ▸ Chart… shows a chart as a slide of its own, right after the tab I am on
+  Rule: Insert ▸ Chart… shows a chart as a slide of its own, right after the tab I am on
 
     # Step 3, owner 2026-11-23: the new slide gets the next free generic name "Slide n"; the name in the dialog is the
     # chart's, as with "Move to Slide" (Q1 of the review of 2026-11-22).
 
     Scenario: "A slide" is what the dialog offers first
-      When I select A1:B4 and choose Edit ▸ Chart…
+      When I select A1:B4 and choose Insert ▸ Chart…
       Then the dialog offers to show the chart as "A slide" or as "A floating object on the sheet"
       And "A slide" is chosen
       And the name field asks for the name of the chart
@@ -60,14 +60,14 @@ Feature: Slides in computes (E6.31)
       And the tabs read "Sheet1"
 
   @extended
-  Rule: While a slide is shown, Edit ▸ Chart… puts the chart on that slide or on a new one
+  Rule: While a slide is shown, Insert ▸ Chart… puts the chart on that slide or on a new one
 
     # Step 3, owner 2026-11-23 (Q3)
     Background:
       Given I inserted a bar chart "Sales" of A1:B4 as a slide
 
     Scenario: The dialog offers "On this slide" instead of the sheet
-      When I choose Edit ▸ Chart… while the slide "Slide 1" is shown
+      When I choose Insert ▸ Chart… while the slide "Slide 1" is shown
       Then the dialog offers to show the chart as "A slide" or "On this slide"
 
   # ================================================================ Move to Slide
@@ -80,7 +80,7 @@ Feature: Slides in computes (E6.31)
 
     Scenario: The object menu of a chart offers "Move to Slide"
       When I open the object menu of the chart
-      Then it offers "Name & describe…", "Style…", "Move to Slide" and "Delete"
+      Then it offers "Name & Describe…", "Reference in Chat", "Style…", "Cut", "Copy", "Delete" and "Move to Slide"
 
     Scenario: The chart moves to a new slide and keeps its name
       # Q1: the chart keeps the name people may already use for it; the new slide gets the next free "Slide N"
@@ -179,11 +179,11 @@ Feature: Slides in computes (E6.31)
 
     @two-users
     Scenario: A viewer sees the slide and cannot move a chart
-      # Q5
+      # Q5; since the menus show what fits (D1600, D1603) the entry is left out with the others
       Given Vera, a viewer, has the document open
       And a bar chart "Sales" of A1:B4 floats on Sheet1
       When Vera opens the object menu of the chart
-      Then "Move to Slide" is there but cannot be chosen
+      Then it holds only the greyed line "You can only look at this document."
 
   # ================================================================ files and print
 

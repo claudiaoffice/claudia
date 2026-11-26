@@ -26,7 +26,8 @@ from typing import Any
 import pytest
 from certs import needs_openssl, self_signed
 
-from claudia_shell_gtk import identity, manifest, settings
+from claudia_menus import manifest
+from claudia_shell_gtk import identity, settings
 from claudia_shell_gtk.bridge import Bridge
 from claudia_shell_gtk.connection import NeedsTrust
 from claudia_shell_gtk.connector import Connector, ServerBook

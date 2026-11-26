@@ -17,7 +17,7 @@ Four shapes are collected, by four different techniques:
   expression, not a real parser (there is no TypeScript/Vue parser in this project's own dependencies to reach for);
   it accepts the one plain string literal shape actual calls use today and otherwise reports the call so it is
   fixed by hand rather than silently dropped, the same stance as the Python side.
-* The Linux client's menu manifest (``clients/linux/src/claudia_shell_gtk/manifest.py``): every menu label and
+* The Linux client's menu manifest (``clients/contract/src/claudia_menus/manifest.py``): every menu label and
   action label/tooltip is a plain dataclass field, not a ``_("...")`` call (that module's own docstring explains
   why — it stays pure data, importable and testable with no locale installed), so :func:`extract_manifest` walks
   the already-built ``Manifest`` objects themselves instead of parsing source text. ``LANGUAGES``' own autonyms
@@ -36,11 +36,12 @@ import re
 import sys
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 ROOT = Path(__file__).resolve().parent.parent
 POT_PATH = ROOT / "po" / "claudia.pot"
-MANIFEST_SRC_DIR = ROOT / "clients" / "linux" / "src"
-MANIFEST_PATH = MANIFEST_SRC_DIR / "claudia_shell_gtk" / "manifest.py"
+MANIFEST_SRC_DIR = ROOT / "clients" / "contract" / "src"  # the menu definition, claudia_menus (D1643)
+MANIFEST_PATH = MANIFEST_SRC_DIR / "claudia_menus" / "manifest.py"
 
 # Where each extractor looks. The kernel stays dependency-free and catalog-agnostic (test_purity.py): it only marks the
 # templates of its refusals (CODE-78, D1510), which the server translates.
@@ -172,37 +173,45 @@ def extract_web(path: Path) -> tuple[dict[str, list[str]], list[Problem]]:
     return found, problems
 
 
+def _add_action_texts(texts: set[str], action: Any) -> None:
+    """An action's label and tooltip, but not a language's own name, which is never translated (``manifest.py``)."""
+    if not action.id.startswith("config.language."):
+        texts.add(action.label)
+        if action.tooltip:
+            texts.add(action.tooltip)
+
+
 def extract_manifest() -> dict[str, list[str]]:
     """Every ``Menu``/``Submenu`` label and every (non-autonym) ``Action`` label/tooltip of the three apps' Linux
     manifests, collected by building and walking them (see this module's docstring for why: these are data, not
     calls). Always succeeds -- there is no "not a plain string literal" failure mode for a dataclass field -- so,
     unlike :func:`extract_python`/:func:`extract_web`, this returns no ``problems`` list.
 
-    All three apps' manifests report the same ``clients/linux/src/claudia_shell_gtk/manifest.py`` as every string's
+    All three apps' manifests report the same ``clients/contract/src/claudia_menus/manifest.py`` as every string's
     one occurrence (not a line number: these are built objects, not source positions), and a label shared by more
     than one app or more than one action (``"Edit"``, ``"Delete"``, ...) is still listed there only once.
     """
     if str(MANIFEST_SRC_DIR) not in sys.path:
         sys.path.insert(0, str(MANIFEST_SRC_DIR))
-    # clients/linux is its own project (own mypy run, own venv), never on this project's mypy_path -- unresolvable
-    # here by construction, not a mistake to fix.
-    from claudia_shell_gtk import manifest as manifest_module  # type: ignore[import-not-found]
+    # clients/contract is its own project, never on this project's mypy_path -- unresolvable here by construction,
+    # not a mistake to fix.
+    from claudia_menus import manifest as manifest_module  # type: ignore[import-not-found]
 
     occurrence = MANIFEST_PATH.relative_to(ROOT).as_posix()
     texts: set[str] = set()
     for build in (manifest_module.composes, manifest_module.computes, manifest_module.creates):
         built = build()
-        for menu in built.menus:
+        # Every place, menus and context menus alike: an action shown again has the words of its place (D1605).
+        for menu in (*built.menus, *built.context_menus):
             texts.add(menu.label)
             for section in menu.sections:
                 for entry in section:
                     if isinstance(entry, manifest_module.Submenu):
                         texts.add(entry.label)
+            for action in menu.all_actions():
+                _add_action_texts(texts, action)
         for action in built.actions:
-            if not action.id.startswith("config.language."):  # their own autonyms, never translated (manifest.py)
-                texts.add(action.label)
-                if action.tooltip:
-                    texts.add(action.tooltip)
+            _add_action_texts(texts, action)
     texts.update(label for label, _url in manifest_module.about_links())  # the About dialog's links (D28)
     return {text: [occurrence] for text in texts}
 

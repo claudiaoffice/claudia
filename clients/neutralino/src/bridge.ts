@@ -32,7 +32,8 @@ export interface BridgeOptions {
   /** Hands one message (JSON text) to the page. */
   send: (raw: string) => void
   locale?: string
-  onStates?: (states: Record<string, ActionState>) => void
+  /** The states of the known actions the page reported, and the menus with nothing left when it said (D1645). */
+  onStates?: (states: Record<string, ActionState>, empty?: Record<string, string>) => void
   /** The page said hello and the shell welcomed it. */
   onReady?: () => void
   onConnect?: (address: string) => void
@@ -178,7 +179,8 @@ export class Bridge {
       if (known.has(name)) applied[name] = state
       else unknown.push(name)
     }
-    if (Object.keys(applied).length > 0) this.options.onStates?.(applied)
+    const empty = message.empty as Record<string, string> | undefined
+    if (Object.keys(applied).length > 0) this.options.onStates?.(applied, empty)
     if (unknown.length > 0) {
       this.reply(contract.error('unknown_action', `no such action: ${unknown.sort().join(', ')}`))
     }

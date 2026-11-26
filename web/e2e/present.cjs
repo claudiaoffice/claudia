@@ -156,10 +156,11 @@ async function planTime(page, typed) {
     await show(page).waitFor({ state: 'detached' })
     log('F5, Shift+F5 and Ctrl+Alt+P (the chord a Mac keyboard can send) all start the show')
 
-    // ---- the View menu names the keys and starts it too
-    await page.click('.menus .title:text-is("View")')
-    assert.match(await page.locator('.menus .drop [role^=menuitem]:has-text("Present from the first slide")').innerText(), /F5/)
-    await page.click('.menus .drop [role^=menuitem]:has-text("Present from this slide")')
+    // ---- Tools ▸ Present names the keys and starts it too
+    await page.click('.menus .title:text-is("Tools")')
+    await page.hover('.menus .drop [role=menuitem]:has-text("Present")')
+    assert.match(await page.locator('.menus .drop.sub [role^=menuitem]:has-text("From Beginning")').innerText(), /F5/)
+    await page.click('.menus .drop.sub [role^=menuitem]:has-text("From Slide")')
     await show(page).waitFor()
     await page.keyboard.press('Escape')
     await show(page).waitFor({ state: 'detached' })

@@ -34,7 +34,7 @@
   /* Borrowed GNOME red, not a Claudia colour on purpose (canvas note s4): reserved for the one or two actions on the
    * server settings pages where getting it wrong is expensive (rotating the access secret, removing an
    * administrator) — never used for an ordinary document-level "danger" action, which stays `--rose` (see
-   * DeleteDocumentDialog.vue). A single fixed hex in both themes, the same choice already made for `--rose`,
+   * DeleteFromListDialog.vue). A single fixed hex in both themes, the same choice already made for `--rose`,
    * `--teal` and `--apricot` as filled button backgrounds: 10.8:1 for white text, so dark mode needs no override. */
   /* What a replay marks (D553): what the step on show changed, and what changed after it. Told apart by line style
    * (solid or dashed) and not only by colour. */

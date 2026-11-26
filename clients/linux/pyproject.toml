@@ -28,11 +28,12 @@ packages = ["src/claudia_shell_gtk"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["src"]
+pythonpath = ["src", "../contract/src"]  # the menu definition, claudia_menus (D1643)
 addopts = "-q"
 markers = [
     "gtk: needs GTK 4, libadwaita 1.5+, WebKitGTK 6.0 and a display (Xvfb is enough); skipped where they are missing",
     "e2e: starts the real server and the built web frontend; skipped when they are not there",
+    "must_not_break(story): the test of the key risk of a story, that the feature does not do what it is for (coding standards §2, PROC-68)",
 ]
 
 [tool.ruff]
@@ -41,7 +42,7 @@ extend = "../../pyproject.toml"
 target-version = "py312"
 
 [tool.ruff.lint.isort]
-known-first-party = ["claudia_shell_gtk"]
+known-first-party = ["claudia_shell_gtk", "claudia_menus"]
 
 [tool.mypy]
 python_version = "3.12"  # the floor of this client; the root configuration checks for 3.14
@@ -49,7 +50,7 @@ platform = "linux"  # the Linux client: checked as Linux code wherever mypy runs
 check_untyped_defs = true
 warn_unused_ignores = true
 warn_redundant_casts = true
-mypy_path = ["src", "tests"]
+mypy_path = ["src", "tests", "../contract/src"]
 explicit_package_bases = true
 
 [[tool.mypy.overrides]]

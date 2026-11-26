@@ -109,7 +109,7 @@ def hash_list(person: Person) -> list[tuple[str, str]]:
 
 def name_in_dialog(person: Person) -> str:
     """The name Name & describe… shows for what is selected or has the caret; the dialog is closed again."""
-    choose(person, "Name & describe…")
+    choose(person, "Name & Describe…")
     field = person.page.locator(f"{DIALOG} input[type=text]")
     field.wait_for()
     name = field.input_value()
@@ -157,11 +157,16 @@ def close_print_preview(person: Person) -> None:
     person.page.wait_for_selector("[data-testid=print-preview]", state="detached")
 
 
-def choose_view(person: Person, label: str) -> None:
-    """View ▸ Flow or View ▸ Page (entries that are ticked, so not plain menu items)."""
+def show_pages(person: Person, on: bool) -> None:
+    """View ▸ Page View, a ticked entry: ticks it (``on``) or unticks it (back to the flowing text)."""
     page = person.page
     page.click('.menus .title:text-is("View")')
-    page.locator(".menus .drop [role^=menuitem]", has=page.locator(".label", has_text=re.compile(f"^{label}$"))).click()
+    entry = page.locator(".menus .drop [role=menuitemcheckbox]", has=page.locator(".label", has_text="Page View"))
+    if (entry.get_attribute("aria-checked") == "true") != on:
+        entry.click()
+    else:
+        page.keyboard.press("Escape")
+    page.wait_for_selector(".scroller.page", state="attached" if on else "detached")
 
 
 def share_and_open(world: World, name: str, role: str) -> Person:
@@ -180,11 +185,11 @@ class Table:
     SELECTOR = "[data-testid=table]"
     ADDED = "Add table"  # how the history speaks of adding one
     KIND = "Table"  # how the # list says what a thing is
-    #: the entries that change a table, by menu, as the menus of composes have them (claudia-menus.xlsx)
+    #: the entries of the menu bar that change a table, by menu, as the menus of composes have them
+    #: (claudia-menus.xlsx); the rest are in the table's own menu (D1612)
     CHANGES = {
         "Insert": ("Table…",),
-        "Format": ("Name & describe…",),
-        "Tools": ("Row", "Column", "Sort", "Merge Cells", "Split Cell", "Table Options…"),
+        "Edit": ("Name & Describe…",),
     }
 
     def count(self, person: Person) -> int:
@@ -494,13 +499,13 @@ def _still_work(world, kind):
 # ================================================================================================= views
 @when("I switch to the page view")
 def _page_view(world):
-    choose_view(world.ann, "Page")
+    show_pages(world.ann, on=True)
 
 
 @when("I switch back to the flow view")
 def _flow_view(world):
     close_print_preview(world.ann)
-    choose_view(world.ann, "Flow")
+    show_pages(world.ann, on=False)
 
 
 @when("I open the print preview")
@@ -651,7 +656,7 @@ def _describe(world, scene):
     ann = world.ann
     scene.description = "What we grow, by crop"
     scene.kind.select(ann)
-    choose(ann, "Name & describe…")
+    choose(ann, "Name & Describe…")
     ann.page.fill(f"{DIALOG} textarea", scene.description)
     ann.page.click(f"{DIALOG} button[type=submit]")
     ann.page.wait_for_selector(DIALOG, state="detached")

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // The menu on a table's header chip (E6.5, mock 2): what this column is for, or what the whole table is for. The
-// cells are tinted by it, so the choice shows at once. Text only, like every menu here (HeaderMenu.vue).
+// cells are tinted by it, so the choice shows at once. Text only, like every menu here (ContextMenu.vue).
 import { columnPurpose, PURPOSES, type NameInfo, type Purpose } from '~/lib/names'
 import { useI18n } from '~/lib/i18n'
 

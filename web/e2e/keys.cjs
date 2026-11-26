@@ -31,11 +31,14 @@ async function waitFor(page, fn, arg, what) {
     throw new Error('timed out waiting for ' + what)
   }
 }
-/** The key a menu shows beside an entry. */
-async function hint(page, title, label) {
+/** The key a menu shows beside an entry; each name but the last is a submenu. */
+async function hint(page, title, ...path) {
   await page.click(`.menus .title:text-is("${title}")`)
-  const text = await page.locator(`.menus .drop [role=menuitem]:has-text("${label}") kbd`).first().textContent()
-  await page.keyboard.press('Escape')
+  const label = path.pop()
+  for (const submenu of path) await page.hover(`.menus .drop [role=menuitem]:has-text("${submenu}")`)
+  const text = await page.locator(`.menus .drop [role^=menuitem]:has-text("${label}") kbd`).first().textContent()
+  // Esc closes a submenu first, then the menu
+  for (let i = 0; i <= path.length && (await page.locator('.menus .drop').count()); i++) await page.keyboard.press('Escape')
   return text
 }
 const panelShown = (page) => page.evaluate(() => {
@@ -54,9 +57,9 @@ const panelShown = (page) => page.evaluate(() => {
     await sheet.waitForTimeout(500)
     assert.equal(await sheet.locator('text=This document has no sheet yet.').count(), 0, 'Ctrl+Z took the first sheet away')
     log('computes: a new workbook has Sheet1, and Ctrl+Z leaves it')
-    assert.equal(await hint(sheet, 'Edit', 'Image…'), 'Ctrl+Alt+I')
+    assert.equal(await hint(sheet, 'Insert', 'Image…'), 'Ctrl+Alt+I')
     assert.equal(await hint(sheet, 'Tools', 'Names…'), 'Ctrl+F3')
-    assert.equal(await hint(sheet, 'File', 'Open…'), 'Ctrl+O')
+    assert.equal(await hint(sheet, 'File', 'Open', 'Document…'), 'Ctrl+O')
     log('computes: the menus show the keys of the table')
     assert.equal(await panelShown(sheet), true)
     await sheet.keyboard.press('Control+Alt+h')
@@ -70,7 +73,7 @@ const panelShown = (page) => page.evaluate(() => {
     await sheet.keyboard.press('Escape')
     log('computes: Ctrl+F3 opens Names…')
 
-    // the grid has its own arrow keys: Alt+Shift+↑ must still reach Edit ▸ Row ▸ Insert Above
+    // the grid has its own arrow keys: Alt+Shift+↑ must still reach Insert ▸ Row or Column ▸ Row Above
     const box = await sheet.locator('.viewport').boundingBox()
     await sheet.mouse.click(box.x + 52 + 40, box.y + 26 + 13)
     await sheet.keyboard.type('first')
@@ -84,8 +87,8 @@ const panelShown = (page) => page.evaluate(() => {
     const text = await create(browser, COMPOSES)
     await text.waitForSelector('[data-testid=text]')
     await text.click('.menus .title:text-is("Edit")')
-    const undo = text.locator('.menus .drop [role=menuitem]:has-text("Undo")').first()
-    assert.equal(await undo.isDisabled(), true, 'a new text has something to undo')
+    // nothing to undo: the entry is not offered (D1600)
+    assert.equal(await text.locator('.menus .drop [role=menuitem]:has-text("Undo")').count(), 0, 'a new text has something to undo')
     await text.keyboard.press('Escape')
     log('composes: a new text has nothing to undo')
     assert.equal(await hint(text, 'File', 'Print…'), 'Ctrl+P')
@@ -101,7 +104,7 @@ const panelShown = (page) => page.evaluate(() => {
     await text.keyboard.press('Escape')
     log('composes: Ctrl+? opens the shortcuts')
 
-    // ---- creates: Ctrl+M is a new slide; Show Grid and the presenting entries are after the shared View entries
+    // ---- creates: Ctrl+M is a new slide; Grid and Speaker Notes are after the shared View entries
     const deck = await create(browser, CREATES)
     await deck.waitForSelector('[aria-label=slides] [role=tab]')
     await deck.click('.menus .title:text-is("Edit")') // (the canvas, not a text field, has the keys)
@@ -112,11 +115,9 @@ const panelShown = (page) => page.evaluate(() => {
     await deck.click('.menus .title:text-is("View")')
     const view = await deck.$$eval('.menus .drop [role=menuitem], .menus .drop [role=menuitemcheckbox]', (els) => els.map((e) => e.querySelector('.label')?.textContent?.trim()))
     await deck.keyboard.press('Escape')
-    assert.deepEqual(view, [
-      'Show Who Wrote What', 'History and Chat', 'Replay History…', 'Back where I was', 'Dark Mode', 'Show Grid', // (Replay: D551; Back: D1319)
-      'Present from the First Slide', 'Present from This Slide', 'Speaker Notes',
-    ])
-    log('creates: View ▸ Show Grid follows the shared entries, then the presenting entries')
+    // Back Where I Was is not offered with no place to go back to (D1600); Present is in Tools (the menu workbook)
+    assert.deepEqual(view, ['Who Wrote What', 'History & Chat', 'Replay…', 'Dark Mode', 'Grid', 'Speaker Notes'])
+    log('creates: View ▸ Grid and Speaker Notes follow the shared entries')
     console.log('\nALL GOOD')
   } catch (error) {
     console.error('FAILED:', error.message)

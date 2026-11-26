@@ -111,21 +111,30 @@ def colleague(world: World, owner: Person, name: str = "Ben") -> Person:
 
 # ------------------------------------------------------------------------------------------------- reading names
 def choose(person: Person, entry: str) -> None:
-    """Choose ``entry`` from whichever top menu has it (Name & describe… is moving from Format to Edit)."""
+    """Choose ``entry`` from whichever top menu offers it; where none does and the caret is in a text, from the menu
+    of the paragraph the caret is in (a caret is not something selected, D1601: Edit ▸ Name & Describe… is for what
+    is selected, the paragraph's menu for the paragraph)."""
     page = person.page
+    here = page.evaluate(
+        "() => { const n = getSelection()?.focusNode; const e = n && (n.nodeType === 1 ? n : n.parentElement);"
+        " return e?.closest('[data-testid=text] [data-paragraph]')?.dataset.paragraph ?? null }"
+    )
     for title in page.eval_on_selector_all(".menus .title", "els => els.map(e => e.textContent.trim())"):
         page.click(f'.menus .title:text-is("{title}")')
         item = person.menu_item(entry)
-        if item.count():
+        if item.count() and not item.is_disabled():
             item.click()
             return
         page.click(f'.menus .title:text-is("{title}")')
-    raise AssertionError(f"no menu has {entry!r}")
+    if here is None:
+        raise AssertionError(f"no menu has {entry!r}")
+    page.locator(f'[data-testid=text] [data-paragraph="{here}"]').click(button="right")
+    page.locator("[role=menu] [role=menuitem]", has_text=entry).first.click()
 
 
 def open_name_and_describe(person: Person) -> None:
     """Name & describe… on what is selected or has the caret, and wait for its name field."""
-    choose(person, "Name & describe…")
+    choose(person, "Name & Describe…")
     person.page.wait_for_selector(NAME)
 
 
@@ -201,9 +210,11 @@ def tag_in_chat(person: Person, name: str) -> None:
 
 
 def reference_in_chat(person: Person) -> str:
-    """Edit ▸ Reference in Chat on what has the caret or is selected, and send it; the tag's words."""
+    """Reference in Chat on what has the caret or is selected, by its key (the entry is in the context menus, D1607),
+    and send it; the tag's words."""
     count = person.page.locator(TAGS).count()
-    choose(person, "Reference in Chat")
+    person.page.wait_for_timeout(300)  # a person presses the key after the page has seen where the caret went
+    person.page.keyboard.press("Control+Alt+x")
     person.page.wait_for_function("sel => document.querySelector(sel)?.querySelector('.chip')", arg=CHAT)
     person.page.click(CHAT)
     person.page.keyboard.press("End")
@@ -417,7 +428,7 @@ def _add_each(scene):
     if "composes" in scene.desks:
         add_text_box(scene.desks["composes"])
     if "creates" in scene.desks:
-        scene.desks["creates"].menu("Edit", "New Slide")
+        scene.desks["creates"].menu("Insert", "New Slide")
     if "computes" in scene.desks:
         computes = scene.desks["computes"]
         insert(computes, "a chart")
@@ -1273,7 +1284,7 @@ def _far_tag(world: World, scene: Scene, tmp_path: Path, app: str) -> Person:
         ann = desk(world, scene, app)
         if app == "creates":
             for _ in range(8):
-                ann.menu("Edit", "New Slide")
+                ann.menu("Insert", "New Slide")
             add_text_box(ann)
             show_slide(ann, 4)
             add_text_box(ann)
@@ -1497,7 +1508,7 @@ def _view_back(scene):
     """Each of the two on its own: the menu entry; then, after the same jump again (the panel unfolded for it and
     folded again), the keys."""
     for app, ann in scene.desks.items():
-        ann.menu("View", "Back where I was")
+        ann.menu("View", "Back Where I Was")
         back_at(ann, scene.view["before"][app])
         _fold_panel(ann)
         jump(ann)

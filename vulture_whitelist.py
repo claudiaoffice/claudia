@@ -203,6 +203,15 @@ used.rgb  # RGBColor set on a run's/shape's .color or .fore_color (claudia_creat
 used.slide_width  # Presentation.slide_width, set once per deck (claudia_creates_io.pptx.slides_to_pptx)
 used.slide_height  # Presentation.slide_height, set once per deck (claudia_creates_io.pptx.slides_to_pptx)
 
+# scripts/menu_audit.py: set-only properties of openpyxl's own objects (never read back by our code, only by openpyxl
+# itself when the workbook is saved)
+used.font  # a cell's Font (the Diagnosis sheet's look)
+used.fill  # a cell's PatternFill
+used.alignment  # a cell's Alignment
+used.border  # a cell's Border
+used.freeze_panes  # Worksheet.freeze_panes
+used.ref  # Worksheet.auto_filter.ref
+
 # claudia-fonts: set on a fontTools table in claudia_fonts.testing, which tests use
 used.macStyle  # head.macStyle is read by fontTools when the font is saved
 

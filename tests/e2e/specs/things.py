@@ -64,13 +64,13 @@ def wait_for_objects(person: Person, count: int) -> None:
 
 
 def insert_text_box(person: Person) -> None:
-    """Edit ▸ Text Box."""
-    person.menu("Edit", "Text Box")
+    """Insert ▸ Text Box."""
+    person.menu("Insert", "Text Box")
 
 
 def insert_picture(person: Person) -> None:
-    """Edit ▸ Image…, a gradient with its description."""
-    person.menu("Edit", "Image…")
+    """Insert ▸ Image…, a gradient with its description."""
+    person.menu("Insert", "Image…")
     page = person.page
     page.set_input_files(
         ".modal input[type=file]", files=[{"name": "gradient.png", "mimeType": "image/png", "buffer": PICTURE}]
@@ -81,10 +81,14 @@ def insert_picture(person: Person) -> None:
 
 
 def insert_container(person: Person) -> None:
-    """A LaTeX container, left as it is; the scenario is skipped where this server has no LaTeX (the entry is off)."""
-    person.menu("Insert", "Container")
+    """A LaTeX container, left as it is; the scenario is skipped where this server has no LaTeX (the entry is not
+    offered, D1615)."""
+    person.page.click('.menus .title:text-is("Insert")')
+    container = person.menu_item("Container")
     latex = person.menu_item("LaTeX")
-    if latex.is_disabled():
+    if container.count():
+        container.hover()
+    if not container.count() or not latex.count() or latex.is_disabled():
         person.page.keyboard.press("Escape")
         pytest.skip("this server cannot make a LaTeX container (no XeLaTeX), so it has none to insert")
     latex.click()
@@ -92,8 +96,8 @@ def insert_container(person: Person) -> None:
 
 
 def insert_shape(person: Person) -> None:
-    """Edit ▸ Rectangle."""
-    person.menu("Edit", "Rectangle")
+    """Insert ▸ Shape ▸ Rectangle."""
+    person.menu("Insert", "Shape", "Rectangle")
 
 
 def insert_chart(person: Person) -> None:
@@ -106,7 +110,7 @@ def insert_chart(person: Person) -> None:
     page.locator(".viewport").click(position=FIRST_CELL)
     page.keyboard.press("Shift+ArrowDown")
     page.keyboard.press("Shift+ArrowDown")
-    person.menu("Edit", "Chart…")
+    person.menu("Insert", "Chart…")
     page.check(".modal input[value=sheet]")
     page.click(".modal button[type=submit]")
     page.wait_for_selector(f"{OBJECTS['computes']} .js-plotly-plot .main-svg", state="attached")  # drawn: it is there

@@ -15,7 +15,8 @@ const { t } = useI18n()
 
 export interface MenuItem {
   /** The shell-contract action id (`file.save`, …) for an item a native shell can also drive. Omit for an item that
-   * only exists on the web (a style name, a shape from the library): see `lib/menu-dispatch.ts`. */
+   * only exists on the web (a wrap mode, Show As of a reference). The menus are assembled from the definition
+   * (`lib/menus/assemble.ts`), which gives every entry its id. */
   id?: string
   label: string
   hint?: string
@@ -25,12 +26,9 @@ export interface MenuItem {
   separator?: boolean
   /** A choice that is on or off: shown with a tick. */
   checked?: boolean
-  /** One level of flyout (Paste as ▸ Plain text; computes' Row ▸ and Column ▸, D130; Format ▸ Apply style, D300).
-   * Items of a submenu may carry `id` too, and are included in `lib/menu-dispatch.ts`'s walk, but may not nest a
-   * submenu of their own. A flyout parent may also have an `action`: what a native shell's own entry does (D301). */
+  /** One level of flyout: a submenu of the definition (Paste As ▸ Plain Text), or the choices of an entry (Wrap Text… ▸
+   * its modes). Items of a submenu may carry `id` too, but may not nest a submenu of their own. */
   items?: MenuItem[]
-  /** How the label is drawn: a style's own look in Format ▸ Apply style (`menuCss`, D300). */
-  css?: Record<string, string>
 }
 export interface Menu {
   label: string
@@ -50,13 +48,16 @@ const focused = ref(0)
 let typeahead = ''
 let typeaheadTimer: ReturnType<typeof setTimeout> | undefined
 
-const openMenu = computed(() => (openIndex.value === null ? null : props.menus[openIndex.value] ?? null))
+/** The menu as it was when it opened (D1603): what fits may change while it is open (a colleague's step, the ai), and an
+ * entry must not move under the pointer. Whether the chosen entry still fits is judged when it runs. */
+const frozen = ref<Menu | null>(null)
+const openMenu = computed(() => (openIndex.value === null ? null : frozen.value))
 const clickable = computed(() => (openMenu.value?.items ?? []).filter((it) => !it.separator))
 const activeTop = computed<MenuItem | null>(() => (activeItem.value === null ? null : (clickable.value[activeItem.value] ?? null)))
 const subItems = computed(() => (activeTop.value?.items ?? []).filter((it) => !it.separator))
 const activeSubItem = computed<MenuItem | null>(() => (activeSub.value === null ? null : (subItems.value[activeSub.value] ?? null)))
 
-/** The key beside an entry: the one table's (`keys.generated.ts`, the same in every client, UX-35) for an entry with an
+/** The key beside an entry: the one table's (`menus.generated.ts`, the same in every client, UX-35) for an entry with an
  * id, else what the entry says itself (the List flyout's Tab, an id-less entry). */
 function hintFor(item: MenuItem): string | undefined {
   return hintOf(item.id) ?? item.hint
@@ -101,6 +102,7 @@ function enterItem(item: MenuItem) {
 }
 
 function open(i: number, { focusFirst = false }: { focusFirst?: boolean } = {}) {
+  if (openIndex.value !== i) frozen.value = props.menus[i] ?? null
   openIndex.value = i
   focused.value = i
   activeSub.value = null
@@ -110,6 +112,7 @@ function open(i: number, { focusFirst = false }: { focusFirst?: boolean } = {}) 
 
 function close() {
   openIndex.value = null
+  frozen.value = null
   activeItem.value = null
   activeSub.value = null
 }
@@ -301,7 +304,7 @@ onBeforeUnmount(() => {
           {{ menu.label }}
         </button>
         <ul v-if="openIndex === i" :id="`menu-drop-${i}`" class="drop" role="menu" :aria-labelledby="titleId(i)">
-          <template v-for="(item, j) in menu.items" :key="j">
+          <template v-for="(item, j) in openMenu?.items ?? []" :key="j">
             <li v-if="item.separator" class="sep" role="separator" />
             <li v-else class="item-wrap">
               <button
@@ -317,7 +320,7 @@ onBeforeUnmount(() => {
                 @click="choose(item)"
                 @mouseenter="enterItem(item)"
               >
-                <span><i v-if="item.checked !== undefined" class="tick" aria-hidden="true">{{ item.checked ? '✓' : '' }}</i><span class="label" :style="item.css">{{ item.label }}</span></span>
+                <span><i v-if="item.checked !== undefined" class="tick" aria-hidden="true">{{ item.checked ? '✓' : '' }}</i><span class="label">{{ item.label }}</span></span>
                 <kbd v-if="hintFor(item)">{{ hintFor(item) }}</kbd>
                 <span v-if="item.items" class="arrow" aria-hidden="true">▸</span>
               </button>
@@ -336,7 +339,7 @@ onBeforeUnmount(() => {
                       @click="choose(sub)"
                       @mouseenter="!sub.disabled && (activeSub = subItems.indexOf(sub))"
                     >
-                      <span><i v-if="sub.checked !== undefined" class="tick" aria-hidden="true">{{ sub.checked ? '✓' : '' }}</i><span class="label" :style="sub.css">{{ sub.label }}</span></span>
+                      <span><i v-if="sub.checked !== undefined" class="tick" aria-hidden="true">{{ sub.checked ? '✓' : '' }}</i><span class="label">{{ sub.label }}</span></span>
                       <kbd v-if="hintFor(sub)">{{ hintFor(sub) }}</kbd>
                     </button>
                   </li>

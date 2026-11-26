@@ -221,7 +221,7 @@ export function previewCss(computed: Css): Css {
 
 const BORDERS = ['border-top', 'border-right', 'border-bottom', 'border-left']
 
-/** How a style is drawn as an entry of a menu or a gallery (D300, `format-menu-apply-style.svg`): its font, weight,
+/** How a style is drawn as an entry of a picker or a gallery (D300, `format-menu-apply-style.svg`): its font, weight,
  * slant, decoration and colour as in `previewCss`, and — where it has them — its background and borders, as a small
  * chip around the name. Never its size: a 40 px title would break the menu. A border wider than 2 px is drawn as
  * 2 px, enough to see which side it is on. */

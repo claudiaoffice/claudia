@@ -7,7 +7,9 @@ from importlib import resources
 
 import pytest
 
-from claudia_shell_gtk import identity, manifest
+from claudia_menus import manifest
+from claudia_shell_gtk import identity
+from claudia_shell_gtk.menu_xml import menu_button_id, menu_elements, menu_xml
 
 
 def window_ui() -> ET.Element:
@@ -17,7 +19,7 @@ def window_ui() -> ET.Element:
 @pytest.mark.parametrize("app", identity.names())
 def test_there_is_a_menu_button_for_every_menu_of_every_app(app: str) -> None:
     """One layout serves all apps: their menus have the same ids and labels, only their items differ."""
-    wanted = {manifest.menu_button_id(menu.id): menu.label for menu in manifest.for_app(app).menus}
+    wanted = {menu_button_id(menu.id): menu.label for menu in manifest.for_app(app).menus}
     buttons = {
         button.get("id"): button.findtext("property[@name='label']")
         for button in window_ui().iter("object")
@@ -33,7 +35,7 @@ def test_the_window_class_has_a_child_for_every_menu_button() -> None:
     source = resources.files("claudia_shell_gtk").joinpath("window.py").read_text(encoding="utf-8")
     for app in identity.names():
         for menu in manifest.for_app(app).menus:
-            assert f"{manifest.menu_button_id(menu.id)} = Gtk.Template.Child()" in source
+            assert f"{menu_button_id(menu.id)} = Gtk.Template.Child()" in source
 
 
 def test_the_header_bars_own_panel_toggle_is_wired_to_the_view_panel_action() -> None:
@@ -65,7 +67,7 @@ def test_the_waiting_page_has_no_app_name_in_it() -> None:
 
 
 def test_the_menu_elements_can_be_merged_into_a_layout() -> None:
-    fragment = manifest.menu_elements(manifest.composes())
+    fragment = menu_elements(manifest.composes())
     assert fragment.lstrip().startswith("<menu ")
     assert "<interface" not in fragment
-    assert fragment in manifest.menu_xml(manifest.composes())
+    assert fragment in menu_xml(manifest.composes())

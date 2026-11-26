@@ -11,13 +11,16 @@ const KNOWN: KnownAction[] = [
 
 function make(overrides: Partial<BridgeOptions> = {}) {
   const sent: Array<Record<string, unknown>> = []
-  const calls = { states: [] as unknown[], ready: 0, connect: [] as string[], servers: [] as unknown[] }
+  const calls = { states: [] as unknown[], empty: [] as unknown[], ready: 0, connect: [] as string[], servers: [] as unknown[] }
   const bridge = new Bridge({
     app: 'creates',
     known: KNOWN,
     shell: { name: 'neutralino', platform: 'macos', version: '0.1.0' },
     send: (raw) => sent.push(JSON.parse(raw)),
-    onStates: (s) => calls.states.push(s),
+    onStates: (s, e) => {
+      calls.states.push(s)
+      if (e) calls.empty.push(e)
+    },
     onReady: () => calls.ready++,
     onConnect: (a) => calls.connect.push(a),
     onServers: (s) => calls.servers.push(s),
@@ -143,6 +146,15 @@ describe('after hello', () => {
     say({ type: 'action_state', states: { 'file.new': { enabled: false }, 'file.nope': { enabled: true } } })
     expect(calls.states).toEqual([{ 'file.new': { enabled: false } }])
     expect(sent.at(-1)).toMatchObject({ type: 'error', code: 'unknown_action', message: 'no such action: file.nope' })
+  })
+
+  it('passes on which menus have nothing left (D1645)', () => {
+    const { say, hello, calls, sent } = make()
+    hello()
+    say({ type: 'action_state', states: { 'file.new': { enabled: true } }, empty: { insert: 'Nothing to insert: you can only look at this document.' } })
+    expect(calls.states).toEqual([{ 'file.new': { enabled: true } }])
+    expect(calls.empty).toEqual([{ insert: 'Nothing to insert: you can only look at this document.' }])
+    expect(sent).toHaveLength(1) // only the welcome: nothing was wrong
   })
 
   it('does not call back for a report of unknown actions only', () => {

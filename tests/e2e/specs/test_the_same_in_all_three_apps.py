@@ -63,8 +63,8 @@ def entries(person: Person) -> int:
 
 
 def style_names(person: Person) -> list[str]:
-    """The names in Format ▸ All Styles…, read from the dialog, which is closed again."""
-    person.menu("Format", "All Styles…")
+    """The names in Format ▸ Style ▸ All Styles…, read from the dialog, which is closed again."""
+    person.menu("Format", "Style", "All Styles…")
     names = person.page.eval_on_selector_all(
         "[data-testid=styles-list] [data-style] .sample", "els => els.map(e => e.textContent.trim())"
     )
@@ -73,8 +73,8 @@ def style_names(person: Person) -> list[str]:
 
 
 def accent(person: Person) -> str:
-    """The colour of the accent as Format ▸ Colours… shows it; the dialog is closed again."""
-    person.menu("Format", "Colours…")
+    """The colour of the accent as Format ▸ Palette… shows it; the dialog is closed again."""
+    person.menu("Format", "Palette…")
     colour = person.page.eval_on_selector(
         "[data-testid=role-list] [data-role=accent] i", "e => getComputedStyle(e).backgroundColor"
     )
@@ -95,8 +95,8 @@ def the_document(person: Person) -> dict:
 
 # ----------------------------------------------------------------------------------------------- what people do
 def rename_first_style(person: Person) -> None:
-    """Format ▸ All Styles…, Rename on the first style, a new name."""
-    person.menu("Format", "All Styles…")
+    """Format ▸ Style ▸ All Styles…, Rename on the first style, a new name."""
+    person.menu("Format", "Style", "All Styles…")
     person.page.locator("[data-rename]").first.click()
     name = person.page.locator(".modal form.rename input")
     name.fill(NEW_STYLE_NAME)
@@ -106,8 +106,8 @@ def rename_first_style(person: Person) -> None:
 
 
 def change_the_accent(person: Person) -> None:
-    """Format ▸ Colours…, the accent, a new colour, Change it."""
-    person.menu("Format", "Colours…")
+    """Format ▸ Palette…, the accent, a new colour, Change it."""
+    person.menu("Format", "Palette…")
     person.page.click("[data-testid=role-list] [data-role=accent] button")
     person.page.locator(".modal input.mono").fill(NEW_ACCENT)
     person.page.click("[data-testid=apply-role]")
@@ -158,17 +158,26 @@ def _close_menus_and_dialogs(person: Person) -> None:
 
 
 def _choose_even_if_off(person: Person, title: str, *path: str) -> None:
-    """What a person does with an entry that may be greyed out: she clicks it anyway (``Person.menu`` waits for it)."""
+    """What a person does with an entry that may be greyed out: she clicks it anyway (``Person.menu`` waits for it). An
+    entry the menu leaves out (D1600) cannot be clicked: she closes the menu again."""
     person.page.click(f'.menus .title:text-is("{title}")')
     *submenus, entry = path
     for submenu in submenus:
-        person.page.locator(f'.menus .drop [role=menuitem]:has-text("{submenu}")').first.hover()
-    person.page.locator(f'.menus .drop [role=menuitem]:has-text("{entry}")').first.click(force=True)
+        found = person.page.locator(f'.menus .drop [role=menuitem]:has-text("{submenu}")').first
+        if not found.count():
+            person.page.keyboard.press("Escape")
+            return
+        found.hover()
+    found = person.page.locator(f'.menus .drop [role=menuitem]:has-text("{entry}")').first
+    if found.count():
+        found.click(force=True)
+    else:
+        person.page.keyboard.press("Escape")
 
 
 def _try_to_rename_a_style(vera: Person) -> None:
-    """Format ▸ All Styles…, and Rename where the dialog offers it."""
-    vera.menu("Format", "All Styles…")
+    """Format ▸ Style ▸ All Styles…, and Rename where the dialog offers it."""
+    _choose_even_if_off(vera, "Format", "Style", "All Styles…")
     rename = vera.page.locator("[data-rename]")
     if rename.count():
         rename.first.click()
@@ -177,8 +186,10 @@ def _try_to_rename_a_style(vera: Person) -> None:
 
 
 def _try_to_change_a_colour(vera: Person) -> None:
-    """Format ▸ Colours…, the accent, a new colour where the field takes one, and Change it."""
-    vera.menu("Format", "Colours…")
+    """Format ▸ Palette…, the accent, a new colour where the field takes one, and Change it."""
+    _choose_even_if_off(vera, "Format", "Palette…")
+    if not vera.page.locator("[data-testid=role-list]").count():
+        return
     vera.page.click("[data-testid=role-list] [data-role=accent] button")
     colour = vera.page.locator(".modal input.mono").first
     if colour.is_enabled():
@@ -212,7 +223,7 @@ def _tries_on_an_object(vera: Person) -> dict[str, Callable[[], None]]:
 def _i_try_to(world, scene, change):
     vera = world.people["Vera"]
     tries = {
-        "insert a picture": {change: lambda: _choose_even_if_off(vera, "Edit", "Image…")},
+        "insert a picture": {change: lambda: _choose_even_if_off(vera, "Insert", "Image…")},
         "insert a container": {change: lambda: _choose_even_if_off(vera, "Insert", "Container", "LaTeX")},
         "rename a style": {change: lambda: _try_to_rename_a_style(vera)},
         "change a colour of the palette": {change: lambda: _try_to_change_a_colour(vera)},

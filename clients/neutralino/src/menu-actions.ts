@@ -2,7 +2,7 @@
 // logic with no Neutralino or DOM import, so it is checked with plain data (tests/menu-actions.test.ts); the handful
 // of real `Neutralino` calls that use it are in shell-page.ts.
 
-import type { WindowMenuItem } from './menu.js'
+import { SEPARATOR, type ShellMenuItem, type WindowMenuItem } from './menu.js'
 
 export interface KnownAction {
   id: string
@@ -40,6 +40,8 @@ export interface ActionState {
   enabled?: boolean
   checked?: boolean
   label?: string
+  /** False: the page leaves the entry out for now (D1645); `drawMenu` does not draw it. */
+  visible?: boolean
 }
 
 /** A new menu tree with `states` applied to the items named (by id) in it, everything else unchanged. Used to
@@ -47,18 +49,51 @@ export interface ActionState {
  * no per-item update call -- only setting the whole menu again (confirmed by the only real example in its own
  * docs and by the spike's own `menu.set`, which always rebuilds and resends the full array). */
 export function applyActionStates(
-  menu: readonly WindowMenuItem[],
+  menu: readonly ShellMenuItem[],
   states: Readonly<Record<string, ActionState>>,
-): WindowMenuItem[] {
-  const patchOne = (item: WindowMenuItem): WindowMenuItem => {
-    const patched: WindowMenuItem = item.menuItems ? { ...item, menuItems: item.menuItems.map(patchOne) } : { ...item }
+): ShellMenuItem[] {
+  const patchOne = (item: ShellMenuItem): ShellMenuItem => {
+    const patched: ShellMenuItem = item.menuItems ? { ...item, menuItems: item.menuItems.map(patchOne) } : { ...item }
     const state = item.id ? states[item.id] : undefined
     if (state) {
       if (state.checked !== undefined) patched.isChecked = state.checked
       if (state.enabled !== undefined) patched.isDisabled = !state.enabled
       if (state.label !== undefined) patched.text = state.label
+      if (state.visible !== undefined) patched.isHidden = !state.visible
     }
     return patched
   }
   return menu.map(patchOne)
+}
+
+/** What Neutralino is given: the menus without the entries the page leaves out, by the rule the page and the Linux
+ * shell draw by (clients/contract/fixtures/menu-collapse.json): no submenu with nothing in it, and no separator first,
+ * last or twice. A menu of the bar with nothing left keeps its title (D1603) and holds the greyed line of `empty`
+ * that says why. */
+export function drawMenu(menu: readonly ShellMenuItem[], empty: Readonly<Record<string, string>>): WindowMenuItem[] {
+  const drawOne = (item: ShellMenuItem): WindowMenuItem | null => {
+    if (item.isHidden) return null
+    if (!item.menuItems) return plainOf(item)
+    const items = collapse(item.menuItems.map(drawOne).filter((i): i is WindowMenuItem => i !== null))
+    return items.length ? { ...plainOf(item), menuItems: items } : null
+  }
+  return menu.map((top) => {
+    const why = top.word ? empty[top.word] : undefined
+    return drawOne(top) ?? { ...plainOf(top), menuItems: why ? [{ text: why, isDisabled: true }] : [] }
+  })
+}
+
+/** The item as Neutralino takes it: without the shell's notes on it and without its items. */
+function plainOf(item: ShellMenuItem): WindowMenuItem {
+  const { isHidden: _hidden, word: _word, menuItems: _items, ...plain } = item
+  return plain
+}
+
+/** No separator first, last or right after another. */
+function collapse(items: readonly WindowMenuItem[]): WindowMenuItem[] {
+  const isLine = (i: WindowMenuItem | undefined) => i?.text === SEPARATOR.text && !i.id && !i.menuItems
+  const out: WindowMenuItem[] = []
+  for (const i of items) if (!isLine(i) || (out.length && !isLine(out.at(-1)))) out.push(i)
+  while (isLine(out.at(-1))) out.pop()
+  return out
 }

@@ -135,7 +135,7 @@ def test_extract_manifest_finds_a_menu_label_shared_by_every_app_only_once():
     """ "Edit" is one of D120's seven menus in composes, computes and creates alike; it must not be listed three
     times over just because it was built three times."""
     found = extract_i18n.extract_manifest()
-    assert found["Edit"] == ["clients/linux/src/claudia_shell_gtk/manifest.py"]
+    assert found["Edit"] == ["clients/contract/src/claudia_menus/manifest.py"]
 
 
 def test_extract_manifest_finds_submenu_labels_and_action_labels_and_tooltips():

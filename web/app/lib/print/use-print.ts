@@ -1,11 +1,8 @@
-// What a window that prints has (D906, D918): File ▸ Print… and Ctrl+P open the preview in place of the document,
+// What a window that prints has (D906, D918): File ▸ Print… (and its key, Ctrl+P) opens the preview in place of the document,
 // and once it is open print; Esc or the arrow go back. And a new document starts in its maker's language (D915, D917).
 // The same in composes and creates, so printing reads and behaves the same in both.
 import { ref, type Ref } from 'vue'
-import { PRINT_CHORD } from '../document-menus'
-import type { ShortcutDef } from '../shortcuts'
 
-import { translate as t } from '../i18n'
 export interface Printing {
   /** whether the preview is shown in place of the document */
   printing: Ref<boolean>
@@ -15,8 +12,6 @@ export interface Printing {
   open(): void
   /** back to the document; `then` puts the focus where it was */
   close(): void
-  /** Ctrl+P, for the window's extra shortcuts */
-  shortcut: ShortcutDef
 }
 
 export function usePrint(then: () => void = () => {}): Printing {
@@ -30,5 +25,5 @@ export function usePrint(then: () => void = () => {}): Printing {
     printing.value = false
     setTimeout(then)
   }
-  return { printing, preview, open, close, shortcut: { id: 'file.print', get label() { return t('Print…') }, chord: PRINT_CHORD, run: open } }
+  return { printing, preview, open, close }
 }

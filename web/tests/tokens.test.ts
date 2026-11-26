@@ -100,7 +100,7 @@ const LITERALS_ALLOWED: Record<string, number> = {
   'BackChip.vue': 3,
   'ChatInput.vue': 7,
   'ConnectionIndicator.vue': 1,
-  'DeleteDocumentDialog.vue': 1,
+  'DeleteFromListDialog.vue': 1,
   'DeleteStyleDialog.vue': 1,
   'DocDetails.vue': 2,
   'DocumentFrame.vue': 4,

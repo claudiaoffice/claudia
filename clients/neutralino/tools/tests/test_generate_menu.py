@@ -1,8 +1,8 @@
 """`generate_menu.py`: the one place the macOS and Windows client reads the shared menu manifest from (E5.11, D159).
 
-The client is TypeScript, not Python, and never imports `claudia_shell_gtk` at run time (that package is the
-Linux client's, outside the uv workspace, D116). Instead this script runs at development/build time, imports the
-*manifest*, which has no GTK dependency (`manifest.py`'s own docstring: "Nothing here imports GTK"), and writes its
+The client is TypeScript, not Python, and never imports the menu definition at run time. Instead this script runs at
+development/build time, imports the *manifest* (`clients/contract/src/claudia_menus`, D1643), which is pure data
+(`manifest.py`'s own docstring: "Nothing here imports GTK"), and writes its
 `describe()` as JSON next to the TypeScript that reads it. The checked-in file is a cache, not a second source of
 truth, so the important property this module guarantees is: **the checked-in JSON can always be reproduced byte for
 byte from the manifest it was generated from** — exactly the drift the project has been bitten by before (D28's

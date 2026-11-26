@@ -94,26 +94,27 @@ async function main() {
   await page.waitForSelector('[data-testid=style-menu]')
   await page.keyboard.press('Escape')
   await page.waitForSelector('[data-testid=style-menu]', { state: 'detached' })
-  // a contextmenu event the way any browser sends it, also from the margin of the page, opens the menu and is not left to the browser
+  // a contextmenu event the way any browser sends it, also from the margin of the page, opens the menu of the
+  // paragraph, heading or list the cursor is in (the menu workbook, 25.11.26) and is not left to the browser
   const prevented = await page.evaluate(() => {
     const e = new MouseEvent('contextmenu', { bubbles: true, cancelable: true, clientX: 300, clientY: 300, button: 2 })
     document.querySelector('[data-testid=text-scroller]').dispatchEvent(e)
     return e.defaultPrevented
   })
   assert.equal(prevented, true)
-  await page.waitForSelector('[data-testid=style-menu]')
+  await page.waitForSelector('[role=menu][aria-label="Paragraph menu"]')
   await page.keyboard.press('Escape')
-  await page.waitForSelector('[data-testid=style-menu]', { state: 'detached' })
+  await page.waitForSelector('[role=menu][aria-label="Paragraph menu"]', { state: 'detached' })
   log('style list of the bar is visible and closes; the Look button and a contextmenu event open the menu')
 
-  // right-click in the second paragraph: the menu opens with the style gallery and the look
+  // Format ▸ Style ▸ Edit… (its key) in the second paragraph: the menu opens with the style gallery and the look
   const second = page.locator('[data-testid=text] [data-paragraph]').nth(1)
   await second.click()
-  await second.click({ button: 'right' })
+  await page.keyboard.press('Control+Shift+Alt+h')
   await page.waitForSelector('[data-testid=style-menu]')
   assert.equal(await page.locator('[data-testid=style-menu] [data-style].on').getAttribute('data-style'), 'body')
   await page.screenshot({ path: `${SHOTS}/styling-1-menu.png` })
-  log('context menu open on Body text')
+  log('style menu open on Body text')
 
   // UX-14: clicking a different style in the gallery only shows its look — it must not touch the document
   await page.click('[data-testid=style-menu] [data-style=heading-1]')
@@ -186,7 +187,8 @@ async function main() {
   await page.keyboard.press('Escape')
   await page.waitForSelector('[data-testid=style-menu]', { state: 'detached' })
   await page.locator('[data-testid=text] [data-paragraph]').nth(2).click()
-  await page.locator('[data-testid=text] [data-paragraph]').nth(2).click({ button: 'right' })
+  await page.keyboard.press('Control+Shift+Alt+h')
+  await page.waitForSelector('[data-testid=style-menu]')
   await page.click('[data-testid=view-controls]')
   await page.locator('[data-testid=style-spec] label', { hasText: 'Every use of' }).click()
   const before = (await look(page, 2)).size
@@ -198,8 +200,9 @@ async function main() {
   await page.keyboard.press('Escape')
 
   // the dialog lists the styles and counts
-  await page.click('text=Format')
-  await page.click('text=All Styles…')
+  await page.click('.menus .title:text-is("Format")')
+  await page.hover('.menus .drop [role=menuitem]:has-text("Style")')
+  await page.click('.menus .drop.sub [role=menuitem]:has-text("All Styles…")')
   await page.waitForSelector('[data-testid=styles-list]')
   assert.match(await page.locator('[data-testid=styles-list] [data-style=body-text-changed]').innerText(), /1 paragraph/)
   await page.screenshot({ path: `${SHOTS}/styling-6-styles.png` })

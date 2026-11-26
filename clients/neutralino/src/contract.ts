@@ -40,6 +40,7 @@ export type Message = { type: string; [key: string]: unknown }
 
 const ACTION_ID = /^[a-z]+(\.[a-z][a-z0-9-]*)+$/
 const TOKEN = /^[a-z][a-z0-9-]*$/
+const MENU_WORD = /^[a-z]{1,32}$/ // a menu of the bar in 'empty': its word in the definition, lower case (D1645)
 const LOCALE = /^[A-Za-z]{2,8}(-[A-Za-z0-9]{1,8})*$/
 const MAX_ACTION_ID = 64
 const MAX_TOKEN = 32
@@ -145,16 +146,23 @@ const CHECKS: Record<string, Check> = {
   },
   action_state(message) {
     const states = message.states
+    const empty = message.empty
     if (!isRecord(states) || Object.keys(states).length === 0) {
       throw bad("'action_state' needs 'states' with at least one action")
     }
     for (const [name, state] of Object.entries(states)) {
       actionId(name)
       if (!isRecord(state)) throw bad(`the state of ${name} is an object`)
-      for (const flag of ['enabled', 'checked']) {
+      for (const flag of ['enabled', 'checked', 'visible']) {
         if (flag in state && typeof state[flag] !== 'boolean') throw bad(`'${flag}' of ${name} is true or false`)
       }
       text(state, 'label', 128)
+    }
+    if (empty === undefined) return
+    if (!isRecord(empty)) throw bad("'empty' names menus")
+    for (const [menu, why] of Object.entries(empty)) {
+      if (!MENU_WORD.test(menu)) throw bad(`'${menu}' in 'empty' is a menu's word in lower case`)
+      if (typeof why !== 'string' || why.length > 256) throw bad(`why '${menu}' is empty is text of at most 256 characters`)
     }
   },
   error(message) {

@@ -10,7 +10,7 @@ import { ariaColCount, ariaRowCount, cellDomId, cellName, colIndexOf, rowIndexOf
 import { imageDataUrl } from '~/lib/images'
 import { besideRect, centredScroll, CORNERS, HANDLES, type Handle } from '~/lib/geometry'
 import { useObjectInteraction } from '~/lib/object-interaction'
-import { contextMenuItems } from '~/lib/object-menu'
+import type { ContextMenuOf } from '~/lib/menus/assemble'
 import { pictureOf as clippedImport, useObjectClipboard } from '~/lib/object-clipboard'
 import { nearestLine, stepFor } from '~/lib/sheet-object-host'
 import { canTurn, degreesText, quarterTurn, SHIFT_STEP, stepTurn } from '~/lib/turning'
@@ -69,6 +69,8 @@ const props = defineProps<{
   cellHost?: StyleHost
   /** What a search found on this sheet, and what a replacement would show (`lib/search.ts`, E5.15). */
   marks?: SearchMarks
+  /** The window's context menus, by the definition (D1644): an object's here. */
+  menuOf: ContextMenuOf
 }>()
 const emit = defineEmits<{
   /** Asks the workspace to open the all-styles dialog, which owns the modal layer. */
@@ -655,28 +657,29 @@ function openObjectMenu(event: MouseEvent, id: string) {
   const rect = viewport.value?.querySelector(`[data-object="${CSS.escape(id)}"]`)?.getBoundingClientRect()
   objectMenu.value = { id, x: keyboard && rect ? rect.left + 24 : event.clientX, y: keyboard && rect ? rect.top + 12 : event.clientY }
 }
+/** The object's menu (D1225) by the definition, run on the object pressed and at the point pressed; a chart on the sheet
+ * adds its own (Move to Slide, D1475). */
 const objectItems = computed<MenuItem[]>(() => {
   const at = objectMenu.value
   const o = at ? props.session.sheetObject(at.id) : null
   if (!at || !o) return []
-  const close = () => (objectMenu.value = null)
-  return contextMenuItems(
-    o,
-    readonlyHere(),
-    {
-      describe: () => (close(), emit('describe')),
-      edit: () => (close(), beginContainerEdit(o)),
-      style: () => (close(), openStyleMenu({ x: at.x, y: at.y })),
-      rotateBy: () => (close(), openRotateBy(o.id, { x: at.x, y: at.y })),
-      remove: () => void removeSelected(),
-      cut: () => void clip.cut(),
-      copy: () => void clip.copy(),
-      setSnap: () => undefined, // computes has no grid for objects
-      moveToSlide: () => (close(), emit('move-to-slide', o.id)),
-    },
-    { edit: o.kind === 'container' }, // a picture and a chart have no words; a container is written in
-  )
+  const items = props.menuOf('object', {
+    'format.describe': { run: () => emit('describe') },
+    'edit.edit-text': { run: () => beginContainerEdit(o) },
+    'format.apply-style': { run: () => openStyleMenu({ x: at.x, y: at.y }) },
+    'format.rotate-by': { run: () => openRotateBy(o.id, { x: at.x, y: at.y }) },
+    'edit.delete': { run: () => void removeSelected() },
+    // only a picture goes onto the clipboard (D1229): the workbook's rule does not say so, so the grid does
+    'edit.cut': { run: () => void clip.cut(), notNow: () => pictureOnly(o.kind) },
+    'edit.copy': { run: () => void clip.copy(), notNow: () => pictureOnly(o.kind) },
+  })
+  if (o.kind !== 'chart') return items
+  const chart = props.menuOf('chart', { 'edit.move-to-slide': { run: () => emit('move-to-slide', o.id) } })
+  return [...items, ...(items.length && chart.length ? [{ label: '', separator: true }] : []), ...chart]
 })
+function pictureOnly(kind: string): string | null {
+  return kind === 'image' ? null : t('Only a picture can be cut or copied.')
+}
 async function removeSelected() {
   const id = selectedObject.value
   selectedObject.value = null
@@ -1226,7 +1229,8 @@ defineExpose({
   quarter,
   /** Paste a picture that was cut or copied (false: there is none, the cells are pasted instead). */
   paste: () => clip.paste(),
-  beginContainerEdit: () => beginContainerEdit(props.session.sheetObject(selectedObject.value)),
+  /** Edit Text: write in the object selected, where it holds words (a container). */
+  editText: () => beginContainerEdit(props.session.sheetObject(selectedObject.value)),
   stepObject,
   openStyleMenu,
   /** What the Format menu ticks and disables itself by. */

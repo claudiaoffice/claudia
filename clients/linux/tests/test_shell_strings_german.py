@@ -6,8 +6,9 @@ from __future__ import annotations
 
 import pytest
 
+from claudia_menus import manifest
 from claudia_shell_gtk import __main__ as main_module
-from claudia_shell_gtk import cli, i18n, identity, launch, manifest
+from claudia_shell_gtk import cli, i18n, identity, launch
 from claudia_shell_gtk.i18n import install_translation
 from claudia_shell_gtk.server import LocalServer, ServerStartError
 
